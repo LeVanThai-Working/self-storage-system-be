@@ -4,13 +4,14 @@
 
 * npx husky init --> (init Husky)
 * npm install --> (install dependencies)
+* npm run format --> (format codebase)
+* npm run check --> (check type, eslint, format)
 
 - On each task:
 
 * npm run dev --> (dev phase)
 * npm run build --> (Compile TS -> JS)
 * npm start --> (run code had built)
-* npm run check --> (check type, eslint, format)
 
 - - Git rules:
 - Branch naming conventions:
