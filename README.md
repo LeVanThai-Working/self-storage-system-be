@@ -2,8 +2,8 @@
 
 - First time cloning project:
 
-* nmp install --> (install dependencies)
-* npm run prepare --> (init Husky)
+* npx husky init --> (init Husky)
+* npm install --> (install dependencies)
 
 - On each task:
 
