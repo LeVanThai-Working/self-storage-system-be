@@ -27,12 +27,17 @@
   },
   "homepage": "https://github.com/LeVanThai-Working/project_be#readme",
   "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "mongoose": "^9.10.1",
     "morgan": "^1.12.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
+    "@types/mongoose": "^5.11.96",
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.5.1",
     "eslint": "^10.10.0",
