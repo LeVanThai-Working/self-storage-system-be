@@ -1,0 +1,30 @@
+- - Workflows contributing code:
+
+- First time cloning project:
+
+* nmp install --> (install dependencies)
+* npm run prepare --> (init Husky)
+
+- On each task:
+
+* npm run dev --> (dev phase)
+* npm run build --> (Compile TS -> JS)
+* npm start --> (run code had built)
+* npm run check --> (check type, eslint, format)
+
+- - Git rules:
+- Branch naming conventions:
+
+* feature/branch-name --> (application feature)
+* fix/branch-name --> (fix appliction bugs)
+* hotfix/branch-name --> (fix critical issues)
+* chore/branch-name --> (config, chores, docs, ...)
+* refactor/branch-name --> (refactor code structure)
+
+- Commit conventions:
+
+* [PREFIX] (feature): short description here...
+* - [PREFIX]: FEATURE, CHORE, FIX, HOTFIX, REFACTOR
+* - (feature): feature's name, such as: (auth, user, payment,...)
+* - short description: describe short action in that commit, such as: (completed CRUD, ...)
+* Example of one commit: -- [CHORE] (auth): config jwt guards --

@@ -1,0 +1,47 @@
+{
+  "name": "project_be",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "./src/app.ts",
+  "scripts": {
+    "dev": "nodemon --watch src --ext ts,json --exec tsx src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "check": "npm run typecheck && npm run lint && npm run format:check",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LeVanThai-Working/project_be.git"
+  },
+  "author": "Van Thai",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LeVanThai-Working/project_be/issues"
+  },
+  "homepage": "https://github.com/LeVanThai-Working/project_be#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "morgan": "^1.12.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^26.5.1",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.0"
+  }
+}
