@@ -15,7 +15,12 @@ const connectDB = async () => {
 connectDB();
 
 // Middleware
-app.use(morgan('combined', { stream: accessLogStream }));
+app.use(
+  morgan(
+    ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" :response-time ms',
+    { stream: accessLogStream }
+  )
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
