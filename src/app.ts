@@ -4,7 +4,6 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import connect from './config/connect.ts';
 import errorHandler from 'errorhandler';
-import { accessLogStream } from './utils/loggerStream.util.ts';
 
 const app: Express = express();
 
@@ -17,8 +16,7 @@ connectDB();
 // Middleware
 app.use(
   morgan(
-    ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" :response-time ms',
-    { stream: accessLogStream }
+    ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" :response-time ms'
   )
 );
 app.use(express.json());
