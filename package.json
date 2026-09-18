@@ -27,12 +27,18 @@
   },
   "homepage": "https://github.com/LeVanThai-Working/project_be#readme",
   "dependencies": {
+    "@types/mongoose-delete": "^1.0.6",
+    "@types/passport-google-oauth2": "^0.1.10",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
     "errorhandler": "^1.5.2",
     "express": "^5.2.1",
     "mongoose": "^9.10.1",
-    "morgan": "^1.12.1"
+    "mongoose-delete": "^1.0.7",
+    "morgan": "^1.12.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth2": "^0.2.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -42,6 +48,7 @@
     "@types/mongoose": "^5.11.96",
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.5.1",
+    "@types/passport": "^1.0.17",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",

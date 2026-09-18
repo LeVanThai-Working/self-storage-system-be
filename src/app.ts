@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import connect from './config/connect.ts';
 import errorHandler from 'errorhandler';
 
+// import * as oauth2 from './modules/auth/oauth2.auth.ts';
 const app: Express = express();
 
 //Connect to Database
@@ -32,4 +33,4 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello World!');
 });
 
-app.listen(3000);
+app.listen(process.env.PORT);
