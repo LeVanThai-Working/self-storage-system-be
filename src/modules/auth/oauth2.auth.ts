@@ -2,10 +2,6 @@
 // import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 // import { type Request } from 'express';
 
-// // const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'YOUR_CLIENT_ID';
-// // const GOOGLE_CLIENT_SECRET =
-// //   process.env.GOOGLE_CLIENT_SECRET || 'YOUR_CLIENT_SECRET';
-
 // passport.use(
 //   new GoogleStrategy(
 //     {
