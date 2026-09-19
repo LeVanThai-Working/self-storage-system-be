@@ -9,7 +9,7 @@ import MongooseDelete, {
   type SoftDeleteModel,
 } from 'mongoose-delete';
 
-interface IUser extends SoftDeleteDocument {
+export interface IUser extends SoftDeleteDocument {
   name: string;
   email: string;
   password: string;

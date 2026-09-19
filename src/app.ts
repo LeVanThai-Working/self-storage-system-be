@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import connect from './config/connect.ts';
 import createHttpError from 'http-errors';
 import { errorMiddleware } from './middlewares/error.middleware.ts';
+import userRouter from './modules/user/user.route.ts';
 
 const app: Express = express();
 
@@ -27,6 +28,8 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello World!');
 });
+
+app.use('/users', userRouter);
 
 // 404 handler
 app.use((req, res, next) => {
