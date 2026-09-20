@@ -1,0 +1,22 @@
+import { AuthRepository } from './auth.repository.ts';
+import { AuthService } from './auth.service.ts';
+import { AuthController } from './auth.controller.ts';
+import { Otp } from './otp.model.ts';
+import { User } from '../user/user.model.ts';
+import { UserRepository } from '../user/user.repository.ts';
+import { MailUtil } from '../../utils/mail.util.ts';
+import { JwtUtil } from '../../utils/jwt.util.ts';
+
+const authRepository = new AuthRepository(Otp);
+const userRepository = new UserRepository(User);
+const mailUtil = new MailUtil();
+export const jwtUtil = new JwtUtil();
+
+const authService = new AuthService(
+  authRepository,
+  userRepository,
+  mailUtil,
+  jwtUtil
+);
+
+export const authController = new AuthController(authService);

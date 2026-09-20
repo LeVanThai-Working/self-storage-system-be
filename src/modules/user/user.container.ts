@@ -1,5 +1,3 @@
-// container.ts
-
 import { UserController } from './user.controller.ts';
 import { User } from './user.model.ts';
 import { UserRepository } from './user.repository.ts';

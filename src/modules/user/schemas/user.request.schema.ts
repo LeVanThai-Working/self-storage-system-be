@@ -1,5 +1,4 @@
-// src/modules/user/schemas/user.request.schema.ts
-import { z } from 'zod';
+import z from 'zod';
 import { RoleEnum } from '../../../common/enums/user.enum.ts';
 
 export const createUserSchema = z.object({
