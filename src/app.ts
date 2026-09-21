@@ -3,6 +3,7 @@ import 'dotenv/config';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import connect from './config/connect.config.ts';
+import { connectRedis } from './config/redis.config.ts';
 import createHttpError from 'http-errors';
 import passport from 'passport';
 import './config/passport.config.ts';
@@ -12,11 +13,12 @@ import authRouter from './modules/auth/auth.route.ts';
 
 const app: Express = express();
 
-//Connect to Database
-const connectDB = async () => {
+// Connect to Database & Redis
+const initServices = async () => {
   await connect();
+  await connectRedis();
 };
-connectDB();
+initServices();
 
 // Middleware
 app.use(
