@@ -46,6 +46,8 @@ authRouter.get(
   authController.googleCallback
 );
 
+authRouter.post('/refresh', authController.refreshToken);
+
 authRouter.post('/logout', authController.logout);
 
 authRouter.get('/me', authMiddleware, authController.getMe);

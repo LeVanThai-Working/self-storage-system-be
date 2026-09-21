@@ -29,3 +29,10 @@
 * - (feature): feature's name, such as: (auth, user, payment,...)
 * - short description: describe short action in that commit, such as: (completed CRUD, ...)
 * Example of one commit: -- [CHORE] (auth): config jwt guards --
+
+-- Docker
+
+- `docker compose up -d` -> create image + start container for the redis
+- `docker compose stop` -> stop the container which is running
+- `docker compose logs` -> view output from containers
+- `docker compose down` -> remove the container which is running

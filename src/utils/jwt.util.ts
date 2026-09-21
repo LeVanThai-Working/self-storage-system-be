@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 
 export interface TokenPayload {
@@ -7,9 +8,14 @@ export interface TokenPayload {
   [key: string]: unknown;
 }
 
-interface GeneratedTokens {
+export interface RefreshTokenPayload extends TokenPayload {
+  familyId: string;
+}
+
+export interface GeneratedTokens {
   accessToken: string;
   refreshToken: string;
+  familyId: string;
 }
 
 export class JwtUtil {
@@ -25,25 +31,39 @@ export class JwtUtil {
     }
   }
 
-  generateTokens(payload: TokenPayload): GeneratedTokens {
+  generateTokens(payload: TokenPayload, familyId?: string): GeneratedTokens {
+    const tokenFamilyId = familyId || crypto.randomUUID();
+
     const accessToken = jwt.sign(payload, this.accessSecret, {
-      expiresIn: '15m',
+      expiresIn:
+        (process.env.JWT_ACCESS_EXPIRES_IN as jwt.SignOptions['expiresIn']) ||
+        '15m',
     });
 
-    const refreshToken = jwt.sign(payload, this.refreshSecret, {
-      expiresIn: '7d',
+    const refreshPayload: RefreshTokenPayload = {
+      ...payload,
+      familyId: tokenFamilyId,
+      jti: crypto.randomUUID(),
+    };
+
+    const refreshToken = jwt.sign(refreshPayload, this.refreshSecret, {
+      expiresIn:
+        (process.env.JWT_REFRESH_EXPIRES_IN as jwt.SignOptions['expiresIn']) ||
+        '7d',
     });
 
     return {
       accessToken,
       refreshToken,
+      familyId: tokenFamilyId,
     };
   }
+
   verifyAccessToken(token: string): TokenPayload {
     return jwt.verify(token, this.accessSecret) as TokenPayload;
   }
 
-  verifyRefreshToken(token: string): TokenPayload {
-    return jwt.verify(token, this.refreshSecret) as TokenPayload;
+  verifyRefreshToken(token: string): RefreshTokenPayload {
+    return jwt.verify(token, this.refreshSecret) as RefreshTokenPayload;
   }
 }
