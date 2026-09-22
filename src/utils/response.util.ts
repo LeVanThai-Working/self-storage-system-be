@@ -3,6 +3,10 @@ import type {
   ApiErrorResponse,
   ApiResponse,
 } from '../common/types/apiResponse.type.ts';
+import type {
+  PaginatedData,
+  PaginationMeta,
+} from '../common/types/pagination.type.ts';
 
 export const ResponseUtils = {
   success<T>(
@@ -16,6 +20,24 @@ export const ResponseUtils = {
       statusCode,
       message,
       data,
+    });
+  },
+
+  paginated<T>(
+    res: Response,
+    statusCode: number,
+    message: string,
+    items: T[],
+    pagination: PaginationMeta
+  ): Response<ApiResponse<PaginatedData<T>>> {
+    return res.status(statusCode).json({
+      success: true,
+      statusCode,
+      message,
+      data: {
+        items,
+        pagination,
+      },
     });
   },
 

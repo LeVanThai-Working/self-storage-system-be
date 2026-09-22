@@ -15,15 +15,23 @@ export const errorMiddleware: ErrorRequestHandler = (err, req, res, _next) => {
     message = err.messageCode;
 
     // find ZodError if it's passed to params of AppError
-    const zodError = err.params.find((p) => p instanceof ZodError) as
-      ZodError | undefined;
-    if (zodError) {
+    const zodError = err.params.find(
+      (p) =>
+        p instanceof ZodError ||
+        (p &&
+          typeof p === 'object' &&
+          ('issues' in p || (p as Error).name === 'ZodError'))
+    ) as ZodError | undefined;
+
+    if (zodError?.issues) {
       errors = zodError.issues.map((issue) => ({
         field: issue.path.join('.'),
         message: issue.message,
       }));
     } else if (err.params.length > 0) {
-      errors = err.params;
+      errors = err.params.map((p) =>
+        p instanceof Error ? { message: p.message } : p
+      );
     }
   }
   // Http Errors
