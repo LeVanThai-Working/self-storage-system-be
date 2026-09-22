@@ -7,6 +7,8 @@ import { connectRedis } from './config/redis.config.ts';
 import createHttpError from 'http-errors';
 import passport from 'passport';
 import './config/passport.config.ts';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger.config.ts';
 import { errorMiddleware } from './middlewares/error.middleware.ts';
 import userRouter from './modules/user/user.route.ts';
 import authRouter from './modules/auth/auth.route.ts';
@@ -35,6 +37,7 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello World!');
 });
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/users', userRouter);
 app.use('/auth', authRouter);
 
