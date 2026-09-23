@@ -26,3 +26,13 @@ export const MESSAGE_CODE = {
   // Invalid Token
   MESSAGE_CODE_201: 'MESSAGE_CODE_201',
 } as const;
+
+export const ERROR_MESSAGE = {
+  [MESSAGE_CODE.MESSAGE_CODE_101]: 'Request is invalid.',
+  [MESSAGE_CODE.MESSAGE_CODE_102]: 'Authentication is required.',
+  [MESSAGE_CODE.MESSAGE_CODE_103]: 'Access is denied.',
+  [MESSAGE_CODE.MESSAGE_CODE_104]: '{0} was not found.',
+  [MESSAGE_CODE.MESSAGE_CODE_105]: '{0} already exists.',
+  [MESSAGE_CODE.MESSAGE_CODE_106]: 'An internal server error occurred.',
+  [MESSAGE_CODE.MESSAGE_CODE_201]: 'The token is invalid or has expired.',
+} as const;

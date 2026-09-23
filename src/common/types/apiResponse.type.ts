@@ -8,6 +8,7 @@ export interface ApiResponse<T> {
 export interface ApiErrorResponse {
   success: false;
   statusCode: number;
+  errorCode: string;
   message: string;
   errors?: unknown;
   path: string;

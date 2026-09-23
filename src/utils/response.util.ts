@@ -44,6 +44,7 @@ export const ResponseUtils = {
   error(
     res: Response,
     statusCode: number,
+    errorCode: string,
     message: string,
     options: {
       path: string;
@@ -54,6 +55,7 @@ export const ResponseUtils = {
     return res.status(statusCode).json({
       success: false,
       statusCode,
+      errorCode,
       message,
       ...(options.errors ? { errors: options.errors } : {}),
       path: options.path,

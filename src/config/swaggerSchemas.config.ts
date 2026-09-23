@@ -32,6 +32,7 @@ export const paginationMetaSchema = z.object({
 export const apiErrorResponseSchema = z.object({
   success: z.literal(false),
   statusCode: z.number(),
+  errorCode: z.string(),
   message: z.string(),
   errors: z.unknown().optional(),
   path: z.string(),
