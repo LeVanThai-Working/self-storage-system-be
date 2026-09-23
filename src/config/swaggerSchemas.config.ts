@@ -32,6 +32,7 @@ export const paginationMetaSchema = z.object({
 export const apiErrorResponseSchema = z.object({
   success: z.literal(false),
   statusCode: z.number(),
+  messageCode: z.string(),
   message: z.string(),
   errors: z.unknown().optional(),
   path: z.string(),
@@ -41,6 +42,7 @@ export const apiErrorResponseSchema = z.object({
 export const apiSuccessMessageSchema = z.object({
   success: z.literal(true),
   statusCode: z.number().default(200),
+  messageCode: z.string(),
   message: z.string(),
   data: z.record(z.string(), z.unknown()).nullable().optional(),
 });
@@ -58,6 +60,7 @@ export function createApiResponseSchema<T extends z.ZodType>(dataSchema: T) {
   return z.object({
     success: z.boolean().default(true),
     statusCode: z.number().default(200),
+    messageCode: z.string(),
     message: z.string(),
     data: dataSchema,
   });
@@ -72,6 +75,7 @@ export function createPaginatedResponseSchema<T extends z.ZodType>(
   return z.object({
     success: z.boolean().default(true),
     statusCode: z.number().default(200),
+    messageCode: z.string(),
     message: z.string(),
     data: z.object({
       items: z.array(itemSchema),

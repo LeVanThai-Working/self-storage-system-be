@@ -32,7 +32,9 @@ export class UserController {
 
   createUser = async (req: Request, res: Response): Promise<void> => {
     const user = await this.userService.createUser(req.body);
-    ResponseUtils.success(res, 201, MESSAGE_CODE.MESSAGE_CODE_002, user);
+    ResponseUtils.success(res, 201, MESSAGE_CODE.MESSAGE_CODE_002, user, [
+      'User',
+    ]);
   };
 
   updateUser = async (req: Request, res: Response): Promise<void> => {
@@ -40,7 +42,9 @@ export class UserController {
       req.params.id as string,
       req.body
     );
-    ResponseUtils.success(res, 200, MESSAGE_CODE.MESSAGE_CODE_003, user);
+    ResponseUtils.success(res, 200, MESSAGE_CODE.MESSAGE_CODE_003, user, [
+      'User',
+    ]);
   };
 
   deleteUser = async (req: Request, res: Response): Promise<void> => {

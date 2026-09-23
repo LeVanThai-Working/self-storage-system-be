@@ -48,4 +48,10 @@ app.use((req, res, next) => {
 // Error middleware
 app.use(errorMiddleware);
 
-app.listen(process.env.PORT);
+// Start the server
+const port = Number(process.env.PORT) || 5000;
+app.listen(port, () => {
+  const swaggerUrl = `http://localhost:${port}/api-docs/`;
+  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Swagger UI is available at ${swaggerUrl}`);
+});
