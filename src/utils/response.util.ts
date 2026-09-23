@@ -7,18 +7,21 @@ import type {
   PaginatedData,
   PaginationMeta,
 } from '../common/types/pagination.type.ts';
+import { formatMessage } from './format.util.ts';
 
 export const ResponseUtils = {
   success<T>(
     res: Response,
     statusCode: number,
-    message: string,
-    data: T
+    messageCode: string,
+    data: T,
+    args: string[] = []
   ): Response<ApiResponse<T>> {
     return res.status(statusCode).json({
       success: true,
       statusCode,
-      message,
+      messageCode,
+      message: formatMessage(messageCode, args),
       data,
     });
   },
@@ -26,14 +29,16 @@ export const ResponseUtils = {
   paginated<T>(
     res: Response,
     statusCode: number,
-    message: string,
+    messageCode: string,
     items: T[],
-    pagination: PaginationMeta
+    pagination: PaginationMeta,
+    args: string[] = []
   ): Response<ApiResponse<PaginatedData<T>>> {
     return res.status(statusCode).json({
       success: true,
       statusCode,
-      message,
+      messageCode,
+      message: formatMessage(messageCode, args),
       data: {
         items,
         pagination,
@@ -44,19 +49,21 @@ export const ResponseUtils = {
   error(
     res: Response,
     statusCode: number,
-    errorCode: string,
-    message: string,
+    messageCode: string,
     options: {
       path: string;
       errors?: unknown;
       stack?: string;
+      args?: string[];
+      message?: string;
     }
   ): Response<ApiErrorResponse> {
+    const args = options.args || [];
     return res.status(statusCode).json({
       success: false,
       statusCode,
-      errorCode,
-      message,
+      messageCode,
+      message: options.message || formatMessage(messageCode, args),
       ...(options.errors ? { errors: options.errors } : {}),
       path: options.path,
       timestamp: new Date().toISOString(),

@@ -6,13 +6,19 @@ export const createUserSchema = z.object({
   name: z.string().min(2).max(50),
   email: z.email(),
   password: z.string().min(6).max(100),
-  phoneNumber: z.string().min(10).max(11).optional(),
+  phoneNumber: z
+    .string()
+    .regex(/^0(3|5|7|8|9)[0-9]{8}$/, 'Invalid phone number format')
+    .optional(),
   role: z.enum(RoleEnum).optional(),
 });
 
 export const updateUserSchema = z.object({
   name: z.string().min(2).max(50).optional(),
-  phoneNumber: z.string().min(10).max(11).optional(),
+  phoneNumber: z
+    .string()
+    .regex(/^0(3|5|7|8|9)[0-9]{8}$/, 'Invalid phone number format')
+    .optional(),
   role: z.enum(RoleEnum).optional(),
   status: z.enum(UserStatusEnum).optional(),
 });

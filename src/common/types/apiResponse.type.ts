@@ -1,6 +1,7 @@
 export interface ApiResponse<T> {
   success: boolean;
   statusCode: number;
+  messageCode: string;
   message: string;
   data: T;
 }
@@ -8,7 +9,7 @@ export interface ApiResponse<T> {
 export interface ApiErrorResponse {
   success: false;
   statusCode: number;
-  errorCode: string;
+  messageCode: string;
   message: string;
   errors?: unknown;
   path: string;

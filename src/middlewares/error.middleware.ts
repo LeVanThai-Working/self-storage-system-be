@@ -2,18 +2,19 @@ import type { ErrorRequestHandler } from 'express';
 import createHttpError from 'http-errors';
 import { ZodError } from 'zod';
 import { AppError } from '../common/errors/appError.error.ts';
+import { MESSAGE_CODE } from '../common/consts/messageCode.const.ts';
 import { ResponseUtils } from '../utils/response.util.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const errorMiddleware: ErrorRequestHandler = (err, req, res, _next) => {
   let statusCode = 500;
-  let errorCode = 'INTERNAL_SERVER_ERROR';
+  let messageCode: string = MESSAGE_CODE.MESSAGE_CODE_106;
   let message = 'Internal Server Error';
   let errors: unknown = undefined;
 
   if (err instanceof AppError) {
     statusCode = err.statusCode;
-    errorCode = err.errorCode;
+    messageCode = err.messageCode;
     message = err.message;
 
     // find ZodError if it's passed to params of AppError
@@ -39,7 +40,7 @@ export const errorMiddleware: ErrorRequestHandler = (err, req, res, _next) => {
   // Http Errors
   else if (createHttpError.isHttpError(err)) {
     statusCode = err.statusCode;
-    errorCode = 'HTTP_ERROR';
+    messageCode = MESSAGE_CODE.MESSAGE_CODE_101;
     message = err.message;
   }
   // Other Errors
@@ -50,9 +51,10 @@ export const errorMiddleware: ErrorRequestHandler = (err, req, res, _next) => {
     }
   }
 
-  ResponseUtils.error(res, statusCode, errorCode, message, {
+  ResponseUtils.error(res, statusCode, messageCode, {
     path: req.originalUrl,
     errors,
     stack: err.stack,
+    message,
   });
 };

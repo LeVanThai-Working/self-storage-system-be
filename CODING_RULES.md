@@ -81,10 +81,10 @@ class UserController {}
 ### [MUST] [EXISTING] Use camelCase for functions, methods, variables, and fields
 
 ```ts
-findUserById()
-createUser()
-userRepository
-refreshToken
+findUserById();
+createUser();
+userRepository;
+refreshToken;
 ```
 
 **Evidence:** `src/modules/user/user.service.ts`, `src/modules/auth/auth.controller.ts`.
@@ -354,7 +354,7 @@ export const userController = new UserController(userService);
 validateRequest({
   params: userIdParamSchema,
   body: updateUserSchema,
-})
+});
 ```
 
 **Evidence:** `src/modules/user/user.route.ts`, `src/middlewares/validate.middleware.ts`.
@@ -375,7 +375,13 @@ validateRequest({
 ### [MUST] [EXISTING] Use `ResponseUtils.paginated` for list responses
 
 ```ts
-ResponseUtils.paginated(res, 200, MESSAGE_CODE.MESSAGE_CODE_001, items, pagination);
+ResponseUtils.paginated(
+  res,
+  200,
+  MESSAGE_CODE.MESSAGE_CODE_001,
+  items,
+  pagination
+);
 ```
 
 Pagination data contains `items` and `pagination` with page, limit, total, and navigation fields.
@@ -776,34 +782,34 @@ authRouter.get('/me', authMiddleware, authController.getMe);
 
 ## Summary Table
 
-| Category | Rule | Level | Status | Evidence |
-|---|---|---:|---|---|
-| Structure | Feature code lives in `src/modules/<domain>` | MUST | EXISTING | `src/modules/auth`, `src/modules/user` |
-| Structure | Shared code uses `common`, `config`, `middlewares`, and `utils` | MUST | EXISTING | `src/` |
-| Naming | Role-based TypeScript files use lowercase dotted names | MUST | EXISTING | `src/modules/`, `src/middlewares/` |
-| Naming | Classes use PascalCase | MUST | EXISTING | `src/modules/*/*.service.ts` |
-| Naming | Methods and variables use camelCase | MUST | EXISTING | `src/modules/*` |
-| Naming | Constants use SCREAMING_SNAKE_CASE | MUST | EXISTING | `src/common/consts/messageCode.const.ts` |
-| Import | Use ESM with explicit `.ts` relative extensions | MUST | EXISTING | `package.json`, `src/**/*.ts` |
-| Import | Use `import type` for type-only imports | MUST | EXISTING | `src/middlewares`, `src/utils` |
-| TypeScript | Keep strict mode enabled | MUST | EXISTING | `tsconfig.json` |
-| TypeScript | Infer request types from Zod schemas | MUST | EXISTING | `src/modules/*/schemas/*.request.schema.ts` |
-| Controller | Keep HTTP handling in controllers | MUST | EXISTING | `src/modules/*/*.controller.ts` |
-| Service | Keep business rules in services | MUST | EXISTING | `src/modules/*/*.service.ts` |
-| Data access | Keep Mongoose queries in repositories | MUST | EXISTING | `src/modules/*/*.repository.ts` |
-| DI | Compose dependencies in containers | MUST | EXISTING | `src/modules/*/*.container.ts` |
-| Request | Validate at route boundary with Zod | MUST | EXISTING | `src/middlewares/validate.middleware.ts` |
-| Response | Use `ResponseUtils` envelopes | MUST | EXISTING | `src/utils/response.util.ts` |
-| Errors | Throw `AppError` with `MESSAGE_CODE` | MUST | EXISTING | `src/common/errors`, `src/common/consts` |
-| Auth | Runtime protection requires middleware | MUST | EXISTING | `src/middlewares/auth.middleware.ts` |
-| Swagger | Keep OpenAPI security aligned with runtime middleware | MUST | EXISTING | `src/modules/auth/auth.route.ts` |
-| Database | Preserve Mongoose soft-delete and TTL behavior | MUST | EXISTING | `src/modules/user/user.model.ts`, `src/modules/auth/otp.model.ts` |
-| Logging | Never log credentials or tokens | MUST | EXISTING | `src/config`, `src/middlewares` |
-| Testing | Test framework and naming are not established | SHOULD | PROPOSED | No test files/scripts found |
-| Formatting | Use Prettier and ESLint configuration | MUST | EXISTING | `.prettierrc`, `eslint.config.js` |
-| Git | Use `[PREFIX] (scope): message` commits | MUST | EXISTING | `git log`, `README.md` |
-| Import ordering | Adopt an ordering rule | SHOULD | PROPOSED | No configured rule |
-| Logging library | Adopt structured logging | OPTIONAL | PROPOSED | No logger package/config found |
+| Category        | Rule                                                            |    Level | Status   | Evidence                                                          |
+| --------------- | --------------------------------------------------------------- | -------: | -------- | ----------------------------------------------------------------- |
+| Structure       | Feature code lives in `src/modules/<domain>`                    |     MUST | EXISTING | `src/modules/auth`, `src/modules/user`                            |
+| Structure       | Shared code uses `common`, `config`, `middlewares`, and `utils` |     MUST | EXISTING | `src/`                                                            |
+| Naming          | Role-based TypeScript files use lowercase dotted names          |     MUST | EXISTING | `src/modules/`, `src/middlewares/`                                |
+| Naming          | Classes use PascalCase                                          |     MUST | EXISTING | `src/modules/*/*.service.ts`                                      |
+| Naming          | Methods and variables use camelCase                             |     MUST | EXISTING | `src/modules/*`                                                   |
+| Naming          | Constants use SCREAMING_SNAKE_CASE                              |     MUST | EXISTING | `src/common/consts/messageCode.const.ts`                          |
+| Import          | Use ESM with explicit `.ts` relative extensions                 |     MUST | EXISTING | `package.json`, `src/**/*.ts`                                     |
+| Import          | Use `import type` for type-only imports                         |     MUST | EXISTING | `src/middlewares`, `src/utils`                                    |
+| TypeScript      | Keep strict mode enabled                                        |     MUST | EXISTING | `tsconfig.json`                                                   |
+| TypeScript      | Infer request types from Zod schemas                            |     MUST | EXISTING | `src/modules/*/schemas/*.request.schema.ts`                       |
+| Controller      | Keep HTTP handling in controllers                               |     MUST | EXISTING | `src/modules/*/*.controller.ts`                                   |
+| Service         | Keep business rules in services                                 |     MUST | EXISTING | `src/modules/*/*.service.ts`                                      |
+| Data access     | Keep Mongoose queries in repositories                           |     MUST | EXISTING | `src/modules/*/*.repository.ts`                                   |
+| DI              | Compose dependencies in containers                              |     MUST | EXISTING | `src/modules/*/*.container.ts`                                    |
+| Request         | Validate at route boundary with Zod                             |     MUST | EXISTING | `src/middlewares/validate.middleware.ts`                          |
+| Response        | Use `ResponseUtils` envelopes                                   |     MUST | EXISTING | `src/utils/response.util.ts`                                      |
+| Errors          | Throw `AppError` with `MESSAGE_CODE`                            |     MUST | EXISTING | `src/common/errors`, `src/common/consts`                          |
+| Auth            | Runtime protection requires middleware                          |     MUST | EXISTING | `src/middlewares/auth.middleware.ts`                              |
+| Swagger         | Keep OpenAPI security aligned with runtime middleware           |     MUST | EXISTING | `src/modules/auth/auth.route.ts`                                  |
+| Database        | Preserve Mongoose soft-delete and TTL behavior                  |     MUST | EXISTING | `src/modules/user/user.model.ts`, `src/modules/auth/otp.model.ts` |
+| Logging         | Never log credentials or tokens                                 |     MUST | EXISTING | `src/config`, `src/middlewares`                                   |
+| Testing         | Test framework and naming are not established                   |   SHOULD | PROPOSED | No test files/scripts found                                       |
+| Formatting      | Use Prettier and ESLint configuration                           |     MUST | EXISTING | `.prettierrc`, `eslint.config.js`                                 |
+| Git             | Use `[PREFIX] (scope): message` commits                         |     MUST | EXISTING | `git log`, `README.md`                                            |
+| Import ordering | Adopt an ordering rule                                          |   SHOULD | PROPOSED | No configured rule                                                |
+| Logging library | Adopt structured logging                                        | OPTIONAL | PROPOSED | No logger package/config found                                    |
 
 ## Evidence Gaps
 
