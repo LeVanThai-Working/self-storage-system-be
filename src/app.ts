@@ -10,8 +10,8 @@ import './config/passport.config.ts';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.config.ts';
 import { errorMiddleware } from './middlewares/error.middleware.ts';
-import userRouter from './modules/user/user.route.ts';
 import authRouter from './modules/auth/auth.route.ts';
+import { RegisterRoutes } from './routes/routes.ts';
 
 const app: Express = express();
 
@@ -37,8 +37,13 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello World!');
 });
 
+// Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use('/users', userRouter);
+
+// tsoa Routes generated from Controller Annotations
+RegisterRoutes(app);
+
+// Additional custom routes (e.g. Google OAuth redirect)
 app.use('/auth', authRouter);
 
 // 404 handler
