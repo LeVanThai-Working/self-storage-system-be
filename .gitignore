@@ -6,3 +6,4 @@ coverage/
 logs/
 *.log
 src/modules/auth/oauth2.auth.ts
+GEMINI.md
