@@ -6,3 +6,6 @@ coverage/
 logs/
 *.log
 src/modules/auth/oauth2.auth.ts
+
+# Agent memory (personal per developer, do not commit)
+.agents/memory/
