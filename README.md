@@ -40,9 +40,13 @@ self-storage-system-be/
 │   ├── common/          # Shared global definitions (constants, enums, errors, schemas, types, templates)
 │   ├── config/          # Infrastructure setup (MongoDB, Redis, Mail, Passport, Swagger)
 │   ├── middlewares/     # Express middlewares (auth, validation, error handling)
-│   ├── modules/         # Feature modules — each contains controller, service, repository, model, container, schemas
+│   ├── modules/         # Each contains controller, service, repository, model, container, schemas
 │   │   ├── auth/        # Authentication: OTP, register, login, Google OAuth, JWT refresh/logout
-│   │   └── user/        # User management: CRUD, search, pagination, soft delete
+│   │      ├── schemas/  # Schemas for request and response
+│   │      ├── .controller
+│   │      ├── .container
+│   │      ├── .service
+│   │      ├── .model
 │   ├── routes/          # Auto-generated Express routes by tsoa
 │   ├── utils/           # Reusable helpers (JWT, cookie, mail, response, pagination, validation)
 │   ├── ioc.ts           # IoC container — resolves controller instances for tsoa
