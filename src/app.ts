@@ -14,6 +14,7 @@ import authRouter from './modules/auth/auth.route.ts';
 import { RegisterRoutes } from './routes/routes.ts';
 
 const app: Express = express();
+const port = Number(process.env.PORT) || 5000;
 
 // Connect to Database & Redis
 const initServices = async () => {
@@ -38,7 +39,34 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// swagger-ui-express@5 + swagger-ui-dist@5 requires:
+// 1. CSP header with unsafe-eval (swagger-ui-bundle uses eval internally)
+// 2. Server URL must be absolute so Swagger UI OAS3 URL builder doesn't fail
+app.use('/api-docs', (_req: Request, res: Response, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-eval' blob:; worker-src blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
+  );
+  next();
+});
+
+const specWithAbsoluteServer = {
+  ...(swaggerSpec as Record<string, unknown>),
+  servers: [
+    { url: `http://localhost:${port}`, description: 'Development server' },
+  ],
+};
+
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(specWithAbsoluteServer, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      tryItOutEnabled: true,
+    },
+  })
+);
 
 // tsoa Routes generated from Controller Annotations
 RegisterRoutes(app);
@@ -54,7 +82,6 @@ app.use((req, res, next) => {
 app.use(errorMiddleware);
 
 // Start the server
-const port = Number(process.env.PORT) || 5000;
 app.listen(port, () => {
   const swaggerUrl = `http://localhost:${port}/api-docs/`;
   console.log(`Server is running at http://localhost:${port}`);
