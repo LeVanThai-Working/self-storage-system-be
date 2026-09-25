@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import type { UserRepository } from './user.repository.ts';
+import type { ProfileRepository } from '../profile/profile.repository.ts';
 import type { AuthRedisService } from '../auth/auth.redis.service.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
@@ -24,7 +25,8 @@ import {
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly authRedisService?: AuthRedisService
+    private readonly authRedisService?: AuthRedisService,
+    private readonly profileRepository?: ProfileRepository
   ) {}
 
   private formatUser(user: unknown): unknown {
@@ -107,6 +109,11 @@ export class UserService {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+    }
+
+    // Cascade delete: remove profile before soft-deleting user
+    if (this.profileRepository) {
+      await this.profileRepository.deleteByUserId(id);
     }
 
     await this.userRepository.softDeleteUser(id, deletedBy);

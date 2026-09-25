@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
 import type { AuthRepository } from './auth.repository.ts';
 import type { UserRepository } from '../user/user.repository.ts';
+import type { ProfileRepository } from '../profile/profile.repository.ts';
 import type { MailUtil } from '../../utils/mail.util.ts';
 import type { JwtUtil } from '../../utils/jwt.util.ts';
 import type { AuthRedisService } from './auth.redis.service.ts';
@@ -24,6 +25,7 @@ export class AuthService {
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly userRepository: UserRepository,
+    private readonly profileRepository: ProfileRepository,
     private readonly mailUtil: MailUtil,
     private readonly jwtUtil: JwtUtil,
     private readonly authRedisService: AuthRedisService
@@ -65,6 +67,9 @@ export class AuthService {
       status: UserStatusEnum.ACTIVE,
       isEmailVerified: true,
     });
+
+    // Auto-create empty profile for new local user
+    await this.profileRepository.upsertByUserId(user._id.toString(), {});
 
     await this.authRepository.deleteOtp(data.email);
 
