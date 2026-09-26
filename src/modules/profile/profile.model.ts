@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 import { GenderEnum } from '../../common/enums/user.enum.ts';
+import type { SoftDeleteDocument, SoftDeleteModel } from 'mongoose-delete';
+import MongooseDelete from 'mongoose-delete';
 
-export interface IProfile {
+export interface IProfile extends SoftDeleteDocument {
   _id: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   avatarUrl?: string;
@@ -33,4 +35,13 @@ const profileSchema = new mongoose.Schema<IProfile>(
   }
 );
 
-export const Profile = mongoose.model<IProfile>('Profile', profileSchema);
+profileSchema.plugin(MongooseDelete, {
+  overrideMethods: 'all',
+  deletedAt: true,
+  deletedBy: true,
+});
+
+export const Profile = mongoose.model<IProfile, SoftDeleteModel<IProfile>>(
+  'Profile',
+  profileSchema
+);
