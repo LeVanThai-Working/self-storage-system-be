@@ -1,9 +1,9 @@
 import type mongoose from 'mongoose';
-import type { Model } from 'mongoose';
 import type { IProfile } from './profile.model.ts';
+import type { SoftDeleteModel } from 'mongoose-delete';
 
 export class ProfileRepository {
-  constructor(private readonly profile: Model<IProfile>) {}
+  constructor(private readonly profile: SoftDeleteModel<IProfile>) {}
 
   async findByUserId(userId: string): Promise<IProfile | null> {
     return this.profile.findOne({ userId });
@@ -20,9 +20,9 @@ export class ProfileRepository {
     ) as Promise<IProfile>;
   }
 
-  async deleteByUserId(
+  async softDeleteByUserId(
     userId: string | mongoose.Types.ObjectId
   ): Promise<void> {
-    await this.profile.deleteOne({ userId });
+    await this.profile.delete({ userId });
   }
 }
