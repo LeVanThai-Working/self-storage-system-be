@@ -19,6 +19,7 @@ export interface IUser extends SoftDeleteDocument {
   authProvider: AuthProviderEnum;
   status: UserStatusEnum;
   isEmailVerified: boolean;
+  assignedFacilityId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +52,11 @@ const userSchema = new mongoose.Schema<IUser>(
       required: true,
     },
     isEmailVerified: { type: Boolean, default: false },
+    assignedFacilityId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Facility',
+      default: null,
+    },
   },
   {
     timestamps: true,
