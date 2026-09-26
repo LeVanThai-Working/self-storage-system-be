@@ -113,7 +113,7 @@ export class UserService {
 
     // Cascade delete: remove profile before soft-deleting user
     if (this.profileRepository) {
-      await this.profileRepository.deleteByUserId(id);
+      await this.profileRepository.softDeleteByUserId(id);
     }
 
     await this.userRepository.softDeleteUser(id, deletedBy);
