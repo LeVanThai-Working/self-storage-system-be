@@ -97,7 +97,7 @@ export class AuthService {
   async login(data: LoginRequest) {
     const user = await this.userRepository.findByEmail(data.email);
     if (!user) {
-      throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
+      throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_107);
     }
 
     if (user.authProvider !== AuthProviderEnum.LOCAL) {
@@ -105,12 +105,12 @@ export class AuthService {
     }
 
     if (!user.password) {
-      throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
+      throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_107);
     }
 
     const isMatch = await bcrypt.compare(data.password, user.password);
     if (!isMatch) {
-      throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
+      throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_107);
     }
 
     if (user.status === UserStatusEnum.BANNED) {
@@ -228,5 +228,81 @@ export class AuthService {
         }
       }
     }
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+    }
+
+    if (user.authProvider !== AuthProviderEnum.LOCAL) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+
+    await this.authRepository.deleteOtp(email);
+    await this.authRepository.createOtp(email, otp);
+    await this.mailUtil.sendResetPasswordEmail(email, otp);
+  }
+
+  async resetPassword(
+    email: string,
+    otp: string,
+    newPassword: string
+  ): Promise<void> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+    }
+
+    if (user.authProvider !== AuthProviderEnum.LOCAL) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    const latestOtp = await this.authRepository.findLatestOtp(email);
+    if (!latestOtp || latestOtp.otp !== otp) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userRepository.updatePassword(
+      user._id.toString(),
+      hashedPassword
+    );
+
+    await this.authRepository.deleteOtp(email);
+
+    await this.authRedisService.revokeAllUserFamilies(user._id.toString());
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+    }
+
+    if (user.authProvider !== AuthProviderEnum.LOCAL) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    if (!user.password) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_107);
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userRepository.updatePassword(userId, hashedPassword);
+
+    await this.authRedisService.revokeAllUserFamilies(userId);
   }
 }
