@@ -4,6 +4,7 @@ import {
   Tags,
   Get,
   Post,
+  Patch,
   Body,
   SuccessResponse,
   Response,
@@ -26,9 +27,15 @@ import {
   sendOtpSchema,
   registerSchema,
   loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
   type SendOtpRequest,
   type RegisterRequest,
   type LoginRequest,
+  type ForgotPasswordRequest,
+  type ResetPasswordRequest,
+  type ChangePasswordRequest,
 } from './schemas/auth.request.schema.ts';
 import type { AuthUserResponse } from './schemas/auth.response.schema.ts';
 import type {
@@ -199,4 +206,79 @@ export class AuthController extends Controller {
     setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
     res.redirect('/auth/me');
   };
+
+  @Post('forgot-password')
+  @Middlewares(validateRequest({ body: forgotPasswordSchema }))
+  @Response<ApiErrorResponse>(400, 'Google OAuth account cannot reset password')
+  @Response<ApiErrorResponse>(404, 'User not found')
+  public async forgotPassword(
+    @Body() body: ForgotPasswordRequest
+  ): Promise<ApiResponse<{ message: string }>> {
+    await this.authService.forgotPassword(body.email);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: {
+        message: 'Password reset OTP has been sent to your email.',
+      },
+    };
+  }
+
+  @Post('reset-password')
+  @Middlewares(validateRequest({ body: resetPasswordSchema }))
+  @Response<ApiErrorResponse>(400, 'Invalid OTP or Google OAuth account')
+  @Response<ApiErrorResponse>(404, 'User not found')
+  public async resetPassword(
+    @Body() body: ResetPasswordRequest
+  ): Promise<ApiResponse<{ message: string }>> {
+    await this.authService.resetPassword(
+      body.email,
+      body.otp,
+      body.newPassword
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: {
+        message: 'Password has been reset successfully. Please log in again.',
+      },
+    };
+  }
+
+  @Patch('change-password')
+  @Security('bearerAuth')
+  @Security('cookieAuth')
+  @Middlewares(validateRequest({ body: changePasswordSchema }))
+  @Response<ApiErrorResponse>(
+    400,
+    'Current password is incorrect or Google OAuth account'
+  )
+  @Response<ApiErrorResponse>(404, 'User not found')
+  public async changePassword(
+    @Body() body: ChangePasswordRequest,
+    @Request() req: ExpressRequest
+  ): Promise<ApiResponse<{ message: string }>> {
+    const user = req.user as IUser;
+    await this.authService.changePassword(
+      user._id.toString(),
+      body.currentPassword,
+      body.newPassword
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: {
+        message: 'Password changed successfully. Please log in again.',
+      },
+    };
+  }
 }

@@ -20,6 +20,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_105: 'MESSAGE_CODE_105',
   // Internal Server
   MESSAGE_CODE_106: 'MESSAGE_CODE_106',
+  // Invalid Email Or Password
+  MESSAGE_CODE_107: 'MESSAGE_CODE_107',
 
   // {0} Is Required
   MESSAGE_CODE_200: 'MESSAGE_CODE_200',
@@ -38,6 +40,7 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_104: '{0} Not Found',
   MESSAGE_CODE_105: '{0} Already Exists',
   MESSAGE_CODE_106: 'Internal Server Error',
+  MESSAGE_CODE_107: 'Invalid Email Or Password',
   MESSAGE_CODE_200: '{0} Is Required',
   MESSAGE_CODE_201: 'Invalid Token',
 };
