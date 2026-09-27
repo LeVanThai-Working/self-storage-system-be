@@ -11,7 +11,7 @@ import {
   Path,
   SuccessResponse,
   Response,
-  Security,
+  // Security,
   Middlewares,
   Request,
 } from 'tsoa';
@@ -39,7 +39,7 @@ import type {
 } from '../../common/types/apiResponse.type.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 
-@Tags('Facilities')
+@Tags('facilities')
 @Route('facilities')
 export class FacilityController extends Controller {
   constructor(private readonly facilityService: FacilityService) {
@@ -83,8 +83,8 @@ export class FacilityController extends Controller {
   }
 
   @Post('')
-  @Security('bearerAuth')
-  @Security('cookieAuth')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
   @SuccessResponse(201, 'Facility created successfully')
   @Middlewares(validateRequest({ body: createFacilitySchema }))
   @Response<ApiErrorResponse>(
@@ -107,8 +107,8 @@ export class FacilityController extends Controller {
   }
 
   @Patch('{id}')
-  @Security('bearerAuth')
-  @Security('cookieAuth')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
   @Middlewares(
     validateRequest({
       params: facilityIdParamSchema,
@@ -133,8 +133,8 @@ export class FacilityController extends Controller {
   }
 
   @Delete('{id}')
-  @Security('bearerAuth')
-  @Security('cookieAuth')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
   @Middlewares(validateRequest({ params: facilityIdParamSchema }))
   @Response<ApiErrorResponse>(400, 'Invalid ID format')
   @Response<ApiErrorResponse>(404, 'Facility not found')
@@ -155,8 +155,8 @@ export class FacilityController extends Controller {
   }
 
   @Patch('{id}/assign-manager')
-  @Security('bearerAuth')
-  @Security('cookieAuth')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
   @Middlewares(
     validateRequest({
       params: facilityIdParamSchema,

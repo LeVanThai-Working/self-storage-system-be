@@ -6,6 +6,8 @@ import {  fetchMiddlewares, ExpressTemplateService } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { UserController } from './../modules/user/user.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { UnitTypeController } from './../modules/unitType/unitType.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ProfileController } from './../modules/profile/profile.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { FacilityController } from './../modules/facility/facility.controller.js';
@@ -149,6 +151,89 @@ const models: TsoaRoute.Models = {
             "data": {"dataType":"enum","enums":[null],"required":true},
         },
         "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UnitTypeStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["active","inactive"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UnitTypeCategoryEnum": {
+        "dataType": "refEnum",
+        "enums": ["locker","small","medium","large","climate_controlled"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofunitTypeResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"basePrice":{"dataType":"double"},"features":{"dataType":"array","array":{"dataType":"string"}},"images":{"dataType":"array","array":{"dataType":"string"}},"category":{"ref":"UnitTypeCategoryEnum"},"description":{"dataType":"string"},"status":{"ref":"UnitTypeStatusEnum","required":true},"volume":{"dataType":"double","required":true},"area":{"dataType":"double","required":true},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}},"required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UnitTypeResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofunitTypeResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedData_UnitTypeResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "items": {"dataType":"array","array":{"dataType":"refAlias","ref":"UnitTypeResponse"},"required":true},
+            "pagination": {"ref":"PaginationMeta","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedData_UnitTypeResponse__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedData_UnitTypeResponse_","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofunitTypeQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"maxPrice":{"dataType":"double"},"minPrice":{"dataType":"double"},"maxArea":{"dataType":"double"},"minArea":{"dataType":"double"},"category":{"ref":"UnitTypeCategoryEnum"},"status":{"ref":"UnitTypeStatusEnum"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["name"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["updatedAt"]},{"dataType":"enum","enums":["area"]},{"dataType":"enum","enums":["volume"]},{"dataType":"enum","enums":["basePrice"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UnitTypeQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofunitTypeQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_UnitTypeResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"UnitTypeResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcreateUnitTypeSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"basePrice":{"dataType":"double"},"features":{"dataType":"array","array":{"dataType":"string"}},"images":{"dataType":"array","array":{"dataType":"string"}},"category":{"ref":"UnitTypeCategoryEnum"},"description":{"dataType":"string"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}},"required":true},"name":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateUnitTypeRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcreateUnitTypeSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofupdateUnitTypeSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"basePrice":{"dataType":"double"},"features":{"dataType":"array","array":{"dataType":"string"}},"images":{"dataType":"array","array":{"dataType":"string"}},"status":{"ref":"UnitTypeStatusEnum"},"category":{"ref":"UnitTypeCategoryEnum"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"description":{"dataType":"string"},"name":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UpdateUnitTypeRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofupdateUnitTypeSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "GenderEnum": {
@@ -600,6 +685,183 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsUnitTypeController_findAllUnitType: Record<string, TsoaRoute.ParameterSchema> = {
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"maxPrice":{"dataType":"double"},"minPrice":{"dataType":"double"},"maxArea":{"dataType":"double"},"minArea":{"dataType":"double"},"category":{"ref":"UnitTypeCategoryEnum"},"status":{"ref":"UnitTypeStatusEnum"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["name"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["updatedAt"]},{"dataType":"enum","enums":["area"]},{"dataType":"enum","enums":["volume"]},{"dataType":"enum","enums":["basePrice"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/unit-types',
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController)),
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController.prototype.findAllUnitType)),
+
+            async function UnitTypeController_findAllUnitType(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnitTypeController_findAllUnitType, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<UnitTypeController>(UnitTypeController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'findAllUnitType',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsUnitTypeController_findUnitTypeById: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/unit-types/:id',
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController)),
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController.prototype.findUnitTypeById)),
+
+            async function UnitTypeController_findUnitTypeById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnitTypeController_findUnitTypeById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<UnitTypeController>(UnitTypeController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'findUnitTypeById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsUnitTypeController_createUnitType: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"CreateUnitTypeRequest"},
+        };
+        app.post('/unit-types',
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController)),
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController.prototype.createUnitType)),
+
+            async function UnitTypeController_createUnitType(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnitTypeController_createUnitType, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<UnitTypeController>(UnitTypeController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createUnitType',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 201,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsUnitTypeController_updateUnitType: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"UpdateUnitTypeRequest"},
+        };
+        app.patch('/unit-types/:id',
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController)),
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController.prototype.updateUnitType)),
+
+            async function UnitTypeController_updateUnitType(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnitTypeController_updateUnitType, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<UnitTypeController>(UnitTypeController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'updateUnitType',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsUnitTypeController_deleteUnitType: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","dataType":"object"},
+        };
+        app.delete('/unit-types/:id',
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController)),
+            ...(fetchMiddlewares<RequestHandler>(UnitTypeController.prototype.deleteUnitType)),
+
+            async function UnitTypeController_deleteUnitType(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnitTypeController_deleteUnitType, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<UnitTypeController>(UnitTypeController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'deleteUnitType',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsProfileController_getMyProfile: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
@@ -783,7 +1045,6 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"CreateFacilityRequest"},
         };
         app.post('/facilities',
-            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(FacilityController)),
             ...(fetchMiddlewares<RequestHandler>(FacilityController.prototype.createFacility)),
 
@@ -820,7 +1081,6 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"UpdateFacilityRequest"},
         };
         app.patch('/facilities/:id',
-            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(FacilityController)),
             ...(fetchMiddlewares<RequestHandler>(FacilityController.prototype.updateFacility)),
 
@@ -857,7 +1117,6 @@ export function RegisterRoutes(app: Router) {
                 req: {"in":"request","name":"req","dataType":"object"},
         };
         app.delete('/facilities/:id',
-            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(FacilityController)),
             ...(fetchMiddlewares<RequestHandler>(FacilityController.prototype.deleteFacility)),
 
@@ -894,7 +1153,6 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"AssignManagerRequest"},
         };
         app.patch('/facilities/:id/assign-manager',
-            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(FacilityController)),
             ...(fetchMiddlewares<RequestHandler>(FacilityController.prototype.assignManager)),
 
