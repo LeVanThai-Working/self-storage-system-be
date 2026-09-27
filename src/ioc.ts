@@ -5,6 +5,10 @@ import { AuthController } from './modules/auth/auth.controller.ts';
 import { authController } from './modules/auth/auth.container.ts';
 import { ProfileController } from './modules/profile/profile.controller.ts';
 import { profileController } from './modules/profile/profile.container.ts';
+import { FacilityController } from './modules/facility/facility.controller.ts';
+import { facilityController } from './modules/facility/facility.container.ts';
+import { UnitTypeController } from './modules/unitType/unitType.controller.ts';
+import { unitTypeController } from './modules/unitType/unitType.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -16,6 +20,12 @@ export const iocContainer: IocContainer = {
     }
     if (controller === ProfileController) {
       return profileController as unknown as T;
+    }
+    if (controller === FacilityController) {
+      return facilityController as unknown as T;
+    }
+    if (controller === UnitTypeController) {
+      return unitTypeController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

@@ -370,6 +370,365 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"UnitTypeStatusEnum": {
+				"enum": [
+					"active",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"UnitTypeCategoryEnum": {
+				"enum": [
+					"locker",
+					"small",
+					"medium",
+					"large",
+					"climate_controlled"
+				],
+				"type": "string"
+			},
+			"infer_typeofunitTypeResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"basePrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"features": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"category": {
+						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+					},
+					"description": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/UnitTypeStatusEnum"
+					},
+					"volume": {
+						"type": "number",
+						"format": "double"
+					},
+					"area": {
+						"type": "number",
+						"format": "double"
+					},
+					"dimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"volume",
+					"area",
+					"dimensions",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"UnitTypeResponse": {
+				"$ref": "#/components/schemas/infer_typeofunitTypeResponseSchema_"
+			},
+			"PaginatedData_UnitTypeResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/UnitTypeResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_UnitTypeResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_UnitTypeResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofunitTypeQuerySchema_": {
+				"properties": {
+					"maxPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"minPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"maxArea": {
+						"type": "number",
+						"format": "double"
+					},
+					"minArea": {
+						"type": "number",
+						"format": "double"
+					},
+					"category": {
+						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+					},
+					"status": {
+						"$ref": "#/components/schemas/UnitTypeStatusEnum"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"name",
+							"createdAt",
+							"updatedAt",
+							"area",
+							"volume",
+							"basePrice"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"UnitTypeQuery": {
+				"$ref": "#/components/schemas/infer_typeofunitTypeQuerySchema_"
+			},
+			"ApiResponse_UnitTypeResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/UnitTypeResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateUnitTypeSchema_": {
+				"properties": {
+					"basePrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"features": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"category": {
+						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+					},
+					"description": {
+						"type": "string"
+					},
+					"dimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"dimensions",
+					"name"
+				],
+				"type": "object"
+			},
+			"CreateUnitTypeRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateUnitTypeSchema_"
+			},
+			"infer_typeofupdateUnitTypeSchema_": {
+				"properties": {
+					"basePrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"features": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"status": {
+						"$ref": "#/components/schemas/UnitTypeStatusEnum"
+					},
+					"category": {
+						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+					},
+					"dimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"description": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateUnitTypeRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateUnitTypeSchema_"
+			},
 			"GenderEnum": {
 				"enum": [
 					"male",
@@ -458,6 +817,303 @@
 			},
 			"UpdateProfileRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateProfileSchema_"
+			},
+			"FacilityStatusEnum": {
+				"enum": [
+					"active",
+					"inactive",
+					"closed"
+				],
+				"type": "string"
+			},
+			"infer_typeoffacilityResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"operatingHours": {
+						"properties": {
+							"close": {
+								"type": "string"
+							},
+							"open": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"close",
+							"open"
+						],
+						"type": "object"
+					},
+					"managerId": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"city": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"city",
+					"address",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"FacilityResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityResponseSchema_"
+			},
+			"PaginatedData_FacilityResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_FacilityResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_FacilityResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeoffacilityQuerySchema_": {
+				"properties": {
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"name",
+							"status",
+							"createdAt",
+							"updatedAt",
+							"city"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"FacilityQuery": {
+				"$ref": "#/components/schemas/infer_typeoffacilityQuerySchema_"
+			},
+			"ApiResponse_FacilityResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateFacilitySchema_": {
+				"properties": {
+					"operatingHours": {
+						"properties": {
+							"close": {
+								"type": "string"
+							},
+							"open": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"close",
+							"open"
+						],
+						"type": "object"
+					},
+					"description": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"city",
+					"address",
+					"name"
+				],
+				"type": "object"
+			},
+			"CreateFacilityRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateFacilitySchema_"
+			},
+			"infer_typeofupdateFacilitySchema_": {
+				"properties": {
+					"operatingHours": {
+						"properties": {
+							"close": {
+								"type": "string"
+							},
+							"open": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"close",
+							"open"
+						],
+						"type": "object"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"description": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateFacilityRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateFacilitySchema_"
+			},
+			"infer_typeofassignManagerSchema_": {
+				"properties": {
+					"managerId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"managerId"
+				],
+				"type": "object"
+			},
+			"AssignManagerRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignManagerSchema_"
 			},
 			"ApiResponse__message-string__": {
 				"properties": {
@@ -1173,6 +1829,344 @@
 				]
 			}
 		},
+		"/unit-types": {
+			"get": {
+				"operationId": "FindAllUnitType",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_UnitTypeResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Unit Types"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "maxPrice",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "minPrice",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "maxArea",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "minArea",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "category",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/UnitTypeStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"name",
+								"createdAt",
+								"updatedAt",
+								"area",
+								"volume",
+								"basePrice"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateUnitType",
+				"responses": {
+					"201": {
+						"description": "Unit type created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_UnitTypeResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or unit type already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Unit Types"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateUnitTypeRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/unit-types/{id}": {
+			"get": {
+				"operationId": "FindUnitTypeById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_UnitTypeResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Unit type not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Unit Types"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateUnitType",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_UnitTypeResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Unit type not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Unit Types"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateUnitTypeRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteUnitType",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Unit type not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Unit Types"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/profile/me": {
 			"get": {
 				"operationId": "GetMyProfile",
@@ -1328,6 +2322,360 @@
 						}
 					}
 				]
+			}
+		},
+		"/facilities": {
+			"get": {
+				"operationId": "FindAllFacility",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_FacilityResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/FacilityStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"name",
+								"status",
+								"createdAt",
+								"updatedAt",
+								"city"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateFacility",
+				"responses": {
+					"201": {
+						"description": "Facility created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or facility already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateFacilityRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/facilities/{id}": {
+			"get": {
+				"operationId": "FindFacilityById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateFacility",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateFacilityRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteFacility",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facilities/{id}/assign-manager": {
+			"patch": {
+				"operationId": "AssignManager",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID or user is not a Facility Manager",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility or Manager not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignManagerRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/auth/send-otp": {
