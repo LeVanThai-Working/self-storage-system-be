@@ -326,12 +326,19 @@ userSchema.plugin(MongooseDelete, {
 
 ---
 
-## 14. Authentication
+## 14. Authentication & Authorization (Phân quyền)
 
 - **Access Token:** 15 phút, lưu trong cookie `httpOnly` hoặc `Authorization: Bearer`
 - **Refresh Token:** 7 ngày, RTR (Refresh Token Rotation) + Family Token trong Redis
 - **Protected routes:** dùng `@Security('bearerAuth')` hoặc `@Security('cookieAuth')` trong tsoa controller
 - **tsoa authentication:** implement qua `expressAuthentication()` trong `src/middlewares/auth.tsoa.ts`
+- **[MUST] Role Authorization Comments:** Các endpoint nhạy cảm đều có comment đánh dấu role (`// TODO: Role authorization: ...`) sẵn sàng cho phase hoàn thiện bảo mật cuối.
+  ```ts
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  @Post('')
+  ```
 
 ---
 
@@ -394,3 +401,45 @@ enum AuthProviderEnum {
 | `MESSAGE_CODE_106` | Internal Server Error    |
 | `MESSAGE_CODE_200` | {0} Is Required          |
 | `MESSAGE_CODE_201` | Invalid Token            |
+
+---
+
+## 18. File Writing — Quy tắc ghi file an toàn
+
+### [MUST] Ghi file tuần tự — KHÔNG ghi song song
+
+```
+// ✅ Đúng — ghi từng file, đợi xong mới ghi tiếp
+write_to_file(file1) → verify size > 0 → write_to_file(file2) → verify → ...
+
+// ❌ Sai — ghi nhiều file cùng lúc (parallel)
+write_to_file(file1) + write_to_file(file2) + write_to_file(file3)
+// Có thể gây file rỗng nếu bị interrupt
+```
+
+**Lý do:** Khi nhiều `write_to_file` chạy song song, nếu task bị interrupt/cancel giữa chừng, file được tạo nhưng nội dung chưa được flush → file có size = 0 bytes (mất toàn bộ code).
+
+### [MUST] Verify size sau mỗi lần ghi
+
+Sau mỗi `write_to_file`, kiểm tra file size > 0 trước khi tiếp tục:
+
+```powershell
+# Verify file không rỗng sau khi ghi
+Get-Item <path> | Select-Object Length  # Phải > 0
+```
+
+### [MUST] Thứ tự ghi file trong một module mới
+
+Luôn ghi theo thứ tự sau, **từng file một**:
+
+```
+1. enums (nếu có)
+2. model
+3. repository
+4. request.schema
+5. response.schema
+6. service
+7. controller
+8. container
+9. Cập nhật ioc.ts
+```
