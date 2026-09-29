@@ -37,17 +37,17 @@ import {
   type ResetPasswordRequest,
   type ChangePasswordRequest,
 } from './schemas/auth.request.schema.ts';
-import type { AuthUserResponse } from './schemas/auth.response.schema.ts';
+import type {
+  AuthUserResponse,
+  AuthTokens,
+  AuthLoginResponse,
+} from './schemas/auth.response.schema.ts';
 import type {
   ApiResponse,
   ApiErrorResponse,
 } from '../../common/types/apiResponse.type.ts';
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  familyId?: string;
-}
+export type { AuthTokens };
 
 export interface RefreshTokenRequest {
   refreshToken?: string;
@@ -89,7 +89,7 @@ export class AuthController extends Controller {
   public async register(
     @Body() body: RegisterRequest,
     @Request() req?: ExpressRequest
-  ): Promise<ApiResponse<AuthUserResponse>> {
+  ): Promise<ApiResponse<AuthLoginResponse>> {
     const { user, tokens } = await this.authService.register(body);
     if (req?.res) {
       setAuthCookies(req.res, tokens.accessToken, tokens.refreshToken);
@@ -101,7 +101,10 @@ export class AuthController extends Controller {
       statusCode: 201,
       messageCode: MESSAGE_CODE.MESSAGE_CODE_002,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_002),
-      data: user as unknown as AuthUserResponse,
+      data: {
+        user: user as unknown as AuthUserResponse,
+        tokens,
+      },
     };
   }
 
@@ -112,7 +115,7 @@ export class AuthController extends Controller {
   public async login(
     @Body() body: LoginRequest,
     @Request() req?: ExpressRequest
-  ): Promise<ApiResponse<AuthUserResponse>> {
+  ): Promise<ApiResponse<AuthLoginResponse>> {
     const { user, tokens } = await this.authService.login(body);
     if (req?.res) {
       setAuthCookies(req.res, tokens.accessToken, tokens.refreshToken);
@@ -123,7 +126,10 @@ export class AuthController extends Controller {
       statusCode: 200,
       messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
-      data: user as unknown as AuthUserResponse,
+      data: {
+        user: user as unknown as AuthUserResponse,
+        tokens,
+      },
     };
   }
 

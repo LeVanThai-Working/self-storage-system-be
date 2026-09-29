@@ -1166,6 +1166,209 @@
 			"SendOtpRequest": {
 				"$ref": "#/components/schemas/infer_typeofsendOtpSchema_"
 			},
+			"infer_typeofauthLoginResponseSchema_": {
+				"properties": {
+					"tokens": {
+						"properties": {
+							"familyId": {
+								"type": "string"
+							},
+							"refreshToken": {
+								"type": "string"
+							},
+							"accessToken": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"refreshToken",
+							"accessToken"
+						],
+						"type": "object"
+					},
+					"user": {
+						"properties": {
+							"updatedAt": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "string"
+							},
+							"status": {
+								"$ref": "#/components/schemas/UserStatusEnum"
+							},
+							"authProvider": {
+								"$ref": "#/components/schemas/AuthProviderEnum"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"_id": {},
+							"id": {
+								"type": "string"
+							},
+							"role": {
+								"$ref": "#/components/schemas/RoleEnum"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"role",
+							"email",
+							"name"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"tokens",
+					"user"
+				],
+				"type": "object"
+			},
+			"AuthLoginResponse": {
+				"$ref": "#/components/schemas/infer_typeofauthLoginResponseSchema_"
+			},
+			"ApiResponse_AuthLoginResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AuthLoginResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofregisterSchema_": {
+				"properties": {
+					"phoneNumber": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string"
+					},
+					"otp": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"password",
+					"otp",
+					"email"
+				],
+				"type": "object"
+			},
+			"RegisterRequest": {
+				"$ref": "#/components/schemas/infer_typeofregisterSchema_"
+			},
+			"infer_typeofloginSchema_": {
+				"properties": {
+					"password": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"password",
+					"email"
+				],
+				"type": "object"
+			},
+			"LoginRequest": {
+				"$ref": "#/components/schemas/infer_typeofloginSchema_"
+			},
+			"infer_typeofauthTokensSchema_": {
+				"properties": {
+					"familyId": {
+						"type": "string"
+					},
+					"refreshToken": {
+						"type": "string"
+					},
+					"accessToken": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"refreshToken",
+					"accessToken"
+				],
+				"type": "object"
+			},
+			"AuthTokens": {
+				"$ref": "#/components/schemas/infer_typeofauthTokensSchema_"
+			},
+			"ApiResponse_AuthTokens_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AuthTokens"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RefreshTokenRequest": {
+				"properties": {
+					"refreshToken": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
 			"infer_typeofauthUserResponseSchema_": {
 				"properties": {
 					"updatedAt": {
@@ -1233,110 +1436,6 @@
 					"message",
 					"data"
 				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofregisterSchema_": {
-				"properties": {
-					"phoneNumber": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"password": {
-						"type": "string"
-					},
-					"otp": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"name",
-					"password",
-					"otp",
-					"email"
-				],
-				"type": "object"
-			},
-			"RegisterRequest": {
-				"$ref": "#/components/schemas/infer_typeofregisterSchema_"
-			},
-			"infer_typeofloginSchema_": {
-				"properties": {
-					"password": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"password",
-					"email"
-				],
-				"type": "object"
-			},
-			"LoginRequest": {
-				"$ref": "#/components/schemas/infer_typeofloginSchema_"
-			},
-			"AuthTokens": {
-				"properties": {
-					"accessToken": {
-						"type": "string"
-					},
-					"refreshToken": {
-						"type": "string"
-					},
-					"familyId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"accessToken",
-					"refreshToken"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_AuthTokens_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/AuthTokens"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RefreshTokenRequest": {
-				"properties": {
-					"refreshToken": {
-						"type": "string"
-					}
-				},
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -2729,7 +2828,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthUserResponse_"
+									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
 								}
 							}
 						}
@@ -2771,7 +2870,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthUserResponse_"
+									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
 								}
 							}
 						}
