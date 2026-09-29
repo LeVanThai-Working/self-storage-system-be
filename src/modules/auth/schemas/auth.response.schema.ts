@@ -19,3 +19,18 @@ export const authUserResponseSchema = z.object({
 });
 
 export type AuthUserResponse = z.infer<typeof authUserResponseSchema>;
+
+export const authTokensSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  familyId: z.string().optional(),
+});
+
+export type AuthTokens = z.infer<typeof authTokensSchema>;
+
+export const authLoginResponseSchema = z.object({
+  user: authUserResponseSchema,
+  tokens: authTokensSchema,
+});
+
+export type AuthLoginResponse = z.infer<typeof authLoginResponseSchema>;
