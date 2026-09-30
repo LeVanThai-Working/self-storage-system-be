@@ -106,4 +106,8 @@ export class FacilityUnitTypeOfferingRepository {
   async softDeleteById(id: string, deletedBy?: string) {
     return this.offering.deleteById(id, deletedBy);
   }
+
+  async restoreById(id: string) {
+    return this.offering.restore({ _id: id });
+  }
 }

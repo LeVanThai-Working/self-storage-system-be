@@ -15,6 +15,7 @@ import type {
 } from './schemas/unitType.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
+import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 
 export class UnitTypeService {
   constructor(private readonly unitTypeRepository: UnitTypeRepository) {}
@@ -139,11 +140,19 @@ export class UnitTypeService {
     );
   }
 
+  @Transactional()
   async deleteUnitType(id: string, deletedBy?: string): Promise<void> {
     const unitType = await this.unitTypeRepository.findById(id);
     if (!unitType) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Unit Type']);
     }
+
+    // TODO: [Module StorageUnit & Offering Integration Reminder]
+    // Khi hoàn thiện các module liên quan, cần bổ sung các điều kiện chặn xoá & cascade:
+    // 1. [CHẶN XOÁ] Kiểm tra nếu có bất kỳ StorageUnit nào đang thuộc UnitType này và đang có người thuê (OCCUPIED) hoặc đặt chỗ (RESERVED) -> Báo lỗi.
+    // 2. [CASCADE SOFT-DELETE] Tự động xoá mềm các bản ghi phụ thuộc trong cùng Transaction:
+    //    - FacilityUnitTypeOffering: Xoá mềm tất cả bảng giá cấu hình của UnitType này trên mọi cơ sở.
+    //    - StorageUnit: Xoá mềm tất cả phòng kho vật lý đang trống (AVAILABLE/MAINTENANCE) của UnitType này.
 
     await this.unitTypeRepository.softDelete(id, deletedBy);
   }

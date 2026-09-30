@@ -21,6 +21,7 @@ import {
   RoleEnum,
   UserStatusEnum,
 } from '../../common/enums/user.enum.ts';
+import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 
 export class UserService {
   constructor(
@@ -105,11 +106,18 @@ export class UserService {
     return validateResponse(userResponseSchema, this.formatUser(updatedUser));
   }
 
+  @Transactional()
   async deleteUser(id: string, deletedBy?: string): Promise<void> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
     }
+
+    // TODO: [Module Reservation & Contract Integration Reminder]
+    // Khi hoàn thiện các module liên quan, cần bổ sung các điều kiện chặn xoá:
+    // 1. Kiểm tra nếu User đang có Hợp đồng thuê hiệu lực (Contract.status === 'ACTIVE') -> Chặn xoá và báo lỗi.
+    // 2. Kiểm tra nếu User đang có Đặt chỗ chưa hoàn thành (Reservation.status IN ['CONFIRMED', 'PENDING_PAYMENT']) -> Chặn xoá.
+    // 3. Nếu User là FACILITY_MANAGER đang phụ trách cơ sở -> Yêu cầu gán Manager khác trước khi xoá.
 
     // Cascade delete: remove profile before soft-deleting user
     if (this.profileRepository) {

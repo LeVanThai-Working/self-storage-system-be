@@ -24,7 +24,6 @@ export interface IUnitType extends SoftDeleteDocument {
   status: UnitTypeStatusEnum;
   images?: string[];
   features?: string[];
-  basePrice?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,7 +64,6 @@ const unitTypeSchema = new mongoose.Schema<IUnitType>(
     },
     images: { type: [String], default: [] },
     features: { type: [String], default: [] },
-    basePrice: { type: Number, min: 0, default: 0 },
   },
   {
     timestamps: true,

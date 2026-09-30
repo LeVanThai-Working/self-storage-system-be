@@ -19,6 +19,7 @@ import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
 import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
+import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 
 export class FacilityUnitTypeOfferingService {
   constructor(
@@ -129,6 +130,7 @@ export class FacilityUnitTypeOfferingService {
     );
   }
 
+  @Transactional()
   async createOffering(
     data: CreateOfferingRequest
   ): Promise<FacilityUnitTypeOfferingResponse> {
@@ -156,10 +158,33 @@ export class FacilityUnitTypeOfferingService {
         data.facilityId,
         data.unitTypeId
       );
+
     if (existing) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_105, [
-        'Offering for this Facility and Unit Type',
-      ]);
+      // Nếu bản ghi đang ACTIVE (chưa xoá mềm) -> Báo lỗi trùng
+      if (!existing.deleted) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_105, [
+          'Offering for this Facility and Unit Type',
+        ]);
+      }
+
+      // Nếu bản ghi ĐÃ BỊ XOÁ MỀM -> Khôi phục và cập nhật thông tin mới
+      await this.offeringRepository.restoreById(String(existing._id));
+      const updated = await this.offeringRepository.updateById(
+        String(existing._id),
+        {
+          ...data,
+          facilityId:
+            data.facilityId as unknown as IFacilityUnitTypeOffering['facilityId'],
+          unitTypeId:
+            data.unitTypeId as unknown as IFacilityUnitTypeOffering['unitTypeId'],
+          status: data.status ?? FacilityUnitTypeOfferingStatusEnum.ACTIVE,
+        }
+      );
+
+      return validateResponse(
+        facilityUnitTypeOfferingResponseSchema,
+        this.formatOffering(updated)
+      );
     }
 
     const newOffering = await this.offeringRepository.create({
@@ -201,6 +226,7 @@ export class FacilityUnitTypeOfferingService {
     );
   }
 
+  @Transactional()
   async deleteOffering(id: string, deletedBy?: string): Promise<void> {
     const offering = await this.offeringRepository.findById(id);
     if (!offering) {
@@ -208,6 +234,11 @@ export class FacilityUnitTypeOfferingService {
         'Facility Unit Type Offering',
       ]);
     }
+
+    // TODO: [Module Reservation & Contract Integration Reminder]
+    // Khi hoàn thiện các module liên quan, cần bổ sung các điều kiện chặn xoá:
+    // 1. [CHẶN XOÁ] Kiểm tra nếu cặp (facilityId, unitTypeId) này đang có Hợp đồng hiệu lực (Contract.status === 'ACTIVE') -> Chặn xoá.
+    // 2. [CHẶN XOÁ] Kiểm tra nếu đang có Đặt chỗ (Reservation) chờ nhận phòng sử dụng bảng giá này -> Chặn xoá.
 
     await this.offeringRepository.softDeleteById(id, deletedBy);
   }

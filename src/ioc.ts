@@ -11,6 +11,8 @@ import { UnitTypeController } from './modules/unitType/unitType.controller.ts';
 import { unitTypeController } from './modules/unitType/unitType.container.ts';
 import { FacilityUnitTypeOfferingController } from './modules/facilityUnitTypeOffering/facilityUnitTypeOffering.controller.ts';
 import { facilityUnitTypeOfferingController } from './modules/facilityUnitTypeOffering/facilityUnitTypeOffering.container.ts';
+import { StorageUnitController } from './modules/storageUnit/storageUnit.controller.ts';
+import { storageUnitController } from './modules/storageUnit/storageUnit.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -31,6 +33,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === FacilityUnitTypeOfferingController) {
       return facilityUnitTypeOfferingController as unknown as T;
+    }
+    if (controller === StorageUnitController) {
+      return storageUnitController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

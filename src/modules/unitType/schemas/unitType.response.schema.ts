@@ -21,7 +21,6 @@ export const unitTypeResponseSchema = z.object({
   status: z.enum(UnitTypeStatusEnum),
   images: z.array(z.string()).optional().nullable(),
   features: z.array(z.string()).optional().nullable(),
-  basePrice: z.number().optional().nullable(),
   createdAt: z.union([
     z.date().transform((d) => d.toISOString()),
     z.iso.datetime(),

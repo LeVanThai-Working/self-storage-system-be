@@ -395,10 +395,6 @@
 					"createdAt": {
 						"type": "string"
 					},
-					"basePrice": {
-						"type": "number",
-						"format": "double"
-					},
 					"features": {
 						"items": {
 							"type": "string"
@@ -520,14 +516,6 @@
 			},
 			"infer_typeofunitTypeQuerySchema_": {
 				"properties": {
-					"maxPrice": {
-						"type": "number",
-						"format": "double"
-					},
-					"minPrice": {
-						"type": "number",
-						"format": "double"
-					},
 					"maxArea": {
 						"type": "number",
 						"format": "double"
@@ -559,8 +547,7 @@
 							"createdAt",
 							"updatedAt",
 							"area",
-							"volume",
-							"basePrice"
+							"volume"
 						]
 					},
 					"limit": {
@@ -614,10 +601,6 @@
 			},
 			"infer_typeofcreateUnitTypeSchema_": {
 				"properties": {
-					"basePrice": {
-						"type": "number",
-						"format": "double"
-					},
 					"features": {
 						"items": {
 							"type": "string"
@@ -673,10 +656,6 @@
 			},
 			"infer_typeofupdateUnitTypeSchema_": {
 				"properties": {
-					"basePrice": {
-						"type": "number",
-						"format": "double"
-					},
 					"features": {
 						"items": {
 							"type": "string"
@@ -728,6 +707,456 @@
 			},
 			"UpdateUnitTypeRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateUnitTypeSchema_"
+			},
+			"StorageUnitStatusEnum": {
+				"enum": [
+					"available",
+					"reserved",
+					"occupied",
+					"under_maintenance",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"FacilityStatusEnum": {
+				"enum": [
+					"active",
+					"inactive",
+					"closed"
+				],
+				"type": "string"
+			},
+			"infer_typeofstorageUnitResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"unitType": {
+						"properties": {
+							"category": {
+								"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+							},
+							"dimensions": {
+								"properties": {
+									"height": {
+										"type": "number",
+										"format": "double"
+									},
+									"width": {
+										"type": "number",
+										"format": "double"
+									},
+									"length": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"height",
+									"width",
+									"length"
+								],
+								"type": "object"
+							},
+							"status": {
+								"$ref": "#/components/schemas/UnitTypeStatusEnum"
+							},
+							"volume": {
+								"type": "number",
+								"format": "double"
+							},
+							"area": {
+								"type": "number",
+								"format": "double"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"dimensions",
+							"status",
+							"volume",
+							"area",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"$ref": "#/components/schemas/FacilityStatusEnum"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"zone": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/StorageUnitStatusEnum"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"unitNumber": {
+						"type": "string"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"floor",
+					"unitNumber",
+					"unitTypeId",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"StorageUnitResponse": {
+				"$ref": "#/components/schemas/infer_typeofstorageUnitResponseSchema_"
+			},
+			"PaginatedData_StorageUnitResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/StorageUnitResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_StorageUnitResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_StorageUnitResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofstorageUnitQuerySchema_": {
+				"properties": {
+					"unitNumber": {
+						"type": "string"
+					},
+					"zone": {
+						"type": "string"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/StorageUnitStatusEnum"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"updatedAt",
+							"unitNumber",
+							"floor"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"StorageUnitQuery": {
+				"$ref": "#/components/schemas/infer_typeofstorageUnitQuerySchema_"
+			},
+			"ApiResponse_StorageUnitResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/StorageUnitResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofavailableStorageUnitQuerySchema_": {
+				"properties": {
+					"zone": {
+						"type": "string"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"unitTypeId": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"AvailableStorageUnitQuery": {
+				"$ref": "#/components/schemas/infer_typeofavailableStorageUnitQuerySchema_"
+			},
+			"ApiResponse_StorageUnitResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/StorageUnitResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"StorageUnitStatusEnum.AVAILABLE": {
+				"enum": [
+					"available"
+				],
+				"type": "string"
+			},
+			"StorageUnitStatusEnum.UNDER_MAINTENANCE": {
+				"enum": [
+					"under_maintenance"
+				],
+				"type": "string"
+			},
+			"StorageUnitStatusEnum.INACTIVE": {
+				"enum": [
+					"inactive"
+				],
+				"type": "string"
+			},
+			"infer_typeofcreateStorageUnitSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.AVAILABLE"
+							},
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.UNDER_MAINTENANCE"
+							},
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.INACTIVE"
+							}
+						]
+					},
+					"zone": {
+						"type": "string"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"unitNumber": {
+						"type": "string"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"floor",
+					"unitNumber",
+					"unitTypeId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateStorageUnitRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateStorageUnitSchema_"
+			},
+			"infer_typeofupdateStorageUnitSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.AVAILABLE"
+							},
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.INACTIVE"
+							}
+						]
+					},
+					"zone": {
+						"type": "string"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"unitNumber": {
+						"type": "string"
+					},
+					"unitTypeId": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateStorageUnitRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateStorageUnitSchema_"
+			},
+			"infer_typeoftoggleMaintenanceSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"isUnderMaintenance": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"isUnderMaintenance"
+				],
+				"type": "object"
+			},
+			"ToggleMaintenanceRequest": {
+				"$ref": "#/components/schemas/infer_typeoftoggleMaintenanceSchema_"
 			},
 			"GenderEnum": {
 				"enum": [
@@ -817,14 +1246,6 @@
 			},
 			"UpdateProfileRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateProfileSchema_"
-			},
-			"FacilityStatusEnum": {
-				"enum": [
-					"active",
-					"inactive",
-					"closed"
-				],
-				"type": "string"
 			},
 			"BillingUnitEnum": {
 				"enum": [
@@ -2161,24 +2582,6 @@
 				"parameters": [
 					{
 						"in": "query",
-						"name": "maxPrice",
-						"required": false,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "minPrice",
-						"required": false,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
 						"name": "maxArea",
 						"required": false,
 						"schema": {
@@ -2242,8 +2645,7 @@
 								"createdAt",
 								"updatedAt",
 								"area",
-								"volume",
-								"basePrice"
+								"volume"
 							]
 						}
 					},
@@ -2465,6 +2867,494 @@
 						}
 					}
 				]
+			}
+		},
+		"/storage-units": {
+			"get": {
+				"operationId": "GetStorageUnits",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_StorageUnitResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Lấy danh sách phòng kho vật lý (có phân trang, tìm kiếm, lọc theo chi nhánh/loại kho/tầng/khu vực/trạng thái)",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "unitNumber",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "zone",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "floor",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/StorageUnitStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "unitTypeId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"updatedAt",
+								"unitNumber",
+								"floor"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateStorageUnit",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or unit number already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility or Unit Type not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tạo phòng kho vật lý mới\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateStorageUnitRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/storage-units/facility/{facilityId}/available": {
+			"get": {
+				"operationId": "GetAvailableUnits",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or facility inactive",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tra cứu danh sách phòng trống khả dụng theo cơ sở (phục vụ đặt chỗ / thuê phòng)",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "zone",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "floor",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "unitTypeId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-units/{id}": {
+			"get": {
+				"operationId": "GetStorageUnitById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Lấy thông tin chi tiết một phòng kho theo ID",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateStorageUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or duplicate unit number",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cập nhật thông tin phòng kho (unitNumber, floor, zone, notes, unitTypeId)\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateStorageUnitRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteStorageUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Cannot delete unit while reserved or occupied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Xóa mềm phòng kho\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-units/{id}/maintenance": {
+			"patch": {
+				"operationId": "ToggleMaintenance",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Unit cannot be put into/taken out of maintenance in current status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Bật/tắt trạng thái bảo trì cho phòng kho (AVAILABLE <-> UNDER_MAINTENANCE)\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ToggleMaintenanceRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/profile/me": {

@@ -44,16 +44,6 @@ export class UnitTypeRepository {
       }
     }
 
-    if (query.minPrice !== undefined || query.maxPrice !== undefined) {
-      filter.basePrice = {};
-      if (query.minPrice !== undefined) {
-        filter.basePrice.$gte = query.minPrice;
-      }
-      if (query.maxPrice !== undefined) {
-        filter.basePrice.$lte = query.maxPrice;
-      }
-    }
-
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder || 'desc';
 
