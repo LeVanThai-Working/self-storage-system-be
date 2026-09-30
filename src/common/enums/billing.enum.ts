@@ -3,4 +3,3 @@ export enum BillingUnitEnum {
   MONTH = 'month',
   ONE_TIME = 'one_time',
 }
-

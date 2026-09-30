@@ -20,4 +20,3 @@ export const amenityListResponseSchema = z.array(amenityResponseSchema);
 
 export type AmenityResponse = z.infer<typeof amenityResponseSchema>;
 export type AmenityListResponse = z.infer<typeof amenityListResponseSchema>;
-

@@ -52,4 +52,3 @@ export type FacilityAmenityOfferingResponse = z.infer<
 export type FacilityAmenityOfferingListResponse = z.infer<
   typeof facilityAmenityOfferingListResponseSchema
 >;
-

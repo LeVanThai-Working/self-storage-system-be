@@ -69,4 +69,3 @@ export const Amenity = mongoose.model<IAmenity, SoftDeleteModel<IAmenity>>(
   'Amenity',
   amenitySchema
 );
-

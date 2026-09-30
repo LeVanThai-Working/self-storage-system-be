@@ -86,4 +86,3 @@ export class AmenityRepository {
     return this.amenity.deleteById(id, deletedBy);
   }
 }
-

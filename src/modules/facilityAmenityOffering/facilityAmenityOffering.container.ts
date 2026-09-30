@@ -22,4 +22,3 @@ export const facilityAmenityOfferingService =
 
 export const facilityAmenityOfferingController =
   new FacilityAmenityOfferingController(facilityAmenityOfferingService);
-

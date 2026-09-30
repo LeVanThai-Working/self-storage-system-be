@@ -64,10 +64,7 @@ export class AmenityService {
     if (!amenity) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Amenity']);
     }
-    return validateResponse(
-      amenityResponseSchema,
-      this.formatAmenity(amenity)
-    );
+    return validateResponse(amenityResponseSchema, this.formatAmenity(amenity));
   }
 
   @Transactional()
@@ -87,10 +84,7 @@ export class AmenityService {
       name: trimmedName,
     });
 
-    return validateResponse(
-      amenityResponseSchema,
-      this.formatAmenity(created)
-    );
+    return validateResponse(amenityResponseSchema, this.formatAmenity(created));
   }
 
   @Transactional()
@@ -127,10 +121,7 @@ export class AmenityService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Amenity']);
     }
 
-    return validateResponse(
-      amenityResponseSchema,
-      this.formatAmenity(updated)
-    );
+    return validateResponse(amenityResponseSchema, this.formatAmenity(updated));
   }
 
   @Transactional()
@@ -145,4 +136,3 @@ export class AmenityService {
     await this.amenityRepository.deleteById(id, deletedBy);
   }
 }
-

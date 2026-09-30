@@ -88,4 +88,3 @@ export const FacilityAmenityOffering = mongoose.model<
   IFacilityAmenityOffering,
   SoftDeleteModel<IFacilityAmenityOffering>
 >('FacilityAmenityOffering', facilityAmenityOfferingSchema);
-

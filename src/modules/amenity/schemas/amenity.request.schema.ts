@@ -62,4 +62,3 @@ export type CreateAmenityRequest = z.infer<typeof createAmenitySchema>;
 export type UpdateAmenityRequest = z.infer<typeof updateAmenitySchema>;
 export type AmenityQuery = z.infer<typeof amenityQuerySchema>;
 export type AmenityIdParam = z.infer<typeof amenityIdParamSchema>;
-

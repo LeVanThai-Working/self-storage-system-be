@@ -50,8 +50,7 @@ export class AmenityController extends Controller {
   public async getAmenities(
     @Queries() query: AmenityQuery
   ): Promise<ApiResponse<PaginatedData<AmenityResponse>>> {
-    const { items, pagination } =
-      await this.amenityService.getAmenities(query);
+    const { items, pagination } = await this.amenityService.getAmenities(query);
 
     return {
       success: true,
@@ -86,10 +85,7 @@ export class AmenityController extends Controller {
   // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @SuccessResponse(201, 'Amenity created successfully')
   @Middlewares(validateRequest({ body: createAmenitySchema }))
-  @Response<ApiErrorResponse>(
-    400,
-    'Validation error or amenity already exists'
-  )
+  @Response<ApiErrorResponse>(400, 'Validation error or amenity already exists')
   public async createAmenity(
     @Body() body: CreateAmenityRequest
   ): Promise<ApiResponse<AmenityResponse>> {
@@ -157,4 +153,3 @@ export class AmenityController extends Controller {
     };
   }
 }
-
