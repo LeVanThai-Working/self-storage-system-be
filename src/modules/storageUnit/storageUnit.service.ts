@@ -177,7 +177,7 @@ export class StorageUnitService {
 
     const normalizedUnitNumber = data.unitNumber.toUpperCase().trim();
 
-    // Kiểm tra duplicate (bao gồm bản ghi đã xóa mềm để Auto-Restore)
+    // Kiểm tra duplicate trong cùng Facility
     const existing =
       await this.storageUnitRepository.findByFacilityAndUnitNumberIncludeDeleted(
         data.facilityId,
@@ -185,33 +185,9 @@ export class StorageUnitService {
       );
 
     if (existing) {
-      // Nếu bản ghi đang ACTIVE (chưa xoá mềm) -> Báo lỗi trùng
-      if (!existing.deleted) {
-        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_105, [
-          `Storage Unit Number "${normalizedUnitNumber}" in this Facility`,
-        ]);
-      }
-
-      // Nếu bản ghi ĐÃ BỊ XOÁ MỀM -> Khôi phục và cập nhật thông tin mới
-      await this.storageUnitRepository.restoreById(String(existing._id));
-      const updated = await this.storageUnitRepository.updateById(
-        String(existing._id),
-        {
-          ...data,
-          facilityId: data.facilityId as unknown as IStorageUnit['facilityId'],
-          unitTypeId: data.unitTypeId as unknown as IStorageUnit['unitTypeId'],
-          unitNumber: normalizedUnitNumber,
-          status: data.status ?? StorageUnitStatusEnum.AVAILABLE,
-        }
-      );
-
-      const populated = await this.storageUnitRepository.findById(
-        String(updated?._id ?? existing._id)
-      );
-      return validateResponse(
-        storageUnitResponseSchema,
-        this.formatStorageUnit(populated)
-      );
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_105, [
+        `Storage Unit Number "${normalizedUnitNumber}" in this Facility`,
+      ]);
     }
 
     const newUnit = await this.storageUnitRepository.create({
