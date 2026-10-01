@@ -152,4 +152,25 @@ export class AmenityController extends Controller {
       data: null,
     };
   }
+
+  @Post('{id}/restore')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  @Middlewares(validateRequest({ params: amenityIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'Amenity is not deleted or invalid ID')
+  @Response<ApiErrorResponse>(404, 'Amenity not found')
+  public async restoreAmenity(
+    @Path() id: string
+  ): Promise<ApiResponse<AmenityResponse>> {
+    const amenity = await this.amenityService.restoreAmenity(id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Amenity']),
+      data: amenity,
+    };
+  }
 }

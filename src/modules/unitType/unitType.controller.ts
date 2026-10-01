@@ -154,4 +154,25 @@ export class UnitTypeController extends Controller {
       data: null,
     };
   }
+
+  @Post('{id}/restore')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  @Middlewares(validateRequest({ params: unitTypeIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'Unit type is not deleted or invalid ID')
+  @Response<ApiErrorResponse>(404, 'Unit type not found')
+  public async restoreUnitType(
+    @Path() id: string
+  ): Promise<ApiResponse<UnitTypeResponse>> {
+    const unitType = await this.unitTypeService.restoreUnitType(id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Unit Type']),
+      data: unitType,
+    };
+  }
 }

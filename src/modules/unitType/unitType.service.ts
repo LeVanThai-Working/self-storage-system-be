@@ -156,4 +156,23 @@ export class UnitTypeService {
 
     await this.unitTypeRepository.softDelete(id, deletedBy);
   }
+
+  @Transactional()
+  async restoreUnitType(id: string): Promise<UnitTypeResponse> {
+    const unitType = await this.unitTypeRepository.findByIdIncludeDeleted(id);
+    if (!unitType) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Unit Type']);
+    }
+    if (!unitType.deleted) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    await this.unitTypeRepository.restoreById(id);
+
+    const restored = await this.unitTypeRepository.findById(id);
+    return validateResponse(
+      unitTypeResponseSchema,
+      this.formatUnitType(restored)
+    );
+  }
 }

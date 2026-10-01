@@ -248,4 +248,29 @@ export class StorageUnitController extends Controller {
       data: null,
     };
   }
+
+  /**
+   * Restore soft-deleted storage unit
+   *
+   * // @Security('bearerAuth')
+   * // @Security('cookieAuth')
+   * // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+   */
+  @Post('{id}/restore')
+  @Middlewares(validateRequest({ params: storageUnitIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'Storage unit is not deleted or invalid ID')
+  @Response<ApiErrorResponse>(404, 'Storage unit not found')
+  public async restoreStorageUnit(
+    @Path() id: string
+  ): Promise<ApiResponse<StorageUnitResponse>> {
+    const unit = await this.storageUnitService.restoreStorageUnit(id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Storage Unit']),
+      data: unit,
+    };
+  }
 }

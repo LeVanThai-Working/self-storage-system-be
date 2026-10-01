@@ -182,4 +182,25 @@ export class FacilityController extends Controller {
       data: facility,
     };
   }
+
+  @Post('{id}/restore')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  @Middlewares(validateRequest({ params: facilityIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'Facility is not deleted or invalid ID')
+  @Response<ApiErrorResponse>(404, 'Facility not found')
+  public async restoreFacility(
+    @Path() id: string
+  ): Promise<ApiResponse<FacilityResponse>> {
+    const facility = await this.facilityService.restoreFacility(id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Facility']),
+      data: facility,
+    };
+  }
 }

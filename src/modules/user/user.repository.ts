@@ -79,4 +79,13 @@ export class UserRepository {
     await this.user.findByIdAndUpdate(id, { status: UserStatusEnum.DELETED });
     return this.user.deleteById(id, deletedBy);
   }
+
+  async findByIdIncludeDeleted(id: string) {
+    return this.user.findOneWithDeleted({ _id: id });
+  }
+
+  async restoreUser(id: string) {
+    await this.user.findByIdAndUpdate(id, { status: UserStatusEnum.ACTIVE });
+    return this.user.restore({ _id: id });
+  }
 }

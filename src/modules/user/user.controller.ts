@@ -155,4 +155,24 @@ export class UserController extends Controller {
       data: null,
     };
   }
+
+  @Post('{id}/restore')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  @Middlewares(validateRequest({ params: userIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'User is not deleted or invalid ID')
+  @Response<ApiErrorResponse>(404, 'User not found')
+  public async restoreUser(
+    @Path() id: string
+  ): Promise<ApiResponse<UserResponse>> {
+    const user = await this.userService.restoreUser(id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['User']),
+      data: user,
+    };
+  }
 }

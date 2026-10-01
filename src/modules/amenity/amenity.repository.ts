@@ -85,4 +85,12 @@ export class AmenityRepository {
   async deleteById(id: string, deletedBy?: string) {
     return this.amenity.deleteById(id, deletedBy);
   }
+
+  async findByIdIncludeDeleted(id: string) {
+    return this.amenity.findOneWithDeleted({ _id: id });
+  }
+
+  async restoreById(id: string) {
+    return this.amenity.restore({ _id: id });
+  }
 }

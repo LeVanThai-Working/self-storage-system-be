@@ -203,4 +203,23 @@ export class FacilityService {
       this.formatFacility(updatedFacility)
     );
   }
+
+  @Transactional()
+  async restoreFacility(id: string): Promise<FacilityResponse> {
+    const facility = await this.facilityRepository.findByIdIncludeDeleted(id);
+    if (!facility) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
+    }
+    if (!facility.deleted) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    await this.facilityRepository.restore(id);
+
+    const restored = await this.facilityRepository.findById(id);
+    return validateResponse(
+      facilityResponseSchema,
+      this.formatFacility(restored)
+    );
+  }
 }
