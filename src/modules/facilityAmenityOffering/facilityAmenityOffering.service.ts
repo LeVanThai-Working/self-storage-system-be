@@ -1,4 +1,4 @@
-import type { ClientSession } from 'mongoose';
+// import type { ClientSession } from 'mongoose';
 import type { FacilityAmenityOfferingRepository } from './facilityAmenityOffering.repository.ts';
 import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { AmenityRepository } from '../amenity/amenity.repository.ts';
@@ -26,7 +26,7 @@ export class FacilityAmenityOfferingService {
     private readonly offeringRepository: FacilityAmenityOfferingRepository,
     private readonly facilityRepository: FacilityRepository,
     private readonly amenityRepository: AmenityRepository
-  ) { }
+  ) {}
 
   private formatOffering(offering: unknown): unknown {
     if (!offering) return offering;
