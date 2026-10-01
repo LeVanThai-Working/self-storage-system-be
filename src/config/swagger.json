@@ -3364,6 +3364,57 @@
 				]
 			}
 		},
+		"/users/{id}/restore": {
+			"post": {
+				"operationId": "RestoreUser",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_UserResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "User is not deleted or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Users"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/unit-types": {
 			"get": {
 				"operationId": "FindAllUnitType",
@@ -3683,6 +3734,57 @@
 				]
 			}
 		},
+		"/unit-types/{id}/restore": {
+			"post": {
+				"operationId": "RestoreUnitType",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_UnitTypeResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Unit type is not deleted or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Unit type not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Unit Types"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/storage-units": {
 			"get": {
 				"operationId": "GetStorageUnits",
@@ -3852,7 +3954,7 @@
 						}
 					}
 				},
-				"description": "Create a new physical storage unit\n\n//",
+				"description": "Create a new physical storage unit\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -4032,7 +4134,7 @@
 						}
 					}
 				},
-				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\n\n//",
+				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -4092,7 +4194,7 @@
 						}
 					}
 				},
-				"description": "Soft-delete storage unit\n\n//",
+				"description": "Soft-delete storage unit\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -4144,7 +4246,7 @@
 						}
 					}
 				},
-				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\n\n//",
+				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -4169,6 +4271,58 @@
 						}
 					}
 				}
+			}
+		},
+		"/storage-units/{id}/restore": {
+			"post": {
+				"operationId": "RestoreStorageUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Storage unit is not deleted or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Restore soft-deleted storage unit\r\n\r\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/profile/me": {
@@ -4712,7 +4866,7 @@
 						}
 					}
 				},
-				"description": "Quick lookup offering by facilityId and unitTypeId\n(used by StorageUnit, Reservation, Contract)",
+				"description": "Quick lookup offering by facilityId and unitTypeId\r\n(used by StorageUnit, Reservation, Contract)",
 				"tags": [
 					"Facility Unit Type Offerings"
 				],
@@ -4729,6 +4883,57 @@
 					{
 						"in": "path",
 						"name": "unitTypeId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-unit-type-offerings/{id}/restore": {
+			"post": {
+				"operationId": "RestoreOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Offering is not deleted or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
 						"required": true,
 						"schema": {
 							"type": "string"
@@ -5183,6 +5388,57 @@
 				]
 			}
 		},
+		"/facility-amenity-offerings/{id}/restore": {
+			"post": {
+				"operationId": "RestoreOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityAmenityOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Offering is not deleted or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Amenity Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Amenity Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/facilities": {
 			"get": {
 				"operationId": "FindAllFacility",
@@ -5535,6 +5791,57 @@
 						}
 					}
 				}
+			}
+		},
+		"/facilities/{id}/restore": {
+			"post": {
+				"operationId": "RestoreFacility",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Facility is not deleted or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/auth/send-otp": {
@@ -6214,6 +6521,57 @@
 					},
 					"400": {
 						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Amenity not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Amenities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/amenities/{id}/restore": {
+			"post": {
+				"operationId": "RestoreAmenity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AmenityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Amenity is not deleted or invalid ID",
 						"content": {
 							"application/json": {
 								"schema": {

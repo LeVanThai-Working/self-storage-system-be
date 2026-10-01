@@ -25,4 +25,10 @@ export class ProfileRepository {
   ): Promise<void> {
     await this.profile.delete({ userId });
   }
+
+  async restoreByUserId(
+    userId: string | mongoose.Types.ObjectId
+  ): Promise<void> {
+    await this.profile.restore({ userId });
+  }
 }

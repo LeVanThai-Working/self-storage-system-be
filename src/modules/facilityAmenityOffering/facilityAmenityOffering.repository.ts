@@ -128,4 +128,15 @@ export class FacilityAmenityOfferingRepository {
   async deleteById(id: string, deletedBy?: string) {
     return this.offering.deleteById(id, deletedBy);
   }
+
+  async findByIdIncludeDeleted(id: string) {
+    return this.offering
+      .findOneWithDeleted({ _id: id })
+      .populate(POPULATE_FACILITY)
+      .populate(POPULATE_AMENITY);
+  }
+
+  async restoreById(id: string) {
+    return this.offering.restore({ _id: id });
+  }
 }

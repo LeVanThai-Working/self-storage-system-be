@@ -77,4 +77,12 @@ export class UnitTypeRepository {
   async softDelete(id: string, deletedBy?: string) {
     return this.unitType.deleteById(id, deletedBy);
   }
+
+  async findByIdIncludeDeleted(id: string) {
+    return this.unitType.findOneWithDeleted({ _id: id });
+  }
+
+  async restoreById(id: string) {
+    return this.unitType.restore({ _id: id });
+  }
 }

@@ -211,4 +211,29 @@ export class FacilityAmenityOfferingController extends Controller {
       data: null,
     };
   }
+
+  @Post('{id}/restore')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  @Middlewares(
+    validateRequest({ params: facilityAmenityOfferingIdParamSchema })
+  )
+  @Response<ApiErrorResponse>(400, 'Offering is not deleted or invalid ID')
+  @Response<ApiErrorResponse>(404, 'Facility Amenity Offering not found')
+  public async restoreOffering(
+    @Path() id: string
+  ): Promise<ApiResponse<FacilityAmenityOfferingResponse>> {
+    const offering = await this.offeringService.restoreOffering(id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, [
+        'Facility Amenity Offering',
+      ]),
+      data: offering,
+    };
+  }
 }

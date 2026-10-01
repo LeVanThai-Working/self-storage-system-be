@@ -265,6 +265,27 @@ export class FacilityAmenityOfferingService {
     await this.offeringRepository.deleteById(id, deletedBy);
   }
 
+  @Transactional()
+  async restoreOffering(id: string): Promise<FacilityAmenityOfferingResponse> {
+    const offering = await this.offeringRepository.findByIdIncludeDeleted(id);
+    if (!offering) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+        'Facility Amenity Offering',
+      ]);
+    }
+    if (!offering.deleted) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    await this.offeringRepository.restoreById(id);
+
+    const restored = await this.offeringRepository.findById(id);
+    return validateResponse(
+      facilityAmenityOfferingResponseSchema,
+      this.formatOffering(restored)
+    );
+  }
+
   // =========================================================================
   // INTERNAL SERVICE METHODS (For Reservation & Contract modules)
   // =========================================================================

@@ -135,4 +135,23 @@ export class AmenityService {
 
     await this.amenityRepository.deleteById(id, deletedBy);
   }
+
+  @Transactional()
+  async restoreAmenity(id: string): Promise<AmenityResponse> {
+    const amenity = await this.amenityRepository.findByIdIncludeDeleted(id);
+    if (!amenity) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Amenity']);
+    }
+    if (!amenity.deleted) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    await this.amenityRepository.restoreById(id);
+
+    const restored = await this.amenityRepository.findById(id);
+    return validateResponse(
+      amenityResponseSchema,
+      this.formatAmenity(restored)
+    );
+  }
 }

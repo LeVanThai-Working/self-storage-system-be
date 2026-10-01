@@ -60,4 +60,12 @@ export class FacilityRepository {
   async softDelete(id: string, deletedBy?: string) {
     return this.facility.deleteById(id, deletedBy);
   }
+
+  async findByIdIncludeDeleted(id: string) {
+    return this.facility.findOneWithDeleted({ _id: id });
+  }
+
+  async restore(id: string) {
+    return this.facility.restore({ _id: id });
+  }
 }

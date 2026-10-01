@@ -165,6 +165,13 @@ export class StorageUnitRepository {
     return this.storageUnit.deleteById(id, deletedBy);
   }
 
+  async findByIdIncludeDeleted(id: string) {
+    return this.storageUnit
+      .findOneWithDeleted({ _id: id })
+      .populate(POPULATE_FACILITY)
+      .populate(POPULATE_UNIT_TYPE);
+  }
+
   async restoreById(id: string) {
     return this.storageUnit.restore({ _id: id });
   }

@@ -63,8 +63,12 @@ const storageUnitSchema = new mongoose.Schema<IStorageUnit>(
   }
 );
 
-// Compound Unique Index: each facility can only have one unique unitNumber
-storageUnitSchema.index({ facilityId: 1, unitNumber: 1 }, { unique: true });
+// Partial Unique Index: each facility can only have one unique unitNumber among non-deleted documents
+// Allows re-creating a unit with the same number after soft-delete
+storageUnitSchema.index(
+  { facilityId: 1, unitNumber: 1 },
+  { unique: true, partialFilterExpression: { deleted: { $ne: true } } }
+);
 
 // Compound Indexes for optimizing queries by facility
 storageUnitSchema.index({ facilityId: 1, status: 1 });

@@ -130,4 +130,24 @@ export class UserService {
       await this.authRedisService.revokeAllUserFamilies(id);
     }
   }
+
+  @Transactional()
+  async restoreUser(id: string): Promise<UserResponse> {
+    const user = await this.userRepository.findByIdIncludeDeleted(id);
+    if (!user) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+    }
+    if (!user.deleted) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    if (this.profileRepository) {
+      await this.profileRepository.restoreByUserId(id);
+    }
+
+    await this.userRepository.restoreUser(id);
+
+    const restored = await this.userRepository.findById(id);
+    return validateResponse(userResponseSchema, this.formatUser(restored));
+  }
 }

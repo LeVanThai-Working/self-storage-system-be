@@ -345,6 +345,25 @@ export class StorageUnitService {
     await this.storageUnitRepository.deleteById(id);
   }
 
+  @Transactional()
+  async restoreStorageUnit(id: string): Promise<StorageUnitResponse> {
+    const unit = await this.storageUnitRepository.findByIdIncludeDeleted(id);
+    if (!unit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+    if (!unit.deleted) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    await this.storageUnitRepository.restoreById(id);
+
+    const restored = await this.storageUnitRepository.findById(id);
+    return validateResponse(
+      storageUnitResponseSchema,
+      this.formatStorageUnit(restored)
+    );
+  }
+
   // =========================================================================
   // INTERNAL SERVICE METHODS (For Reservation & Contract modules)
   // =========================================================================

@@ -242,4 +242,25 @@ export class FacilityUnitTypeOfferingService {
 
     await this.offeringRepository.softDeleteById(id, deletedBy);
   }
+
+  @Transactional()
+  async restoreOffering(id: string): Promise<FacilityUnitTypeOfferingResponse> {
+    const offering = await this.offeringRepository.findByIdIncludeDeleted(id);
+    if (!offering) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+        'Facility Unit Type Offering',
+      ]);
+    }
+    if (!offering.deleted) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    await this.offeringRepository.restoreById(id);
+
+    const restored = await this.offeringRepository.findById(id);
+    return validateResponse(
+      facilityUnitTypeOfferingResponseSchema,
+      this.formatOffering(restored)
+    );
+  }
 }
