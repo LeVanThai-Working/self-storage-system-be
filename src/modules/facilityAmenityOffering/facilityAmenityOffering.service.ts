@@ -26,7 +26,7 @@ export class FacilityAmenityOfferingService {
     private readonly offeringRepository: FacilityAmenityOfferingRepository,
     private readonly facilityRepository: FacilityRepository,
     private readonly amenityRepository: AmenityRepository
-  ) {}
+  ) { }
 
   private formatOffering(offering: unknown): unknown {
     if (!offering) return offering;
@@ -268,58 +268,58 @@ export class FacilityAmenityOfferingService {
   // =========================================================================
   // INTERNAL SERVICE METHODS (For Reservation & Contract modules)
   // =========================================================================
+  //
+  // async reserveAmenity(
+  //   offeringId: string,
+  //   quantity: number,
+  //   session?: ClientSession
+  // ): Promise<IFacilityAmenityOffering> {
+  //   const offering = await this.offeringRepository.findById(
+  //     offeringId,
+  //     session
+  //   );
+  //   if (!offering) {
+  //     throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+  //       'Facility Amenity Offering',
+  //     ]);
+  //   }
 
-  async reserveAmenity(
-    offeringId: string,
-    quantity: number,
-    session?: ClientSession
-  ): Promise<IFacilityAmenityOffering> {
-    const offering = await this.offeringRepository.findById(
-      offeringId,
-      session
-    );
-    if (!offering) {
-      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
-        'Facility Amenity Offering',
-      ]);
-    }
+  //   const available = offering.totalQuantity - offering.inUseQuantity;
+  //   if (offering.totalQuantity > 0 && available < quantity) {
+  //     throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+  //       `Insufficient amenity quantity (Available: ${available}, Requested: ${quantity})`,
+  //     ]);
+  //   }
 
-    const available = offering.totalQuantity - offering.inUseQuantity;
-    if (offering.totalQuantity > 0 && available < quantity) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-        `Insufficient amenity quantity (Available: ${available}, Requested: ${quantity})`,
-      ]);
-    }
+  //   const updated = await this.offeringRepository.updateById(
+  //     offeringId,
+  //     { inUseQuantity: offering.inUseQuantity + quantity },
+  //     session
+  //   );
+  //   return updated as IFacilityAmenityOffering;
+  // }
 
-    const updated = await this.offeringRepository.updateById(
-      offeringId,
-      { inUseQuantity: offering.inUseQuantity + quantity },
-      session
-    );
-    return updated as IFacilityAmenityOffering;
-  }
+  // async releaseAmenity(
+  //   offeringId: string,
+  //   quantity: number,
+  //   session?: ClientSession
+  // ): Promise<IFacilityAmenityOffering> {
+  //   const offering = await this.offeringRepository.findById(
+  //     offeringId,
+  //     session
+  //   );
+  //   if (!offering) {
+  //     throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+  //       'Facility Amenity Offering',
+  //     ]);
+  //   }
 
-  async releaseAmenity(
-    offeringId: string,
-    quantity: number,
-    session?: ClientSession
-  ): Promise<IFacilityAmenityOffering> {
-    const offering = await this.offeringRepository.findById(
-      offeringId,
-      session
-    );
-    if (!offering) {
-      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
-        'Facility Amenity Offering',
-      ]);
-    }
-
-    const newInUse = Math.max(0, offering.inUseQuantity - quantity);
-    const updated = await this.offeringRepository.updateById(
-      offeringId,
-      { inUseQuantity: newInUse },
-      session
-    );
-    return updated as IFacilityAmenityOffering;
-  }
+  //   const newInUse = Math.max(0, offering.inUseQuantity - quantity);
+  //   const updated = await this.offeringRepository.updateById(
+  //     offeringId,
+  //     { inUseQuantity: newInUse },
+  //     session
+  //   );
+  //   return updated as IFacilityAmenityOffering;
+  // }
 }
