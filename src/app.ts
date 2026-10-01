@@ -56,7 +56,9 @@ app.use('/api-docs', (_req: Request, res: Response, next) => {
   next();
 });
 
-const serverUrl = process.env.SERVER_URL || `http://localhost:${port}`;
+const serverUrl = (
+  process.env.SERVER_URL || `http://localhost:${port}`
+).replace(/\/+$/, '');
 const serverDescription =
   process.env.NODE_ENV === 'production'
     ? 'Production server'
@@ -93,7 +95,7 @@ app.use(errorMiddleware);
 
 // Start the server
 app.listen(port, '0.0.0.0', () => {
-  const publicUrl = process.env.SERVER_URL || `http://localhost:${port}`;
+  const publicUrl = serverUrl;
   console.log(`Server is running at ${publicUrl}`);
   console.log(`Swagger UI is available at ${publicUrl}/api-docs/`);
 });
