@@ -69,7 +69,7 @@ const facilityAmenityOfferingSchema =
     }
   );
 
-// Partial Unique Compound Index: 1 cơ sở chỉ có 1 bản ghi cấu hình active cho 1 tiện ích
+// Partial Unique Compound Index: each facility can only have one active offering record per amenity
 facilityAmenityOfferingSchema.index(
   { facilityId: 1, amenityId: 1 },
   { unique: true, partialFilterExpression: { deleted: false } }

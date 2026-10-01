@@ -71,7 +71,7 @@ export class AmenityService {
   async createAmenity(data: CreateAmenityRequest): Promise<AmenityResponse> {
     const trimmedName = data.name.trim();
 
-    // Chặn trùng tên tiện ích (bao gồm cả bản ghi soft-deleted)
+    // Prevent duplicate amenity name (including soft-deleted records)
     const existing =
       await this.amenityRepository.findByNameIncludeDeleted(trimmedName);
 
@@ -97,7 +97,7 @@ export class AmenityService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Amenity']);
     }
 
-    // Nếu có đổi tên -> Kiểm tra trùng tên
+    // If name is changed -> check for name duplicates
     if (data.name) {
       const trimmedName = data.name.trim();
       if (trimmedName.toLowerCase() !== amenity.name.toLowerCase()) {
@@ -131,7 +131,7 @@ export class AmenityService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Amenity']);
     }
 
-    // TODO: Khi triển khai FacilityAmenityOffering -> Kiểm tra chặn xóa nếu có cơ sở đang sử dụng tiện ích này.
+    // TODO: When integrating FacilityAmenityOffering -> Prevent deletion if any facility is offering this amenity.
 
     await this.amenityRepository.deleteById(id, deletedBy);
   }

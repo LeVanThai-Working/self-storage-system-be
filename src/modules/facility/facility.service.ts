@@ -125,13 +125,13 @@ export class FacilityService {
     }
 
     // TODO: [Module StorageUnit, Reservation & Contract Integration Reminder]
-    // Khi hoàn thiện các module liên quan, cần bổ sung các điều kiện chặn xoá & cascade:
-    // 1. [CHẶN XOÁ] Kiểm tra nếu cơ sở đang có ô kho có người thuê (StorageUnit.status === 'OCCUPIED') -> Báo lỗi không cho xoá.
-    // 2. [CHẶN XOÁ] Kiểm tra nếu cơ sở đang có Hợp đồng hiệu lực (Contract) hoặc Đặt chỗ chờ nhận phòng (Reservation) -> Báo lỗi.
-    // 3. [CASCADE SOFT-DELETE] Tự động xoá mềm các bản ghi phụ thuộc trong cùng Transaction:
-    //    - FacilityUnitTypeOffering: Xoá mềm toàn bộ bảng giá thuộc cơ sở này.
-    //    - StorageUnit: Xoá mềm toàn bộ phòng kho vật lý (AVAILABLE/MAINTENANCE) thuộc cơ sở này.
-    //    - User (Staff): Huỷ liên kết assignedFacilityId của các nhân viên thuộc cơ sở này.
+    // When completing related modules, add deletion guard conditions & cascading logic:
+    // 1. [GUARD DELETION] Check if facility has occupied storage units (StorageUnit.status === 'OCCUPIED') -> Throw error to prevent deletion.
+    // 2. [GUARD DELETION] Check if facility has active contracts (Contract) or pending reservations (Reservation) -> Throw error.
+    // 3. [CASCADE SOFT-DELETE] Automatically soft-delete dependent records within the same transaction:
+    //    - FacilityUnitTypeOffering: Soft-delete all pricing offerings for this facility.
+    //    - StorageUnit: Soft-delete all physical storage units (AVAILABLE/MAINTENANCE) belonging to this facility.
+    //    - User (Staff): Unassign assignedFacilityId for staff members assigned to this facility.
 
     await this.facilityRepository.softDelete(id, deletedBy);
   }
@@ -143,7 +143,7 @@ export class FacilityService {
   ): Promise<FacilityResponse> {
     const facility = await this.facilityRepository.findById(facilityId);
 
-    // 1. kiem tra facility ton tai va active  ?
+    // 1. Check if facility exists and is ACTIVE
     if (!facility) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
     }
@@ -151,7 +151,7 @@ export class FacilityService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Facility']);
     }
 
-    // 2. kiem tra manager ton tai, dung role va dang active ?
+    // 2. Check if manager exists, has the correct role, and is ACTIVE
     const newManager = await this.userRepository.findById(data.managerId);
     if (!newManager) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Manager']);
@@ -167,7 +167,7 @@ export class FacilityService {
       ]);
     }
 
-    // 3. kiem tra Manager moi co dang quan li co so khac khong -> go manager khoi co so cu
+    // 3. Check if new manager is already managing another facility -> unlink manager from old facility
     if (
       newManager.assignedFacilityId &&
       String(newManager.assignedFacilityId) !== facilityId
@@ -180,7 +180,7 @@ export class FacilityService {
       );
     }
 
-    //4. kiem tra co so hien tai co manager chua -> go lien ket
+    // 4. Check if current facility already has a manager -> unlink old manager
     const oldManagerId = facility.managerId ? String(facility.managerId) : null;
     if (oldManagerId && oldManagerId !== data.managerId) {
       await this.userRepository.updateUser(oldManagerId, {
@@ -188,12 +188,12 @@ export class FacilityService {
       });
     }
 
-    //5. cap nhat Facility.managerId (chieu 1)
+    // 5. Update Facility.managerId (side 1)
     const updatedFacility = await this.facilityRepository.update(facilityId, {
       managerId: newManager._id as unknown as Types.ObjectId,
     });
 
-    //6. Cap nhat User.assignedFacilityId (chieu 2)
+    // 6. Update User.assignedFacilityId (side 2)
     await this.userRepository.updateUser(data.managerId, {
       assignedFacilityId: facility._id as unknown as Types.ObjectId,
     });

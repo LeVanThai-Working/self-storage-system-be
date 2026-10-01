@@ -134,7 +134,7 @@ export class FacilityUnitTypeOfferingService {
   async createOffering(
     data: CreateOfferingRequest
   ): Promise<FacilityUnitTypeOfferingResponse> {
-    // Validate Facility tồn tại và ACTIVE
+    // Validate Facility exists and is ACTIVE
     const facility = await this.facilityRepository.findById(data.facilityId);
     if (!facility) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
@@ -143,7 +143,7 @@ export class FacilityUnitTypeOfferingService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Facility']);
     }
 
-    // Validate UnitType tồn tại và ACTIVE
+    // Validate UnitType exists and is ACTIVE
     const unitType = await this.unitTypeRepository.findById(data.unitTypeId);
     if (!unitType) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Unit Type']);
@@ -152,7 +152,7 @@ export class FacilityUnitTypeOfferingService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Unit Type']);
     }
 
-    // Kiểm tra duplicate (bao gồm bản ghi đã xóa mềm)
+    // Check duplicate (including soft-deleted records)
     const existing =
       await this.offeringRepository.findByFacilityAndUnitTypeIncludeDeleted(
         data.facilityId,
@@ -160,14 +160,14 @@ export class FacilityUnitTypeOfferingService {
       );
 
     if (existing) {
-      // Nếu bản ghi đang ACTIVE (chưa xoá mềm) -> Báo lỗi trùng
+      // If record is currently ACTIVE (not soft-deleted) -> Throw duplicate error
       if (!existing.deleted) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_105, [
           'Offering for this Facility and Unit Type',
         ]);
       }
 
-      // Nếu bản ghi ĐÃ BỊ XOÁ MỀM -> Khôi phục và cập nhật thông tin mới
+      // If record WAS SOFT-DELETED -> Restore and update with new payload
       await this.offeringRepository.restoreById(String(existing._id));
       const updated = await this.offeringRepository.updateById(
         String(existing._id),
@@ -196,7 +196,7 @@ export class FacilityUnitTypeOfferingService {
       status: data.status ?? FacilityUnitTypeOfferingStatusEnum.ACTIVE,
     });
 
-    // Fetch lại với populate để trả về response đầy đủ
+    // Re-fetch with populate to return complete response
     const populated = await this.offeringRepository.findById(
       String(newOffering._id)
     );
@@ -236,9 +236,9 @@ export class FacilityUnitTypeOfferingService {
     }
 
     // TODO: [Module Reservation & Contract Integration Reminder]
-    // Khi hoàn thiện các module liên quan, cần bổ sung các điều kiện chặn xoá:
-    // 1. [CHẶN XOÁ] Kiểm tra nếu cặp (facilityId, unitTypeId) này đang có Hợp đồng hiệu lực (Contract.status === 'ACTIVE') -> Chặn xoá.
-    // 2. [CHẶN XOÁ] Kiểm tra nếu đang có Đặt chỗ (Reservation) chờ nhận phòng sử dụng bảng giá này -> Chặn xoá.
+    // When completing related modules, add deletion guard conditions:
+    // 1. [GUARD DELETION] Check if this (facilityId, unitTypeId) pair currently has active contracts (Contract.status === 'ACTIVE') -> Block deletion.
+    // 2. [GUARD DELETION] Check if there are pending reservations (Reservation) using this offering -> Block deletion.
 
     await this.offeringRepository.softDeleteById(id, deletedBy);
   }

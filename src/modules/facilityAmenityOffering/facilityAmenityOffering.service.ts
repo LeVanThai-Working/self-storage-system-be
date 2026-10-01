@@ -168,7 +168,7 @@ export class FacilityAmenityOfferingService {
   async createOffering(
     data: CreateFacilityAmenityOfferingRequest
   ): Promise<FacilityAmenityOfferingResponse> {
-    // Validate Facility tồn tại và ACTIVE
+    // Validate Facility exists and is ACTIVE
     const facility = await this.facilityRepository.findById(data.facilityId);
     if (!facility) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
@@ -177,7 +177,7 @@ export class FacilityAmenityOfferingService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Facility']);
     }
 
-    // Validate Amenity tồn tại và ACTIVE
+    // Validate Amenity exists and is ACTIVE
     const amenity = await this.amenityRepository.findById(data.amenityId);
     if (!amenity) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Amenity']);
@@ -186,7 +186,7 @@ export class FacilityAmenityOfferingService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Amenity']);
     }
 
-    // Kiểm tra duplicate (chỉ xét bản ghi active theo Partial Unique Index)
+    // Check duplicate (only for active records based on Partial Unique Index)
     const existing = await this.offeringRepository.findByFacilityAndAmenity(
       data.facilityId,
       data.amenityId
@@ -227,7 +227,7 @@ export class FacilityAmenityOfferingService {
       ]);
     }
 
-    // Rule kiểm tra tồn kho: totalQuantity không được nhỏ hơn inUseQuantity
+    // Inventory validation rule: totalQuantity cannot be less than inUseQuantity
     if (data.totalQuantity !== undefined) {
       if (data.totalQuantity < offering.inUseQuantity) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
@@ -255,7 +255,7 @@ export class FacilityAmenityOfferingService {
       ]);
     }
 
-    // Chặn xóa nếu có số lượng đang được sử dụng
+    // Guard against deletion if units are currently in use
     if (offering.inUseQuantity > 0) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
         `Cannot delete offering while ${offering.inUseQuantity} items are currently in use`,
@@ -266,7 +266,7 @@ export class FacilityAmenityOfferingService {
   }
 
   // =========================================================================
-  // INTERNAL SERVICE METHODS (Dành cho Reservation & Contract)
+  // INTERNAL SERVICE METHODS (For Reservation & Contract modules)
   // =========================================================================
 
   async reserveAmenity(

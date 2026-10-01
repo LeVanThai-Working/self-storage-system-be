@@ -84,7 +84,7 @@ export class FacilityUnitTypeOfferingRepository {
       .populate(POPULATE_UNIT_TYPE);
   }
 
-  // Kiểm tra duplicate bao gồm cả bản ghi đã xóa mềm
+  // Check duplicate including soft-deleted records
   async findByFacilityAndUnitTypeIncludeDeleted(
     facilityId: string,
     unitTypeId: string

@@ -11,7 +11,7 @@ const offeringRepository = new FacilityUnitTypeOfferingRepository(
   FacilityUnitTypeOffering
 );
 
-// Cross-module: cần validate Facility và UnitType tồn tại trong createOffering
+// Cross-module: required to validate that Facility and UnitType exist in createOffering
 const facilityRepository = new FacilityRepository(Facility);
 const unitTypeRepository = new UnitTypeRepository(UnitType);
 

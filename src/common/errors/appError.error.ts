@@ -28,16 +28,16 @@ export class AppError extends Error {
   }
 }
 
-// 3 kiểu lỗi có thể trả
+// 3 supported ways to throw errors:
 
-// Kiểu 1: Truyền chuỗi chữ thuần túy bất kỳ bạn muốn
-// throw new AppError(400, 'Cơ sở này hiện đã kín phòng, không thể nhận thêm!');
-// -> Trả về message: "Cơ sở này hiện đã kín phòng, không thể nhận thêm!"
+// Pattern 1: Pass any plain custom message string
+// throw new AppError(400, 'This facility is fully booked and cannot accept more units!');
+// -> Returns message: "This facility is fully booked and cannot accept more units!"
 
-// Kiểu 2: Truyền chuỗi tự do có chứa {0}, {1}
-// throw new AppError(400, 'Không thể gán {0} vì cơ sở đang ở trạng thái {1}', ['Nguyễn Văn A', 'Đóng cửa']);
-// -> Trả về message: "Không thể gán Nguyễn Văn A vì cơ sở đang ở trạng thái Đóng cửa"
+// Pattern 2: Pass custom string containing {0}, {1} placeholders
+// throw new AppError(400, 'Cannot assign {0} because the facility is currently {1}', ['John Doe', 'Closed']);
+// -> Returns message: "Cannot assign John Doe because the facility is currently Closed"
 
-// Kiểu 3: Vẫn dùng mã lỗi chuẩn MESSAGE_CODE như bình thường
+// Pattern 3: Use standard MESSAGE_CODE constant
 // throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
-// -> Trả về message: "Facility Not Found"
+// -> Returns message: "Facility Not Found"

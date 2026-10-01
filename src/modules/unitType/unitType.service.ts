@@ -148,11 +148,11 @@ export class UnitTypeService {
     }
 
     // TODO: [Module StorageUnit & Offering Integration Reminder]
-    // Khi hoàn thiện các module liên quan, cần bổ sung các điều kiện chặn xoá & cascade:
-    // 1. [CHẶN XOÁ] Kiểm tra nếu có bất kỳ StorageUnit nào đang thuộc UnitType này và đang có người thuê (OCCUPIED) hoặc đặt chỗ (RESERVED) -> Báo lỗi.
-    // 2. [CASCADE SOFT-DELETE] Tự động xoá mềm các bản ghi phụ thuộc trong cùng Transaction:
-    //    - FacilityUnitTypeOffering: Xoá mềm tất cả bảng giá cấu hình của UnitType này trên mọi cơ sở.
-    //    - StorageUnit: Xoá mềm tất cả phòng kho vật lý đang trống (AVAILABLE/MAINTENANCE) của UnitType này.
+    // When completing related modules, add deletion guard conditions & cascading logic:
+    // 1. [GUARD DELETION] Check if any StorageUnit belongs to this UnitType and is currently OCCUPIED or RESERVED -> Throw error.
+    // 2. [CASCADE SOFT-DELETE] Automatically soft-delete dependent records within the same transaction:
+    //    - FacilityUnitTypeOffering: Soft-delete all pricing offerings for this UnitType across all facilities.
+    //    - StorageUnit: Soft-delete all physical storage units (AVAILABLE/MAINTENANCE) belonging to this UnitType.
 
     await this.unitTypeRepository.softDelete(id, deletedBy);
   }

@@ -48,7 +48,7 @@ export class FacilityUnitTypeOfferingController extends Controller {
   }
 
   /**
-   * Lấy danh sách cấu hình bảng giá (có phân trang, lọc, sắp xếp)
+   * Get list of facility unit type offerings (with pagination, filter, sorting)
    */
   @Get('')
   @Middlewares(validateRequest({ query: offeringQuerySchema }))
@@ -69,7 +69,7 @@ export class FacilityUnitTypeOfferingController extends Controller {
   }
 
   /**
-   * Lấy chi tiết cấu hình bảng giá theo ID
+   * Get facility unit type offering details by ID
    */
   @Get('{id}')
   @Middlewares(validateRequest({ params: offeringIdParamSchema }))
@@ -90,8 +90,8 @@ export class FacilityUnitTypeOfferingController extends Controller {
   }
 
   /**
-   * Tra cứu nhanh bảng giá theo cặp facilityId + unitTypeId
-   * (dùng bởi StorageUnit, Reservation, Contract)
+   * Quick lookup offering by facilityId and unitTypeId
+   * (used by StorageUnit, Reservation, Contract)
    */
   @Get('facility/{facilityId}/unit-type/{unitTypeId}')
   @Middlewares(validateRequest({ params: facilityUnitTypeParamSchema }))
@@ -117,7 +117,7 @@ export class FacilityUnitTypeOfferingController extends Controller {
   }
 
   /**
-   * Tạo cấu hình bảng giá mới cho cơ sở
+   * Create a new facility unit type offering
    */
   @Post('')
   // @Security('bearerAuth')
@@ -148,7 +148,7 @@ export class FacilityUnitTypeOfferingController extends Controller {
   }
 
   /**
-   * Cập nhật cấu hình bảng giá
+   * Update facility unit type offering
    */
   @Patch('{id}')
   // @Security('bearerAuth')
@@ -180,7 +180,7 @@ export class FacilityUnitTypeOfferingController extends Controller {
   }
 
   /**
-   * Xóa mềm cấu hình bảng giá
+   * Soft-delete facility unit type offering
    */
   @Delete('{id}')
   // @Security('bearerAuth')

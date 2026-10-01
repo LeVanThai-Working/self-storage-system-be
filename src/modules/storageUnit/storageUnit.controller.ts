@@ -47,7 +47,7 @@ export class StorageUnitController extends Controller {
   }
 
   /**
-   * Lấy danh sách phòng kho vật lý (có phân trang, tìm kiếm, lọc theo chi nhánh/loại kho/tầng/khu vực/trạng thái)
+   * Get list of physical storage units (with pagination, search, filter by facility/unitType/floor/zone/status)
    */
   @Get('')
   @Middlewares(validateRequest({ query: storageUnitQuerySchema }))
@@ -68,7 +68,7 @@ export class StorageUnitController extends Controller {
   }
 
   /**
-   * Tra cứu danh sách phòng trống khả dụng theo cơ sở (phục vụ đặt chỗ / thuê phòng)
+   * Lookup available storage units for a facility (for booking/reservation)
    */
   @Get('facility/{facilityId}/available')
   @Middlewares(
@@ -98,7 +98,7 @@ export class StorageUnitController extends Controller {
   }
 
   /**
-   * Lấy thông tin chi tiết một phòng kho theo ID
+   * Get physical storage unit details by ID
    */
   @Get('{id}')
   @Middlewares(validateRequest({ params: storageUnitIdParamSchema }))
@@ -119,7 +119,7 @@ export class StorageUnitController extends Controller {
   }
 
   /**
-   * Tạo phòng kho vật lý mới
+   * Create a new physical storage unit
    *
    * // @Security('bearerAuth')
    * // @Security('cookieAuth')
@@ -149,7 +149,7 @@ export class StorageUnitController extends Controller {
   }
 
   /**
-   * Cập nhật thông tin phòng kho (unitNumber, floor, zone, notes, unitTypeId)
+   * Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)
    *
    * // @Security('bearerAuth')
    * // @Security('cookieAuth')
@@ -183,7 +183,7 @@ export class StorageUnitController extends Controller {
   }
 
   /**
-   * Bật/tắt trạng thái bảo trì cho phòng kho (AVAILABLE <-> UNDER_MAINTENANCE)
+   * Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)
    *
    * // @Security('bearerAuth')
    * // @Security('cookieAuth')
@@ -222,7 +222,7 @@ export class StorageUnitController extends Controller {
   }
 
   /**
-   * Xóa mềm phòng kho
+   * Soft-delete storage unit
    *
    * // @Security('bearerAuth')
    * // @Security('cookieAuth')

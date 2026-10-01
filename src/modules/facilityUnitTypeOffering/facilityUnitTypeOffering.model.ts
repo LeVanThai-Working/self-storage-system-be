@@ -69,7 +69,7 @@ const facilityUnitTypeOfferingSchema =
     }
   );
 
-// Compound unique index: 1 cơ sở chỉ có 1 bảng giá cho 1 loại phòng kho
+// Compound unique index: each facility can only have one pricing offering per unit type
 facilityUnitTypeOfferingSchema.index(
   { facilityId: 1, unitTypeId: 1 },
   { unique: true }

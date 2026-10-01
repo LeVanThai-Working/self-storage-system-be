@@ -93,7 +93,7 @@ export class StorageUnitRepository {
     return q;
   }
 
-  // Tra cứu bao gồm bản ghi đã xóa mềm (phục vụ Auto-Restore)
+  // Find storage unit including soft-deleted records (for Auto-Restore)
   async findByFacilityAndUnitNumberIncludeDeleted(
     facilityId: string,
     unitNumber: string
@@ -104,7 +104,7 @@ export class StorageUnitRepository {
     });
   }
 
-  // Tra cứu danh sách phòng trống khả dụng tại một cơ sở
+  // Find available storage units in a facility
   async findAvailableUnits(
     facilityId: string,
     filters?: AvailableStorageUnitQuery

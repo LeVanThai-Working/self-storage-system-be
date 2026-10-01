@@ -114,10 +114,10 @@ export class UserService {
     }
 
     // TODO: [Module Reservation & Contract Integration Reminder]
-    // Khi hoàn thiện các module liên quan, cần bổ sung các điều kiện chặn xoá:
-    // 1. Kiểm tra nếu User đang có Hợp đồng thuê hiệu lực (Contract.status === 'ACTIVE') -> Chặn xoá và báo lỗi.
-    // 2. Kiểm tra nếu User đang có Đặt chỗ chưa hoàn thành (Reservation.status IN ['CONFIRMED', 'PENDING_PAYMENT']) -> Chặn xoá.
-    // 3. Nếu User là FACILITY_MANAGER đang phụ trách cơ sở -> Yêu cầu gán Manager khác trước khi xoá.
+    // When completing related modules, add deletion guard conditions:
+    // 1. Check if user has active lease contracts (Contract.status === 'ACTIVE') -> Block deletion and throw error.
+    // 2. Check if user has uncompleted reservations (Reservation.status IN ['CONFIRMED', 'PENDING_PAYMENT']) -> Block deletion.
+    // 3. If user is a FACILITY_MANAGER managing a facility -> Require assigning another manager before deletion.
 
     // Cascade delete: remove profile before soft-deleting user
     if (this.profileRepository) {

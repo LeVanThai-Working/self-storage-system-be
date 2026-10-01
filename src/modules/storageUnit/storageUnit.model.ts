@@ -63,10 +63,10 @@ const storageUnitSchema = new mongoose.Schema<IStorageUnit>(
   }
 );
 
-// Compound Unique Index: 1 cơ sở chỉ có 1 phòng kho mang 1 unitNumber duy nhất
+// Compound Unique Index: each facility can only have one unique unitNumber
 storageUnitSchema.index({ facilityId: 1, unitNumber: 1 }, { unique: true });
 
-// Compound Indexes phục vụ tối ưu query theo chi nhánh
+// Compound Indexes for optimizing queries by facility
 storageUnitSchema.index({ facilityId: 1, status: 1 });
 storageUnitSchema.index({ facilityId: 1, unitTypeId: 1 });
 storageUnitSchema.index({ facilityId: 1, floor: 1 });

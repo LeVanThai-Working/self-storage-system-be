@@ -1,6 +1,6 @@
 export const MESSAGE_CODE = {
   // ==========================================
-  // NHÓM THÀNH CÔNG (SUCCESS 001 - 004)
+  // SUCCESS (001 - 004)
   // ==========================================
   // Operation Successful
   MESSAGE_CODE_001: 'MESSAGE_CODE_001',
@@ -12,7 +12,7 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_004: 'MESSAGE_CODE_004',
 
   // ==========================================
-  // NHÓM LỖI CHUNG (GENERAL ERRORS 101 - 106)
+  // GENERAL ERRORS (101 - 106)
   // ==========================================
   // Invalid Request
   MESSAGE_CODE_101: 'MESSAGE_CODE_101',
@@ -28,7 +28,7 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_106: 'MESSAGE_CODE_106',
 
   // ==========================================
-  // NHÓM XÁC THỰC & ĐĂNG NHẬP (AUTH & CREDENTIALS 107 - 109)
+  // AUTH & CREDENTIALS (107 - 109)
   // ==========================================
   // Invalid Email Or Password
   MESSAGE_CODE_107: 'MESSAGE_CODE_107',
@@ -38,9 +38,9 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_109: 'MESSAGE_CODE_109',
 
   // ==========================================
-  // NHÓM TRẠNG THÁI TÀI KHOẢN & THỰC THỂ (STATUS 110 - 113)
+  // STATUS & ENTITY STATE (110 - 113)
   // ==========================================
-  // {0} Is Inactive (VD: Facility Is Inactive, Unit Type Is Inactive, Manager Account Is Inactive)
+  // {0} Is Inactive (e.g. Facility Is Inactive, Unit Type Is Inactive, Manager Account Is Inactive)
   MESSAGE_CODE_110: 'MESSAGE_CODE_110',
   // {0} Is Banned Or Locked
   MESSAGE_CODE_111: 'MESSAGE_CODE_111',
@@ -48,17 +48,17 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_112: 'MESSAGE_CODE_112',
 
   // ==========================================
-  // NHÓM XÉT VAI TRÒ & PHÂN QUYỀN (ROLE & PERMISSIONS 120 - 122)
+  // ROLE & PERMISSIONS (120 - 122)
   // ==========================================
-  // {0} Role Is Invalid (VD: User Role Is Invalid)
+  // {0} Role Is Invalid (e.g. User Role Is Invalid)
   MESSAGE_CODE_120: 'MESSAGE_CODE_120',
-  // User Must Have Role {0} (VD: User Must Have Role facility_manager)
+  // User Must Have Role {0} (e.g. User Must Have Role facility_manager)
   MESSAGE_CODE_121: 'MESSAGE_CODE_121',
   // You Do Not Have Permission To Manage {0}
   MESSAGE_CODE_122: 'MESSAGE_CODE_122',
 
   // ==========================================
-  // NHÓM VALIDATION & TOKEN (VALIDATION & TOKEN 200 - 201)
+  // VALIDATION & TOKEN (200 - 201)
   // ==========================================
   // {0} Is Required
   MESSAGE_CODE_200: 'MESSAGE_CODE_200',

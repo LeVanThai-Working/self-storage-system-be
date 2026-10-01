@@ -145,7 +145,7 @@ export class StorageUnitService {
   async createStorageUnit(
     data: CreateStorageUnitRequest
   ): Promise<StorageUnitResponse> {
-    // Validate Facility tồn tại và ACTIVE
+    // Validate Facility exists and is ACTIVE
     const facility = await this.facilityRepository.findById(data.facilityId);
     if (!facility) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
@@ -154,7 +154,7 @@ export class StorageUnitService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Facility']);
     }
 
-    // Validate UnitType tồn tại và ACTIVE
+    // Validate UnitType exists and is ACTIVE
     const unitType = await this.unitTypeRepository.findById(data.unitTypeId);
     if (!unitType) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Unit Type']);
@@ -163,7 +163,7 @@ export class StorageUnitService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Unit Type']);
     }
 
-    // Validate Offering (Cấu hình giá cho cặp Facility + UnitType phải tồn tại và ACTIVE)
+    // Validate Offering (Pricing offering for Facility + UnitType must exist and be ACTIVE)
     const offering = await this.offeringRepository.findByFacilityAndUnitType(
       data.facilityId,
       data.unitTypeId
@@ -177,7 +177,7 @@ export class StorageUnitService {
 
     const normalizedUnitNumber = data.unitNumber.toUpperCase().trim();
 
-    // Kiểm tra duplicate trong cùng Facility
+    // Check duplicate within the same Facility
     const existing =
       await this.storageUnitRepository.findByFacilityAndUnitNumberIncludeDeleted(
         data.facilityId,
@@ -217,7 +217,7 @@ export class StorageUnitService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
     }
 
-    // Nếu thay đổi unitTypeId: Chỉ cho phép khi phòng đang AVAILABLE
+    // If unitTypeId is changed: only allow if the unit is currently AVAILABLE
     if (
       data.unitTypeId &&
       String(unit.unitTypeId?._id || unit.unitTypeId) !== data.unitTypeId
@@ -247,7 +247,7 @@ export class StorageUnitService {
       }
     }
 
-    // Nếu thay đổi unitNumber: Kiểm tra trùng lặp tại cùng cơ sở
+    // If unitNumber is changed: check duplicate within the same facility
     if (data.unitNumber) {
       const normalizedUnitNumber = data.unitNumber.toUpperCase().trim();
       const facilityIdStr = String(unit.facilityId?._id || unit.facilityId);
@@ -295,7 +295,7 @@ export class StorageUnitService {
     }
 
     if (data.isUnderMaintenance) {
-      // Đưa vào bảo trì: Chặn nếu đang có người đặt (RESERVED) hoặc đang thuê (OCCUPIED)
+      // Put under maintenance: Block if currently RESERVED or OCCUPIED
       if (
         unit.status === StorageUnitStatusEnum.RESERVED ||
         unit.status === StorageUnitStatusEnum.OCCUPIED
@@ -304,7 +304,7 @@ export class StorageUnitService {
       }
       unit.status = StorageUnitStatusEnum.UNDER_MAINTENANCE;
     } else {
-      // Tắt bảo trì -> chuyển về AVAILABLE
+      // Turn off maintenance -> transition to AVAILABLE
       if (unit.status !== StorageUnitStatusEnum.UNDER_MAINTENANCE) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
       }
@@ -334,7 +334,7 @@ export class StorageUnitService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
     }
 
-    // Chặn xóa nếu phòng đang RESERVED hoặc OCCUPIED
+    // Block deletion if unit is currently RESERVED or OCCUPIED
     if (
       unit.status === StorageUnitStatusEnum.RESERVED ||
       unit.status === StorageUnitStatusEnum.OCCUPIED
@@ -346,7 +346,7 @@ export class StorageUnitService {
   }
 
   // =========================================================================
-  // INTERNAL SERVICE METHODS (Dành cho Module Reservation & Contract gọi)
+  // INTERNAL SERVICE METHODS (For Reservation & Contract modules)
   // =========================================================================
 
   async reserveUnit(
@@ -424,7 +424,7 @@ export class StorageUnitService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
     }
 
-    // Bắt buộc chuyển sang bảo trì/dọn dẹp sau khi trả phòng
+    // Automatically transition to maintenance/cleaning after checkout
     const updated = await this.storageUnitRepository.updateById(
       unitId,
       { status: StorageUnitStatusEnum.UNDER_MAINTENANCE },

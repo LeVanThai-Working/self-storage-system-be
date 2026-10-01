@@ -2,8 +2,8 @@ import mongoose, { type ClientSession } from 'mongoose';
 
 /**
  * @Transactional() Method Decorator
- * Tự động bọc toàn bộ logic của hàm trong một Database Transaction (Mongoose Session).
- * Tự động Commit khi thành công và Rollback nếu có bất kỳ lỗi/exception nào xảy ra.
+ * Automatically wraps method execution inside a MongoDB Transaction (Mongoose Session).
+ * Automatically commits on success and rolls back on any error/exception.
  */
 export function Transactional() {
   return function (
@@ -22,7 +22,7 @@ export function Transactional() {
         });
         return result;
       } catch (error: unknown) {
-        // Fallback cho môi trường MongoDB standalone (không bật replica set)
+        // Fallback for standalone MongoDB environments (without replica set enabled)
         const errMessage = error instanceof Error ? error.message : '';
         if (
           errMessage.includes('replica set member') ||
