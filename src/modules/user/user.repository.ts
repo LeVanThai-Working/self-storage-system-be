@@ -71,6 +71,10 @@ export class UserRepository {
     return this.user.findByIdAndUpdate(id, data, { new: true });
   }
 
+  async updatePassword(id: string, hashedPassword: string): Promise<void> {
+    await this.user.findByIdAndUpdate(id, { password: hashedPassword });
+  }
+
   async softDeleteUser(id: string, deletedBy?: string) {
     await this.user.findByIdAndUpdate(id, { status: UserStatusEnum.DELETED });
     return this.user.deleteById(id, deletedBy);
