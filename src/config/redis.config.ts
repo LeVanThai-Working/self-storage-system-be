@@ -1,13 +1,12 @@
 import { Redis } from 'ioredis';
 
-const redisHost = process.env.REDIS_HOST || 'localhost';
-const redisPort = Number(process.env.REDIS_PORT) || 6379;
-const redisPassword = process.env.REDIS_PASSWORD || undefined;
+// Local Redis configuration
+// const redisHost = process.env.REDIS_HOST || 'localhost';
+// const redisPort = Number(process.env.REDIS_PORT) || 6379;
+// const redisPassword = process.env.REDIS_PASSWORD || undefined;
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-export const redis = new Redis({
-  host: redisHost,
-  port: redisPort,
-  password: redisPassword,
+export const redis = new Redis(redisUrl, {
   maxRetriesPerRequest: null,
   lazyConnect: true,
 });
