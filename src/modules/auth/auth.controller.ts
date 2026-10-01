@@ -18,7 +18,7 @@ import type {
 } from 'express';
 import type { AuthService } from './auth.service.ts';
 import type { IUser } from '../user/user.model.ts';
-import { setAuthCookies } from '../../utils/cookie.util.ts';
+import { setAuthCookies, clearAuthCookies } from '../../utils/cookie.util.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { formatMessage } from '../../utils/format.util.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
@@ -173,8 +173,7 @@ export class AuthController extends Controller {
     }
 
     if (req?.res) {
-      req.res.clearCookie('accessToken');
-      req.res.clearCookie('refreshToken');
+      clearAuthCookies(req.res);
     }
 
     return {
@@ -210,7 +209,8 @@ export class AuthController extends Controller {
       req.user as IUser
     );
     setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
-    res.redirect('/auth/me');
+    const redirectUrl = process.env.FRONTEND_URL || '/auth/me';
+    res.redirect(redirectUrl);
   };
 
   @Post('forgot-password')
