@@ -3852,7 +3852,7 @@
 						}
 					}
 				},
-				"description": "Create a new physical storage unit\r\n\r\n//",
+				"description": "Create a new physical storage unit\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -4032,7 +4032,7 @@
 						}
 					}
 				},
-				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\r\n\r\n//",
+				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -4092,7 +4092,7 @@
 						}
 					}
 				},
-				"description": "Soft-delete storage unit\r\n\r\n//",
+				"description": "Soft-delete storage unit\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -4144,7 +4144,7 @@
 						}
 					}
 				},
-				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\r\n\r\n//",
+				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -4712,7 +4712,7 @@
 						}
 					}
 				},
-				"description": "Quick lookup offering by facilityId and unitTypeId\r\n(used by StorageUnit, Reservation, Contract)",
+				"description": "Quick lookup offering by facilityId and unitTypeId\n(used by StorageUnit, Reservation, Contract)",
 				"tags": [
 					"Facility Unit Type Offerings"
 				],
