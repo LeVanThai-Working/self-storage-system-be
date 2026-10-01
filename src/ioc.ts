@@ -9,6 +9,14 @@ import { FacilityController } from './modules/facility/facility.controller.ts';
 import { facilityController } from './modules/facility/facility.container.ts';
 import { UnitTypeController } from './modules/unitType/unitType.controller.ts';
 import { unitTypeController } from './modules/unitType/unitType.container.ts';
+import { FacilityUnitTypeOfferingController } from './modules/facilityUnitTypeOffering/facilityUnitTypeOffering.controller.ts';
+import { facilityUnitTypeOfferingController } from './modules/facilityUnitTypeOffering/facilityUnitTypeOffering.container.ts';
+import { StorageUnitController } from './modules/storageUnit/storageUnit.controller.ts';
+import { storageUnitController } from './modules/storageUnit/storageUnit.container.ts';
+import { AmenityController } from './modules/amenity/amenity.controller.ts';
+import { amenityController } from './modules/amenity/amenity.container.ts';
+import { FacilityAmenityOfferingController } from './modules/facilityAmenityOffering/facilityAmenityOffering.controller.ts';
+import { facilityAmenityOfferingController } from './modules/facilityAmenityOffering/facilityAmenityOffering.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -26,6 +34,18 @@ export const iocContainer: IocContainer = {
     }
     if (controller === UnitTypeController) {
       return unitTypeController as unknown as T;
+    }
+    if (controller === FacilityUnitTypeOfferingController) {
+      return facilityUnitTypeOfferingController as unknown as T;
+    }
+    if (controller === StorageUnitController) {
+      return storageUnitController as unknown as T;
+    }
+    if (controller === AmenityController) {
+      return amenityController as unknown as T;
+    }
+    if (controller === FacilityAmenityOfferingController) {
+      return facilityAmenityOfferingController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

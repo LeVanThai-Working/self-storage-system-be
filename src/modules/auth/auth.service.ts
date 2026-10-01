@@ -20,6 +20,7 @@ import {
 } from '../../common/enums/user.enum.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
 import { authUserResponseSchema } from './schemas/auth.response.schema.ts';
+import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 
 export class AuthService {
   constructor(
@@ -44,6 +45,7 @@ export class AuthService {
     await this.mailUtil.sendOtpEmail(email, otp);
   }
 
+  @Transactional()
   async register(data: RegisterRequest) {
     const existingUser = await this.userRepository.findByEmail(data.email);
     if (existingUser && existingUser.status !== UserStatusEnum.INACTIVE) {

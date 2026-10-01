@@ -15,6 +15,7 @@ import type {
 } from './schemas/unitType.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
+import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 
 export class UnitTypeService {
   constructor(private readonly unitTypeRepository: UnitTypeRepository) {}
@@ -139,11 +140,19 @@ export class UnitTypeService {
     );
   }
 
+  @Transactional()
   async deleteUnitType(id: string, deletedBy?: string): Promise<void> {
     const unitType = await this.unitTypeRepository.findById(id);
     if (!unitType) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Unit Type']);
     }
+
+    // TODO: [Module StorageUnit & Offering Integration Reminder]
+    // When completing related modules, add deletion guard conditions & cascading logic:
+    // 1. [GUARD DELETION] Check if any StorageUnit belongs to this UnitType and is currently OCCUPIED or RESERVED -> Throw error.
+    // 2. [CASCADE SOFT-DELETE] Automatically soft-delete dependent records within the same transaction:
+    //    - FacilityUnitTypeOffering: Soft-delete all pricing offerings for this UnitType across all facilities.
+    //    - StorageUnit: Soft-delete all physical storage units (AVAILABLE/MAINTENANCE) belonging to this UnitType.
 
     await this.unitTypeRepository.softDelete(id, deletedBy);
   }

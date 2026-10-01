@@ -29,7 +29,7 @@ export class ProfileService {
   }
 
   async getMyProfile(userId: string): Promise<ProfileResponse> {
-    // Lazy upsert — tạo profile rỗng nếu chưa có
+    // Lazy upsert — create empty profile if one does not exist yet
     const profile = await this.profileRepository.upsertByUserId(userId, {});
     return validateResponse(profileResponseSchema, this.formatProfile(profile));
   }

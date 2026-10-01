@@ -7,7 +7,7 @@ import { UserRepository } from '../user/user.repository.ts';
 
 const facilityRepository = new FacilityRepository(Facility);
 
-// UserRepository cần thiết để validate managerId trong assignManager
+// UserRepository is required to validate managerId in assignManager
 const userRepository = new UserRepository(User);
 
 const facilityService = new FacilityService(facilityRepository, userRepository);

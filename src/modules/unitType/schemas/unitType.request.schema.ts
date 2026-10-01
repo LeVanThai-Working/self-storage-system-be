@@ -18,7 +18,6 @@ export const createUnitTypeSchema = z.object({
   category: z.enum(UnitTypeCategoryEnum).optional(),
   images: z.array(z.string()).optional(),
   features: z.array(z.string()).optional(),
-  basePrice: z.number().min(0).optional(),
 });
 
 export const updateUnitTypeSchema = z.object({
@@ -29,7 +28,6 @@ export const updateUnitTypeSchema = z.object({
   status: z.enum(UnitTypeStatusEnum).optional(),
   images: z.array(z.string()).optional(),
   features: z.array(z.string()).optional(),
-  basePrice: z.number().min(0).optional(),
 });
 
 export const unitTypeIdParamSchema = z.object({
@@ -42,10 +40,8 @@ export const unitTypeQuerySchema = paginationQuerySchema.extend({
   category: z.enum(UnitTypeCategoryEnum).optional(),
   minArea: z.coerce.number().min(0).optional(),
   maxArea: z.coerce.number().min(0).optional(),
-  minPrice: z.coerce.number().min(0).optional(),
-  maxPrice: z.coerce.number().min(0).optional(),
   sortBy: z
-    .enum(['name', 'area', 'volume', 'basePrice', 'createdAt', 'updatedAt'])
+    .enum(['name', 'area', 'volume', 'createdAt', 'updatedAt'])
     .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

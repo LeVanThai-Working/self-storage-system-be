@@ -16,8 +16,9 @@ import type {
   UpdateFacilityRequest,
 } from './schemas/facility.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
-import { RoleEnum } from '../../common/enums/user.enum.ts';
+import { RoleEnum, UserStatusEnum } from '../../common/enums/user.enum.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
+import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 
 export class FacilityService {
   constructor(
@@ -116,35 +117,85 @@ export class FacilityService {
     );
   }
 
+  @Transactional()
   async deleteFacility(id: string, deletedBy?: string): Promise<void> {
     const facility = await this.facilityRepository.findById(id);
     if (!facility) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
     }
 
+    // TODO: [Module StorageUnit, Reservation & Contract Integration Reminder]
+    // When completing related modules, add deletion guard conditions & cascading logic:
+    // 1. [GUARD DELETION] Check if facility has occupied storage units (StorageUnit.status === 'OCCUPIED') -> Throw error to prevent deletion.
+    // 2. [GUARD DELETION] Check if facility has active contracts (Contract) or pending reservations (Reservation) -> Throw error.
+    // 3. [CASCADE SOFT-DELETE] Automatically soft-delete dependent records within the same transaction:
+    //    - FacilityUnitTypeOffering: Soft-delete all pricing offerings for this facility.
+    //    - StorageUnit: Soft-delete all physical storage units (AVAILABLE/MAINTENANCE) belonging to this facility.
+    //    - User (Staff): Unassign assignedFacilityId for staff members assigned to this facility.
+
     await this.facilityRepository.softDelete(id, deletedBy);
   }
 
+  @Transactional()
   async assignManager(
     facilityId: string,
     data: AssignManagerRequest
   ): Promise<FacilityResponse> {
     const facility = await this.facilityRepository.findById(facilityId);
+
+    // 1. Check if facility exists and is ACTIVE
     if (!facility) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
     }
+    if (facility.status === FacilityStatusEnum.INACTIVE) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Facility']);
+    }
 
-    const manager = await this.userRepository.findById(data.managerId);
-    if (!manager) {
+    // 2. Check if manager exists, has the correct role, and is ACTIVE
+    const newManager = await this.userRepository.findById(data.managerId);
+    if (!newManager) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Manager']);
     }
-
-    if (manager.role !== RoleEnum.FACILITY_MANAGER) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    if (newManager.role !== RoleEnum.FACILITY_MANAGER) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_121, [
+        'Facility Manager',
+      ]);
+    }
+    if (newManager.status !== UserStatusEnum.ACTIVE) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, [
+        'Facility Manager Account',
+      ]);
     }
 
+    // 3. Check if new manager is already managing another facility -> unlink manager from old facility
+    if (
+      newManager.assignedFacilityId &&
+      String(newManager.assignedFacilityId) !== facilityId
+    ) {
+      await this.facilityRepository.update(
+        String(newManager.assignedFacilityId),
+        {
+          managerId: null as unknown as Types.ObjectId,
+        }
+      );
+    }
+
+    // 4. Check if current facility already has a manager -> unlink old manager
+    const oldManagerId = facility.managerId ? String(facility.managerId) : null;
+    if (oldManagerId && oldManagerId !== data.managerId) {
+      await this.userRepository.updateUser(oldManagerId, {
+        assignedFacilityId: null as unknown as Types.ObjectId,
+      });
+    }
+
+    // 5. Update Facility.managerId (side 1)
     const updatedFacility = await this.facilityRepository.update(facilityId, {
-      managerId: manager._id as unknown as Types.ObjectId,
+      managerId: newManager._id as unknown as Types.ObjectId,
+    });
+
+    // 6. Update User.assignedFacilityId (side 2)
+    await this.userRepository.updateUser(data.managerId, {
+      assignedFacilityId: facility._id as unknown as Types.ObjectId,
     });
 
     return validateResponse(

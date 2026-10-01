@@ -395,10 +395,6 @@
 					"createdAt": {
 						"type": "string"
 					},
-					"basePrice": {
-						"type": "number",
-						"format": "double"
-					},
 					"features": {
 						"items": {
 							"type": "string"
@@ -520,14 +516,6 @@
 			},
 			"infer_typeofunitTypeQuerySchema_": {
 				"properties": {
-					"maxPrice": {
-						"type": "number",
-						"format": "double"
-					},
-					"minPrice": {
-						"type": "number",
-						"format": "double"
-					},
 					"maxArea": {
 						"type": "number",
 						"format": "double"
@@ -559,8 +547,7 @@
 							"createdAt",
 							"updatedAt",
 							"area",
-							"volume",
-							"basePrice"
+							"volume"
 						]
 					},
 					"limit": {
@@ -614,10 +601,6 @@
 			},
 			"infer_typeofcreateUnitTypeSchema_": {
 				"properties": {
-					"basePrice": {
-						"type": "number",
-						"format": "double"
-					},
 					"features": {
 						"items": {
 							"type": "string"
@@ -673,10 +656,6 @@
 			},
 			"infer_typeofupdateUnitTypeSchema_": {
 				"properties": {
-					"basePrice": {
-						"type": "number",
-						"format": "double"
-					},
 					"features": {
 						"items": {
 							"type": "string"
@@ -728,6 +707,456 @@
 			},
 			"UpdateUnitTypeRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateUnitTypeSchema_"
+			},
+			"StorageUnitStatusEnum": {
+				"enum": [
+					"available",
+					"reserved",
+					"occupied",
+					"under_maintenance",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"FacilityStatusEnum": {
+				"enum": [
+					"active",
+					"inactive",
+					"closed"
+				],
+				"type": "string"
+			},
+			"infer_typeofstorageUnitResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"unitType": {
+						"properties": {
+							"category": {
+								"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+							},
+							"dimensions": {
+								"properties": {
+									"height": {
+										"type": "number",
+										"format": "double"
+									},
+									"width": {
+										"type": "number",
+										"format": "double"
+									},
+									"length": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"height",
+									"width",
+									"length"
+								],
+								"type": "object"
+							},
+							"status": {
+								"$ref": "#/components/schemas/UnitTypeStatusEnum"
+							},
+							"volume": {
+								"type": "number",
+								"format": "double"
+							},
+							"area": {
+								"type": "number",
+								"format": "double"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"dimensions",
+							"status",
+							"volume",
+							"area",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"$ref": "#/components/schemas/FacilityStatusEnum"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"zone": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/StorageUnitStatusEnum"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"unitNumber": {
+						"type": "string"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"floor",
+					"unitNumber",
+					"unitTypeId",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"StorageUnitResponse": {
+				"$ref": "#/components/schemas/infer_typeofstorageUnitResponseSchema_"
+			},
+			"PaginatedData_StorageUnitResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/StorageUnitResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_StorageUnitResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_StorageUnitResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofstorageUnitQuerySchema_": {
+				"properties": {
+					"unitNumber": {
+						"type": "string"
+					},
+					"zone": {
+						"type": "string"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/StorageUnitStatusEnum"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"updatedAt",
+							"unitNumber",
+							"floor"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"StorageUnitQuery": {
+				"$ref": "#/components/schemas/infer_typeofstorageUnitQuerySchema_"
+			},
+			"ApiResponse_StorageUnitResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/StorageUnitResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofavailableStorageUnitQuerySchema_": {
+				"properties": {
+					"zone": {
+						"type": "string"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"unitTypeId": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"AvailableStorageUnitQuery": {
+				"$ref": "#/components/schemas/infer_typeofavailableStorageUnitQuerySchema_"
+			},
+			"ApiResponse_StorageUnitResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/StorageUnitResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"StorageUnitStatusEnum.AVAILABLE": {
+				"enum": [
+					"available"
+				],
+				"type": "string"
+			},
+			"StorageUnitStatusEnum.UNDER_MAINTENANCE": {
+				"enum": [
+					"under_maintenance"
+				],
+				"type": "string"
+			},
+			"StorageUnitStatusEnum.INACTIVE": {
+				"enum": [
+					"inactive"
+				],
+				"type": "string"
+			},
+			"infer_typeofcreateStorageUnitSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.AVAILABLE"
+							},
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.UNDER_MAINTENANCE"
+							},
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.INACTIVE"
+							}
+						]
+					},
+					"zone": {
+						"type": "string"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"unitNumber": {
+						"type": "string"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"floor",
+					"unitNumber",
+					"unitTypeId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateStorageUnitRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateStorageUnitSchema_"
+			},
+			"infer_typeofupdateStorageUnitSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.AVAILABLE"
+							},
+							{
+								"$ref": "#/components/schemas/StorageUnitStatusEnum.INACTIVE"
+							}
+						]
+					},
+					"zone": {
+						"type": "string"
+					},
+					"floor": {
+						"type": "number",
+						"format": "double"
+					},
+					"unitNumber": {
+						"type": "string"
+					},
+					"unitTypeId": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateStorageUnitRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateStorageUnitSchema_"
+			},
+			"infer_typeoftoggleMaintenanceSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"isUnderMaintenance": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"isUnderMaintenance"
+				],
+				"type": "object"
+			},
+			"ToggleMaintenanceRequest": {
+				"$ref": "#/components/schemas/infer_typeoftoggleMaintenanceSchema_"
 			},
 			"GenderEnum": {
 				"enum": [
@@ -818,13 +1247,760 @@
 			"UpdateProfileRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateProfileSchema_"
 			},
-			"FacilityStatusEnum": {
+			"BillingUnitEnum": {
+				"enum": [
+					"day",
+					"month",
+					"one_time"
+				],
+				"type": "string"
+			},
+			"FacilityUnitTypeOfferingStatusEnum": {
+				"enum": [
+					"active",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"infer_typeoffacilityUnitTypeOfferingResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+					},
+					"minRentalDays": {
+						"type": "number",
+						"format": "double"
+					},
+					"depositMultiplier": {
+						"type": "number",
+						"format": "double"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"unitType": {
+						"properties": {
+							"category": {
+								"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+							},
+							"dimensions": {
+								"properties": {
+									"height": {
+										"type": "number",
+										"format": "double"
+									},
+									"width": {
+										"type": "number",
+										"format": "double"
+									},
+									"length": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"height",
+									"width",
+									"length"
+								],
+								"type": "object"
+							},
+							"status": {
+								"$ref": "#/components/schemas/UnitTypeStatusEnum"
+							},
+							"volume": {
+								"type": "number",
+								"format": "double"
+							},
+							"area": {
+								"type": "number",
+								"format": "double"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"dimensions",
+							"status",
+							"volume",
+							"area",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"$ref": "#/components/schemas/FacilityStatusEnum"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"minRentalDays",
+					"depositMultiplier",
+					"pricePerUnit",
+					"billingUnit",
+					"unitType",
+					"facility",
+					"id"
+				],
+				"type": "object"
+			},
+			"FacilityUnitTypeOfferingResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityUnitTypeOfferingResponseSchema_"
+			},
+			"PaginatedData_FacilityUnitTypeOfferingResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityUnitTypeOfferingResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_FacilityUnitTypeOfferingResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_FacilityUnitTypeOfferingResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofofferingQuerySchema_": {
+				"properties": {
+					"maxPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"minPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"updatedAt",
+							"pricePerUnit",
+							"minRentalDays"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"OfferingQuery": {
+				"$ref": "#/components/schemas/infer_typeofofferingQuerySchema_"
+			},
+			"ApiResponse_FacilityUnitTypeOfferingResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateOfferingSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+					},
+					"minRentalDays": {
+						"type": "number",
+						"format": "double"
+					},
+					"depositMultiplier": {
+						"type": "number",
+						"format": "double"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"minRentalDays",
+					"depositMultiplier",
+					"pricePerUnit",
+					"billingUnit",
+					"unitTypeId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateOfferingRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateOfferingSchema_"
+			},
+			"infer_typeofupdateOfferingSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+					},
+					"minRentalDays": {
+						"type": "number",
+						"format": "double"
+					},
+					"depositMultiplier": {
+						"type": "number",
+						"format": "double"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateOfferingRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateOfferingSchema_"
+			},
+			"FacilityAmenityOfferingStatusEnum": {
 				"enum": [
 					"active",
 					"inactive",
-					"closed"
+					"out_of_stock"
 				],
 				"type": "string"
+			},
+			"AmenityTypeEnum": {
+				"enum": [
+					"physical",
+					"service"
+				],
+				"type": "string"
+			},
+			"AmenityStatusEnum": {
+				"enum": [
+					"active",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"infer_typeoffacilityAmenityOfferingResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					},
+					"createdAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					},
+					"notes": {
+						"type": "string"
+					},
+					"amenity": {
+						"properties": {
+							"description": {
+								"type": "string"
+							},
+							"tags": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"images": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"status": {
+								"$ref": "#/components/schemas/AmenityStatusEnum"
+							},
+							"type": {
+								"$ref": "#/components/schemas/AmenityTypeEnum"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"tags",
+							"images",
+							"status",
+							"type",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"$ref": "#/components/schemas/FacilityStatusEnum"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+					},
+					"availableQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"inUseQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"amenityId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"availableQuantity",
+					"inUseQuantity",
+					"totalQuantity",
+					"billingUnit",
+					"pricePerUnit",
+					"amenityId",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"FacilityAmenityOfferingResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityAmenityOfferingResponseSchema_"
+			},
+			"PaginatedData_FacilityAmenityOfferingResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_FacilityAmenityOfferingResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_FacilityAmenityOfferingResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeoffacilityAmenityOfferingQuerySchema_": {
+				"properties": {
+					"maxPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"minPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"amenityId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"updatedAt",
+							"pricePerUnit",
+							"totalQuantity",
+							"inUseQuantity"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"FacilityAmenityOfferingQuery": {
+				"$ref": "#/components/schemas/infer_typeoffacilityAmenityOfferingQuerySchema_"
+			},
+			"ApiResponse_FacilityAmenityOfferingResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_FacilityAmenityOfferingResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateFacilityAmenityOfferingSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"amenityId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"totalQuantity",
+					"billingUnit",
+					"pricePerUnit",
+					"amenityId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateFacilityAmenityOfferingRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateFacilityAmenityOfferingSchema_"
+			},
+			"infer_typeofupdateFacilityAmenityOfferingSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateFacilityAmenityOfferingRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateFacilityAmenityOfferingSchema_"
 			},
 			"infer_typeoffacilityResponseSchema_": {
 				"properties": {
@@ -1492,6 +2668,266 @@
 			},
 			"ChangePasswordRequest": {
 				"$ref": "#/components/schemas/infer_typeofchangePasswordSchema_"
+			},
+			"infer_typeofamenityResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					},
+					"createdAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					},
+					"description": {
+						"type": "string"
+					},
+					"tags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AmenityStatusEnum"
+					},
+					"type": {
+						"$ref": "#/components/schemas/AmenityTypeEnum"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"tags",
+					"images",
+					"status",
+					"type",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"AmenityResponse": {
+				"$ref": "#/components/schemas/infer_typeofamenityResponseSchema_"
+			},
+			"PaginatedData_AmenityResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/AmenityResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_AmenityResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_AmenityResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofamenityQuerySchema_": {
+				"properties": {
+					"status": {
+						"$ref": "#/components/schemas/AmenityStatusEnum"
+					},
+					"type": {
+						"$ref": "#/components/schemas/AmenityTypeEnum"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"type",
+							"name",
+							"status",
+							"createdAt"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"AmenityQuery": {
+				"$ref": "#/components/schemas/infer_typeofamenityQuerySchema_"
+			},
+			"ApiResponse_AmenityResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AmenityResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateAmenitySchema_": {
+				"properties": {
+					"description": {
+						"type": "string"
+					},
+					"tags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AmenityStatusEnum"
+					},
+					"type": {
+						"$ref": "#/components/schemas/AmenityTypeEnum"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"tags",
+					"images",
+					"status",
+					"type",
+					"name"
+				],
+				"type": "object"
+			},
+			"CreateAmenityRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateAmenitySchema_"
+			},
+			"infer_typeofupdateAmenitySchema_": {
+				"properties": {
+					"tags": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AmenityStatusEnum"
+					},
+					"type": {
+						"$ref": "#/components/schemas/AmenityTypeEnum"
+					},
+					"description": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateAmenityRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateAmenitySchema_"
 			}
 		},
 		"securitySchemes": {
@@ -1960,24 +3396,6 @@
 				"parameters": [
 					{
 						"in": "query",
-						"name": "maxPrice",
-						"required": false,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "minPrice",
-						"required": false,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
 						"name": "maxArea",
 						"required": false,
 						"schema": {
@@ -2041,8 +3459,7 @@
 								"createdAt",
 								"updatedAt",
 								"area",
-								"volume",
-								"basePrice"
+								"volume"
 							]
 						}
 					},
@@ -2266,6 +3683,494 @@
 				]
 			}
 		},
+		"/storage-units": {
+			"get": {
+				"operationId": "GetStorageUnits",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_StorageUnitResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get list of physical storage units (with pagination, search, filter by facility/unitType/floor/zone/status)",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "unitNumber",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "zone",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "floor",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/StorageUnitStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "unitTypeId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"updatedAt",
+								"unitNumber",
+								"floor"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateStorageUnit",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or unit number already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility or Unit Type not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new physical storage unit\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateStorageUnitRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/storage-units/facility/{facilityId}/available": {
+			"get": {
+				"operationId": "GetAvailableUnits",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or facility inactive",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Lookup available storage units for a facility (for booking/reservation)",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "zone",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "floor",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "unitTypeId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-units/{id}": {
+			"get": {
+				"operationId": "GetStorageUnitById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get physical storage unit details by ID",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateStorageUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or duplicate unit number",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateStorageUnitRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteStorageUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Cannot delete unit while reserved or occupied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Soft-delete storage unit\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-units/{id}/maintenance": {
+			"patch": {
+				"operationId": "ToggleMaintenance",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Unit cannot be put into/taken out of maintenance in current status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ToggleMaintenanceRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/profile/me": {
 			"get": {
 				"operationId": "GetMyProfile",
@@ -2415,6 +4320,861 @@
 					{
 						"in": "path",
 						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-unit-type-offerings": {
+			"get": {
+				"operationId": "GetOfferings",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_FacilityUnitTypeOfferingResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get list of facility unit type offerings (with pagination, filter, sorting)",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "maxPrice",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "minPrice",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "billingUnit",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BillingUnitEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "unitTypeId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"updatedAt",
+								"pricePerUnit",
+								"minRentalDays"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateOffering",
+				"responses": {
+					"201": {
+						"description": "Offering created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error, inactive Facility/UnitType, or offering already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility or Unit Type not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new facility unit type offering",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateOfferingRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/facility-unit-type-offerings/{id}": {
+			"get": {
+				"operationId": "GetOfferingById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get facility unit type offering details by ID",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update facility unit type offering",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateOfferingRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Soft-delete facility unit type offering",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-unit-type-offerings/facility/{facilityId}/unit-type/{unitTypeId}": {
+			"get": {
+				"operationId": "GetOfferingByFacilityAndUnitType",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Quick lookup offering by facilityId and unitTypeId\n(used by StorageUnit, Reservation, Contract)",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "unitTypeId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-amenity-offerings": {
+			"get": {
+				"operationId": "GetOfferings",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_FacilityAmenityOfferingResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Amenity Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "maxPrice",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "minPrice",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "billingUnit",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BillingUnitEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "amenityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"updatedAt",
+								"pricePerUnit",
+								"totalQuantity",
+								"inUseQuantity"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateOffering",
+				"responses": {
+					"201": {
+						"description": "Facility amenity offering created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityAmenityOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or offering already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Amenity Offerings"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateFacilityAmenityOfferingRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/facility-amenity-offerings/facility/{facilityId}/available": {
+			"get": {
+				"operationId": "GetAvailableOfferings",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityAmenityOfferingResponse-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Facility ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Amenity Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-amenity-offerings/facility/{facilityId}/amenity/{amenityId}": {
+			"get": {
+				"operationId": "GetOfferingByFacilityAndAmenity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityAmenityOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid parameters format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Amenity Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Amenity Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "amenityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-amenity-offerings/{id}": {
+			"get": {
+				"operationId": "GetOfferingById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityAmenityOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Amenity Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Amenity Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityAmenityOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Amenity Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Amenity Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateFacilityAmenityOfferingRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format or items in use",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Amenity Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Amenity Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
 						"required": true,
 						"schema": {
 							"type": "string"
@@ -3187,6 +5947,306 @@
 						}
 					}
 				}
+			}
+		},
+		"/amenities": {
+			"get": {
+				"operationId": "GetAmenities",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AmenityResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Amenities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AmenityStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "type",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AmenityTypeEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"type",
+								"name",
+								"status",
+								"createdAt"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateAmenity",
+				"responses": {
+					"201": {
+						"description": "Amenity created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AmenityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or amenity already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Amenities"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateAmenityRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/amenities/{id}": {
+			"get": {
+				"operationId": "GetAmenityById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AmenityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Amenity not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Amenities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateAmenity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AmenityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Amenity not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Amenities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateAmenityRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteAmenity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Amenity not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Amenities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		}
 	},

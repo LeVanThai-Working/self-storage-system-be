@@ -21,6 +21,7 @@ import {
   RoleEnum,
   UserStatusEnum,
 } from '../../common/enums/user.enum.ts';
+import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 
 export class UserService {
   constructor(
@@ -105,11 +106,18 @@ export class UserService {
     return validateResponse(userResponseSchema, this.formatUser(updatedUser));
   }
 
+  @Transactional()
   async deleteUser(id: string, deletedBy?: string): Promise<void> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
     }
+
+    // TODO: [Module Reservation & Contract Integration Reminder]
+    // When completing related modules, add deletion guard conditions:
+    // 1. Check if user has active lease contracts (Contract.status === 'ACTIVE') -> Block deletion and throw error.
+    // 2. Check if user has uncompleted reservations (Reservation.status IN ['CONFIRMED', 'PENDING_PAYMENT']) -> Block deletion.
+    // 3. If user is a FACILITY_MANAGER managing a facility -> Require assigning another manager before deletion.
 
     // Cascade delete: remove profile before soft-deleting user
     if (this.profileRepository) {

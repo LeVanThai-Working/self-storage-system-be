@@ -326,12 +326,19 @@ userSchema.plugin(MongooseDelete, {
 
 ---
 
-## 14. Authentication
+## 14. Authentication & Authorization (Phân quyền)
 
 - **Access Token:** 15 phút, lưu trong cookie `httpOnly` hoặc `Authorization: Bearer`
 - **Refresh Token:** 7 ngày, RTR (Refresh Token Rotation) + Family Token trong Redis
 - **Protected routes:** dùng `@Security('bearerAuth')` hoặc `@Security('cookieAuth')` trong tsoa controller
 - **tsoa authentication:** implement qua `expressAuthentication()` trong `src/middlewares/auth.tsoa.ts`
+- **[MUST] Role Authorization Comments:** Các endpoint nhạy cảm đều có comment đánh dấu role (`// TODO: Role authorization: ...`) sẵn sàng cho phase hoàn thiện bảo mật cuối.
+  ```ts
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  @Post('')
+  ```
 
 ---
 
@@ -380,17 +387,68 @@ enum AuthProviderEnum {
 
 ## 17. Message Codes hiện có
 
-| Code               | Ý nghĩa                  |
-| ------------------ | ------------------------ |
-| `MESSAGE_CODE_001` | Operation Successful     |
-| `MESSAGE_CODE_002` | {0} Created Successfully |
-| `MESSAGE_CODE_003` | {0} Updated Successfully |
-| `MESSAGE_CODE_004` | {0} Deleted Successfully |
-| `MESSAGE_CODE_101` | Invalid Request          |
-| `MESSAGE_CODE_102` | Unauthorized Access      |
-| `MESSAGE_CODE_103` | Access Denied            |
-| `MESSAGE_CODE_104` | {0} Not Found            |
-| `MESSAGE_CODE_105` | {0} Already Exists       |
-| `MESSAGE_CODE_106` | Internal Server Error    |
-| `MESSAGE_CODE_200` | {0} Is Required          |
-| `MESSAGE_CODE_201` | Invalid Token            |
+| Code               | Ý nghĩa                                  | Nhóm / Mục đích                           |
+| ------------------ | ---------------------------------------- | ----------------------------------------- |
+| `MESSAGE_CODE_001` | Operation Successful                     | Thành công (001-004)                      |
+| `MESSAGE_CODE_002` | {0} Created Successfully                 | Thành công                                |
+| `MESSAGE_CODE_003` | {0} Updated Successfully                 | Thành công                                |
+| `MESSAGE_CODE_004` | {0} Deleted Successfully                 | Thành công                                |
+| `MESSAGE_CODE_101` | Invalid Request                          | Lỗi chung (101-106)                       |
+| `MESSAGE_CODE_102` | Unauthorized Access                      | Lỗi chung                                 |
+| `MESSAGE_CODE_103` | Access Denied                            | Lỗi chung                                 |
+| `MESSAGE_CODE_104` | {0} Not Found                            | Lỗi chung                                 |
+| `MESSAGE_CODE_105` | {0} Already Exists                       | Lỗi chung                                 |
+| `MESSAGE_CODE_106` | Internal Server Error                    | Lỗi chung                                 |
+| `MESSAGE_CODE_107` | Invalid Email Or Password                | Xác thực & Đăng nhập (107-109)            |
+| `MESSAGE_CODE_108` | {0} Email Is Not Verified                | Xác thực & Đăng nhập                      |
+| `MESSAGE_CODE_109` | Invalid Or Expired OTP                   | Xác thực & Đăng nhập                      |
+| `MESSAGE_CODE_110` | {0} Is Inactive                          | Trạng thái tài khoản & thực thể (110-112) |
+| `MESSAGE_CODE_111` | {0} Is Banned Or Locked                  | Trạng thái tài khoản & thực thể           |
+| `MESSAGE_CODE_112` | {0} Has Been Deleted                     | Trạng thái tài khoản & thực thể           |
+| `MESSAGE_CODE_120` | {0} Role Is Invalid                      | Xét vai trò & phân quyền (120-122)        |
+| `MESSAGE_CODE_121` | User Must Have Role {0}                  | Xét vai trò & phân quyền                  |
+| `MESSAGE_CODE_122` | You Do Not Have Permission To Manage {0} | Xét vai trò & phân quyền                  |
+| `MESSAGE_CODE_200` | {0} Is Required                          | Validation & Token (200-201)              |
+| `MESSAGE_CODE_201` | Invalid Token                            | Validation & Token                        |
+
+---
+
+## 18. File Writing — Quy tắc ghi file an toàn
+
+### [MUST] Ghi file tuần tự — KHÔNG ghi song song
+
+```
+// ✅ Đúng — ghi từng file, đợi xong mới ghi tiếp
+write_to_file(file1) → verify size > 0 → write_to_file(file2) → verify → ...
+
+// ❌ Sai — ghi nhiều file cùng lúc (parallel)
+write_to_file(file1) + write_to_file(file2) + write_to_file(file3)
+// Có thể gây file rỗng nếu bị interrupt
+```
+
+**Lý do:** Khi nhiều `write_to_file` chạy song song, nếu task bị interrupt/cancel giữa chừng, file được tạo nhưng nội dung chưa được flush → file có size = 0 bytes (mất toàn bộ code).
+
+### [MUST] Verify size sau mỗi lần ghi
+
+Sau mỗi `write_to_file`, kiểm tra file size > 0 trước khi tiếp tục:
+
+```powershell
+# Verify file không rỗng sau khi ghi
+Get-Item <path> | Select-Object Length  # Phải > 0
+```
+
+### [MUST] Thứ tự ghi file trong một module mới
+
+Luôn ghi theo thứ tự sau, **từng file một**:
+
+```
+1. enums (nếu có)
+2. model
+3. repository
+4. request.schema
+5. response.schema
+6. service
+7. controller
+8. container
+9. Cập nhật ioc.ts
+```
