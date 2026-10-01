@@ -140,7 +140,7 @@ export class FacilityUnitTypeOfferingService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
     }
     if (facility.status !== FacilityStatusEnum.ACTIVE) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Facility']);
     }
 
     // Validate UnitType tồn tại và ACTIVE
@@ -149,7 +149,7 @@ export class FacilityUnitTypeOfferingService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Unit Type']);
     }
     if (unitType.status !== UnitTypeStatusEnum.ACTIVE) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Unit Type']);
     }
 
     // Kiểm tra duplicate (bao gồm bản ghi đã xóa mềm)

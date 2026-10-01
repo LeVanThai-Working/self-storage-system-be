@@ -148,7 +148,7 @@ export class FacilityService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
     }
     if (facility.status === FacilityStatusEnum.INACTIVE) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_107, ['Facility']);
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Facility']);
     }
 
     // 2. kiem tra manager ton tai, dung role va dang active ?
@@ -157,7 +157,7 @@ export class FacilityService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Manager']);
     }
     if (newManager.role !== RoleEnum.FACILITY_MANAGER) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_108, [
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_121, [
         'Facility Manager',
       ]);
     }
