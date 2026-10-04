@@ -20,12 +20,18 @@ import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
 import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class FacilityUnitTypeOfferingService {
   constructor(
     private readonly offeringRepository: FacilityUnitTypeOfferingRepository,
     private readonly facilityRepository: FacilityRepository,
-    private readonly unitTypeRepository: UnitTypeRepository
+    private readonly unitTypeRepository: UnitTypeRepository,
+    private readonly auditLogService?: AuditLogService
   ) {}
 
   private formatOffering(offering: unknown): unknown {
@@ -181,6 +187,17 @@ export class FacilityUnitTypeOfferingService {
         }
       );
 
+      this.auditLogService?.record({
+        action: AuditActionEnum.RESTORE,
+        resourceType: AuditResourceEnum.FACILITY_UNIT_TYPE_OFFERING,
+        resourceId: String(existing._id),
+        before: { deleted: true },
+        after:
+          typeof updated?.toObject === 'function'
+            ? updated.toObject()
+            : updated,
+      });
+
       return validateResponse(
         facilityUnitTypeOfferingResponseSchema,
         this.formatOffering(updated)
@@ -201,6 +218,16 @@ export class FacilityUnitTypeOfferingService {
       String(newOffering._id)
     );
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE,
+      resourceType: AuditResourceEnum.FACILITY_UNIT_TYPE_OFFERING,
+      resourceId: String(newOffering._id),
+      after:
+        typeof populated?.toObject === 'function'
+          ? populated.toObject()
+          : populated,
+    });
+
     return validateResponse(
       facilityUnitTypeOfferingResponseSchema,
       this.formatOffering(populated)
@@ -219,6 +246,18 @@ export class FacilityUnitTypeOfferingService {
     }
 
     const updated = await this.offeringRepository.updateById(id, data);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.FACILITY_UNIT_TYPE_OFFERING,
+      resourceId: id,
+      before:
+        typeof offering.toObject === 'function'
+          ? offering.toObject()
+          : offering,
+      after:
+        typeof updated?.toObject === 'function' ? updated.toObject() : updated,
+    });
 
     return validateResponse(
       facilityUnitTypeOfferingResponseSchema,
@@ -241,6 +280,16 @@ export class FacilityUnitTypeOfferingService {
     // 2. [GUARD DELETION] Check if there are pending reservations (Reservation) using this offering -> Block deletion.
 
     await this.offeringRepository.softDeleteById(id, deletedBy);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DELETE,
+      resourceType: AuditResourceEnum.FACILITY_UNIT_TYPE_OFFERING,
+      resourceId: id,
+      before:
+        typeof offering.toObject === 'function'
+          ? offering.toObject()
+          : offering,
+    });
   }
 
   @Transactional()
@@ -258,6 +307,18 @@ export class FacilityUnitTypeOfferingService {
     await this.offeringRepository.restoreById(id);
 
     const restored = await this.offeringRepository.findById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RESTORE,
+      resourceType: AuditResourceEnum.FACILITY_UNIT_TYPE_OFFERING,
+      resourceId: id,
+      before: { deleted: true },
+      after:
+        typeof restored?.toObject === 'function'
+          ? restored.toObject()
+          : restored,
+    });
+
     return validateResponse(
       facilityUnitTypeOfferingResponseSchema,
       this.formatOffering(restored)

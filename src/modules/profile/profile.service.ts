@@ -7,9 +7,17 @@ import {
   profileResponseSchema,
   type ProfileResponse,
 } from './schemas/profile.response.schema.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class ProfileService {
-  constructor(private readonly profileRepository: ProfileRepository) {}
+  constructor(
+    private readonly profileRepository: ProfileRepository,
+    private readonly auditLogService?: AuditLogService
+  ) {}
 
   private formatProfile(profile: unknown): unknown {
     if (!profile) return profile;
@@ -38,6 +46,8 @@ export class ProfileService {
     userId: string,
     data: UpdateProfileRequest
   ): Promise<ProfileResponse> {
+    const beforeProfile = await this.profileRepository.findByUserId(userId);
+
     const updateData: Record<string, unknown> = {};
 
     if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
@@ -50,6 +60,19 @@ export class ProfileService {
       userId,
       updateData
     );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.PROFILE,
+      resourceId: userId,
+      before:
+        typeof beforeProfile?.toObject === 'function'
+          ? beforeProfile.toObject()
+          : beforeProfile,
+      after:
+        typeof profile?.toObject === 'function' ? profile.toObject() : profile,
+    });
+
     return validateResponse(profileResponseSchema, this.formatProfile(profile));
   }
 

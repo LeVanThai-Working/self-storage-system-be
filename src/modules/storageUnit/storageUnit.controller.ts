@@ -68,7 +68,7 @@ export class StorageUnitController extends Controller {
   }
 
   /**
-   * Lookup available storage units for a facility (for booking/reservation)
+   * Lookup available storage units for a facility (for reservation)
    */
   @Get('facility/{facilityId}/available')
   @Middlewares(

@@ -20,12 +20,18 @@ import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
 import { AmenityStatusEnum } from '../../common/enums/amenity.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class FacilityAmenityOfferingService {
   constructor(
     private readonly offeringRepository: FacilityAmenityOfferingRepository,
     private readonly facilityRepository: FacilityRepository,
-    private readonly amenityRepository: AmenityRepository
+    private readonly amenityRepository: AmenityRepository,
+    private readonly auditLogService?: AuditLogService
   ) {}
 
   private formatOffering(offering: unknown): unknown {
@@ -209,6 +215,17 @@ export class FacilityAmenityOfferingService {
     const populated = await this.offeringRepository.findById(
       String(created._id)
     );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE,
+      resourceType: AuditResourceEnum.FACILITY_AMENITY_OFFERING,
+      resourceId: String(created._id),
+      after:
+        typeof populated?.toObject === 'function'
+          ? populated.toObject()
+          : populated,
+    });
+
     return validateResponse(
       facilityAmenityOfferingResponseSchema,
       this.formatOffering(populated)
@@ -240,6 +257,21 @@ export class FacilityAmenityOfferingService {
     const populated = await this.offeringRepository.findById(
       String(updated?._id ?? id)
     );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.FACILITY_AMENITY_OFFERING,
+      resourceId: id,
+      before:
+        typeof offering.toObject === 'function'
+          ? offering.toObject()
+          : offering,
+      after:
+        typeof populated?.toObject === 'function'
+          ? populated.toObject()
+          : populated,
+    });
+
     return validateResponse(
       facilityAmenityOfferingResponseSchema,
       this.formatOffering(populated)
@@ -263,6 +295,16 @@ export class FacilityAmenityOfferingService {
     }
 
     await this.offeringRepository.deleteById(id, deletedBy);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DELETE,
+      resourceType: AuditResourceEnum.FACILITY_AMENITY_OFFERING,
+      resourceId: id,
+      before:
+        typeof offering.toObject === 'function'
+          ? offering.toObject()
+          : offering,
+    });
   }
 
   @Transactional()
@@ -280,6 +322,18 @@ export class FacilityAmenityOfferingService {
     await this.offeringRepository.restoreById(id);
 
     const restored = await this.offeringRepository.findById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RESTORE,
+      resourceType: AuditResourceEnum.FACILITY_AMENITY_OFFERING,
+      resourceId: id,
+      before: { deleted: true },
+      after:
+        typeof restored?.toObject === 'function'
+          ? restored.toObject()
+          : restored,
+    });
+
     return validateResponse(
       facilityAmenityOfferingResponseSchema,
       this.formatOffering(restored)
