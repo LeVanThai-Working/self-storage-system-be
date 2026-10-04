@@ -332,13 +332,19 @@ userSchema.plugin(MongooseDelete, {
 - **Refresh Token:** 7 ngày, RTR (Refresh Token Rotation) + Family Token trong Redis
 - **Protected routes:** dùng `@Security('bearerAuth')` hoặc `@Security('cookieAuth')` trong tsoa controller
 - **tsoa authentication:** implement qua `expressAuthentication()` trong `src/middlewares/auth.tsoa.ts`
-- **[MUST] Role Authorization Comments:** Các endpoint nhạy cảm đều có comment đánh dấu role (`// TODO: Role authorization: ...`) sẵn sàng cho phase hoàn thiện bảo mật cuối.
-  ```ts
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
-  @Post('')
-  ```
+- **[MUST] Trì hoãn phân quyền Role đến Phase hoàn thiện cuối cùng:**
+  Phân quyền (Role Authorization) và kích hoạt xác thực `@Security` trên các module nghiệp vụ sẽ được triển khai đồng loạt sau khi hoàn thành tất cả các module.
+- **[MUST] Quy tắc ghi nhận Role & Ẩn `@Security` trong giai đoạn phát triển:**
+  1. **Ẩn `@Security`:** Tạm thời comment out `// @Security('bearerAuth')` và `// @Security('cookieAuth')` để tránh block kiểm thử và luồng gọi API giữa các module.
+  2. **Ghi chú Role (`// TODO: Role authorization:`):** Mọi endpoint nhạy cảm/cần phân quyền **bắt buộc** phải có comment đánh dấu role chính xác ngay trên decorator HTTP method (`@Post`, `@Patch`, `@Delete`, `@Get`) để sẵn sàng cho phase hoàn thiện bảo mật:
+     ```ts
+     // @Security('bearerAuth')
+     // @Security('cookieAuth')
+     // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+     @Post('')
+     ```
+  3. **Nhận diện Caller linh hoạt (Fallback Pattern):** Khi `@Security` đang được ẩn, controller không bắt buộc `req.user` phải tồn tại từ tsoa middleware. Hãy dùng helper trích xuất an toàn:
+     `req.user` ➔ header `x-user-id` ➔ giải mã JWT token nếu client có gửi `Bearer` ➔ fallback id từ body/query ➔ throw `AppError(401, MESSAGE_CODE.MESSAGE_CODE_102)` nếu không có thông tin caller.
 
 ---
 

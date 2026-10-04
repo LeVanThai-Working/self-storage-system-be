@@ -126,6 +126,7 @@ export class FacilityController extends Controller {
   @Post('')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @SuccessResponse(201, 'Facility created successfully')
   @Middlewares(validateRequest({ body: createFacilitySchema }))
   @Response<ApiErrorResponse>(
@@ -150,6 +151,7 @@ export class FacilityController extends Controller {
   @Patch('{id}')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @Middlewares(
     validateRequest({
       params: facilityIdParamSchema,
@@ -176,6 +178,7 @@ export class FacilityController extends Controller {
   @Delete('{id}')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN
   @Middlewares(validateRequest({ params: facilityIdParamSchema }))
   @Response<ApiErrorResponse>(400, 'Invalid ID format')
   @Response<ApiErrorResponse>(404, 'Facility not found')
@@ -198,6 +201,7 @@ export class FacilityController extends Controller {
   @Patch('{id}/assign-manager')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @Middlewares(
     validateRequest({
       params: facilityIdParamSchema,
