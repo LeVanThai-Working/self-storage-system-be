@@ -9,6 +9,7 @@ import { JwtUtil } from '../../utils/jwt.util.ts';
 import { redis } from '../../config/redis.config.ts';
 import { AuthRedisService } from './auth.redis.service.ts';
 import { profileRepository } from '../profile/profile.container.ts';
+import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const authRepository = new AuthRepository(Otp);
 const userRepository = new UserRepository(User);
@@ -22,7 +23,8 @@ const authService = new AuthService(
   profileRepository,
   mailUtil,
   jwtUtil,
-  authRedisService
+  authRedisService,
+  auditLogService
 );
 
 export const authController = new AuthController(authService);

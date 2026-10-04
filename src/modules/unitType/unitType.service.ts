@@ -16,9 +16,17 @@ import type {
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class UnitTypeService {
-  constructor(private readonly unitTypeRepository: UnitTypeRepository) {}
+  constructor(
+    private readonly unitTypeRepository: UnitTypeRepository,
+    private readonly auditLogService?: AuditLogService
+  ) {}
 
   private calculateAreaAndVolume(dimensions: IDimensions): {
     area: number;
@@ -100,6 +108,16 @@ export class UnitTypeService {
       status: UnitTypeStatusEnum.ACTIVE,
     });
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE,
+      resourceType: AuditResourceEnum.UNIT_TYPE,
+      resourceId: newUnitType._id.toString(),
+      after:
+        typeof newUnitType.toObject === 'function'
+          ? newUnitType.toObject()
+          : newUnitType,
+    });
+
     return validateResponse(
       unitTypeResponseSchema,
       this.formatUnitType(newUnitType)
@@ -134,6 +152,21 @@ export class UnitTypeService {
       id,
       updatePayload
     );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.UNIT_TYPE,
+      resourceId: id,
+      before:
+        typeof unitType.toObject === 'function'
+          ? unitType.toObject()
+          : unitType,
+      after:
+        typeof updatedUnitType?.toObject === 'function'
+          ? updatedUnitType.toObject()
+          : updatedUnitType,
+    });
+
     return validateResponse(
       unitTypeResponseSchema,
       this.formatUnitType(updatedUnitType)
@@ -155,6 +188,16 @@ export class UnitTypeService {
     //    - StorageUnit: Soft-delete all physical storage units (AVAILABLE/MAINTENANCE) belonging to this UnitType.
 
     await this.unitTypeRepository.softDelete(id, deletedBy);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DELETE,
+      resourceType: AuditResourceEnum.UNIT_TYPE,
+      resourceId: id,
+      before:
+        typeof unitType.toObject === 'function'
+          ? unitType.toObject()
+          : unitType,
+    });
   }
 
   @Transactional()
@@ -170,6 +213,18 @@ export class UnitTypeService {
     await this.unitTypeRepository.restoreById(id);
 
     const restored = await this.unitTypeRepository.findById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RESTORE,
+      resourceType: AuditResourceEnum.UNIT_TYPE,
+      resourceId: id,
+      before: { deleted: true },
+      after:
+        typeof restored?.toObject === 'function'
+          ? restored.toObject()
+          : restored,
+    });
+
     return validateResponse(
       unitTypeResponseSchema,
       this.formatUnitType(restored)

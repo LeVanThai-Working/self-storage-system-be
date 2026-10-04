@@ -4,6 +4,7 @@ import { MESSAGE_CODE } from '../common/consts/messageCode.const.ts';
 import { jwtUtil } from '../modules/auth/auth.container.ts';
 import { User, type IUser } from '../modules/user/user.model.ts';
 import { UserStatusEnum } from '../common/enums/user.enum.ts';
+import { setRequestActor } from '../utils/requestContext.util.ts';
 
 export async function expressAuthentication(
   req: Request,
@@ -46,6 +47,8 @@ export async function expressAuthentication(
   if (!user || user.status === UserStatusEnum.BANNED) {
     throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
   }
+
+  setRequestActor(user);
 
   return user;
 }

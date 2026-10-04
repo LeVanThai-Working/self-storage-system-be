@@ -17,6 +17,8 @@ import { AmenityController } from './modules/amenity/amenity.controller.ts';
 import { amenityController } from './modules/amenity/amenity.container.ts';
 import { FacilityAmenityOfferingController } from './modules/facilityAmenityOffering/facilityAmenityOffering.controller.ts';
 import { facilityAmenityOfferingController } from './modules/facilityAmenityOffering/facilityAmenityOffering.container.ts';
+import { AuditLogController } from './modules/auditLog/auditLog.controller.ts';
+import { auditLogController } from './modules/auditLog/auditLog.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -46,6 +48,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === FacilityAmenityOfferingController) {
       return facilityAmenityOfferingController as unknown as T;
+    }
+    if (controller === AuditLogController) {
+      return auditLogController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

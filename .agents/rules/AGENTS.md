@@ -348,11 +348,11 @@ userSchema.plugin(MongooseDelete, {
 1. Thêm/cập nhật Zod schema trong schemas/<domain>.request.schema.ts
 2. Thêm/cập nhật response schema nếu output contract thay đổi
 3. Thêm repository methods (chỉ persistence operations)
-4. Thêm service logic + AppError handling
-5. Wire dependencies trong <domain>.container.ts
+4. Thêm service logic + AppError handling + ghi audit log (cho các mutation)
+5. Wire dependencies trong <domain>.container.ts (inject auditLogService nếu cần)
 6. Thêm controller method với ResponseUtils / ApiResponse
 7. Thêm @openapi documentation (tsoa decorators)
-8. Thêm MESSAGE_CODE mới nếu cần
+8. Thêm MESSAGE_CODE / AuditActionEnum / AuditResourceEnum mới nếu cần
 9. Cập nhật ioc.ts nếu thêm controller mới
 10. Chạy: npm run check && npm run build
 11. Bàn giao FE: chạy `/fe-prompt <tên module>` để xuất prompt bàn giao contract (shared layer)
@@ -391,6 +391,41 @@ enum UserStatusEnum {
 enum AuthProviderEnum {
   LOCAL = 'local',
   GOOGLE = 'google',
+}
+
+enum AuditActionEnum {
+  REGISTER = 'register',
+  LOGIN = 'login',
+  LOGIN_GOOGLE = 'login_google',
+  LOGOUT = 'logout',
+  SEND_OTP = 'send_otp',
+  FORGOT_PASSWORD = 'forgot_password',
+  RESET_PASSWORD = 'reset_password',
+  CHANGE_PASSWORD = 'change_password',
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  RESTORE = 'restore',
+  ASSIGN_MANAGER = 'assign_manager',
+  TOGGLE_MAINTENANCE = 'toggle_maintenance',
+}
+
+enum AuditResourceEnum {
+  AUTH = 'auth',
+  USER = 'user',
+  PROFILE = 'profile',
+  FACILITY = 'facility',
+  UNIT_TYPE = 'unit_type',
+  AMENITY = 'amenity',
+  FACILITY_UNIT_TYPE_OFFERING = 'facility_unit_type_offering',
+  FACILITY_AMENITY_OFFERING = 'facility_amenity_offering',
+  STORAGE_UNIT = 'storage_unit',
+  RESERVATION = 'reservation',
+}
+
+enum AuditStatusEnum {
+  SUCCESS = 'success',
+  FAILURE = 'failure',
 }
 ```
 
@@ -463,3 +498,72 @@ Luôn ghi theo thứ tự sau, **từng file một**:
 8. container
 9. Cập nhật ioc.ts
 ```
+
+---
+
+## 19. Audit Logging (Ghi nhận hành động người dùng)
+
+### [MUST] Khi nào PHẢI ghi log?
+
+- **Mọi thao tác làm thay đổi dữ liệu (Mutations):** `CREATE`, `UPDATE`, `DELETE`, `RESTORE`.
+- **Mọi hành động nhạy cảm hoặc thay đổi trạng thái:** `REGISTER`, `LOGIN` (cả SUCCESS lẫn FAILURE), `LOGOUT`, `SEND_OTP`, `CHANGE_PASSWORD`, `ASSIGN_MANAGER`, `TOGGLE_MAINTENANCE`, `CANCEL`, `CONFIRM`, v.v.
+
+### [MUST] Khi nào KHÔNG ghi log?
+
+- **Mọi thao tác đọc (Read-only queries):** `GET /`, `GET /{id}`, tra cứu danh sách, tìm kiếm kho trống.
+- **Thao tác nội bộ có tần suất cao:** `refreshTokens` (đã có RTR + Redis quản lý).
+
+### [MUST] Quy tắc tích hợp vào Service
+
+1. **Dependency Injection:** Nhận `auditLogService?: AuditLogService` dạng **optional** qua constructor:
+   ```ts
+   export class ExampleService {
+     constructor(
+       private readonly exampleRepository: ExampleRepository,
+       private readonly auditLogService?: AuditLogService
+     ) {}
+   }
+   ```
+2. **Container wiring:** Import `auditLogService` từ `../auditLog/auditLog.container.ts` và inject vào service trong `<domain>.container.ts`.
+
+3. **Ghi log an toàn qua Optional Chaining (`?.`):**
+
+   ```ts
+   // Tạo mới: chỉ truyền after
+   this.auditLogService?.record({
+     action: AuditActionEnum.CREATE,
+     resourceType: AuditResourceEnum.RESERVATION,
+     resourceId: String(createdDoc._id),
+     after: createdDoc,
+   });
+
+   // Cập nhật: truyền before và after (hệ thống tự diff các trường thay đổi & mask thông tin nhạy cảm)
+   this.auditLogService?.record({
+     action: AuditActionEnum.UPDATE,
+     resourceType: AuditResourceEnum.RESERVATION,
+     resourceId: String(id),
+     before: oldDoc,
+     after: updatedDoc,
+   });
+
+   // Xoá mềm: truyền before
+   this.auditLogService?.record({
+     action: AuditActionEnum.DELETE,
+     resourceType: AuditResourceEnum.RESERVATION,
+     resourceId: String(id),
+     before: oldDoc,
+   });
+
+   // Khôi phục:
+   this.auditLogService?.record({
+     action: AuditActionEnum.RESTORE,
+     resourceType: AuditResourceEnum.RESERVATION,
+     resourceId: String(id),
+     before: { deleted: true },
+     after: { deleted: false },
+   });
+   ```
+
+4. **Async Context:** KHÔNG cần truyền thủ công `actorId`, `ip`, `userAgent`, `requestId`. Hệ thống `AsyncLocalStorage` (`requestContext.util.ts`) tự động trích xuất thông tin user đã đăng nhập.
+5. **Hỗ trợ Transaction (`@Transactional`):** Log được giữ trong bộ đệm tự động và **chỉ ghi xuống DB khi transaction commit thành công**. Nếu transaction rollback/retry, buffer bị huỷ bỏ, tránh log ảo (phantom logs).
+6. **Non-blocking & An toàn:** Ghi log chạy fire-and-forget, không bao giờ làm gián đoạn hoặc ném lỗi ảnh hưởng đến nghiệp vụ chính của người dùng.

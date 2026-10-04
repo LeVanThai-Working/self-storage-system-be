@@ -25,13 +25,19 @@ import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
 import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class StorageUnitService {
   constructor(
     private readonly storageUnitRepository: StorageUnitRepository,
     private readonly facilityRepository: FacilityRepository,
     private readonly unitTypeRepository: UnitTypeRepository,
-    private readonly offeringRepository: FacilityUnitTypeOfferingRepository
+    private readonly offeringRepository: FacilityUnitTypeOfferingRepository,
+    private readonly auditLogService?: AuditLogService
   ) {}
 
   private formatStorageUnit(unit: unknown): unknown {
@@ -201,6 +207,17 @@ export class StorageUnitService {
     const populated = await this.storageUnitRepository.findById(
       String(newUnit._id)
     );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE,
+      resourceType: AuditResourceEnum.STORAGE_UNIT,
+      resourceId: String(newUnit._id),
+      after:
+        typeof populated?.toObject === 'function'
+          ? populated.toObject()
+          : populated,
+    });
+
     return validateResponse(
       storageUnitResponseSchema,
       this.formatStorageUnit(populated)
@@ -278,6 +295,15 @@ export class StorageUnitService {
     await this.storageUnitRepository.updateById(id, updatePayload);
     const updated = await this.storageUnitRepository.findById(id);
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.STORAGE_UNIT,
+      resourceId: id,
+      before: typeof unit.toObject === 'function' ? unit.toObject() : unit,
+      after:
+        typeof updated?.toObject === 'function' ? updated.toObject() : updated,
+    });
+
     return validateResponse(
       storageUnitResponseSchema,
       this.formatStorageUnit(updated)
@@ -293,6 +319,9 @@ export class StorageUnitService {
     if (!unit) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
     }
+
+    const beforeStatus = unit.status;
+    const beforeNotes = unit.notes;
 
     if (data.isUnderMaintenance) {
       // Put under maintenance: Block if currently RESERVED or OCCUPIED
@@ -321,6 +350,22 @@ export class StorageUnitService {
     });
 
     const updated = await this.storageUnitRepository.findById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.TOGGLE_MAINTENANCE,
+      resourceType: AuditResourceEnum.STORAGE_UNIT,
+      resourceId: id,
+      before: {
+        status: beforeStatus,
+        notes: beforeNotes,
+      },
+      after: {
+        status: unit.status,
+        notes: unit.notes,
+      },
+      metadata: { isUnderMaintenance: data.isUnderMaintenance },
+    });
+
     return validateResponse(
       storageUnitResponseSchema,
       this.formatStorageUnit(updated)
@@ -343,6 +388,13 @@ export class StorageUnitService {
     }
 
     await this.storageUnitRepository.deleteById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DELETE,
+      resourceType: AuditResourceEnum.STORAGE_UNIT,
+      resourceId: id,
+      before: typeof unit.toObject === 'function' ? unit.toObject() : unit,
+    });
   }
 
   @Transactional()
@@ -358,6 +410,18 @@ export class StorageUnitService {
     await this.storageUnitRepository.restoreById(id);
 
     const restored = await this.storageUnitRepository.findById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RESTORE,
+      resourceType: AuditResourceEnum.STORAGE_UNIT,
+      resourceId: id,
+      before: { deleted: true },
+      after:
+        typeof restored?.toObject === 'function'
+          ? restored.toObject()
+          : restored,
+    });
+
     return validateResponse(
       storageUnitResponseSchema,
       this.formatStorageUnit(restored)

@@ -26,6 +26,11 @@ import { RoleEnum, UserStatusEnum } from '../../common/enums/user.enum.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class FacilityService {
   constructor(
@@ -33,7 +38,8 @@ export class FacilityService {
     private readonly userRepository: UserRepository,
     private readonly offeringRepository?: FacilityUnitTypeOfferingRepository,
     private readonly storageUnitRepository?: StorageUnitRepository,
-    private readonly amenityOfferingRepository?: FacilityAmenityOfferingRepository
+    private readonly amenityOfferingRepository?: FacilityAmenityOfferingRepository,
+    private readonly auditLogService?: AuditLogService
   ) {}
 
   private formatFacility(facility: unknown): unknown {
@@ -105,6 +111,16 @@ export class FacilityService {
       status: FacilityStatusEnum.ACTIVE,
     });
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE,
+      resourceType: AuditResourceEnum.FACILITY,
+      resourceId: newFacility._id.toString(),
+      after:
+        typeof newFacility.toObject === 'function'
+          ? newFacility.toObject()
+          : newFacility,
+    });
+
     return validateResponse(
       facilityResponseSchema,
       this.formatFacility(newFacility)
@@ -121,6 +137,21 @@ export class FacilityService {
     }
 
     const updatedFacility = await this.facilityRepository.update(id, data);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.FACILITY,
+      resourceId: id,
+      before:
+        typeof facility.toObject === 'function'
+          ? facility.toObject()
+          : facility,
+      after:
+        typeof updatedFacility?.toObject === 'function'
+          ? updatedFacility.toObject()
+          : updatedFacility,
+    });
+
     return validateResponse(
       facilityResponseSchema,
       this.formatFacility(updatedFacility)
@@ -144,6 +175,16 @@ export class FacilityService {
     //    - User (Staff): Unassign assignedFacilityId for staff members assigned to this facility.
 
     await this.facilityRepository.softDelete(id, deletedBy);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DELETE,
+      resourceType: AuditResourceEnum.FACILITY,
+      resourceId: id,
+      before:
+        typeof facility.toObject === 'function'
+          ? facility.toObject()
+          : facility,
+    });
   }
 
   @Transactional()
@@ -208,6 +249,14 @@ export class FacilityService {
       assignedFacilityId: facility._id as unknown as Types.ObjectId,
     });
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.ASSIGN_MANAGER,
+      resourceType: AuditResourceEnum.FACILITY,
+      resourceId: facilityId,
+      before: { managerId: oldManagerId },
+      after: { managerId: data.managerId },
+    });
+
     return validateResponse(
       facilityResponseSchema,
       this.formatFacility(updatedFacility)
@@ -227,6 +276,18 @@ export class FacilityService {
     await this.facilityRepository.restore(id);
 
     const restored = await this.facilityRepository.findById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RESTORE,
+      resourceType: AuditResourceEnum.FACILITY,
+      resourceId: id,
+      before: { deleted: true },
+      after:
+        typeof restored?.toObject === 'function'
+          ? restored.toObject()
+          : restored,
+    });
+
     return validateResponse(
       facilityResponseSchema,
       this.formatFacility(restored)

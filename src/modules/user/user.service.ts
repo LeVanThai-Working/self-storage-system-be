@@ -22,12 +22,18 @@ import {
   UserStatusEnum,
 } from '../../common/enums/user.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly authRedisService?: AuthRedisService,
-    private readonly profileRepository?: ProfileRepository
+    private readonly profileRepository?: ProfileRepository,
+    private readonly auditLogService?: AuditLogService
   ) {}
 
   private formatUser(user: unknown): unknown {
@@ -93,6 +99,14 @@ export class UserService {
       isEmailVerified: false,
     });
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE,
+      resourceType: AuditResourceEnum.USER,
+      resourceId: newUser._id.toString(),
+      after:
+        typeof newUser.toObject === 'function' ? newUser.toObject() : newUser,
+    });
+
     return validateResponse(userResponseSchema, this.formatUser(newUser));
   }
 
@@ -103,6 +117,18 @@ export class UserService {
     }
 
     const updatedUser = await this.userRepository.updateUser(id, data);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.USER,
+      resourceId: id,
+      before: typeof user.toObject === 'function' ? user.toObject() : user,
+      after:
+        typeof updatedUser?.toObject === 'function'
+          ? updatedUser.toObject()
+          : updatedUser,
+    });
+
     return validateResponse(userResponseSchema, this.formatUser(updatedUser));
   }
 
@@ -129,6 +155,13 @@ export class UserService {
     if (this.authRedisService) {
       await this.authRedisService.revokeAllUserFamilies(id);
     }
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DELETE,
+      resourceType: AuditResourceEnum.USER,
+      resourceId: id,
+      before: typeof user.toObject === 'function' ? user.toObject() : user,
+    });
   }
 
   @Transactional()
@@ -148,6 +181,18 @@ export class UserService {
     await this.userRepository.restoreUser(id);
 
     const restored = await this.userRepository.findById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RESTORE,
+      resourceType: AuditResourceEnum.USER,
+      resourceId: id,
+      before: { deleted: true },
+      after:
+        typeof restored?.toObject === 'function'
+          ? restored.toObject()
+          : restored,
+    });
+
     return validateResponse(userResponseSchema, this.formatUser(restored));
   }
 }

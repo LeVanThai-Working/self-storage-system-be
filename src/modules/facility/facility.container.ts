@@ -10,6 +10,7 @@ import { StorageUnit } from '../storageUnit/storageUnit.model.ts';
 import { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
 import { FacilityAmenityOffering } from '../facilityAmenityOffering/facilityAmenityOffering.model.ts';
 import { FacilityAmenityOfferingRepository } from '../facilityAmenityOffering/facilityAmenityOffering.repository.ts';
+import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const facilityRepository = new FacilityRepository(Facility);
 
@@ -30,7 +31,8 @@ const facilityService = new FacilityService(
   userRepository,
   offeringRepository,
   storageUnitRepository,
-  amenityOfferingRepository
+  amenityOfferingRepository,
+  auditLogService
 );
 
 export const facilityController = new FacilityController(facilityService);

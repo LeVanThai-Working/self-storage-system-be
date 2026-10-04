@@ -6,6 +6,7 @@ import { Facility } from '../facility/facility.model.ts';
 import { FacilityRepository } from '../facility/facility.repository.ts';
 import { Amenity } from '../amenity/amenity.model.ts';
 import { AmenityRepository } from '../amenity/amenity.repository.ts';
+import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 export const facilityAmenityOfferingRepository =
   new FacilityAmenityOfferingRepository(FacilityAmenityOffering);
@@ -17,7 +18,8 @@ export const facilityAmenityOfferingService =
   new FacilityAmenityOfferingService(
     facilityAmenityOfferingRepository,
     facilityRepository,
-    amenityRepository
+    amenityRepository,
+    auditLogService
   );
 
 export const facilityAmenityOfferingController =

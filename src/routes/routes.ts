@@ -20,6 +20,8 @@ import { FacilityController } from './../modules/facility/facility.controller.js
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AuthController } from './../modules/auth/auth.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { AuditLogController } from './../modules/auditLog/auditLog.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AmenityController } from './../modules/amenity/amenity.controller.js';
 import { expressAuthentication } from './../middlewares/auth.tsoa.js';
 // @ts-ignore - no great way to install types from subpackage
@@ -853,6 +855,79 @@ const models: TsoaRoute.Models = {
     "ChangePasswordRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofchangePasswordSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuditActionEnum": {
+        "dataType": "refEnum",
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuditResourceEnum": {
+        "dataType": "refEnum",
+        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuditStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["success","failure"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "Record_string.unknown_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofauditLogResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"createdAt":{"dataType":"string"},"path":{"dataType":"string"},"method":{"dataType":"string"},"requestId":{"dataType":"string"},"userAgent":{"dataType":"string"},"ip":{"dataType":"string"},"metadata":{"ref":"Record_string.unknown_"},"changes":{"dataType":"nestedObjectLiteral","nestedProperties":{"after":{"ref":"Record_string.unknown_"},"before":{"ref":"Record_string.unknown_"}}},"resourceId":{"dataType":"string"},"actorEmail":{"dataType":"string"},"actorRole":{"dataType":"string"},"actorId":{"dataType":"string"},"status":{"ref":"AuditStatusEnum","required":true},"resourceType":{"ref":"AuditResourceEnum","required":true},"action":{"ref":"AuditActionEnum","required":true},"version":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuditLogResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofauditLogResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedData_AuditLogResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "items": {"dataType":"array","array":{"dataType":"refAlias","ref":"AuditLogResponse"},"required":true},
+            "pagination": {"ref":"PaginationMeta","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedData_AuditLogResponse__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedData_AuditLogResponse_","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofauditLogQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"to":{"dataType":"string"},"from":{"dataType":"string"},"status":{"ref":"AuditStatusEnum"},"resourceId":{"dataType":"string"},"resourceType":{"ref":"AuditResourceEnum"},"action":{"ref":"AuditActionEnum"},"actorId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["action"]},{"dataType":"enum","enums":["resourceType"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuditLogQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofauditLogQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_AuditLogResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"AuditLogResponse","required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofamenityResponseSchema_": {
@@ -2957,6 +3032,153 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'changePassword',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAuditLogController_findAll: Record<string, TsoaRoute.ParameterSchema> = {
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"to":{"dataType":"string"},"from":{"dataType":"string"},"status":{"ref":"AuditStatusEnum"},"resourceId":{"dataType":"string"},"resourceType":{"ref":"AuditResourceEnum"},"action":{"ref":"AuditActionEnum"},"actorId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["action"]},{"dataType":"enum","enums":["resourceType"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/audit-logs',
+            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(AuditLogController)),
+            ...(fetchMiddlewares<RequestHandler>(AuditLogController.prototype.findAll)),
+
+            async function AuditLogController_findAll(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAuditLogController_findAll, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AuditLogController>(AuditLogController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'findAll',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAuditLogController_findMine: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"to":{"dataType":"string"},"from":{"dataType":"string"},"status":{"ref":"AuditStatusEnum"},"resourceId":{"dataType":"string"},"resourceType":{"ref":"AuditResourceEnum"},"action":{"ref":"AuditActionEnum"},"actorId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["action"]},{"dataType":"enum","enums":["resourceType"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/audit-logs/me',
+            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(AuditLogController)),
+            ...(fetchMiddlewares<RequestHandler>(AuditLogController.prototype.findMine)),
+
+            async function AuditLogController_findMine(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAuditLogController_findMine, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AuditLogController>(AuditLogController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'findMine',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAuditLogController_findByResource: Record<string, TsoaRoute.ParameterSchema> = {
+                resourceType: {"in":"path","name":"resourceType","required":true,"ref":"AuditResourceEnum"},
+                resourceId: {"in":"path","name":"resourceId","required":true,"dataType":"string"},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"to":{"dataType":"string"},"from":{"dataType":"string"},"status":{"ref":"AuditStatusEnum"},"resourceId":{"dataType":"string"},"resourceType":{"ref":"AuditResourceEnum"},"action":{"ref":"AuditActionEnum"},"actorId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["action"]},{"dataType":"enum","enums":["resourceType"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/audit-logs/resource/:resourceType/:resourceId',
+            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(AuditLogController)),
+            ...(fetchMiddlewares<RequestHandler>(AuditLogController.prototype.findByResource)),
+
+            async function AuditLogController_findByResource(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAuditLogController_findByResource, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AuditLogController>(AuditLogController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'findByResource',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAuditLogController_findById: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/audit-logs/:id',
+            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(AuditLogController)),
+            ...(fetchMiddlewares<RequestHandler>(AuditLogController.prototype.findById)),
+
+            async function AuditLogController_findById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAuditLogController_findById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AuditLogController>(AuditLogController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'findById',
                 controller,
                 response,
                 next,

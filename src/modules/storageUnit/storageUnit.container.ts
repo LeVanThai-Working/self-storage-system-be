@@ -8,6 +8,7 @@ import { UnitType } from '../unitType/unitType.model.ts';
 import { UnitTypeRepository } from '../unitType/unitType.repository.ts';
 import { FacilityUnitTypeOffering } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.model.ts';
 import { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.repository.ts';
+import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const storageUnitRepository = new StorageUnitRepository(StorageUnit);
 const facilityRepository = new FacilityRepository(Facility);
@@ -20,7 +21,8 @@ const storageUnitService = new StorageUnitService(
   storageUnitRepository,
   facilityRepository,
   unitTypeRepository,
-  offeringRepository
+  offeringRepository,
+  auditLogService
 );
 
 export const storageUnitController = new StorageUnitController(

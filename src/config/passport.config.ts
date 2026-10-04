@@ -7,6 +7,11 @@ import { Profile as UserProfile } from '../modules/profile/profile.model.ts';
 import { AuthProviderEnum, UserStatusEnum } from '../common/enums/user.enum.ts';
 import { AppError } from '../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../common/consts/messageCode.const.ts';
+import { auditLogService } from '../modules/auditLog/auditLog.container.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../common/enums/auditLog.enum.ts';
 
 passport.use(
   new GoogleStrategy(
@@ -61,6 +66,19 @@ passport.use(
           {},
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
+
+        auditLogService.record({
+          action: AuditActionEnum.REGISTER,
+          resourceType: AuditResourceEnum.USER,
+          resourceId: user._id.toString(),
+          actor: {
+            id: user._id.toString(),
+            role: user.role,
+            email: user.email,
+          },
+          after: typeof user.toObject === 'function' ? user.toObject() : user,
+          metadata: { provider: 'google' },
+        });
 
         return done(null, user);
       } catch (error) {
