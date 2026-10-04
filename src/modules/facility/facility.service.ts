@@ -1,29 +1,39 @@
 import type { Types } from 'mongoose';
 import type { FacilityRepository } from './facility.repository.ts';
 import type { UserRepository } from '../user/user.repository.ts';
+import type { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.repository.ts';
+import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
+import type { FacilityAmenityOfferingRepository } from '../facilityAmenityOffering/facilityAmenityOffering.repository.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
 import {
   facilityListResponseSchema,
   facilityResponseSchema,
+  facilityPublicDetailResponseSchema,
   type FacilityResponse,
+  type FacilityPublicDetailResponse,
 } from './schemas/facility.response.schema.ts';
 import type {
   AssignManagerRequest,
   CreateFacilityRequest,
   FacilityQuery,
+  SearchByAmenityQuery,
   UpdateFacilityRequest,
 } from './schemas/facility.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { RoleEnum, UserStatusEnum } from '../../common/enums/user.enum.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
+import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 
 export class FacilityService {
   constructor(
     private readonly facilityRepository: FacilityRepository,
-    private readonly userRepository: UserRepository
+    private readonly userRepository: UserRepository,
+    private readonly offeringRepository?: FacilityUnitTypeOfferingRepository,
+    private readonly storageUnitRepository?: StorageUnitRepository,
+    private readonly amenityOfferingRepository?: FacilityAmenityOfferingRepository
   ) {}
 
   private formatFacility(facility: unknown): unknown {
@@ -221,5 +231,173 @@ export class FacilityService {
       facilityResponseSchema,
       this.formatFacility(restored)
     );
+  }
+
+  async getPublicFacilityDetail(
+    facilityId: string
+  ): Promise<FacilityPublicDetailResponse> {
+    const facility = await this.facilityRepository.findById(facilityId);
+    if (!facility || facility.status !== FacilityStatusEnum.ACTIVE) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
+    }
+
+    const [unitTypeOfferingsResult, availableCounts, amenityOfferings] =
+      await Promise.all([
+        this.offeringRepository
+          ? this.offeringRepository.findAll({
+              facilityId,
+              status: FacilityUnitTypeOfferingStatusEnum.ACTIVE,
+              page: 1,
+              limit: 100,
+              sortBy: 'createdAt',
+              sortOrder: 'desc',
+            })
+          : Promise.resolve({ items: [] }),
+        this.storageUnitRepository
+          ? this.storageUnitRepository.countAvailableUnitsGroupedByUnitType(
+              facilityId
+            )
+          : Promise.resolve({} as Record<string, number>),
+        this.amenityOfferingRepository
+          ? this.amenityOfferingRepository.findAvailableOfferings(facilityId)
+          : Promise.resolve([]),
+      ]);
+
+    const formattedUnitTypeOfferings = unitTypeOfferingsResult.items.map(
+      (offering) => {
+        const rawUnitType = offering.unitTypeId as unknown as Record<
+          string,
+          unknown
+        >;
+        const unitTypeIdStr = String(rawUnitType._id || rawUnitType.id);
+        const unitType = {
+          id: unitTypeIdStr,
+          name: rawUnitType.name,
+          category: rawUnitType.category,
+          dimensions: rawUnitType.dimensions,
+          area: rawUnitType.area,
+          volume: rawUnitType.volume,
+          description: rawUnitType.description ?? null,
+          status: rawUnitType.status,
+        };
+
+        return {
+          id: String(offering._id),
+          facilityId: String(facility._id || facility.id),
+          unitTypeId: unitTypeIdStr,
+          unitType,
+          pricePerUnit: offering.pricePerUnit,
+          depositMultiplier: offering.depositMultiplier,
+          billingUnit: offering.billingUnit,
+          minRentalDays: offering.minRentalDays,
+          status: offering.status,
+          availableUnitsCount: availableCounts[unitTypeIdStr] || 0,
+        };
+      }
+    );
+
+    const formattedAmenityOfferings = amenityOfferings.map((item) => {
+      const rawAmenity = item.amenityId as unknown as Record<string, unknown>;
+      const amenityIdStr = String(rawAmenity._id || rawAmenity.id);
+      const amenity = {
+        id: amenityIdStr,
+        name: rawAmenity.name,
+        description: rawAmenity.description ?? null,
+        type: rawAmenity.type,
+        status: rawAmenity.status,
+        images: rawAmenity.images ?? [],
+        tags: rawAmenity.tags ?? [],
+      };
+
+      return {
+        id: String(item._id || item.id),
+        facilityId: String(facility._id || facility.id),
+        amenityId: amenityIdStr,
+        amenity,
+        pricePerUnit: item.pricePerUnit,
+        billingUnit: item.billingUnit,
+        totalQuantity: item.totalQuantity,
+        inUseQuantity: item.inUseQuantity,
+        availableQuantity: Math.max(0, item.totalQuantity - item.inUseQuantity),
+        status: item.status,
+      };
+    });
+
+    const result = {
+      facility: this.formatFacility(facility),
+      unitTypeOfferings: formattedUnitTypeOfferings,
+      amenityOfferings: formattedAmenityOfferings,
+    };
+
+    return validateResponse(facilityPublicDetailResponseSchema, result);
+  }
+
+  async searchFacilitiesByAmenity(
+    query: SearchByAmenityQuery
+  ): Promise<PaginatedData<FacilityResponse>> {
+    const amenityIds = query.amenityIds
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    if (amenityIds.length === 0) {
+      return {
+        items: [],
+        pagination: {
+          page: query.page,
+          limit: query.limit,
+          totalItems: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
+    }
+
+    if (!this.amenityOfferingRepository) {
+      throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106);
+    }
+
+    const matchedFacilityIds =
+      await this.amenityOfferingRepository.findFacilityIdsByAmenityIds(
+        amenityIds,
+        query.matchAll ?? true
+      );
+
+    if (matchedFacilityIds.length === 0) {
+      return {
+        items: [],
+        pagination: {
+          page: query.page,
+          limit: query.limit,
+          totalItems: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      };
+    }
+
+    const result = await this.facilityRepository.findAll({
+      page: query.page,
+      limit: query.limit,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+      search: query.search,
+      city: query.city,
+      status: FacilityStatusEnum.ACTIVE,
+      facilityIds: matchedFacilityIds,
+    });
+
+    const formattedItems = result.items.map((f) => this.formatFacility(f));
+    const validatedItems = validateResponse(
+      facilityListResponseSchema,
+      formattedItems
+    );
+
+    return {
+      items: validatedItems,
+      pagination: result.pagination,
+    };
   }
 }

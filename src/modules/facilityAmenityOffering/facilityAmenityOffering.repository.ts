@@ -1,4 +1,9 @@
-import type { ClientSession, FilterQuery } from 'mongoose';
+import {
+  Types,
+  type ClientSession,
+  type FilterQuery,
+  type PipelineStage,
+} from 'mongoose';
 import type { SoftDeleteModel } from 'mongoose-delete';
 import type { IFacilityAmenityOffering } from './facilityAmenityOffering.model.ts';
 import type { FacilityAmenityOfferingQuery } from './schemas/facilityAmenityOffering.request.schema.ts';
@@ -100,6 +105,46 @@ export class FacilityAmenityOfferingRepository {
       })
       .populate(POPULATE_FACILITY)
       .populate(POPULATE_AMENITY);
+  }
+
+  async findFacilityIdsByAmenityIds(
+    amenityIds: string[],
+    matchAll: boolean = true
+  ): Promise<string[]> {
+    if (amenityIds.length === 0) return [];
+
+    const amenityObjectIds = amenityIds.map((id) => new Types.ObjectId(id));
+
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          amenityId: { $in: amenityObjectIds },
+          status: FacilityAmenityOfferingStatusEnum.ACTIVE,
+          deleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: '$facilityId',
+          matchedAmenities: { $addToSet: '$amenityId' },
+        },
+      },
+    ];
+
+    if (matchAll) {
+      pipeline.push({
+        $match: {
+          $expr: {
+            $gte: [{ $size: '$matchedAmenities' }, amenityObjectIds.length],
+          },
+        },
+      });
+    }
+
+    const results = await this.offering.aggregate<{ _id: Types.ObjectId }>(
+      pipeline
+    );
+    return results.map((r) => r._id.toString());
   }
 
   async create(

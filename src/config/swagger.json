@@ -2118,6 +2118,9 @@
 					"status": {
 						"$ref": "#/components/schemas/FacilityStatusEnum"
 					},
+					"city": {
+						"type": "string"
+					},
 					"search": {
 						"type": "string"
 					},
@@ -2157,6 +2160,359 @@
 			},
 			"FacilityQuery": {
 				"$ref": "#/components/schemas/infer_typeoffacilityQuerySchema_"
+			},
+			"infer_typeofsearchByAmenityQuerySchema_": {
+				"properties": {
+					"search": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"name",
+							"createdAt",
+							"updatedAt",
+							"city"
+						]
+					},
+					"matchAll": {
+						"type": "boolean"
+					},
+					"amenityIds": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"matchAll",
+					"amenityIds",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"SearchByAmenityQuery": {
+				"$ref": "#/components/schemas/infer_typeofsearchByAmenityQuerySchema_"
+			},
+			"infer_typeoffacilityPublicDetailResponseSchema_": {
+				"properties": {
+					"amenityOfferings": {
+						"items": {
+							"properties": {
+								"status": {
+									"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+								},
+								"availableQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"inUseQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"totalQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"billingUnit": {
+									"$ref": "#/components/schemas/BillingUnitEnum"
+								},
+								"pricePerUnit": {
+									"type": "number",
+									"format": "double"
+								},
+								"amenity": {
+									"properties": {
+										"tags": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"images": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"description": {
+											"type": "string"
+										},
+										"status": {
+											"$ref": "#/components/schemas/AmenityStatusEnum"
+										},
+										"type": {
+											"$ref": "#/components/schemas/AmenityTypeEnum"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"type",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"amenityId": {
+									"type": "string"
+								},
+								"facilityId": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"status",
+								"availableQuantity",
+								"inUseQuantity",
+								"totalQuantity",
+								"billingUnit",
+								"pricePerUnit",
+								"amenity",
+								"amenityId",
+								"facilityId",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"unitTypeOfferings": {
+						"items": {
+							"properties": {
+								"availableUnitsCount": {
+									"type": "number",
+									"format": "double"
+								},
+								"status": {
+									"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+								},
+								"minRentalDays": {
+									"type": "number",
+									"format": "double"
+								},
+								"billingUnit": {
+									"$ref": "#/components/schemas/BillingUnitEnum"
+								},
+								"depositMultiplier": {
+									"type": "number",
+									"format": "double"
+								},
+								"pricePerUnit": {
+									"type": "number",
+									"format": "double"
+								},
+								"unitType": {
+									"properties": {
+										"description": {
+											"type": "string"
+										},
+										"status": {
+											"$ref": "#/components/schemas/UnitTypeStatusEnum"
+										},
+										"volume": {
+											"type": "number",
+											"format": "double"
+										},
+										"area": {
+											"type": "number",
+											"format": "double"
+										},
+										"dimensions": {
+											"properties": {
+												"height": {
+													"type": "number",
+													"format": "double"
+												},
+												"width": {
+													"type": "number",
+													"format": "double"
+												},
+												"length": {
+													"type": "number",
+													"format": "double"
+												}
+											},
+											"required": [
+												"height",
+												"width",
+												"length"
+											],
+											"type": "object"
+										},
+										"category": {
+											"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"volume",
+										"area",
+										"dimensions",
+										"category",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"unitTypeId": {
+									"type": "string"
+								},
+								"facilityId": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"availableUnitsCount",
+								"status",
+								"minRentalDays",
+								"billingUnit",
+								"depositMultiplier",
+								"pricePerUnit",
+								"unitType",
+								"unitTypeId",
+								"facilityId",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"facility": {
+						"properties": {
+							"updatedAt": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "string"
+							},
+							"operatingHours": {
+								"properties": {
+									"close": {
+										"type": "string"
+									},
+									"open": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"close",
+									"open"
+								],
+								"type": "object"
+							},
+							"managerId": {
+								"type": "string"
+							},
+							"description": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"phone": {
+								"type": "string"
+							},
+							"status": {
+								"$ref": "#/components/schemas/FacilityStatusEnum"
+							},
+							"city": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"city",
+							"address",
+							"name",
+							"id"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"amenityOfferings",
+					"unitTypeOfferings",
+					"facility"
+				],
+				"type": "object"
+			},
+			"FacilityPublicDetailResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityPublicDetailResponseSchema_"
+			},
+			"ApiResponse_FacilityPublicDetailResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityPublicDetailResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
 			"ApiResponse_FacilityResponse_": {
 				"properties": {
@@ -5479,6 +5835,14 @@
 					},
 					{
 						"in": "query",
+						"name": "city",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
 						"name": "search",
 						"required": false,
 						"schema": {
@@ -5571,6 +5935,166 @@
 						}
 					}
 				}
+			}
+		},
+		"/facilities/search-by-amenity": {
+			"get": {
+				"operationId": "SearchFacilitiesByAmenity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_FacilityResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "city",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"name",
+								"createdAt",
+								"updatedAt",
+								"city"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "matchAll",
+						"required": true,
+						"schema": {
+							"type": "boolean"
+						}
+					},
+					{
+						"in": "query",
+						"name": "amenityIds",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/facilities/{id}/public-detail": {
+			"get": {
+				"operationId": "GetPublicFacilityDetail",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityPublicDetailResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"facilities"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/facilities/{id}": {

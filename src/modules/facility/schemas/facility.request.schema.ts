@@ -44,9 +44,31 @@ export const facilityIdParamSchema = z.object({
 
 export const facilityQuerySchema = paginationQuerySchema.extend({
   search: z.string().optional(),
+  city: z.string().optional(),
   status: z.enum(FacilityStatusEnum).optional(),
   sortBy: z
     .enum(['name', 'city', 'status', 'createdAt', 'updatedAt'])
+    .default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export const searchByAmenityQuerySchema = paginationQuerySchema.extend({
+  amenityIds: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}(,[0-9a-fA-F]{24})*$/, 'Invalid amenity ID format'),
+  matchAll: z
+    .preprocess((val) => {
+      if (typeof val === 'string') {
+        return val.toLowerCase() === 'true';
+      }
+      return val ?? true;
+    }, z.boolean())
+    .optional()
+    .default(true),
+  city: z.string().optional(),
+  search: z.string().optional(),
+  sortBy: z
+    .enum(['name', 'city', 'createdAt', 'updatedAt'])
     .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
@@ -59,4 +81,5 @@ export type CreateFacilityRequest = z.infer<typeof createFacilitySchema>;
 export type UpdateFacilityRequest = z.infer<typeof updateFacilitySchema>;
 export type FacilityIdParam = z.infer<typeof facilityIdParamSchema>;
 export type FacilityQuery = z.infer<typeof facilityQuerySchema>;
+export type SearchByAmenityQuery = z.infer<typeof searchByAmenityQuerySchema>;
 export type AssignManagerRequest = z.infer<typeof assignManagerSchema>;
