@@ -4,6 +4,7 @@ import { MESSAGE_CODE } from '../common/consts/messageCode.const.ts';
 import { jwtUtil } from '../modules/auth/auth.container.ts';
 import { User } from '../modules/user/user.model.ts';
 import { UserStatusEnum } from '../common/enums/user.enum.ts';
+import { setRequestActor } from '../utils/requestContext.util.ts';
 
 export const authMiddleware = async (
   req: Request,
@@ -38,6 +39,7 @@ export const authMiddleware = async (
     }
 
     req.user = user;
+    setRequestActor(user);
     next();
   } catch (error) {
     next(error);

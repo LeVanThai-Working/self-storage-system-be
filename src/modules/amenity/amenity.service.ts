@@ -14,9 +14,17 @@ import type {
 } from './schemas/amenity.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class AmenityService {
-  constructor(private readonly amenityRepository: AmenityRepository) {}
+  constructor(
+    private readonly amenityRepository: AmenityRepository,
+    private readonly auditLogService?: AuditLogService
+  ) {}
 
   private formatAmenity(amenity: unknown): unknown {
     if (!amenity) return amenity;
@@ -84,6 +92,14 @@ export class AmenityService {
       name: trimmedName,
     });
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE,
+      resourceType: AuditResourceEnum.AMENITY,
+      resourceId: created._id.toString(),
+      after:
+        typeof created.toObject === 'function' ? created.toObject() : created,
+    });
+
     return validateResponse(amenityResponseSchema, this.formatAmenity(created));
   }
 
@@ -121,6 +137,16 @@ export class AmenityService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Amenity']);
     }
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.AMENITY,
+      resourceId: id,
+      before:
+        typeof amenity.toObject === 'function' ? amenity.toObject() : amenity,
+      after:
+        typeof updated.toObject === 'function' ? updated.toObject() : updated,
+    });
+
     return validateResponse(amenityResponseSchema, this.formatAmenity(updated));
   }
 
@@ -134,6 +160,14 @@ export class AmenityService {
     // TODO: When integrating FacilityAmenityOffering -> Prevent deletion if any facility is offering this amenity.
 
     await this.amenityRepository.deleteById(id, deletedBy);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DELETE,
+      resourceType: AuditResourceEnum.AMENITY,
+      resourceId: id,
+      before:
+        typeof amenity.toObject === 'function' ? amenity.toObject() : amenity,
+    });
   }
 
   @Transactional()
@@ -149,6 +183,18 @@ export class AmenityService {
     await this.amenityRepository.restoreById(id);
 
     const restored = await this.amenityRepository.findById(id);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RESTORE,
+      resourceType: AuditResourceEnum.AMENITY,
+      resourceId: id,
+      before: { deleted: true },
+      after:
+        typeof restored?.toObject === 'function'
+          ? restored.toObject()
+          : restored,
+    });
+
     return validateResponse(
       amenityResponseSchema,
       this.formatAmenity(restored)

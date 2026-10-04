@@ -2669,6 +2669,266 @@
 			"ChangePasswordRequest": {
 				"$ref": "#/components/schemas/infer_typeofchangePasswordSchema_"
 			},
+			"AuditActionEnum": {
+				"enum": [
+					"register",
+					"login",
+					"login_google",
+					"logout",
+					"send_otp",
+					"forgot_password",
+					"reset_password",
+					"change_password",
+					"create",
+					"update",
+					"delete",
+					"restore",
+					"assign_manager",
+					"toggle_maintenance"
+				],
+				"type": "string"
+			},
+			"AuditResourceEnum": {
+				"enum": [
+					"auth",
+					"user",
+					"profile",
+					"facility",
+					"unit_type",
+					"amenity",
+					"facility_unit_type_offering",
+					"facility_amenity_offering",
+					"storage_unit",
+					"reservation"
+				],
+				"type": "string"
+			},
+			"AuditStatusEnum": {
+				"enum": [
+					"success",
+					"failure"
+				],
+				"type": "string"
+			},
+			"Record_string.unknown_": {
+				"properties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"infer_typeofauditLogResponseSchema_": {
+				"properties": {
+					"createdAt": {
+						"type": "string"
+					},
+					"path": {
+						"type": "string"
+					},
+					"method": {
+						"type": "string"
+					},
+					"requestId": {
+						"type": "string"
+					},
+					"userAgent": {
+						"type": "string"
+					},
+					"ip": {
+						"type": "string"
+					},
+					"metadata": {
+						"$ref": "#/components/schemas/Record_string.unknown_"
+					},
+					"changes": {
+						"properties": {
+							"after": {
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							},
+							"before": {
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							}
+						},
+						"type": "object"
+					},
+					"resourceId": {
+						"type": "string"
+					},
+					"actorEmail": {
+						"type": "string"
+					},
+					"actorRole": {
+						"type": "string"
+					},
+					"actorId": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AuditStatusEnum"
+					},
+					"resourceType": {
+						"$ref": "#/components/schemas/AuditResourceEnum"
+					},
+					"action": {
+						"$ref": "#/components/schemas/AuditActionEnum"
+					},
+					"version": {
+						"type": "number",
+						"format": "double"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"resourceType",
+					"action",
+					"version",
+					"id"
+				],
+				"type": "object"
+			},
+			"AuditLogResponse": {
+				"$ref": "#/components/schemas/infer_typeofauditLogResponseSchema_"
+			},
+			"PaginatedData_AuditLogResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/AuditLogResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_AuditLogResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_AuditLogResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofauditLogQuerySchema_": {
+				"properties": {
+					"to": {
+						"type": "string"
+					},
+					"from": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AuditStatusEnum"
+					},
+					"resourceId": {
+						"type": "string"
+					},
+					"resourceType": {
+						"$ref": "#/components/schemas/AuditResourceEnum"
+					},
+					"action": {
+						"$ref": "#/components/schemas/AuditActionEnum"
+					},
+					"actorId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"action",
+							"resourceType"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"AuditLogQuery": {
+				"$ref": "#/components/schemas/infer_typeofauditLogQuerySchema_"
+			},
+			"ApiResponse_AuditLogResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AuditLogResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"infer_typeofamenityResponseSchema_": {
 				"properties": {
 					"updatedAt": {
@@ -4007,7 +4267,7 @@
 						}
 					}
 				},
-				"description": "Lookup available storage units for a facility (for booking/reservation)",
+				"description": "Lookup available storage units for a facility (for reservation)",
 				"tags": [
 					"Storage Units"
 				],
@@ -6254,6 +6514,568 @@
 						}
 					}
 				}
+			}
+		},
+		"/audit-logs": {
+			"get": {
+				"operationId": "FindAll",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all audit logs with pagination and filters.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/me": {
+			"get": {
+				"operationId": "FindMine",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get current authenticated user's own activity log.\nDefined before /{id} to ensure proper route matching order in tsoa.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/resource/{resourceType}/{resourceId}": {
+			"get": {
+				"operationId": "FindByResource",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid resource parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get change timeline for a specific resource type and ID.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "resourceType",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "path",
+						"name": "resourceId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/{id}": {
+			"get": {
+				"operationId": "FindById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuditLogResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid audit log ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Audit log not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get single audit log record by ID.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/amenities": {

@@ -21,6 +21,12 @@ import {
 import { validateResponse } from '../../utils/validateReponse.util.ts';
 import { authUserResponseSchema } from './schemas/auth.response.schema.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import {
+  AuditActionEnum,
+  AuditResourceEnum,
+  AuditStatusEnum,
+} from '../../common/enums/auditLog.enum.ts';
 
 export class AuthService {
   constructor(
@@ -29,7 +35,8 @@ export class AuthService {
     private readonly profileRepository: ProfileRepository,
     private readonly mailUtil: MailUtil,
     private readonly jwtUtil: JwtUtil,
-    private readonly authRedisService: AuthRedisService
+    private readonly authRedisService: AuthRedisService,
+    private readonly auditLogService?: AuditLogService
   ) {}
 
   async sendOtp(email: string): Promise<void> {
@@ -43,6 +50,13 @@ export class AuthService {
     await this.authRepository.deleteOtp(email);
     await this.authRepository.createOtp(email, otp);
     await this.mailUtil.sendOtpEmail(email, otp);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.SEND_OTP,
+      resourceType: AuditResourceEnum.AUTH,
+      resourceId: email,
+      metadata: { email },
+    });
   }
 
   @Transactional()
@@ -87,6 +101,14 @@ export class AuthService {
       tokens.refreshToken
     );
 
+    this.auditLogService?.record({
+      action: AuditActionEnum.REGISTER,
+      resourceType: AuditResourceEnum.USER,
+      resourceId: user._id.toString(),
+      actor: { id: user._id.toString(), role: user.role, email: user.email },
+      after: typeof user.toObject === 'function' ? user.toObject() : user,
+    });
+
     return {
       user: validateResponse(
         authUserResponseSchema,
@@ -99,23 +121,62 @@ export class AuthService {
   async login(data: LoginRequest) {
     const user = await this.userRepository.findByEmail(data.email);
     if (!user) {
+      this.auditLogService?.record({
+        action: AuditActionEnum.LOGIN,
+        resourceType: AuditResourceEnum.AUTH,
+        resourceId: data.email,
+        status: AuditStatusEnum.FAILURE,
+        metadata: { email: data.email, reason: 'User not found' },
+      });
       throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_107);
     }
 
     if (user.authProvider !== AuthProviderEnum.LOCAL) {
+      this.auditLogService?.record({
+        action: AuditActionEnum.LOGIN,
+        resourceType: AuditResourceEnum.AUTH,
+        resourceId: user._id.toString(),
+        status: AuditStatusEnum.FAILURE,
+        actor: { id: user._id.toString(), role: user.role, email: user.email },
+        metadata: { reason: 'Account uses another auth provider' },
+      });
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
     }
 
     if (!user.password) {
+      this.auditLogService?.record({
+        action: AuditActionEnum.LOGIN,
+        resourceType: AuditResourceEnum.AUTH,
+        resourceId: user._id.toString(),
+        status: AuditStatusEnum.FAILURE,
+        actor: { id: user._id.toString(), role: user.role, email: user.email },
+        metadata: { reason: 'Password not set' },
+      });
       throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_107);
     }
 
     const isMatch = await bcrypt.compare(data.password, user.password);
     if (!isMatch) {
+      this.auditLogService?.record({
+        action: AuditActionEnum.LOGIN,
+        resourceType: AuditResourceEnum.AUTH,
+        resourceId: user._id.toString(),
+        status: AuditStatusEnum.FAILURE,
+        actor: { id: user._id.toString(), role: user.role, email: user.email },
+        metadata: { reason: 'Incorrect password' },
+      });
       throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_107);
     }
 
     if (user.status === UserStatusEnum.BANNED) {
+      this.auditLogService?.record({
+        action: AuditActionEnum.LOGIN,
+        resourceType: AuditResourceEnum.AUTH,
+        resourceId: user._id.toString(),
+        status: AuditStatusEnum.FAILURE,
+        actor: { id: user._id.toString(), role: user.role, email: user.email },
+        metadata: { reason: 'User is banned' },
+      });
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
@@ -130,6 +191,14 @@ export class AuthService {
       tokens.familyId,
       tokens.refreshToken
     );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.LOGIN,
+      resourceType: AuditResourceEnum.AUTH,
+      resourceId: user._id.toString(),
+      actor: { id: user._id.toString(), role: user.role, email: user.email },
+      status: AuditStatusEnum.SUCCESS,
+    });
 
     return {
       user: validateResponse(
@@ -152,6 +221,14 @@ export class AuthService {
       tokens.familyId,
       tokens.refreshToken
     );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.LOGIN_GOOGLE,
+      resourceType: AuditResourceEnum.AUTH,
+      resourceId: user._id.toString(),
+      actor: { id: user._id.toString(), role: user.role, email: user.email },
+      status: AuditStatusEnum.SUCCESS,
+    });
 
     return {
       user: validateResponse(
@@ -216,10 +293,29 @@ export class AuthService {
 
   async logout(refreshToken?: string): Promise<void> {
     if (refreshToken) {
+      let actor: {
+        id: string;
+        role: string | null;
+        email: string | null;
+      } | null = null;
       try {
         const payload = this.jwtUtil.verifyRefreshToken(refreshToken);
+        if (payload?.userId) {
+          actor = {
+            id: payload.userId,
+            role: payload.role ?? null,
+            email: payload.email ?? null,
+          };
+        }
         if (payload?.familyId) {
           await this.authRedisService.revokeFamily(payload.familyId);
+          this.auditLogService?.record({
+            action: AuditActionEnum.LOGOUT,
+            resourceType: AuditResourceEnum.AUTH,
+            resourceId: payload.userId,
+            actor,
+            status: AuditStatusEnum.SUCCESS,
+          });
           return;
         }
       } catch {
@@ -227,6 +323,15 @@ export class AuthService {
         const record = await this.authRedisService.getTokenRecord(refreshToken);
         if (record?.familyId) {
           await this.authRedisService.revokeFamily(record.familyId);
+          this.auditLogService?.record({
+            action: AuditActionEnum.LOGOUT,
+            resourceType: AuditResourceEnum.AUTH,
+            resourceId: record.userId ?? null,
+            actor: record.userId
+              ? { id: record.userId, role: null, email: null }
+              : null,
+            status: AuditStatusEnum.SUCCESS,
+          });
         }
       }
     }
@@ -247,6 +352,14 @@ export class AuthService {
     await this.authRepository.deleteOtp(email);
     await this.authRepository.createOtp(email, otp);
     await this.mailUtil.sendResetPasswordEmail(email, otp);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.FORGOT_PASSWORD,
+      resourceType: AuditResourceEnum.AUTH,
+      resourceId: user._id.toString(),
+      actor: { id: user._id.toString(), role: user.role, email: user.email },
+      metadata: { email },
+    });
   }
 
   async resetPassword(
@@ -277,6 +390,14 @@ export class AuthService {
     await this.authRepository.deleteOtp(email);
 
     await this.authRedisService.revokeAllUserFamilies(user._id.toString());
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RESET_PASSWORD,
+      resourceType: AuditResourceEnum.AUTH,
+      resourceId: user._id.toString(),
+      actor: { id: user._id.toString(), role: user.role, email: user.email },
+      status: AuditStatusEnum.SUCCESS,
+    });
   }
 
   async changePassword(
@@ -299,6 +420,13 @@ export class AuthService {
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
+      this.auditLogService?.record({
+        action: AuditActionEnum.CHANGE_PASSWORD,
+        resourceType: AuditResourceEnum.AUTH,
+        resourceId: userId,
+        status: AuditStatusEnum.FAILURE,
+        metadata: { reason: 'Incorrect current password' },
+      });
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_107);
     }
 
@@ -306,5 +434,12 @@ export class AuthService {
     await this.userRepository.updatePassword(userId, hashedPassword);
 
     await this.authRedisService.revokeAllUserFamilies(userId);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CHANGE_PASSWORD,
+      resourceType: AuditResourceEnum.AUTH,
+      resourceId: userId,
+      status: AuditStatusEnum.SUCCESS,
+    });
   }
 }

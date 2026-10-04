@@ -14,12 +14,16 @@ import authRouter from './modules/auth/auth.route.ts';
 import { RegisterRoutes } from './routes/routes.ts';
 import cors from 'cors';
 import { corsOptions } from './config/cors.config.ts';
+import { requestContextMiddleware } from './middlewares/requestContext.middleware.ts';
 
 const app: Express = express();
 const port = Number(process.env.PORT) || 5000;
 
 // Trust reverse proxy (Render, Cloudflare, Nginx)
 app.set('trust proxy', 1);
+
+// Attach request-scoped context (requestId, ip, user-agent, actor)
+app.use(requestContextMiddleware);
 
 // Connect to Database & Redis
 const initServices = async () => {

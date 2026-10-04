@@ -6,6 +6,7 @@ import { Facility } from '../facility/facility.model.ts';
 import { FacilityRepository } from '../facility/facility.repository.ts';
 import { UnitType } from '../unitType/unitType.model.ts';
 import { UnitTypeRepository } from '../unitType/unitType.repository.ts';
+import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const offeringRepository = new FacilityUnitTypeOfferingRepository(
   FacilityUnitTypeOffering
@@ -18,7 +19,8 @@ const unitTypeRepository = new UnitTypeRepository(UnitType);
 const offeringService = new FacilityUnitTypeOfferingService(
   offeringRepository,
   facilityRepository,
-  unitTypeRepository
+  unitTypeRepository,
+  auditLogService
 );
 
 export const facilityUnitTypeOfferingController =

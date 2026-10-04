@@ -4,13 +4,15 @@ import { UserRepository } from './user.repository.ts';
 import { UserService } from './user.service.ts';
 import { authRedisService } from '../auth/auth.container.ts';
 import { profileRepository } from '../profile/profile.container.ts';
+import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const userRepository = new UserRepository(User);
 
 const userService = new UserService(
   userRepository,
   authRedisService,
-  profileRepository
+  profileRepository,
+  auditLogService
 );
 
 export const userController = new UserController(userService);
