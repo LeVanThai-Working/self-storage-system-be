@@ -9,7 +9,7 @@ export class FacilityRepository {
   constructor(private readonly facility: SoftDeleteModel<IFacility>) {}
 
   async findAll(
-    query: FacilityQuery = {
+    query: FacilityQuery & { facilityIds?: string[]; city?: string } = {
       page: 1,
       limit: 10,
       sortBy: 'createdAt',
@@ -17,6 +17,14 @@ export class FacilityRepository {
     }
   ): Promise<PaginateResult<IFacility>> {
     const filter: FilterQuery<IFacility> = {};
+
+    if (query.facilityIds !== undefined) {
+      filter._id = { $in: query.facilityIds };
+    }
+
+    if (query.city) {
+      filter.city = { $regex: query.city, $options: 'i' };
+    }
 
     if (query.search) {
       const searchRegex = { $regex: query.search, $options: 'i' };

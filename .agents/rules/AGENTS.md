@@ -355,7 +355,18 @@ userSchema.plugin(MongooseDelete, {
 8. Thêm MESSAGE_CODE / AuditActionEnum / AuditResourceEnum mới nếu cần
 9. Cập nhật ioc.ts nếu thêm controller mới
 10. Chạy: npm run check && npm run build
+11. Bàn giao FE: chạy `/fe-prompt <tên module>` để xuất prompt bàn giao contract (shared layer)
 ```
+
+### Bàn giao Frontend sau khi hoàn thành module
+
+Khi hoàn thành một module backend, dùng slash command:
+
+```bash
+/fe-prompt <tên module>
+```
+
+Lệnh này sẽ trích xuất toàn bộ request schemas, enums, error codes, constants và endpoints để tạo prompt gửi cho agent Frontend (chỉ làm tầng shared, không chứa response hay UI).
 
 ---
 

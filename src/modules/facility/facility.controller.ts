@@ -26,13 +26,18 @@ import {
   updateFacilitySchema,
   facilityIdParamSchema,
   facilityQuerySchema,
+  searchByAmenityQuerySchema,
   assignManagerSchema,
   type CreateFacilityRequest,
   type UpdateFacilityRequest,
   type FacilityQuery,
+  type SearchByAmenityQuery,
   type AssignManagerRequest,
 } from './schemas/facility.request.schema.ts';
-import type { FacilityResponse } from './schemas/facility.response.schema.ts';
+import type {
+  FacilityResponse,
+  FacilityPublicDetailResponse,
+} from './schemas/facility.response.schema.ts';
 import type {
   ApiResponse,
   ApiErrorResponse,
@@ -61,6 +66,42 @@ export class FacilityController extends Controller {
       messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
       data: { items, pagination },
+    };
+  }
+
+  @Get('search-by-amenity')
+  @Middlewares(validateRequest({ query: searchByAmenityQuerySchema }))
+  @Response<ApiErrorResponse>(400, 'Invalid query parameters')
+  public async searchFacilitiesByAmenity(
+    @Queries() query: SearchByAmenityQuery
+  ): Promise<ApiResponse<PaginatedData<FacilityResponse>>> {
+    const { items, pagination } =
+      await this.facilityService.searchFacilitiesByAmenity(query);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: { items, pagination },
+    };
+  }
+
+  @Get('{id}/public-detail')
+  @Middlewares(validateRequest({ params: facilityIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'Invalid ID format')
+  @Response<ApiErrorResponse>(404, 'Facility not found')
+  public async getPublicFacilityDetail(
+    @Path() id: string
+  ): Promise<ApiResponse<FacilityPublicDetailResponse>> {
+    const detail = await this.facilityService.getPublicFacilityDetail(id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: detail,
     };
   }
 

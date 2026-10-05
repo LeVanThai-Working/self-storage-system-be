@@ -1,4 +1,4 @@
-import type { ClientSession, FilterQuery } from 'mongoose';
+import { Types, type ClientSession, type FilterQuery } from 'mongoose';
 import type { SoftDeleteModel } from 'mongoose-delete';
 import type { IStorageUnit } from './storageUnit.model.ts';
 import type {
@@ -135,6 +135,37 @@ export class StorageUnitRepository {
 
   async countByFacilityId(facilityId: string): Promise<number> {
     return this.storageUnit.countDocuments({ facilityId });
+  }
+
+  async countAvailableUnitsGroupedByUnitType(
+    facilityId: string
+  ): Promise<Record<string, number>> {
+    const counts = await this.storageUnit.aggregate<{
+      _id: Types.ObjectId;
+      count: number;
+    }>([
+      {
+        $match: {
+          facilityId: new Types.ObjectId(facilityId),
+          status: StorageUnitStatusEnum.AVAILABLE,
+          deleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: '$unitTypeId',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const result: Record<string, number> = {};
+    for (const item of counts) {
+      if (item._id) {
+        result[item._id.toString()] = item.count;
+      }
+    }
+    return result;
   }
 
   async countByUnitTypeId(unitTypeId: string): Promise<number> {
