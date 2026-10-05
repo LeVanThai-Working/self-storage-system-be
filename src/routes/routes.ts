@@ -22,6 +22,8 @@ import { AuthController } from './../modules/auth/auth.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AuditLogController } from './../modules/auditLog/auditLog.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { ApprovalRequestController } from './../modules/approvalRequest/approvalRequest.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { AmenityController } from './../modules/amenity/amenity.controller.js';
 import { expressAuthentication } from './../middlewares/auth.tsoa.js';
 // @ts-ignore - no great way to install types from subpackage
@@ -859,12 +861,12 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
         "dataType": "refEnum",
-        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation"],
+        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditStatusEnum": {
@@ -928,6 +930,107 @@ const models: TsoaRoute.Models = {
             "data": {"ref":"AuditLogResponse","required":true},
         },
         "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApprovalRequestTargetTypeEnum": {
+        "dataType": "refEnum",
+        "enums": ["unit_type","facility_unit_type_offering","amenity","facility_amenity_offering"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApprovalRequestActionEnum": {
+        "dataType": "refEnum",
+        "enums": ["create","update"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApprovalRequestStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["pending","approved","rejected","cancelled"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofapprovalRequestResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"targetCurrentData":{"ref":"Record_string.unknown_"},"reviewNotes":{"dataType":"string"},"rejectionReason":{"dataType":"string"},"reviewedAt":{"dataType":"string"},"approver":{"dataType":"nestedObjectLiteral","nestedProperties":{"phoneNumber":{"dataType":"string"},"role":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"approverId":{"dataType":"string"},"targetId":{"dataType":"string"},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string","required":true},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"requester":{"dataType":"nestedObjectLiteral","nestedProperties":{"phoneNumber":{"dataType":"string"},"role":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"status":{"ref":"ApprovalRequestStatusEnum","required":true},"reason":{"dataType":"string","required":true},"payload":{"ref":"Record_string.unknown_","required":true},"action":{"ref":"ApprovalRequestActionEnum","required":true},"targetType":{"ref":"ApprovalRequestTargetTypeEnum","required":true},"facilityId":{"dataType":"string","required":true},"requesterId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApprovalRequestResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofapprovalRequestResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_ApprovalRequestResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"ApprovalRequestResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateApprovalRequest": {
+        "dataType": "refObject",
+        "properties": {
+            "facilityId": {"dataType":"string"},
+            "targetType": {"ref":"ApprovalRequestTargetTypeEnum","required":true},
+            "action": {"ref":"ApprovalRequestActionEnum","required":true},
+            "targetId": {"dataType":"string"},
+            "payload": {"dataType":"nestedObjectLiteral","nestedProperties":{},"additionalProperties":{"dataType":"any"},"required":true},
+            "reason": {"dataType":"string","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedData_ApprovalRequestResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "items": {"dataType":"array","array":{"dataType":"refAlias","ref":"ApprovalRequestResponse"},"required":true},
+            "pagination": {"ref":"PaginationMeta","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedData_ApprovalRequestResponse__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedData_ApprovalRequestResponse_","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofapprovalRequestQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApprovalRequestQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofapprovalRequestQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApprovalReviewDecisionEnum.APPROVE": {
+        "dataType": "refEnum",
+        "enums": ["approve"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApprovalReviewDecisionEnum.REJECT": {
+        "dataType": "refEnum",
+        "enums": ["reject"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofreviewApprovalRequestSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"action":{"ref":"ApprovalReviewDecisionEnum.APPROVE","required":true}}},{"dataType":"nestedObjectLiteral","nestedProperties":{"rejectionReason":{"dataType":"string","required":true},"action":{"ref":"ApprovalReviewDecisionEnum.REJECT","required":true}}}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ReviewApprovalRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofreviewApprovalRequestSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofamenityResponseSchema_": {
@@ -3047,7 +3150,6 @@ export function RegisterRoutes(app: Router) {
                 query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"to":{"dataType":"string"},"from":{"dataType":"string"},"status":{"ref":"AuditStatusEnum"},"resourceId":{"dataType":"string"},"resourceType":{"ref":"AuditResourceEnum"},"action":{"ref":"AuditActionEnum"},"actorId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["action"]},{"dataType":"enum","enums":["resourceType"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
         app.get('/audit-logs',
-            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AuditLogController)),
             ...(fetchMiddlewares<RequestHandler>(AuditLogController.prototype.findAll)),
 
@@ -3084,7 +3186,6 @@ export function RegisterRoutes(app: Router) {
                 query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"to":{"dataType":"string"},"from":{"dataType":"string"},"status":{"ref":"AuditStatusEnum"},"resourceId":{"dataType":"string"},"resourceType":{"ref":"AuditResourceEnum"},"action":{"ref":"AuditActionEnum"},"actorId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["action"]},{"dataType":"enum","enums":["resourceType"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
         app.get('/audit-logs/me',
-            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AuditLogController)),
             ...(fetchMiddlewares<RequestHandler>(AuditLogController.prototype.findMine)),
 
@@ -3122,7 +3223,6 @@ export function RegisterRoutes(app: Router) {
                 query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"to":{"dataType":"string"},"from":{"dataType":"string"},"status":{"ref":"AuditStatusEnum"},"resourceId":{"dataType":"string"},"resourceType":{"ref":"AuditResourceEnum"},"action":{"ref":"AuditActionEnum"},"actorId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["action"]},{"dataType":"enum","enums":["resourceType"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
         app.get('/audit-logs/resource/:resourceType/:resourceId',
-            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AuditLogController)),
             ...(fetchMiddlewares<RequestHandler>(AuditLogController.prototype.findByResource)),
 
@@ -3158,7 +3258,6 @@ export function RegisterRoutes(app: Router) {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
         };
         app.get('/audit-logs/:id',
-            authenticateMiddleware([{"bearerAuth":[]},{"cookieAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AuditLogController)),
             ...(fetchMiddlewares<RequestHandler>(AuditLogController.prototype.findById)),
 
@@ -3179,6 +3278,221 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'findById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsApprovalRequestController_createApprovalRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"CreateApprovalRequest"},
+        };
+        app.post('/approval-requests',
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController.prototype.createApprovalRequest)),
+
+            async function ApprovalRequestController_createApprovalRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsApprovalRequestController_createApprovalRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ApprovalRequestController>(ApprovalRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createApprovalRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsApprovalRequestController_getMyApprovalRequests: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/approval-requests/my-requests',
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController.prototype.getMyApprovalRequests)),
+
+            async function ApprovalRequestController_getMyApprovalRequests(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsApprovalRequestController_getMyApprovalRequests, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ApprovalRequestController>(ApprovalRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getMyApprovalRequests',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsApprovalRequestController_getAllApprovalRequests: Record<string, TsoaRoute.ParameterSchema> = {
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/approval-requests',
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController.prototype.getAllApprovalRequests)),
+
+            async function ApprovalRequestController_getAllApprovalRequests(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsApprovalRequestController_getAllApprovalRequests, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ApprovalRequestController>(ApprovalRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getAllApprovalRequests',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsApprovalRequestController_getApprovalRequestById: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/approval-requests/:id',
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController.prototype.getApprovalRequestById)),
+
+            async function ApprovalRequestController_getApprovalRequestById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsApprovalRequestController_getApprovalRequestById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ApprovalRequestController>(ApprovalRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getApprovalRequestById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsApprovalRequestController_cancelApprovalRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.patch('/approval-requests/:id/cancel',
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController.prototype.cancelApprovalRequest)),
+
+            async function ApprovalRequestController_cancelApprovalRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsApprovalRequestController_cancelApprovalRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ApprovalRequestController>(ApprovalRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'cancelApprovalRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsApprovalRequestController_reviewApprovalRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"ReviewApprovalRequest"},
+        };
+        app.patch('/approval-requests/:id/review',
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController.prototype.reviewApprovalRequest)),
+
+            async function ApprovalRequestController_reviewApprovalRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsApprovalRequestController_reviewApprovalRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ApprovalRequestController>(ApprovalRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'reviewApprovalRequest',
                 controller,
                 response,
                 next,

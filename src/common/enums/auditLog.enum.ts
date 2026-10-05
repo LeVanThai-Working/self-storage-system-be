@@ -18,6 +18,9 @@ export enum AuditActionEnum {
   // Domain specific
   ASSIGN_MANAGER = 'assign_manager',
   TOGGLE_MAINTENANCE = 'toggle_maintenance',
+  APPROVE = 'approve',
+  REJECT = 'reject',
+  CANCEL = 'cancel',
 }
 
 export enum AuditResourceEnum {
@@ -31,6 +34,7 @@ export enum AuditResourceEnum {
   FACILITY_AMENITY_OFFERING = 'facility_amenity_offering',
   STORAGE_UNIT = 'storage_unit',
   RESERVATION = 'reservation',
+  APPROVAL_REQUEST = 'approval_request',
 }
 
 export enum AuditStatusEnum {

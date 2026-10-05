@@ -3040,7 +3040,10 @@
 					"delete",
 					"restore",
 					"assign_manager",
-					"toggle_maintenance"
+					"toggle_maintenance",
+					"approve",
+					"reject",
+					"cancel"
 				],
 				"type": "string"
 			},
@@ -3055,7 +3058,8 @@
 					"facility_unit_type_offering",
 					"facility_amenity_offering",
 					"storage_unit",
-					"reservation"
+					"reservation",
+					"approval_request"
 				],
 				"type": "string"
 			},
@@ -3284,6 +3288,380 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"ApprovalRequestTargetTypeEnum": {
+				"enum": [
+					"unit_type",
+					"facility_unit_type_offering",
+					"amenity",
+					"facility_amenity_offering"
+				],
+				"type": "string"
+			},
+			"ApprovalRequestActionEnum": {
+				"enum": [
+					"create",
+					"update"
+				],
+				"type": "string"
+			},
+			"ApprovalRequestStatusEnum": {
+				"enum": [
+					"pending",
+					"approved",
+					"rejected",
+					"cancelled"
+				],
+				"type": "string"
+			},
+			"infer_typeofapprovalRequestResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"targetCurrentData": {
+						"$ref": "#/components/schemas/Record_string.unknown_"
+					},
+					"reviewNotes": {
+						"type": "string"
+					},
+					"rejectionReason": {
+						"type": "string"
+					},
+					"reviewedAt": {
+						"type": "string"
+					},
+					"approver": {
+						"properties": {
+							"phoneNumber": {
+								"type": "string"
+							},
+							"role": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"approverId": {
+						"type": "string"
+					},
+					"targetId": {
+						"type": "string"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"requester": {
+						"properties": {
+							"phoneNumber": {
+								"type": "string"
+							},
+							"role": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ApprovalRequestStatusEnum"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"payload": {
+						"$ref": "#/components/schemas/Record_string.unknown_"
+					},
+					"action": {
+						"$ref": "#/components/schemas/ApprovalRequestActionEnum"
+					},
+					"targetType": {
+						"$ref": "#/components/schemas/ApprovalRequestTargetTypeEnum"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"requesterId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"reason",
+					"payload",
+					"action",
+					"targetType",
+					"facilityId",
+					"requesterId",
+					"id"
+				],
+				"type": "object"
+			},
+			"ApprovalRequestResponse": {
+				"$ref": "#/components/schemas/infer_typeofapprovalRequestResponseSchema_"
+			},
+			"ApiResponse_ApprovalRequestResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ApprovalRequestResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateApprovalRequest": {
+				"properties": {
+					"facilityId": {
+						"type": "string"
+					},
+					"targetType": {
+						"$ref": "#/components/schemas/ApprovalRequestTargetTypeEnum"
+					},
+					"action": {
+						"$ref": "#/components/schemas/ApprovalRequestActionEnum"
+					},
+					"targetId": {
+						"type": "string"
+					},
+					"payload": {
+						"properties": {},
+						"additionalProperties": {},
+						"type": "object"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"targetType",
+					"action",
+					"payload",
+					"reason"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PaginatedData_ApprovalRequestResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/ApprovalRequestResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_ApprovalRequestResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_ApprovalRequestResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofapprovalRequestQuerySchema_": {
+				"properties": {
+					"status": {
+						"$ref": "#/components/schemas/ApprovalRequestStatusEnum"
+					},
+					"targetType": {
+						"$ref": "#/components/schemas/ApprovalRequestTargetTypeEnum"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"targetType"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"ApprovalRequestQuery": {
+				"$ref": "#/components/schemas/infer_typeofapprovalRequestQuerySchema_"
+			},
+			"ApprovalReviewDecisionEnum.APPROVE": {
+				"enum": [
+					"approve"
+				],
+				"type": "string"
+			},
+			"ApprovalReviewDecisionEnum.REJECT": {
+				"enum": [
+					"reject"
+				],
+				"type": "string"
+			},
+			"infer_typeofreviewApprovalRequestSchema_": {
+				"anyOf": [
+					{
+						"properties": {
+							"notes": {
+								"type": "string"
+							},
+							"action": {
+								"$ref": "#/components/schemas/ApprovalReviewDecisionEnum.APPROVE"
+							}
+						},
+						"required": [
+							"action"
+						],
+						"type": "object"
+					},
+					{
+						"properties": {
+							"rejectionReason": {
+								"type": "string"
+							},
+							"action": {
+								"$ref": "#/components/schemas/ApprovalReviewDecisionEnum.REJECT"
+							}
+						},
+						"required": [
+							"rejectionReason",
+							"action"
+						],
+						"type": "object"
+					}
+				]
+			},
+			"ReviewApprovalRequest": {
+				"$ref": "#/components/schemas/infer_typeofreviewApprovalRequestSchema_"
 			},
 			"infer_typeofamenityResponseSchema_": {
 				"properties": {
@@ -7079,14 +7457,7 @@
 				"tags": [
 					"AuditLogs"
 				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "query",
@@ -7238,14 +7609,7 @@
 				"tags": [
 					"AuditLogs"
 				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "query",
@@ -7397,14 +7761,7 @@
 				"tags": [
 					"AuditLogs"
 				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "path",
@@ -7582,14 +7939,7 @@
 				"tags": [
 					"AuditLogs"
 				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "path",
@@ -7600,6 +7950,501 @@
 						}
 					}
 				]
+			}
+		},
+		"/approval-requests": {
+			"post": {
+				"operationId": "CreateApprovalRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ApprovalRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Submit a new approval request (Facility Manager).",
+				"tags": [
+					"Approval Requests"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateApprovalRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetAllApprovalRequests",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_ApprovalRequestResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all approval requests across all facilities (Operations Manager & Admin).",
+				"tags": [
+					"Approval Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ApprovalRequestStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "targetType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ApprovalRequestTargetTypeEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"targetType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/approval-requests/my-requests": {
+			"get": {
+				"operationId": "GetMyApprovalRequests",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_ApprovalRequestResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get approval requests submitted by the authenticated user / facility.\nNOTE: Placed before",
+				"tags": [
+					"Approval Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ApprovalRequestStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "targetType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ApprovalRequestTargetTypeEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"targetType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/approval-requests/{id}": {
+			"get": {
+				"operationId": "GetApprovalRequestById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ApprovalRequestResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get details of a specific approval request.",
+				"tags": [
+					"Approval Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/approval-requests/{id}/cancel": {
+			"patch": {
+				"operationId": "CancelApprovalRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ApprovalRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel a pending approval request (Facility Manager).",
+				"tags": [
+					"Approval Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/approval-requests/{id}/review": {
+			"patch": {
+				"operationId": "ReviewApprovalRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ApprovalRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Review an approval request (Approve or Reject).\nAutomatically executes database changes if approved.",
+				"tags": [
+					"Approval Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ReviewApprovalRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/amenities": {
