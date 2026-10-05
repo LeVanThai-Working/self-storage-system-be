@@ -972,7 +972,6 @@ const models: TsoaRoute.Models = {
     "CreateApprovalRequest": {
         "dataType": "refObject",
         "properties": {
-            "requesterId": {"dataType":"string"},
             "facilityId": {"dataType":"string"},
             "targetType": {"ref":"ApprovalRequestTargetTypeEnum","required":true},
             "action": {"ref":"ApprovalRequestActionEnum","required":true},
@@ -1006,7 +1005,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofapprovalRequestQuerySchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"requesterId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ApprovalRequestQuery": {
@@ -1026,7 +1025,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofreviewApprovalRequestSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"union","subSchemas":[{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"approverId":{"dataType":"string"},"action":{"ref":"ApprovalReviewDecisionEnum.APPROVE","required":true}}},{"dataType":"nestedObjectLiteral","nestedProperties":{"approverId":{"dataType":"string"},"rejectionReason":{"dataType":"string","required":true},"action":{"ref":"ApprovalReviewDecisionEnum.REJECT","required":true}}}],"validators":{}},
+        "type": {"dataType":"union","subSchemas":[{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"action":{"ref":"ApprovalReviewDecisionEnum.APPROVE","required":true}}},{"dataType":"nestedObjectLiteral","nestedProperties":{"rejectionReason":{"dataType":"string","required":true},"action":{"ref":"ApprovalReviewDecisionEnum.REJECT","required":true}}}],"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ReviewApprovalRequest": {
@@ -3328,7 +3327,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsApprovalRequestController_getMyApprovalRequests: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"requesterId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
         app.get('/approval-requests/my-requests',
             ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController)),
@@ -3363,7 +3362,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsApprovalRequestController_getAllApprovalRequests: Record<string, TsoaRoute.ParameterSchema> = {
-                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"requesterId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"ApprovalRequestStatusEnum"},"targetType":{"ref":"ApprovalRequestTargetTypeEnum"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["targetType"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
         app.get('/approval-requests',
             ...(fetchMiddlewares<RequestHandler>(ApprovalRequestController)),

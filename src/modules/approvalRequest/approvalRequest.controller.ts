@@ -41,20 +41,10 @@ import type { PaginatedData } from '../../common/types/pagination.type.ts';
  * Khi bước vào phase phân quyền (bật lại @Security), xóa helper này và mở lại các dòng:
  * // const userId = (req.user as unknown as { _id: { toString(): string } })._id.toString();
  */
-function extractUserId(
-  req: ExpressRequest,
-  fallbackId?: string
-): string | undefined {
+function extractUserId(req: ExpressRequest): string | undefined {
   const user = req.user as { _id?: { toString(): string } } | undefined;
   if (user?._id) {
     return user._id.toString();
-  }
-  if (fallbackId) {
-    return fallbackId;
-  }
-  const headerUserId = req.headers['x-user-id'];
-  if (typeof headerUserId === 'string' && headerUserId.trim()) {
-    return headerUserId.trim();
   }
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith('Bearer ')) {
@@ -105,7 +95,7 @@ export class ApprovalRequestController extends Controller {
   ): Promise<ApiResponse<ApprovalRequestResponse>> {
     // Production line (uncomment when @Security is enabled):
     // const userId = (req.user as unknown as { _id: { toString(): string } })._id.toString();
-    const userId = extractUserId(req, body.requesterId);
+    const userId = extractUserId(req);
     if (!userId) {
       throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
     }
@@ -142,7 +132,7 @@ export class ApprovalRequestController extends Controller {
   ): Promise<ApiResponse<PaginatedData<ApprovalRequestResponse>>> {
     // Production line (uncomment when @Security is enabled):
     // const userId = (req.user as unknown as { _id: { toString(): string } })._id.toString();
-    const userId = extractUserId(req, query.requesterId);
+    const userId = extractUserId(req);
     if (!userId) {
       throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
     }
@@ -224,10 +214,7 @@ export class ApprovalRequestController extends Controller {
   ): Promise<ApiResponse<ApprovalRequestResponse>> {
     // Production line (uncomment when @Security is enabled):
     // const userId = (req.user as unknown as { _id: { toString(): string } })._id.toString();
-    const userId = extractUserId(
-      req,
-      (req.query.requesterId as string) || (req.body?.requesterId as string)
-    );
+    const userId = extractUserId(req);
 
     if (!userId) {
       throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
@@ -270,7 +257,7 @@ export class ApprovalRequestController extends Controller {
   ): Promise<ApiResponse<ApprovalRequestResponse>> {
     // Production line (uncomment when @Security is enabled):
     // const approverId = (req.user as unknown as { _id: { toString(): string } })._id.toString();
-    const approverId = extractUserId(req, body.approverId);
+    const approverId = extractUserId(req);
 
     if (!approverId) {
       throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);

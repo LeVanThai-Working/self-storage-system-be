@@ -9,10 +9,6 @@ import { paginationQuerySchema } from '../../../common/schemas/pagination.schema
 
 export const createApprovalRequestSchema = z
   .object({
-    requesterId: z
-      .string()
-      .regex(/^[0-9a-fA-F]{24}$/, 'Invalid requester ID format')
-      .optional(),
     facilityId: z
       .string()
       .regex(/^[0-9a-fA-F]{24}$/, 'Invalid facility ID format')
@@ -50,18 +46,10 @@ export const createApprovalRequestSchema = z
 export const reviewApprovalRequestSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal(ApprovalReviewDecisionEnum.APPROVE),
-    approverId: z
-      .string()
-      .regex(/^[0-9a-fA-F]{24}$/, 'Invalid approver ID format')
-      .optional(),
     notes: z.string().trim().max(500).optional(),
   }),
   z.object({
     action: z.literal(ApprovalReviewDecisionEnum.REJECT),
-    approverId: z
-      .string()
-      .regex(/^[0-9a-fA-F]{24}$/, 'Invalid approver ID format')
-      .optional(),
     rejectionReason: z
       .string()
       .trim()
@@ -77,10 +65,6 @@ export const approvalRequestIdParamSchema = z.object({
 });
 
 export const approvalRequestQuerySchema = paginationQuerySchema.extend({
-  requesterId: z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid requester ID format')
-    .optional(),
   facilityId: z
     .string()
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid facility ID format')
@@ -91,7 +75,6 @@ export const approvalRequestQuerySchema = paginationQuerySchema.extend({
 });
 
 export interface CreateApprovalRequest {
-  requesterId?: string;
   facilityId?: string;
   targetType: ApprovalRequestTargetTypeEnum;
   action: ApprovalRequestActionEnum;

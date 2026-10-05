@@ -3488,9 +3488,6 @@
 			},
 			"CreateApprovalRequest": {
 				"properties": {
-					"requesterId": {
-						"type": "string"
-					},
 					"facilityId": {
 						"type": "string"
 					},
@@ -3580,9 +3577,6 @@
 					"facilityId": {
 						"type": "string"
 					},
-					"requesterId": {
-						"type": "string"
-					},
 					"search": {
 						"type": "string"
 					},
@@ -3640,9 +3634,6 @@
 							"notes": {
 								"type": "string"
 							},
-							"approverId": {
-								"type": "string"
-							},
 							"action": {
 								"$ref": "#/components/schemas/ApprovalReviewDecisionEnum.APPROVE"
 							}
@@ -3654,9 +3645,6 @@
 					},
 					{
 						"properties": {
-							"approverId": {
-								"type": "string"
-							},
 							"rejectionReason": {
 								"type": "string"
 							},
@@ -8092,14 +8080,6 @@
 					},
 					{
 						"in": "query",
-						"name": "requesterId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
 						"name": "search",
 						"required": false,
 						"schema": {
@@ -8202,14 +8182,6 @@
 					{
 						"in": "query",
 						"name": "facilityId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "requesterId",
 						"required": false,
 						"schema": {
 							"type": "string"
