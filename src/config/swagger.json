@@ -1158,6 +1158,384 @@
 			"ToggleMaintenanceRequest": {
 				"$ref": "#/components/schemas/infer_typeoftoggleMaintenanceSchema_"
 			},
+			"ApiResponse__message-string__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"properties": {
+							"message": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"message"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofsendOtpSchema_": {
+				"properties": {
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"email"
+				],
+				"type": "object"
+			},
+			"SendOtpRequest": {
+				"$ref": "#/components/schemas/infer_typeofsendOtpSchema_"
+			},
+			"infer_typeofauthLoginResponseSchema_": {
+				"properties": {
+					"tokens": {
+						"properties": {
+							"familyId": {
+								"type": "string"
+							},
+							"refreshToken": {
+								"type": "string"
+							},
+							"accessToken": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"refreshToken",
+							"accessToken"
+						],
+						"type": "object"
+					},
+					"user": {
+						"properties": {
+							"updatedAt": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "string"
+							},
+							"status": {
+								"$ref": "#/components/schemas/UserStatusEnum"
+							},
+							"authProvider": {
+								"$ref": "#/components/schemas/AuthProviderEnum"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"_id": {},
+							"id": {
+								"type": "string"
+							},
+							"role": {
+								"$ref": "#/components/schemas/RoleEnum"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"role",
+							"email",
+							"name"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"tokens",
+					"user"
+				],
+				"type": "object"
+			},
+			"AuthLoginResponse": {
+				"$ref": "#/components/schemas/infer_typeofauthLoginResponseSchema_"
+			},
+			"ApiResponse_AuthLoginResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AuthLoginResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofregisterSchema_": {
+				"properties": {
+					"phoneNumber": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"password": {
+						"type": "string"
+					},
+					"otp": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"password",
+					"otp",
+					"email"
+				],
+				"type": "object"
+			},
+			"RegisterRequest": {
+				"$ref": "#/components/schemas/infer_typeofregisterSchema_"
+			},
+			"infer_typeofloginSchema_": {
+				"properties": {
+					"password": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"password",
+					"email"
+				],
+				"type": "object"
+			},
+			"LoginRequest": {
+				"$ref": "#/components/schemas/infer_typeofloginSchema_"
+			},
+			"infer_typeofauthTokensSchema_": {
+				"properties": {
+					"familyId": {
+						"type": "string"
+					},
+					"refreshToken": {
+						"type": "string"
+					},
+					"accessToken": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"refreshToken",
+					"accessToken"
+				],
+				"type": "object"
+			},
+			"AuthTokens": {
+				"$ref": "#/components/schemas/infer_typeofauthTokensSchema_"
+			},
+			"ApiResponse_AuthTokens_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AuthTokens"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RefreshTokenRequest": {
+				"properties": {
+					"refreshToken": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofauthUserResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/UserStatusEnum"
+					},
+					"authProvider": {
+						"$ref": "#/components/schemas/AuthProviderEnum"
+					},
+					"phoneNumber": {
+						"type": "string"
+					},
+					"_id": {},
+					"id": {
+						"type": "string"
+					},
+					"role": {
+						"$ref": "#/components/schemas/RoleEnum"
+					},
+					"email": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"role",
+					"email",
+					"name"
+				],
+				"type": "object"
+			},
+			"AuthUserResponse": {
+				"$ref": "#/components/schemas/infer_typeofauthUserResponseSchema_"
+			},
+			"ApiResponse_AuthUserResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AuthUserResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofforgotPasswordSchema_": {
+				"properties": {
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"email"
+				],
+				"type": "object"
+			},
+			"ForgotPasswordRequest": {
+				"$ref": "#/components/schemas/infer_typeofforgotPasswordSchema_"
+			},
+			"infer_typeofresetPasswordSchema_": {
+				"properties": {
+					"newPassword": {
+						"type": "string"
+					},
+					"otp": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"newPassword",
+					"otp",
+					"email"
+				],
+				"type": "object"
+			},
+			"ResetPasswordRequest": {
+				"$ref": "#/components/schemas/infer_typeofresetPasswordSchema_"
+			},
+			"infer_typeofchangePasswordSchema_": {
+				"properties": {
+					"newPassword": {
+						"type": "string"
+					},
+					"currentPassword": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"newPassword",
+					"currentPassword"
+				],
+				"type": "object"
+			},
+			"ChangePasswordRequest": {
+				"$ref": "#/components/schemas/infer_typeofchangePasswordSchema_"
+			},
 			"GenderEnum": {
 				"enum": [
 					"male",
@@ -1247,6 +1625,270 @@
 			"UpdateProfileRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateProfileSchema_"
 			},
+			"AuditActionEnum": {
+				"enum": [
+					"register",
+					"login",
+					"login_google",
+					"logout",
+					"send_otp",
+					"forgot_password",
+					"reset_password",
+					"change_password",
+					"create",
+					"update",
+					"delete",
+					"restore",
+					"assign_manager",
+					"toggle_maintenance",
+					"approve",
+					"reject",
+					"cancel"
+				],
+				"type": "string"
+			},
+			"AuditResourceEnum": {
+				"enum": [
+					"auth",
+					"user",
+					"profile",
+					"facility",
+					"unit_type",
+					"amenity",
+					"facility_unit_type_offering",
+					"facility_amenity_offering",
+					"storage_unit",
+					"reservation",
+					"approval_request"
+				],
+				"type": "string"
+			},
+			"AuditStatusEnum": {
+				"enum": [
+					"success",
+					"failure"
+				],
+				"type": "string"
+			},
+			"Record_string.unknown_": {
+				"properties": {},
+				"type": "object",
+				"description": "Construct a type with a set of properties K of type T"
+			},
+			"infer_typeofauditLogResponseSchema_": {
+				"properties": {
+					"createdAt": {
+						"type": "string"
+					},
+					"path": {
+						"type": "string"
+					},
+					"method": {
+						"type": "string"
+					},
+					"requestId": {
+						"type": "string"
+					},
+					"userAgent": {
+						"type": "string"
+					},
+					"ip": {
+						"type": "string"
+					},
+					"metadata": {
+						"$ref": "#/components/schemas/Record_string.unknown_"
+					},
+					"changes": {
+						"properties": {
+							"after": {
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							},
+							"before": {
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							}
+						},
+						"type": "object"
+					},
+					"resourceId": {
+						"type": "string"
+					},
+					"actorEmail": {
+						"type": "string"
+					},
+					"actorRole": {
+						"type": "string"
+					},
+					"actorId": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AuditStatusEnum"
+					},
+					"resourceType": {
+						"$ref": "#/components/schemas/AuditResourceEnum"
+					},
+					"action": {
+						"$ref": "#/components/schemas/AuditActionEnum"
+					},
+					"version": {
+						"type": "number",
+						"format": "double"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"resourceType",
+					"action",
+					"version",
+					"id"
+				],
+				"type": "object"
+			},
+			"AuditLogResponse": {
+				"$ref": "#/components/schemas/infer_typeofauditLogResponseSchema_"
+			},
+			"PaginatedData_AuditLogResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/AuditLogResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_AuditLogResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_AuditLogResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofauditLogQuerySchema_": {
+				"properties": {
+					"to": {
+						"type": "string"
+					},
+					"from": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AuditStatusEnum"
+					},
+					"resourceId": {
+						"type": "string"
+					},
+					"resourceType": {
+						"$ref": "#/components/schemas/AuditResourceEnum"
+					},
+					"action": {
+						"$ref": "#/components/schemas/AuditActionEnum"
+					},
+					"actorId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"action",
+							"resourceType"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"AuditLogQuery": {
+				"$ref": "#/components/schemas/infer_typeofauditLogQuerySchema_"
+			},
+			"ApiResponse_AuditLogResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AuditLogResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"BillingUnitEnum": {
 				"enum": [
 					"day",
@@ -1254,6 +1896,745 @@
 					"one_time"
 				],
 				"type": "string"
+			},
+			"ReservationStatusEnum": {
+				"enum": [
+					"pending",
+					"received",
+					"pending_payment",
+					"payment_failed",
+					"payment_successful",
+					"confirmed",
+					"completed",
+					"cancelled",
+					"expired",
+					"rejected"
+				],
+				"type": "string"
+			},
+			"infer_typeofreservationResponseSchema_": {
+				"properties": {
+					"storageUnit": {
+						"properties": {
+							"zone": {
+								"type": "string"
+							},
+							"status": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"floor",
+							"unitNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"offering": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"minRentalDays": {
+								"type": "number",
+								"format": "double"
+							},
+							"depositMultiplier": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitTypeId": {
+								"type": "string"
+							},
+							"pricePerUnit": {
+								"type": "number",
+								"format": "double"
+							},
+							"billingUnit": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"pricePerUnit",
+							"billingUnit",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"phone": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"customer": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"lastPaymentError": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"cancelledBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"cancellationReason": {
+						"type": "string"
+					},
+					"rejectionReason": {
+						"type": "string"
+					},
+					"confirmedAt": {
+						"type": "string"
+					},
+					"confirmedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"assignedAt": {
+						"type": "string"
+					},
+					"assignedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"receivedAt": {
+						"type": "string"
+					},
+					"receivedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"expiresAt": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"refundAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ReservationStatusEnum"
+					},
+					"totalAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"amenities": {
+						"items": {
+							"properties": {
+								"totalPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"billingUnit": {
+									"$ref": "#/components/schemas/BillingUnitEnum"
+								},
+								"pricePerUnit": {
+									"type": "number",
+									"format": "double"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"name": {
+									"type": "string"
+								},
+								"amenityId": {
+									"type": "string"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"totalPrice",
+								"billingUnit",
+								"pricePerUnit",
+								"quantity",
+								"name",
+								"amenityId",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"depositAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"basePrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"rentalDuration": {
+						"type": "number",
+						"format": "double"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"reservationCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"refundAmount",
+					"status",
+					"totalAmount",
+					"amenities",
+					"depositAmount",
+					"basePrice",
+					"billingUnit",
+					"rentalDuration",
+					"startDate",
+					"facilityUnitTypeOfferingId",
+					"facilityId",
+					"customerId",
+					"reservationCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"ReservationResponse": {
+				"$ref": "#/components/schemas/infer_typeofreservationResponseSchema_"
+			},
+			"ApiResponse_ReservationResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ReservationResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateReservationSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"amenities": {
+						"items": {
+							"properties": {
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"rentalDuration": {
+						"type": "number",
+						"format": "double"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"amenities",
+					"rentalDuration",
+					"startDate",
+					"facilityUnitTypeOfferingId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateReservationSchema_"
+			},
+			"PaginatedData_ReservationResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/ReservationResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_ReservationResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_ReservationResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofreservationQuerySchema_": {
+				"properties": {
+					"startDateTo": {
+						"type": "string"
+					},
+					"startDateFrom": {
+						"type": "string"
+					},
+					"reservationCode": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ReservationStatusEnum"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"updatedAt",
+							"startDate",
+							"totalAmount"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"ReservationQuery": {
+				"$ref": "#/components/schemas/infer_typeofreservationQuerySchema_"
+			},
+			"ApiResponse__processedCount-number__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"properties": {
+							"processedCount": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"processedCount"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofupdateReservationSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"amenities": {
+						"items": {
+							"properties": {
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"rentalDuration": {
+						"type": "number",
+						"format": "double"
+					},
+					"startDate": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateReservationSchema_"
+			},
+			"infer_typeofassignStorageUnitSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"holdingHours": {
+						"type": "number",
+						"format": "double"
+					},
+					"storageUnitId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"holdingHours",
+					"storageUnitId"
+				],
+				"type": "object"
+			},
+			"AssignStorageUnitRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignStorageUnitSchema_"
+			},
+			"infer_typeofrejectReservationSchema_": {
+				"properties": {
+					"rejectionReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"rejectionReason"
+				],
+				"type": "object"
+			},
+			"RejectReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofrejectReservationSchema_"
+			},
+			"infer_typeofpayDepositSchema_": {
+				"properties": {
+					"transactionRef": {
+						"type": "string"
+					},
+					"paymentMethod": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"paymentMethod"
+				],
+				"type": "object"
+			},
+			"PayDepositRequest": {
+				"$ref": "#/components/schemas/infer_typeofpayDepositSchema_"
+			},
+			"infer_typeofpaymentFailureSchema_": {
+				"properties": {
+					"errorReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"errorReason"
+				],
+				"type": "object"
+			},
+			"PaymentFailureRequest": {
+				"$ref": "#/components/schemas/infer_typeofpaymentFailureSchema_"
+			},
+			"infer_typeofconfirmReservationSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ConfirmReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofconfirmReservationSchema_"
+			},
+			"infer_typeofcancelReservationSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelReservationSchema_"
 			},
 			"FacilityUnitTypeOfferingStatusEnum": {
 				"enum": [
@@ -2646,648 +4027,6 @@
 			},
 			"AssignManagerRequest": {
 				"$ref": "#/components/schemas/infer_typeofassignManagerSchema_"
-			},
-			"ApiResponse__message-string__": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"properties": {
-							"message": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"message"
-						],
-						"type": "object"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofsendOtpSchema_": {
-				"properties": {
-					"email": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"email"
-				],
-				"type": "object"
-			},
-			"SendOtpRequest": {
-				"$ref": "#/components/schemas/infer_typeofsendOtpSchema_"
-			},
-			"infer_typeofauthLoginResponseSchema_": {
-				"properties": {
-					"tokens": {
-						"properties": {
-							"familyId": {
-								"type": "string"
-							},
-							"refreshToken": {
-								"type": "string"
-							},
-							"accessToken": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"refreshToken",
-							"accessToken"
-						],
-						"type": "object"
-					},
-					"user": {
-						"properties": {
-							"updatedAt": {
-								"type": "string"
-							},
-							"createdAt": {
-								"type": "string"
-							},
-							"status": {
-								"$ref": "#/components/schemas/UserStatusEnum"
-							},
-							"authProvider": {
-								"$ref": "#/components/schemas/AuthProviderEnum"
-							},
-							"phoneNumber": {
-								"type": "string"
-							},
-							"_id": {},
-							"id": {
-								"type": "string"
-							},
-							"role": {
-								"$ref": "#/components/schemas/RoleEnum"
-							},
-							"email": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"role",
-							"email",
-							"name"
-						],
-						"type": "object"
-					}
-				},
-				"required": [
-					"tokens",
-					"user"
-				],
-				"type": "object"
-			},
-			"AuthLoginResponse": {
-				"$ref": "#/components/schemas/infer_typeofauthLoginResponseSchema_"
-			},
-			"ApiResponse_AuthLoginResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/AuthLoginResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofregisterSchema_": {
-				"properties": {
-					"phoneNumber": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"password": {
-						"type": "string"
-					},
-					"otp": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"name",
-					"password",
-					"otp",
-					"email"
-				],
-				"type": "object"
-			},
-			"RegisterRequest": {
-				"$ref": "#/components/schemas/infer_typeofregisterSchema_"
-			},
-			"infer_typeofloginSchema_": {
-				"properties": {
-					"password": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"password",
-					"email"
-				],
-				"type": "object"
-			},
-			"LoginRequest": {
-				"$ref": "#/components/schemas/infer_typeofloginSchema_"
-			},
-			"infer_typeofauthTokensSchema_": {
-				"properties": {
-					"familyId": {
-						"type": "string"
-					},
-					"refreshToken": {
-						"type": "string"
-					},
-					"accessToken": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"refreshToken",
-					"accessToken"
-				],
-				"type": "object"
-			},
-			"AuthTokens": {
-				"$ref": "#/components/schemas/infer_typeofauthTokensSchema_"
-			},
-			"ApiResponse_AuthTokens_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/AuthTokens"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"RefreshTokenRequest": {
-				"properties": {
-					"refreshToken": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofauthUserResponseSchema_": {
-				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/UserStatusEnum"
-					},
-					"authProvider": {
-						"$ref": "#/components/schemas/AuthProviderEnum"
-					},
-					"phoneNumber": {
-						"type": "string"
-					},
-					"_id": {},
-					"id": {
-						"type": "string"
-					},
-					"role": {
-						"$ref": "#/components/schemas/RoleEnum"
-					},
-					"email": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"role",
-					"email",
-					"name"
-				],
-				"type": "object"
-			},
-			"AuthUserResponse": {
-				"$ref": "#/components/schemas/infer_typeofauthUserResponseSchema_"
-			},
-			"ApiResponse_AuthUserResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/AuthUserResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofforgotPasswordSchema_": {
-				"properties": {
-					"email": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"email"
-				],
-				"type": "object"
-			},
-			"ForgotPasswordRequest": {
-				"$ref": "#/components/schemas/infer_typeofforgotPasswordSchema_"
-			},
-			"infer_typeofresetPasswordSchema_": {
-				"properties": {
-					"newPassword": {
-						"type": "string"
-					},
-					"otp": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"newPassword",
-					"otp",
-					"email"
-				],
-				"type": "object"
-			},
-			"ResetPasswordRequest": {
-				"$ref": "#/components/schemas/infer_typeofresetPasswordSchema_"
-			},
-			"infer_typeofchangePasswordSchema_": {
-				"properties": {
-					"newPassword": {
-						"type": "string"
-					},
-					"currentPassword": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"newPassword",
-					"currentPassword"
-				],
-				"type": "object"
-			},
-			"ChangePasswordRequest": {
-				"$ref": "#/components/schemas/infer_typeofchangePasswordSchema_"
-			},
-			"AuditActionEnum": {
-				"enum": [
-					"register",
-					"login",
-					"login_google",
-					"logout",
-					"send_otp",
-					"forgot_password",
-					"reset_password",
-					"change_password",
-					"create",
-					"update",
-					"delete",
-					"restore",
-					"assign_manager",
-					"toggle_maintenance",
-					"approve",
-					"reject",
-					"cancel"
-				],
-				"type": "string"
-			},
-			"AuditResourceEnum": {
-				"enum": [
-					"auth",
-					"user",
-					"profile",
-					"facility",
-					"unit_type",
-					"amenity",
-					"facility_unit_type_offering",
-					"facility_amenity_offering",
-					"storage_unit",
-					"reservation",
-					"approval_request"
-				],
-				"type": "string"
-			},
-			"AuditStatusEnum": {
-				"enum": [
-					"success",
-					"failure"
-				],
-				"type": "string"
-			},
-			"Record_string.unknown_": {
-				"properties": {},
-				"type": "object",
-				"description": "Construct a type with a set of properties K of type T"
-			},
-			"infer_typeofauditLogResponseSchema_": {
-				"properties": {
-					"createdAt": {
-						"type": "string"
-					},
-					"path": {
-						"type": "string"
-					},
-					"method": {
-						"type": "string"
-					},
-					"requestId": {
-						"type": "string"
-					},
-					"userAgent": {
-						"type": "string"
-					},
-					"ip": {
-						"type": "string"
-					},
-					"metadata": {
-						"$ref": "#/components/schemas/Record_string.unknown_"
-					},
-					"changes": {
-						"properties": {
-							"after": {
-								"$ref": "#/components/schemas/Record_string.unknown_"
-							},
-							"before": {
-								"$ref": "#/components/schemas/Record_string.unknown_"
-							}
-						},
-						"type": "object"
-					},
-					"resourceId": {
-						"type": "string"
-					},
-					"actorEmail": {
-						"type": "string"
-					},
-					"actorRole": {
-						"type": "string"
-					},
-					"actorId": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/AuditStatusEnum"
-					},
-					"resourceType": {
-						"$ref": "#/components/schemas/AuditResourceEnum"
-					},
-					"action": {
-						"$ref": "#/components/schemas/AuditActionEnum"
-					},
-					"version": {
-						"type": "number",
-						"format": "double"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"resourceType",
-					"action",
-					"version",
-					"id"
-				],
-				"type": "object"
-			},
-			"AuditLogResponse": {
-				"$ref": "#/components/schemas/infer_typeofauditLogResponseSchema_"
-			},
-			"PaginatedData_AuditLogResponse_": {
-				"properties": {
-					"items": {
-						"items": {
-							"$ref": "#/components/schemas/AuditLogResponse"
-						},
-						"type": "array"
-					},
-					"pagination": {
-						"$ref": "#/components/schemas/PaginationMeta"
-					}
-				},
-				"required": [
-					"items",
-					"pagination"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_PaginatedData_AuditLogResponse__": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/PaginatedData_AuditLogResponse_"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofauditLogQuerySchema_": {
-				"properties": {
-					"to": {
-						"type": "string"
-					},
-					"from": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/AuditStatusEnum"
-					},
-					"resourceId": {
-						"type": "string"
-					},
-					"resourceType": {
-						"$ref": "#/components/schemas/AuditResourceEnum"
-					},
-					"action": {
-						"$ref": "#/components/schemas/AuditActionEnum"
-					},
-					"actorId": {
-						"type": "string"
-					},
-					"search": {
-						"type": "string"
-					},
-					"sortOrder": {
-						"type": "string",
-						"enum": [
-							"asc",
-							"desc"
-						]
-					},
-					"sortBy": {
-						"type": "string",
-						"enum": [
-							"status",
-							"createdAt",
-							"action",
-							"resourceType"
-						]
-					},
-					"limit": {
-						"type": "number",
-						"format": "double"
-					},
-					"page": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"sortOrder",
-					"sortBy",
-					"limit",
-					"page"
-				],
-				"type": "object"
-			},
-			"AuditLogQuery": {
-				"$ref": "#/components/schemas/infer_typeofauditLogQuerySchema_"
-			},
-			"ApiResponse_AuditLogResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/AuditLogResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
 			},
 			"ApprovalRequestTargetTypeEnum": {
 				"enum": [
@@ -5319,6 +6058,418 @@
 				]
 			}
 		},
+		"/auth/send-otp": {
+			"post": {
+				"operationId": "SendOtp",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__message-string__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Email already registered or invalid input",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SendOtpRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/register": {
+			"post": {
+				"operationId": "Register",
+				"responses": {
+					"201": {
+						"description": "User registered successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid OTP, email already exists, or validation error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RegisterRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/login": {
+			"post": {
+				"operationId": "Login",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid credentials",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Account banned",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/LoginRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/refresh": {
+			"post": {
+				"operationId": "RefreshToken",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuthTokens_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid or revoked refresh token",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RefreshTokenRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/logout": {
+			"post": {
+				"operationId": "Logout",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RefreshTokenRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/me": {
+			"get": {
+				"operationId": "GetMe",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuthUserResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized or token expired",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/auth/forgot-password": {
+			"post": {
+				"operationId": "ForgotPassword",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__message-string__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Google OAuth account cannot reset password",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ForgotPasswordRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/reset-password": {
+			"post": {
+				"operationId": "ResetPassword",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__message-string__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid OTP or Google OAuth account",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResetPasswordRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/change-password": {
+			"patch": {
+				"operationId": "ChangePassword",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__message-string__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Current password is incorrect or Google OAuth account",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ChangePasswordRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/profile/me": {
 			"get": {
 				"operationId": "GetMyProfile",
@@ -5468,6 +6619,1654 @@
 					{
 						"in": "path",
 						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs": {
+			"get": {
+				"operationId": "FindAll",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all audit logs with pagination and filters.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/me": {
+			"get": {
+				"operationId": "FindMine",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get current authenticated user's own activity log.\r\nDefined before /{id} to ensure proper route matching order in tsoa.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/resource/{resourceType}/{resourceId}": {
+			"get": {
+				"operationId": "FindByResource",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid resource parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get change timeline for a specific resource type and ID.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "resourceType",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "path",
+						"name": "resourceId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/{id}": {
+			"get": {
+				"operationId": "FindById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuditLogResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid audit log ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Audit log not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get single audit log record by ID.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/reservations": {
+			"post": {
+				"operationId": "CreateReservation",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request data or insufficient inventory",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility or Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new reservation in PENDING status (Customer).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateReservationRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetReservations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_ReservationResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get paginated list of reservations.\nCustomers only see their own reservations.\nStaff/Managers can filter across facilities.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "startDateTo",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDateFrom",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "reservationCode",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ReservationStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageUnitId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityUnitTypeOfferingId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"updatedAt",
+								"startDate",
+								"totalAmount"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/reservations/process-expired": {
+			"post": {
+				"operationId": "ProcessExpiredReservations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Process and expire overdue holding reservations (Cron/Admin).\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/reservations/{id}": {
+			"get": {
+				"operationId": "GetReservationById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get detailed reservation by ID.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid state or reservation already received",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update reservation details (Customer, only allowed while in PENDING status).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/receive": {
+			"post": {
+				"operationId": "ReceiveReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid reservation status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager marks reservation as received (PENDING -> RECEIVED).\nLocks the reservation from customer updates.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/reservations/{id}/assign-unit": {
+			"post": {
+				"operationId": "AssignStorageUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Unit not available, invalid status, or concurrency conflict",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation or Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager assigns a physical storage unit and locks inventory (RECEIVED -> PENDING_PAYMENT).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignStorageUnitRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/reject": {
+			"post": {
+				"operationId": "RejectReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid reservation status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager rejects reservation (REJECTED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RejectReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/pay-deposit": {
+			"post": {
+				"operationId": "PayDeposit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Holding expired or invalid reservation status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer pays reservation deposit (PENDING_PAYMENT / PAYMENT_FAILED -> PAYMENT_SUCCESSFUL).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/PayDepositRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/payment-failed": {
+			"post": {
+				"operationId": "HandlePaymentFailure",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Handle payment failure callback (PENDING_PAYMENT -> PAYMENT_FAILED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/PaymentFailureRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/retry-payment": {
+			"post": {
+				"operationId": "RetryPayment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Holding expired or invalid reservation status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer retries deposit payment after failure (PAYMENT_FAILED -> PENDING_PAYMENT).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/reservations/{id}/confirm": {
+			"post": {
+				"operationId": "ConfirmReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Deposit not paid or invalid status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Confirm reservation after successful deposit (Staff/Manager: PAYMENT_SUCCESSFUL -> CONFIRMED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ConfirmReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/cancel": {
+			"post": {
+				"operationId": "CancelReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Reservation cannot be cancelled",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel reservation (CANCELLED).\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/complete": {
+			"post": {
+				"operationId": "CompleteReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Mark reservation as completed (Staff/Manager: CONFIRMED -> COMPLETED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
 						"required": true,
 						"schema": {
 							"type": "string"
@@ -7006,952 +9805,6 @@
 				]
 			}
 		},
-		"/auth/send-otp": {
-			"post": {
-				"operationId": "SendOtp",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__message-string__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Email already registered or invalid input",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/SendOtpRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/register": {
-			"post": {
-				"operationId": "Register",
-				"responses": {
-					"201": {
-						"description": "User registered successfully",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid OTP, email already exists, or validation error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RegisterRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/login": {
-			"post": {
-				"operationId": "Login",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Invalid credentials",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Account banned",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/LoginRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/refresh": {
-			"post": {
-				"operationId": "RefreshToken",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthTokens_"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Invalid or revoked refresh token",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": false,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RefreshTokenRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/logout": {
-			"post": {
-				"operationId": "Logout",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_null_"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": false,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RefreshTokenRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/me": {
-			"get": {
-				"operationId": "GetMe",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthUserResponse_"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized or token expired",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
-				"parameters": []
-			}
-		},
-		"/auth/forgot-password": {
-			"post": {
-				"operationId": "ForgotPassword",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__message-string__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Google OAuth account cannot reset password",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "User not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ForgotPasswordRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/reset-password": {
-			"post": {
-				"operationId": "ResetPassword",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__message-string__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid OTP or Google OAuth account",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "User not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ResetPasswordRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/change-password": {
-			"patch": {
-				"operationId": "ChangePassword",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__message-string__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Current password is incorrect or Google OAuth account",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "User not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ChangePasswordRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/audit-logs": {
-			"get": {
-				"operationId": "FindAll",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid query parameters",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get all audit logs with pagination and filters.",
-				"tags": [
-					"AuditLogs"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "query",
-						"name": "to",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "from",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "status",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditStatusEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceType",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditResourceEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "action",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditActionEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "actorId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "search",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortOrder",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"asc",
-								"desc"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortBy",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"status",
-								"createdAt",
-								"action",
-								"resourceType"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "page",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				]
-			}
-		},
-		"/audit-logs/me": {
-			"get": {
-				"operationId": "FindMine",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid query parameters",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get current authenticated user's own activity log.\nDefined before /{id} to ensure proper route matching order in tsoa.",
-				"tags": [
-					"AuditLogs"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "query",
-						"name": "to",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "from",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "status",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditStatusEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceType",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditResourceEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "action",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditActionEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "actorId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "search",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortOrder",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"asc",
-								"desc"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortBy",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"status",
-								"createdAt",
-								"action",
-								"resourceType"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "page",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				]
-			}
-		},
-		"/audit-logs/resource/{resourceType}/{resourceId}": {
-			"get": {
-				"operationId": "FindByResource",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid resource parameters",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get change timeline for a specific resource type and ID.",
-				"tags": [
-					"AuditLogs"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "resourceType",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/AuditResourceEnum"
-						}
-					},
-					{
-						"in": "path",
-						"name": "resourceId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "to",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "from",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "status",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditStatusEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceType",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditResourceEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "action",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditActionEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "actorId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "search",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortOrder",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"asc",
-								"desc"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortBy",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"status",
-								"createdAt",
-								"action",
-								"resourceType"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "page",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				]
-			}
-		},
-		"/audit-logs/{id}": {
-			"get": {
-				"operationId": "FindById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuditLogResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid audit log ID",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Audit log not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get single audit log record by ID.",
-				"tags": [
-					"AuditLogs"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
 		"/approval-requests": {
 			"post": {
 				"operationId": "CreateApprovalRequest",
@@ -8157,7 +10010,7 @@
 						}
 					}
 				},
-				"description": "Get approval requests submitted by the authenticated user / facility.\nNOTE: Placed before",
+				"description": "Get approval requests submitted by the authenticated user / facility.\r\nNOTE: Placed before",
 				"tags": [
 					"Approval Requests"
 				],
@@ -8420,7 +10273,7 @@
 						}
 					}
 				},
-				"description": "Review an approval request (Approve or Reject).\nAutomatically executes database changes if approved.",
+				"description": "Review an approval request (Approve or Reject).\r\nAutomatically executes database changes if approved.",
 				"tags": [
 					"Approval Requests"
 				],
