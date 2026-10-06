@@ -2983,6 +2983,302 @@
 			"UpdateOfferingRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateOfferingSchema_"
 			},
+			"infer_typeoffacilityResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"operatingHours": {
+						"properties": {
+							"close": {
+								"type": "string"
+							},
+							"open": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"close",
+							"open"
+						],
+						"type": "object"
+					},
+					"managerId": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"city": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"city",
+					"address",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"FacilityResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityResponseSchema_"
+			},
+			"ApiResponse_FacilityResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MyFacilityDashboardFacility": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"phone": {
+						"type": "string",
+						"nullable": true
+					},
+					"email": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"address",
+					"city",
+					"status"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MyFacilityStorageUnitsBreakdown": {
+				"properties": {
+					"total": {
+						"type": "number",
+						"format": "double"
+					},
+					"available": {
+						"type": "number",
+						"format": "double"
+					},
+					"underMaintenance": {
+						"type": "number",
+						"format": "double"
+					},
+					"occupied": {
+						"type": "number",
+						"format": "double"
+					},
+					"reserved": {
+						"type": "number",
+						"format": "double"
+					},
+					"inactive": {
+						"type": "number",
+						"format": "double"
+					},
+					"occupancyRate": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"total",
+					"available",
+					"underMaintenance",
+					"occupied",
+					"reserved",
+					"inactive",
+					"occupancyRate"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MyFacilityAmenitiesSummary": {
+				"properties": {
+					"totalOfferings": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"inUseQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"availableQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"outOfStockOfferingsCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"totalOfferings",
+					"totalQuantity",
+					"inUseQuantity",
+					"availableQuantity",
+					"outOfStockOfferingsCount"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MyFacilityDashboardResponse": {
+				"properties": {
+					"facility": {
+						"$ref": "#/components/schemas/MyFacilityDashboardFacility"
+					},
+					"storageUnits": {
+						"$ref": "#/components/schemas/MyFacilityStorageUnitsBreakdown"
+					},
+					"amenities": {
+						"$ref": "#/components/schemas/MyFacilityAmenitiesSummary"
+					}
+				},
+				"required": [
+					"facility",
+					"storageUnits",
+					"amenities"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_MyFacilityDashboardResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/MyFacilityDashboardResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeoffacilityStaffQuerySchema_": {
+				"properties": {
+					"status": {
+						"$ref": "#/components/schemas/UserStatusEnum"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"name",
+							"email",
+							"createdAt"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"FacilityStaffQuery": {
+				"$ref": "#/components/schemas/infer_typeoffacilityStaffQuerySchema_"
+			},
 			"FacilityAmenityOfferingStatusEnum": {
 				"enum": [
 					"active",
@@ -3382,69 +3678,6 @@
 			},
 			"UpdateFacilityAmenityOfferingRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateFacilityAmenityOfferingSchema_"
-			},
-			"infer_typeoffacilityResponseSchema_": {
-				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
-					"operatingHours": {
-						"properties": {
-							"close": {
-								"type": "string"
-							},
-							"open": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"close",
-							"open"
-						],
-						"type": "object"
-					},
-					"managerId": {
-						"type": "string"
-					},
-					"description": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					},
-					"phone": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityStatusEnum"
-					},
-					"city": {
-						"type": "string"
-					},
-					"address": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"city",
-					"address",
-					"name",
-					"id"
-				],
-				"type": "object"
-			},
-			"FacilityResponse": {
-				"$ref": "#/components/schemas/infer_typeoffacilityResponseSchema_"
 			},
 			"PaginatedData_FacilityResponse_": {
 				"properties": {
@@ -3883,35 +4116,6 @@
 					},
 					"data": {
 						"$ref": "#/components/schemas/FacilityPublicDetailResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_FacilityResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/FacilityResponse"
 					}
 				},
 				"required": [
@@ -8730,6 +8934,265 @@
 						"required": true,
 						"schema": {
 							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/my-facility": {
+			"get": {
+				"operationId": "GetMyFacility",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Assigned Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tra cứu thông tin chi tiết cơ sở mà Facility Manager hiện tại đang phụ trách.\r\nDanh tính được xác định từ token đăng nhập.",
+				"tags": [
+					"Facility Manager"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/my-facility/dashboard": {
+			"get": {
+				"operationId": "GetMyFacilityDashboard",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_MyFacilityDashboardResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Assigned Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Dashboard thống kê tổng quan cơ sở: số lượng phòng theo trạng thái, tỷ lệ lấp đầy (occupancyRate),\r\ntổng tiện ích, số lượng đang sử dụng, và số tiện ích hết hàng.",
+				"tags": [
+					"Facility Manager"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/my-facility/staffs": {
+			"get": {
+				"operationId": "GetMyFacilityStaffs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_UserResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Assigned Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Lấy danh sách nhân viên (FACILITY_STAFF) thuộc cơ sở do Facility Manager quản lý.\r\nHỗ trợ phân trang, tìm kiếm theo tên/email/sđt, lọc theo trạng thái, và sắp xếp.",
+				"tags": [
+					"Facility Manager"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/UserStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"name",
+								"email",
+								"createdAt"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
 						}
 					}
 				]
