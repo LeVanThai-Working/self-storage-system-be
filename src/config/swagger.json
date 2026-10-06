@@ -1602,1051 +1602,6 @@
 			"UpdateOfferingRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateOfferingSchema_"
 			},
-			"FacilityAmenityOfferingStatusEnum": {
-				"enum": [
-					"active",
-					"inactive",
-					"out_of_stock"
-				],
-				"type": "string"
-			},
-			"AmenityTypeEnum": {
-				"enum": [
-					"physical",
-					"service"
-				],
-				"type": "string"
-			},
-			"AmenityStatusEnum": {
-				"enum": [
-					"active",
-					"inactive"
-				],
-				"type": "string"
-			},
-			"infer_typeoffacilityAmenityOfferingResponseSchema_": {
-				"properties": {
-					"updatedAt": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"format": "date-time"
-							}
-						]
-					},
-					"createdAt": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"format": "date-time"
-							}
-						]
-					},
-					"notes": {
-						"type": "string"
-					},
-					"amenity": {
-						"properties": {
-							"description": {
-								"type": "string"
-							},
-							"tags": {
-								"items": {
-									"type": "string"
-								},
-								"type": "array"
-							},
-							"images": {
-								"items": {
-									"type": "string"
-								},
-								"type": "array"
-							},
-							"status": {
-								"$ref": "#/components/schemas/AmenityStatusEnum"
-							},
-							"type": {
-								"$ref": "#/components/schemas/AmenityTypeEnum"
-							},
-							"name": {
-								"type": "string"
-							},
-							"id": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"tags",
-							"images",
-							"status",
-							"type",
-							"name",
-							"id"
-						],
-						"type": "object"
-					},
-					"facility": {
-						"properties": {
-							"status": {
-								"$ref": "#/components/schemas/FacilityStatusEnum"
-							},
-							"address": {
-								"type": "string"
-							},
-							"city": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							},
-							"id": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"status",
-							"address",
-							"city",
-							"name",
-							"id"
-						],
-						"type": "object"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-					},
-					"availableQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"inUseQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"totalQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"billingUnit": {
-						"$ref": "#/components/schemas/BillingUnitEnum"
-					},
-					"pricePerUnit": {
-						"type": "number",
-						"format": "double"
-					},
-					"amenityId": {
-						"type": "string"
-					},
-					"facilityId": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"availableQuantity",
-					"inUseQuantity",
-					"totalQuantity",
-					"billingUnit",
-					"pricePerUnit",
-					"amenityId",
-					"facilityId",
-					"id"
-				],
-				"type": "object"
-			},
-			"FacilityAmenityOfferingResponse": {
-				"$ref": "#/components/schemas/infer_typeoffacilityAmenityOfferingResponseSchema_"
-			},
-			"PaginatedData_FacilityAmenityOfferingResponse_": {
-				"properties": {
-					"items": {
-						"items": {
-							"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
-						},
-						"type": "array"
-					},
-					"pagination": {
-						"$ref": "#/components/schemas/PaginationMeta"
-					}
-				},
-				"required": [
-					"items",
-					"pagination"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_PaginatedData_FacilityAmenityOfferingResponse__": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/PaginatedData_FacilityAmenityOfferingResponse_"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeoffacilityAmenityOfferingQuerySchema_": {
-				"properties": {
-					"maxPrice": {
-						"type": "number",
-						"format": "double"
-					},
-					"minPrice": {
-						"type": "number",
-						"format": "double"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-					},
-					"billingUnit": {
-						"$ref": "#/components/schemas/BillingUnitEnum"
-					},
-					"amenityId": {
-						"type": "string"
-					},
-					"facilityId": {
-						"type": "string"
-					},
-					"search": {
-						"type": "string"
-					},
-					"sortBy": {
-						"type": "string",
-						"enum": [
-							"status",
-							"createdAt",
-							"updatedAt",
-							"pricePerUnit",
-							"totalQuantity",
-							"inUseQuantity"
-						]
-					},
-					"sortOrder": {
-						"type": "string",
-						"enum": [
-							"asc",
-							"desc"
-						]
-					},
-					"limit": {
-						"type": "number",
-						"format": "double"
-					},
-					"page": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"sortBy",
-					"sortOrder",
-					"limit",
-					"page"
-				],
-				"type": "object"
-			},
-			"FacilityAmenityOfferingQuery": {
-				"$ref": "#/components/schemas/infer_typeoffacilityAmenityOfferingQuerySchema_"
-			},
-			"ApiResponse_FacilityAmenityOfferingResponse-Array_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"items": {
-							"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_FacilityAmenityOfferingResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofcreateFacilityAmenityOfferingSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-					},
-					"totalQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"billingUnit": {
-						"$ref": "#/components/schemas/BillingUnitEnum"
-					},
-					"pricePerUnit": {
-						"type": "number",
-						"format": "double"
-					},
-					"amenityId": {
-						"type": "string"
-					},
-					"facilityId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"totalQuantity",
-					"billingUnit",
-					"pricePerUnit",
-					"amenityId",
-					"facilityId"
-				],
-				"type": "object"
-			},
-			"CreateFacilityAmenityOfferingRequest": {
-				"$ref": "#/components/schemas/infer_typeofcreateFacilityAmenityOfferingSchema_"
-			},
-			"infer_typeofupdateFacilityAmenityOfferingSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-					},
-					"totalQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"billingUnit": {
-						"$ref": "#/components/schemas/BillingUnitEnum"
-					},
-					"pricePerUnit": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"type": "object"
-			},
-			"UpdateFacilityAmenityOfferingRequest": {
-				"$ref": "#/components/schemas/infer_typeofupdateFacilityAmenityOfferingSchema_"
-			},
-			"infer_typeoffacilityResponseSchema_": {
-				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
-					"operatingHours": {
-						"properties": {
-							"close": {
-								"type": "string"
-							},
-							"open": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"close",
-							"open"
-						],
-						"type": "object"
-					},
-					"managerId": {
-						"type": "string"
-					},
-					"description": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					},
-					"phone": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityStatusEnum"
-					},
-					"city": {
-						"type": "string"
-					},
-					"address": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"city",
-					"address",
-					"name",
-					"id"
-				],
-				"type": "object"
-			},
-			"FacilityResponse": {
-				"$ref": "#/components/schemas/infer_typeoffacilityResponseSchema_"
-			},
-			"PaginatedData_FacilityResponse_": {
-				"properties": {
-					"items": {
-						"items": {
-							"$ref": "#/components/schemas/FacilityResponse"
-						},
-						"type": "array"
-					},
-					"pagination": {
-						"$ref": "#/components/schemas/PaginationMeta"
-					}
-				},
-				"required": [
-					"items",
-					"pagination"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_PaginatedData_FacilityResponse__": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/PaginatedData_FacilityResponse_"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeoffacilityQuerySchema_": {
-				"properties": {
-					"status": {
-						"$ref": "#/components/schemas/FacilityStatusEnum"
-					},
-					"city": {
-						"type": "string"
-					},
-					"search": {
-						"type": "string"
-					},
-					"sortOrder": {
-						"type": "string",
-						"enum": [
-							"asc",
-							"desc"
-						]
-					},
-					"sortBy": {
-						"type": "string",
-						"enum": [
-							"name",
-							"status",
-							"createdAt",
-							"updatedAt",
-							"city"
-						]
-					},
-					"limit": {
-						"type": "number",
-						"format": "double"
-					},
-					"page": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"sortOrder",
-					"sortBy",
-					"limit",
-					"page"
-				],
-				"type": "object"
-			},
-			"FacilityQuery": {
-				"$ref": "#/components/schemas/infer_typeoffacilityQuerySchema_"
-			},
-			"infer_typeofsearchByAmenityQuerySchema_": {
-				"properties": {
-					"search": {
-						"type": "string"
-					},
-					"city": {
-						"type": "string"
-					},
-					"sortOrder": {
-						"type": "string",
-						"enum": [
-							"asc",
-							"desc"
-						]
-					},
-					"sortBy": {
-						"type": "string",
-						"enum": [
-							"name",
-							"createdAt",
-							"updatedAt",
-							"city"
-						]
-					},
-					"matchAll": {
-						"type": "boolean"
-					},
-					"amenityIds": {
-						"type": "string"
-					},
-					"limit": {
-						"type": "number",
-						"format": "double"
-					},
-					"page": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"sortOrder",
-					"sortBy",
-					"matchAll",
-					"amenityIds",
-					"limit",
-					"page"
-				],
-				"type": "object"
-			},
-			"SearchByAmenityQuery": {
-				"$ref": "#/components/schemas/infer_typeofsearchByAmenityQuerySchema_"
-			},
-			"infer_typeoffacilityPublicDetailResponseSchema_": {
-				"properties": {
-					"amenityOfferings": {
-						"items": {
-							"properties": {
-								"status": {
-									"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-								},
-								"availableQuantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"inUseQuantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"totalQuantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"billingUnit": {
-									"$ref": "#/components/schemas/BillingUnitEnum"
-								},
-								"pricePerUnit": {
-									"type": "number",
-									"format": "double"
-								},
-								"amenity": {
-									"properties": {
-										"tags": {
-											"items": {
-												"type": "string"
-											},
-											"type": "array"
-										},
-										"images": {
-											"items": {
-												"type": "string"
-											},
-											"type": "array"
-										},
-										"description": {
-											"type": "string"
-										},
-										"status": {
-											"$ref": "#/components/schemas/AmenityStatusEnum"
-										},
-										"type": {
-											"$ref": "#/components/schemas/AmenityTypeEnum"
-										},
-										"name": {
-											"type": "string"
-										},
-										"id": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"status",
-										"type",
-										"name",
-										"id"
-									],
-									"type": "object"
-								},
-								"amenityId": {
-									"type": "string"
-								},
-								"facilityId": {
-									"type": "string"
-								},
-								"id": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"status",
-								"availableQuantity",
-								"inUseQuantity",
-								"totalQuantity",
-								"billingUnit",
-								"pricePerUnit",
-								"amenity",
-								"amenityId",
-								"facilityId",
-								"id"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"unitTypeOfferings": {
-						"items": {
-							"properties": {
-								"availableUnitsCount": {
-									"type": "number",
-									"format": "double"
-								},
-								"status": {
-									"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
-								},
-								"minRentalDays": {
-									"type": "number",
-									"format": "double"
-								},
-								"billingUnit": {
-									"$ref": "#/components/schemas/BillingUnitEnum"
-								},
-								"depositMultiplier": {
-									"type": "number",
-									"format": "double"
-								},
-								"pricePerUnit": {
-									"type": "number",
-									"format": "double"
-								},
-								"unitType": {
-									"properties": {
-										"description": {
-											"type": "string"
-										},
-										"status": {
-											"$ref": "#/components/schemas/UnitTypeStatusEnum"
-										},
-										"volume": {
-											"type": "number",
-											"format": "double"
-										},
-										"area": {
-											"type": "number",
-											"format": "double"
-										},
-										"dimensions": {
-											"properties": {
-												"height": {
-													"type": "number",
-													"format": "double"
-												},
-												"width": {
-													"type": "number",
-													"format": "double"
-												},
-												"length": {
-													"type": "number",
-													"format": "double"
-												}
-											},
-											"required": [
-												"height",
-												"width",
-												"length"
-											],
-											"type": "object"
-										},
-										"category": {
-											"$ref": "#/components/schemas/UnitTypeCategoryEnum"
-										},
-										"name": {
-											"type": "string"
-										},
-										"id": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"status",
-										"volume",
-										"area",
-										"dimensions",
-										"category",
-										"name",
-										"id"
-									],
-									"type": "object"
-								},
-								"unitTypeId": {
-									"type": "string"
-								},
-								"facilityId": {
-									"type": "string"
-								},
-								"id": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"availableUnitsCount",
-								"status",
-								"minRentalDays",
-								"billingUnit",
-								"depositMultiplier",
-								"pricePerUnit",
-								"unitType",
-								"unitTypeId",
-								"facilityId",
-								"id"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"facility": {
-						"properties": {
-							"updatedAt": {
-								"type": "string"
-							},
-							"createdAt": {
-								"type": "string"
-							},
-							"operatingHours": {
-								"properties": {
-									"close": {
-										"type": "string"
-									},
-									"open": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"close",
-									"open"
-								],
-								"type": "object"
-							},
-							"managerId": {
-								"type": "string"
-							},
-							"description": {
-								"type": "string"
-							},
-							"email": {
-								"type": "string"
-							},
-							"phone": {
-								"type": "string"
-							},
-							"status": {
-								"$ref": "#/components/schemas/FacilityStatusEnum"
-							},
-							"city": {
-								"type": "string"
-							},
-							"address": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							},
-							"id": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"status",
-							"city",
-							"address",
-							"name",
-							"id"
-						],
-						"type": "object"
-					}
-				},
-				"required": [
-					"amenityOfferings",
-					"unitTypeOfferings",
-					"facility"
-				],
-				"type": "object"
-			},
-			"FacilityPublicDetailResponse": {
-				"$ref": "#/components/schemas/infer_typeoffacilityPublicDetailResponseSchema_"
-			},
-			"ApiResponse_FacilityPublicDetailResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/FacilityPublicDetailResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_FacilityResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/FacilityResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofcreateFacilitySchema_": {
-				"properties": {
-					"operatingHours": {
-						"properties": {
-							"close": {
-								"type": "string"
-							},
-							"open": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"close",
-							"open"
-						],
-						"type": "object"
-					},
-					"description": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					},
-					"phone": {
-						"type": "string"
-					},
-					"city": {
-						"type": "string"
-					},
-					"address": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"city",
-					"address",
-					"name"
-				],
-				"type": "object"
-			},
-			"CreateFacilityRequest": {
-				"$ref": "#/components/schemas/infer_typeofcreateFacilitySchema_"
-			},
-			"infer_typeofupdateFacilitySchema_": {
-				"properties": {
-					"operatingHours": {
-						"properties": {
-							"close": {
-								"type": "string"
-							},
-							"open": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"close",
-							"open"
-						],
-						"type": "object"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityStatusEnum"
-					},
-					"description": {
-						"type": "string"
-					},
-					"email": {
-						"type": "string"
-					},
-					"phone": {
-						"type": "string"
-					},
-					"city": {
-						"type": "string"
-					},
-					"address": {
-						"type": "string"
-					},
-					"name": {
-						"type": "string"
-					}
-				},
-				"type": "object"
-			},
-			"UpdateFacilityRequest": {
-				"$ref": "#/components/schemas/infer_typeofupdateFacilitySchema_"
-			},
-			"infer_typeofassignManagerSchema_": {
-				"properties": {
-					"managerId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"managerId"
-				],
-				"type": "object"
-			},
-			"AssignManagerRequest": {
-				"$ref": "#/components/schemas/infer_typeofassignManagerSchema_"
-			},
 			"ApiResponse__message-string__": {
 				"properties": {
 					"success": {
@@ -3288,6 +2243,1255 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"infer_typeoffacilityResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"operatingHours": {
+						"properties": {
+							"close": {
+								"type": "string"
+							},
+							"open": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"close",
+							"open"
+						],
+						"type": "object"
+					},
+					"managerId": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"city": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"city",
+					"address",
+					"name",
+					"id"
+				],
+				"type": "object"
+			},
+			"FacilityResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityResponseSchema_"
+			},
+			"ApiResponse_FacilityResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MyFacilityDashboardFacility": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"phone": {
+						"type": "string",
+						"nullable": true
+					},
+					"email": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"address",
+					"city",
+					"status"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MyFacilityStorageUnitsBreakdown": {
+				"properties": {
+					"total": {
+						"type": "number",
+						"format": "double"
+					},
+					"available": {
+						"type": "number",
+						"format": "double"
+					},
+					"underMaintenance": {
+						"type": "number",
+						"format": "double"
+					},
+					"occupied": {
+						"type": "number",
+						"format": "double"
+					},
+					"reserved": {
+						"type": "number",
+						"format": "double"
+					},
+					"inactive": {
+						"type": "number",
+						"format": "double"
+					},
+					"occupancyRate": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"total",
+					"available",
+					"underMaintenance",
+					"occupied",
+					"reserved",
+					"inactive",
+					"occupancyRate"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MyFacilityAmenitiesSummary": {
+				"properties": {
+					"totalOfferings": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"inUseQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"availableQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"outOfStockOfferingsCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"totalOfferings",
+					"totalQuantity",
+					"inUseQuantity",
+					"availableQuantity",
+					"outOfStockOfferingsCount"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"MyFacilityDashboardResponse": {
+				"properties": {
+					"facility": {
+						"$ref": "#/components/schemas/MyFacilityDashboardFacility"
+					},
+					"storageUnits": {
+						"$ref": "#/components/schemas/MyFacilityStorageUnitsBreakdown"
+					},
+					"amenities": {
+						"$ref": "#/components/schemas/MyFacilityAmenitiesSummary"
+					}
+				},
+				"required": [
+					"facility",
+					"storageUnits",
+					"amenities"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_MyFacilityDashboardResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/MyFacilityDashboardResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeoffacilityStaffQuerySchema_": {
+				"properties": {
+					"status": {
+						"$ref": "#/components/schemas/UserStatusEnum"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"name",
+							"email",
+							"createdAt"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"FacilityStaffQuery": {
+				"$ref": "#/components/schemas/infer_typeoffacilityStaffQuerySchema_"
+			},
+			"FacilityAmenityOfferingStatusEnum": {
+				"enum": [
+					"active",
+					"inactive",
+					"out_of_stock"
+				],
+				"type": "string"
+			},
+			"AmenityTypeEnum": {
+				"enum": [
+					"physical",
+					"service"
+				],
+				"type": "string"
+			},
+			"AmenityStatusEnum": {
+				"enum": [
+					"active",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"infer_typeoffacilityAmenityOfferingResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					},
+					"createdAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					},
+					"notes": {
+						"type": "string"
+					},
+					"amenity": {
+						"properties": {
+							"description": {
+								"type": "string"
+							},
+							"tags": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"images": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"status": {
+								"$ref": "#/components/schemas/AmenityStatusEnum"
+							},
+							"type": {
+								"$ref": "#/components/schemas/AmenityTypeEnum"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"tags",
+							"images",
+							"status",
+							"type",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"$ref": "#/components/schemas/FacilityStatusEnum"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+					},
+					"availableQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"inUseQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"amenityId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"availableQuantity",
+					"inUseQuantity",
+					"totalQuantity",
+					"billingUnit",
+					"pricePerUnit",
+					"amenityId",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"FacilityAmenityOfferingResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityAmenityOfferingResponseSchema_"
+			},
+			"PaginatedData_FacilityAmenityOfferingResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_FacilityAmenityOfferingResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_FacilityAmenityOfferingResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeoffacilityAmenityOfferingQuerySchema_": {
+				"properties": {
+					"maxPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"minPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"amenityId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"updatedAt",
+							"pricePerUnit",
+							"totalQuantity",
+							"inUseQuantity"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"FacilityAmenityOfferingQuery": {
+				"$ref": "#/components/schemas/infer_typeoffacilityAmenityOfferingQuerySchema_"
+			},
+			"ApiResponse_FacilityAmenityOfferingResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_FacilityAmenityOfferingResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateFacilityAmenityOfferingSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"amenityId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"totalQuantity",
+					"billingUnit",
+					"pricePerUnit",
+					"amenityId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateFacilityAmenityOfferingRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateFacilityAmenityOfferingSchema_"
+			},
+			"infer_typeofupdateFacilityAmenityOfferingSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateFacilityAmenityOfferingRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateFacilityAmenityOfferingSchema_"
+			},
+			"PaginatedData_FacilityResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_FacilityResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_FacilityResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeoffacilityQuerySchema_": {
+				"properties": {
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"city": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"name",
+							"status",
+							"createdAt",
+							"updatedAt",
+							"city"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"FacilityQuery": {
+				"$ref": "#/components/schemas/infer_typeoffacilityQuerySchema_"
+			},
+			"infer_typeofsearchByAmenityQuerySchema_": {
+				"properties": {
+					"search": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"name",
+							"createdAt",
+							"updatedAt",
+							"city"
+						]
+					},
+					"matchAll": {
+						"type": "boolean"
+					},
+					"amenityIds": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"matchAll",
+					"amenityIds",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"SearchByAmenityQuery": {
+				"$ref": "#/components/schemas/infer_typeofsearchByAmenityQuerySchema_"
+			},
+			"infer_typeoffacilityPublicDetailResponseSchema_": {
+				"properties": {
+					"amenityOfferings": {
+						"items": {
+							"properties": {
+								"status": {
+									"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
+								},
+								"availableQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"inUseQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"totalQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"billingUnit": {
+									"$ref": "#/components/schemas/BillingUnitEnum"
+								},
+								"pricePerUnit": {
+									"type": "number",
+									"format": "double"
+								},
+								"amenity": {
+									"properties": {
+										"tags": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"images": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"description": {
+											"type": "string"
+										},
+										"status": {
+											"$ref": "#/components/schemas/AmenityStatusEnum"
+										},
+										"type": {
+											"$ref": "#/components/schemas/AmenityTypeEnum"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"type",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"amenityId": {
+									"type": "string"
+								},
+								"facilityId": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"status",
+								"availableQuantity",
+								"inUseQuantity",
+								"totalQuantity",
+								"billingUnit",
+								"pricePerUnit",
+								"amenity",
+								"amenityId",
+								"facilityId",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"unitTypeOfferings": {
+						"items": {
+							"properties": {
+								"availableUnitsCount": {
+									"type": "number",
+									"format": "double"
+								},
+								"status": {
+									"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+								},
+								"minRentalDays": {
+									"type": "number",
+									"format": "double"
+								},
+								"billingUnit": {
+									"$ref": "#/components/schemas/BillingUnitEnum"
+								},
+								"depositMultiplier": {
+									"type": "number",
+									"format": "double"
+								},
+								"pricePerUnit": {
+									"type": "number",
+									"format": "double"
+								},
+								"unitType": {
+									"properties": {
+										"description": {
+											"type": "string"
+										},
+										"status": {
+											"$ref": "#/components/schemas/UnitTypeStatusEnum"
+										},
+										"volume": {
+											"type": "number",
+											"format": "double"
+										},
+										"area": {
+											"type": "number",
+											"format": "double"
+										},
+										"dimensions": {
+											"properties": {
+												"height": {
+													"type": "number",
+													"format": "double"
+												},
+												"width": {
+													"type": "number",
+													"format": "double"
+												},
+												"length": {
+													"type": "number",
+													"format": "double"
+												}
+											},
+											"required": [
+												"height",
+												"width",
+												"length"
+											],
+											"type": "object"
+										},
+										"category": {
+											"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"volume",
+										"area",
+										"dimensions",
+										"category",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"unitTypeId": {
+									"type": "string"
+								},
+								"facilityId": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"availableUnitsCount",
+								"status",
+								"minRentalDays",
+								"billingUnit",
+								"depositMultiplier",
+								"pricePerUnit",
+								"unitType",
+								"unitTypeId",
+								"facilityId",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"facility": {
+						"properties": {
+							"updatedAt": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "string"
+							},
+							"operatingHours": {
+								"properties": {
+									"close": {
+										"type": "string"
+									},
+									"open": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"close",
+									"open"
+								],
+								"type": "object"
+							},
+							"managerId": {
+								"type": "string"
+							},
+							"description": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"phone": {
+								"type": "string"
+							},
+							"status": {
+								"$ref": "#/components/schemas/FacilityStatusEnum"
+							},
+							"city": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"city",
+							"address",
+							"name",
+							"id"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"amenityOfferings",
+					"unitTypeOfferings",
+					"facility"
+				],
+				"type": "object"
+			},
+			"FacilityPublicDetailResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityPublicDetailResponseSchema_"
+			},
+			"ApiResponse_FacilityPublicDetailResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityPublicDetailResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateFacilitySchema_": {
+				"properties": {
+					"operatingHours": {
+						"properties": {
+							"close": {
+								"type": "string"
+							},
+							"open": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"close",
+							"open"
+						],
+						"type": "object"
+					},
+					"description": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"city",
+					"address",
+					"name"
+				],
+				"type": "object"
+			},
+			"CreateFacilityRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateFacilitySchema_"
+			},
+			"infer_typeofupdateFacilitySchema_": {
+				"properties": {
+					"operatingHours": {
+						"properties": {
+							"close": {
+								"type": "string"
+							},
+							"open": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"close",
+							"open"
+						],
+						"type": "object"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityStatusEnum"
+					},
+					"description": {
+						"type": "string"
+					},
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateFacilityRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateFacilitySchema_"
+			},
+			"infer_typeofassignManagerSchema_": {
+				"properties": {
+					"managerId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"managerId"
+				],
+				"type": "object"
+			},
+			"AssignManagerRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignManagerSchema_"
 			},
 			"ApprovalRequestTargetTypeEnum": {
 				"enum": [
@@ -5936,6 +6140,1211 @@
 				]
 			}
 		},
+		"/auth/send-otp": {
+			"post": {
+				"operationId": "SendOtp",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__message-string__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Email already registered or invalid input",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SendOtpRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/register": {
+			"post": {
+				"operationId": "Register",
+				"responses": {
+					"201": {
+						"description": "User registered successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid OTP, email already exists, or validation error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RegisterRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/login": {
+			"post": {
+				"operationId": "Login",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid credentials",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Account banned",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/LoginRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/refresh": {
+			"post": {
+				"operationId": "RefreshToken",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuthTokens_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid or revoked refresh token",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RefreshTokenRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/logout": {
+			"post": {
+				"operationId": "Logout",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RefreshTokenRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/me": {
+			"get": {
+				"operationId": "GetMe",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuthUserResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized or token expired",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": []
+			}
+		},
+		"/auth/forgot-password": {
+			"post": {
+				"operationId": "ForgotPassword",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__message-string__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Google OAuth account cannot reset password",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ForgotPasswordRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/reset-password": {
+			"post": {
+				"operationId": "ResetPassword",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__message-string__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid OTP or Google OAuth account",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResetPasswordRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/change-password": {
+			"patch": {
+				"operationId": "ChangePassword",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__message-string__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Current password is incorrect or Google OAuth account",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Auth"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ChangePasswordRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/audit-logs": {
+			"get": {
+				"operationId": "FindAll",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all audit logs with pagination and filters.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/me": {
+			"get": {
+				"operationId": "FindMine",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get current authenticated user's own activity log.\nDefined before /{id} to ensure proper route matching order in tsoa.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/resource/{resourceType}/{resourceId}": {
+			"get": {
+				"operationId": "FindByResource",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid resource parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get change timeline for a specific resource type and ID.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "resourceType",
+						"required": true,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "path",
+						"name": "resourceId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "to",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "from",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "resourceType",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditResourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "action",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/AuditActionEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "actorId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"action",
+								"resourceType"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/audit-logs/{id}": {
+			"get": {
+				"operationId": "FindById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AuditLogResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid audit log ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Audit log not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get single audit log record by ID.",
+				"tags": [
+					"AuditLogs"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/my-facility": {
+			"get": {
+				"operationId": "GetMyFacility",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Assigned Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tra cứu thông tin chi tiết cơ sở mà Facility Manager hiện tại đang phụ trách.\nDanh tính được xác định từ token đăng nhập.",
+				"tags": [
+					"Facility Manager"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/my-facility/dashboard": {
+			"get": {
+				"operationId": "GetMyFacilityDashboard",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_MyFacilityDashboardResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Assigned Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Dashboard thống kê tổng quan cơ sở: số lượng phòng theo trạng thái, tỷ lệ lấp đầy (occupancyRate),\ntổng tiện ích, số lượng đang sử dụng, và số tiện ích hết hàng.",
+				"tags": [
+					"Facility Manager"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/my-facility/staffs": {
+			"get": {
+				"operationId": "GetMyFacilityStaffs",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_UserResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Assigned Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Lấy danh sách nhân viên (FACILITY_STAFF) thuộc cơ sở do Facility Manager quản lý.\nHỗ trợ phân trang, tìm kiếm theo tên/email/sđt, lọc theo trạng thái, và sắp xếp.",
+				"tags": [
+					"Facility Manager"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/UserStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"name",
+								"email",
+								"createdAt"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
 		"/facility-amenity-offerings": {
 			"get": {
 				"operationId": "GetOfferings",
@@ -6992,952 +8401,6 @@
 				},
 				"tags": [
 					"facilities"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/auth/send-otp": {
-			"post": {
-				"operationId": "SendOtp",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__message-string__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Email already registered or invalid input",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/SendOtpRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/register": {
-			"post": {
-				"operationId": "Register",
-				"responses": {
-					"201": {
-						"description": "User registered successfully",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid OTP, email already exists, or validation error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RegisterRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/login": {
-			"post": {
-				"operationId": "Login",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthLoginResponse_"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Invalid credentials",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Account banned",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/LoginRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/refresh": {
-			"post": {
-				"operationId": "RefreshToken",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthTokens_"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Invalid or revoked refresh token",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": false,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RefreshTokenRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/logout": {
-			"post": {
-				"operationId": "Logout",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_null_"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": false,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RefreshTokenRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/me": {
-			"get": {
-				"operationId": "GetMe",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuthUserResponse_"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized or token expired",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
-				"parameters": []
-			}
-		},
-		"/auth/forgot-password": {
-			"post": {
-				"operationId": "ForgotPassword",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__message-string__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Google OAuth account cannot reset password",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "User not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ForgotPasswordRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/reset-password": {
-			"post": {
-				"operationId": "ResetPassword",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__message-string__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid OTP or Google OAuth account",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "User not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ResetPasswordRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/auth/change-password": {
-			"patch": {
-				"operationId": "ChangePassword",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__message-string__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Current password is incorrect or Google OAuth account",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "User not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Auth"
-				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/ChangePasswordRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/audit-logs": {
-			"get": {
-				"operationId": "FindAll",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid query parameters",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get all audit logs with pagination and filters.",
-				"tags": [
-					"AuditLogs"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "query",
-						"name": "to",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "from",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "status",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditStatusEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceType",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditResourceEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "action",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditActionEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "actorId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "search",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortOrder",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"asc",
-								"desc"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortBy",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"status",
-								"createdAt",
-								"action",
-								"resourceType"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "page",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				]
-			}
-		},
-		"/audit-logs/me": {
-			"get": {
-				"operationId": "FindMine",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid query parameters",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get current authenticated user's own activity log.\nDefined before /{id} to ensure proper route matching order in tsoa.",
-				"tags": [
-					"AuditLogs"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "query",
-						"name": "to",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "from",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "status",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditStatusEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceType",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditResourceEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "action",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditActionEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "actorId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "search",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortOrder",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"asc",
-								"desc"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortBy",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"status",
-								"createdAt",
-								"action",
-								"resourceType"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "page",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				]
-			}
-		},
-		"/audit-logs/resource/{resourceType}/{resourceId}": {
-			"get": {
-				"operationId": "FindByResource",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AuditLogResponse__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid resource parameters",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get change timeline for a specific resource type and ID.",
-				"tags": [
-					"AuditLogs"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "resourceType",
-						"required": true,
-						"schema": {
-							"$ref": "#/components/schemas/AuditResourceEnum"
-						}
-					},
-					{
-						"in": "path",
-						"name": "resourceId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "to",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "from",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "status",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditStatusEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "resourceType",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditResourceEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "action",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/AuditActionEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "actorId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "search",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortOrder",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"asc",
-								"desc"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortBy",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"status",
-								"createdAt",
-								"action",
-								"resourceType"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "page",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				]
-			}
-		},
-		"/audit-logs/{id}": {
-			"get": {
-				"operationId": "FindById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_AuditLogResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid audit log ID",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Audit log not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get single audit log record by ID.",
-				"tags": [
-					"AuditLogs"
 				],
 				"security": [],
 				"parameters": [

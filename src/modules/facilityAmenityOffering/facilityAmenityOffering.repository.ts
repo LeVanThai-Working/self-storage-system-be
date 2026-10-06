@@ -147,6 +147,76 @@ export class FacilityAmenityOfferingRepository {
     return results.map((r) => r._id.toString());
   }
 
+  async getOfferingSummaryByFacilityId(facilityId: string): Promise<{
+    totalOfferings: number;
+    totalQuantity: number;
+    inUseQuantity: number;
+    availableQuantity: number;
+    outOfStockOfferingsCount: number;
+  }> {
+    const results = await this.offering.aggregate<{
+      totalOfferings: number;
+      totalQuantity: number;
+      inUseQuantity: number;
+      availableQuantity: number;
+      outOfStockOfferingsCount: number;
+    }>([
+      {
+        $match: {
+          facilityId: new Types.ObjectId(facilityId),
+          deleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalOfferings: { $sum: 1 },
+          totalQuantity: { $sum: '$totalQuantity' },
+          inUseQuantity: { $sum: '$inUseQuantity' },
+          availableQuantity: {
+            $sum: { $subtract: ['$totalQuantity', '$inUseQuantity'] },
+          },
+          outOfStockOfferingsCount: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    {
+                      $eq: [
+                        '$status',
+                        FacilityAmenityOfferingStatusEnum.OUT_OF_STOCK,
+                      ],
+                    },
+                    {
+                      $lte: [
+                        { $subtract: ['$totalQuantity', '$inUseQuantity'] },
+                        0,
+                      ],
+                    },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    if (results.length === 0) {
+      return {
+        totalOfferings: 0,
+        totalQuantity: 0,
+        inUseQuantity: 0,
+        availableQuantity: 0,
+        outOfStockOfferingsCount: 0,
+      };
+    }
+
+    return results[0];
+  }
+
   async create(
     data: Partial<IFacilityAmenityOffering>,
     session?: ClientSession

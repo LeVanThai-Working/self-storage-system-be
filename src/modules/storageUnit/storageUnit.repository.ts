@@ -180,6 +180,36 @@ export class StorageUnitRepository {
     return this.storageUnit.create(data);
   }
 
+  async countUnitsByStatusGrouped(
+    facilityId: string
+  ): Promise<Record<string, number>> {
+    const counts = await this.storageUnit.aggregate<{
+      _id: string;
+      count: number;
+    }>([
+      {
+        $match: {
+          facilityId: new Types.ObjectId(facilityId),
+          deleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const result: Record<string, number> = {};
+    for (const item of counts) {
+      if (item._id) {
+        result[item._id] = item.count;
+      }
+    }
+    return result;
+  }
+
   async updateById(
     id: string,
     data: Partial<IStorageUnit>,

@@ -55,6 +55,10 @@ export class FacilityRepository {
     return this.facility.findOne({ name, city });
   }
 
+  async findByManagerId(managerId: string) {
+    return this.facility.findOne({ managerId });
+  }
+
   async create(data: Partial<IFacility>) {
     return this.facility.create(data);
   }
