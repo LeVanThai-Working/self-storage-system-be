@@ -6814,7 +6814,7 @@
 						}
 					}
 				},
-				"description": "Get current authenticated user's own activity log.\r\nDefined before /{id} to ensure proper route matching order in tsoa.",
+				"description": "Get current authenticated user's own activity log.\nDefined before /{id} to ensure proper route matching order in tsoa.",
 				"tags": [
 					"AuditLogs"
 				],
@@ -10010,7 +10010,7 @@
 						}
 					}
 				},
-				"description": "Get approval requests submitted by the authenticated user / facility.\r\nNOTE: Placed before",
+				"description": "Get approval requests submitted by the authenticated user / facility.\nNOTE: Placed before",
 				"tags": [
 					"Approval Requests"
 				],
@@ -10273,7 +10273,7 @@
 						}
 					}
 				},
-				"description": "Review an approval request (Approve or Reject).\r\nAutomatically executes database changes if approved.",
+				"description": "Review an approval request (Approve or Reject).\nAutomatically executes database changes if approved.",
 				"tags": [
 					"Approval Requests"
 				],
