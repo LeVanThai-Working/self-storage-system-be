@@ -21,6 +21,12 @@ export enum AuditActionEnum {
   APPROVE = 'approve',
   REJECT = 'reject',
   CANCEL = 'cancel',
+  CHECK_IN = 'check_in',
+  CHECK_OUT = 'check_out',
+  RENEW = 'renew',
+  TERMINATE = 'terminate',
+  ADD_AMENITY = 'add_amenity',
+  REMOVE_AMENITY = 'remove_amenity',
 }
 
 export enum AuditResourceEnum {
@@ -35,6 +41,7 @@ export enum AuditResourceEnum {
   STORAGE_UNIT = 'storage_unit',
   RESERVATION = 'reservation',
   APPROVAL_REQUEST = 'approval_request',
+  CONTRACT = 'contract',
 }
 
 export enum AuditStatusEnum {

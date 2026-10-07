@@ -25,6 +25,8 @@ import { ReservationController } from './modules/reservation/reservation.control
 import { reservationController } from './modules/reservation/reservation.container.ts';
 import { FacilityManagerController } from './modules/facilityManager/facilityManager.controller.ts';
 import { facilityManagerController } from './modules/facilityManager/facilityManager.container.ts';
+import { ContractController } from './modules/contract/contract.controller.ts';
+import { contractController } from './modules/contract/contract.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -66,6 +68,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === FacilityManagerController) {
       return facilityManagerController as unknown as T;
+    }
+    if (controller === ContractController) {
+      return contractController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`
