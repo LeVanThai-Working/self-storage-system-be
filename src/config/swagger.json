@@ -1158,450 +1158,6 @@
 			"ToggleMaintenanceRequest": {
 				"$ref": "#/components/schemas/infer_typeoftoggleMaintenanceSchema_"
 			},
-			"GenderEnum": {
-				"enum": [
-					"male",
-					"female",
-					"other"
-				],
-				"type": "string"
-			},
-			"infer_typeofprofileResponseSchema_": {
-				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
-					"gender": {
-						"$ref": "#/components/schemas/GenderEnum"
-					},
-					"address": {
-						"type": "string"
-					},
-					"dateOfBirth": {
-						"type": "string"
-					},
-					"avatarUrl": {
-						"type": "string"
-					},
-					"userId": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"type": "object"
-			},
-			"ProfileResponse": {
-				"$ref": "#/components/schemas/infer_typeofprofileResponseSchema_"
-			},
-			"ApiResponse_ProfileResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/ProfileResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofupdateProfileSchema_": {
-				"properties": {
-					"gender": {
-						"$ref": "#/components/schemas/GenderEnum"
-					},
-					"address": {
-						"type": "string"
-					},
-					"dateOfBirth": {
-						"type": "string"
-					},
-					"avatarUrl": {
-						"type": "string"
-					}
-				},
-				"type": "object"
-			},
-			"UpdateProfileRequest": {
-				"$ref": "#/components/schemas/infer_typeofupdateProfileSchema_"
-			},
-			"BillingUnitEnum": {
-				"enum": [
-					"day",
-					"month",
-					"one_time"
-				],
-				"type": "string"
-			},
-			"FacilityUnitTypeOfferingStatusEnum": {
-				"enum": [
-					"active",
-					"inactive"
-				],
-				"type": "string"
-			},
-			"infer_typeoffacilityUnitTypeOfferingResponseSchema_": {
-				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
-					"notes": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
-					},
-					"minRentalDays": {
-						"type": "number",
-						"format": "double"
-					},
-					"depositMultiplier": {
-						"type": "number",
-						"format": "double"
-					},
-					"pricePerUnit": {
-						"type": "number",
-						"format": "double"
-					},
-					"billingUnit": {
-						"$ref": "#/components/schemas/BillingUnitEnum"
-					},
-					"unitType": {
-						"properties": {
-							"category": {
-								"$ref": "#/components/schemas/UnitTypeCategoryEnum"
-							},
-							"dimensions": {
-								"properties": {
-									"height": {
-										"type": "number",
-										"format": "double"
-									},
-									"width": {
-										"type": "number",
-										"format": "double"
-									},
-									"length": {
-										"type": "number",
-										"format": "double"
-									}
-								},
-								"required": [
-									"height",
-									"width",
-									"length"
-								],
-								"type": "object"
-							},
-							"status": {
-								"$ref": "#/components/schemas/UnitTypeStatusEnum"
-							},
-							"volume": {
-								"type": "number",
-								"format": "double"
-							},
-							"area": {
-								"type": "number",
-								"format": "double"
-							},
-							"name": {
-								"type": "string"
-							},
-							"id": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"dimensions",
-							"status",
-							"volume",
-							"area",
-							"name",
-							"id"
-						],
-						"type": "object"
-					},
-					"facility": {
-						"properties": {
-							"status": {
-								"$ref": "#/components/schemas/FacilityStatusEnum"
-							},
-							"address": {
-								"type": "string"
-							},
-							"city": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							},
-							"id": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"status",
-							"address",
-							"city",
-							"name",
-							"id"
-						],
-						"type": "object"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"status",
-					"minRentalDays",
-					"depositMultiplier",
-					"pricePerUnit",
-					"billingUnit",
-					"unitType",
-					"facility",
-					"id"
-				],
-				"type": "object"
-			},
-			"FacilityUnitTypeOfferingResponse": {
-				"$ref": "#/components/schemas/infer_typeoffacilityUnitTypeOfferingResponseSchema_"
-			},
-			"PaginatedData_FacilityUnitTypeOfferingResponse_": {
-				"properties": {
-					"items": {
-						"items": {
-							"$ref": "#/components/schemas/FacilityUnitTypeOfferingResponse"
-						},
-						"type": "array"
-					},
-					"pagination": {
-						"$ref": "#/components/schemas/PaginationMeta"
-					}
-				},
-				"required": [
-					"items",
-					"pagination"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"ApiResponse_PaginatedData_FacilityUnitTypeOfferingResponse__": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/PaginatedData_FacilityUnitTypeOfferingResponse_"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofofferingQuerySchema_": {
-				"properties": {
-					"maxPrice": {
-						"type": "number",
-						"format": "double"
-					},
-					"minPrice": {
-						"type": "number",
-						"format": "double"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
-					},
-					"billingUnit": {
-						"$ref": "#/components/schemas/BillingUnitEnum"
-					},
-					"unitTypeId": {
-						"type": "string"
-					},
-					"facilityId": {
-						"type": "string"
-					},
-					"search": {
-						"type": "string"
-					},
-					"sortOrder": {
-						"type": "string",
-						"enum": [
-							"asc",
-							"desc"
-						]
-					},
-					"sortBy": {
-						"type": "string",
-						"enum": [
-							"createdAt",
-							"updatedAt",
-							"pricePerUnit",
-							"minRentalDays"
-						]
-					},
-					"limit": {
-						"type": "number",
-						"format": "double"
-					},
-					"page": {
-						"type": "number",
-						"format": "double"
-					}
-				},
-				"required": [
-					"sortOrder",
-					"sortBy",
-					"limit",
-					"page"
-				],
-				"type": "object"
-			},
-			"OfferingQuery": {
-				"$ref": "#/components/schemas/infer_typeofofferingQuerySchema_"
-			},
-			"ApiResponse_FacilityUnitTypeOfferingResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/FacilityUnitTypeOfferingResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofcreateOfferingSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
-					},
-					"minRentalDays": {
-						"type": "number",
-						"format": "double"
-					},
-					"depositMultiplier": {
-						"type": "number",
-						"format": "double"
-					},
-					"pricePerUnit": {
-						"type": "number",
-						"format": "double"
-					},
-					"billingUnit": {
-						"$ref": "#/components/schemas/BillingUnitEnum"
-					},
-					"unitTypeId": {
-						"type": "string"
-					},
-					"facilityId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"minRentalDays",
-					"depositMultiplier",
-					"pricePerUnit",
-					"billingUnit",
-					"unitTypeId",
-					"facilityId"
-				],
-				"type": "object"
-			},
-			"CreateOfferingRequest": {
-				"$ref": "#/components/schemas/infer_typeofcreateOfferingSchema_"
-			},
-			"infer_typeofupdateOfferingSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
-					},
-					"minRentalDays": {
-						"type": "number",
-						"format": "double"
-					},
-					"depositMultiplier": {
-						"type": "number",
-						"format": "double"
-					},
-					"pricePerUnit": {
-						"type": "number",
-						"format": "double"
-					},
-					"billingUnit": {
-						"$ref": "#/components/schemas/BillingUnitEnum"
-					}
-				},
-				"type": "object"
-			},
-			"UpdateOfferingRequest": {
-				"$ref": "#/components/schemas/infer_typeofupdateOfferingSchema_"
-			},
 			"ApiResponse__message-string__": {
 				"properties": {
 					"success": {
@@ -1980,6 +1536,95 @@
 			"ChangePasswordRequest": {
 				"$ref": "#/components/schemas/infer_typeofchangePasswordSchema_"
 			},
+			"GenderEnum": {
+				"enum": [
+					"male",
+					"female",
+					"other"
+				],
+				"type": "string"
+			},
+			"infer_typeofprofileResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"gender": {
+						"$ref": "#/components/schemas/GenderEnum"
+					},
+					"address": {
+						"type": "string"
+					},
+					"dateOfBirth": {
+						"type": "string"
+					},
+					"avatarUrl": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ProfileResponse": {
+				"$ref": "#/components/schemas/infer_typeofprofileResponseSchema_"
+			},
+			"ApiResponse_ProfileResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ProfileResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofupdateProfileSchema_": {
+				"properties": {
+					"gender": {
+						"$ref": "#/components/schemas/GenderEnum"
+					},
+					"address": {
+						"type": "string"
+					},
+					"dateOfBirth": {
+						"type": "string"
+					},
+					"avatarUrl": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateProfileRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateProfileSchema_"
+			},
 			"AuditActionEnum": {
 				"enum": [
 					"register",
@@ -2243,6 +1888,1100 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"BillingUnitEnum": {
+				"enum": [
+					"day",
+					"month",
+					"one_time"
+				],
+				"type": "string"
+			},
+			"ReservationStatusEnum": {
+				"enum": [
+					"pending",
+					"received",
+					"pending_payment",
+					"payment_failed",
+					"payment_successful",
+					"confirmed",
+					"completed",
+					"cancelled",
+					"expired",
+					"rejected"
+				],
+				"type": "string"
+			},
+			"infer_typeofreservationResponseSchema_": {
+				"properties": {
+					"storageUnit": {
+						"properties": {
+							"zone": {
+								"type": "string"
+							},
+							"status": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"floor",
+							"unitNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"offering": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"minRentalDays": {
+								"type": "number",
+								"format": "double"
+							},
+							"depositMultiplier": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitTypeId": {
+								"type": "string"
+							},
+							"pricePerUnit": {
+								"type": "number",
+								"format": "double"
+							},
+							"billingUnit": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"pricePerUnit",
+							"billingUnit",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"phone": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"customer": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"lastPaymentError": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"cancelledBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"cancellationReason": {
+						"type": "string"
+					},
+					"rejectionReason": {
+						"type": "string"
+					},
+					"confirmedAt": {
+						"type": "string"
+					},
+					"confirmedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"assignedAt": {
+						"type": "string"
+					},
+					"assignedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"receivedAt": {
+						"type": "string"
+					},
+					"receivedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"expiresAt": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"refundAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ReservationStatusEnum"
+					},
+					"totalAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"amenities": {
+						"items": {
+							"properties": {
+								"totalPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"billingUnit": {
+									"$ref": "#/components/schemas/BillingUnitEnum"
+								},
+								"pricePerUnit": {
+									"type": "number",
+									"format": "double"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"name": {
+									"type": "string"
+								},
+								"amenityId": {
+									"type": "string"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"totalPrice",
+								"billingUnit",
+								"pricePerUnit",
+								"quantity",
+								"name",
+								"amenityId",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"depositAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"basePrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"rentalDuration": {
+						"type": "number",
+						"format": "double"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"reservationCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"refundAmount",
+					"status",
+					"totalAmount",
+					"amenities",
+					"depositAmount",
+					"basePrice",
+					"billingUnit",
+					"rentalDuration",
+					"startDate",
+					"facilityUnitTypeOfferingId",
+					"facilityId",
+					"customerId",
+					"reservationCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"ReservationResponse": {
+				"$ref": "#/components/schemas/infer_typeofreservationResponseSchema_"
+			},
+			"ApiResponse_ReservationResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ReservationResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateReservationSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"amenities": {
+						"items": {
+							"properties": {
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"rentalDuration": {
+						"type": "number",
+						"format": "double"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"amenities",
+					"rentalDuration",
+					"startDate",
+					"facilityUnitTypeOfferingId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateReservationSchema_"
+			},
+			"PaginatedData_ReservationResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/ReservationResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_ReservationResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_ReservationResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofreservationQuerySchema_": {
+				"properties": {
+					"startDateTo": {
+						"type": "string"
+					},
+					"startDateFrom": {
+						"type": "string"
+					},
+					"reservationCode": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ReservationStatusEnum"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"updatedAt",
+							"startDate",
+							"totalAmount"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"ReservationQuery": {
+				"$ref": "#/components/schemas/infer_typeofreservationQuerySchema_"
+			},
+			"ApiResponse__processedCount-number__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"properties": {
+							"processedCount": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"processedCount"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofupdateReservationSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"amenities": {
+						"items": {
+							"properties": {
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"rentalDuration": {
+						"type": "number",
+						"format": "double"
+					},
+					"startDate": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateReservationSchema_"
+			},
+			"infer_typeofassignStorageUnitSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"holdingHours": {
+						"type": "number",
+						"format": "double"
+					},
+					"storageUnitId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"holdingHours",
+					"storageUnitId"
+				],
+				"type": "object"
+			},
+			"AssignStorageUnitRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignStorageUnitSchema_"
+			},
+			"infer_typeofrejectReservationSchema_": {
+				"properties": {
+					"rejectionReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"rejectionReason"
+				],
+				"type": "object"
+			},
+			"RejectReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofrejectReservationSchema_"
+			},
+			"infer_typeofpayDepositSchema_": {
+				"properties": {
+					"transactionRef": {
+						"type": "string"
+					},
+					"paymentMethod": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"paymentMethod"
+				],
+				"type": "object"
+			},
+			"PayDepositRequest": {
+				"$ref": "#/components/schemas/infer_typeofpayDepositSchema_"
+			},
+			"infer_typeofpaymentFailureSchema_": {
+				"properties": {
+					"errorReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"errorReason"
+				],
+				"type": "object"
+			},
+			"PaymentFailureRequest": {
+				"$ref": "#/components/schemas/infer_typeofpaymentFailureSchema_"
+			},
+			"infer_typeofconfirmReservationSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ConfirmReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofconfirmReservationSchema_"
+			},
+			"infer_typeofcancelReservationSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelReservationSchema_"
+			},
+			"FacilityUnitTypeOfferingStatusEnum": {
+				"enum": [
+					"active",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"infer_typeoffacilityUnitTypeOfferingResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+					},
+					"minRentalDays": {
+						"type": "number",
+						"format": "double"
+					},
+					"depositMultiplier": {
+						"type": "number",
+						"format": "double"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"unitType": {
+						"properties": {
+							"category": {
+								"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+							},
+							"dimensions": {
+								"properties": {
+									"height": {
+										"type": "number",
+										"format": "double"
+									},
+									"width": {
+										"type": "number",
+										"format": "double"
+									},
+									"length": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"height",
+									"width",
+									"length"
+								],
+								"type": "object"
+							},
+							"status": {
+								"$ref": "#/components/schemas/UnitTypeStatusEnum"
+							},
+							"volume": {
+								"type": "number",
+								"format": "double"
+							},
+							"area": {
+								"type": "number",
+								"format": "double"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"dimensions",
+							"status",
+							"volume",
+							"area",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"$ref": "#/components/schemas/FacilityStatusEnum"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"minRentalDays",
+					"depositMultiplier",
+					"pricePerUnit",
+					"billingUnit",
+					"unitType",
+					"facility",
+					"id"
+				],
+				"type": "object"
+			},
+			"FacilityUnitTypeOfferingResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityUnitTypeOfferingResponseSchema_"
+			},
+			"PaginatedData_FacilityUnitTypeOfferingResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityUnitTypeOfferingResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_FacilityUnitTypeOfferingResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_FacilityUnitTypeOfferingResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofofferingQuerySchema_": {
+				"properties": {
+					"maxPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"minPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"updatedAt",
+							"pricePerUnit",
+							"minRentalDays"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"OfferingQuery": {
+				"$ref": "#/components/schemas/infer_typeofofferingQuerySchema_"
+			},
+			"ApiResponse_FacilityUnitTypeOfferingResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateOfferingSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+					},
+					"minRentalDays": {
+						"type": "number",
+						"format": "double"
+					},
+					"depositMultiplier": {
+						"type": "number",
+						"format": "double"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"unitTypeId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"minRentalDays",
+					"depositMultiplier",
+					"pricePerUnit",
+					"billingUnit",
+					"unitTypeId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateOfferingRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateOfferingSchema_"
+			},
+			"infer_typeofupdateOfferingSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+					},
+					"minRentalDays": {
+						"type": "number",
+						"format": "double"
+					},
+					"depositMultiplier": {
+						"type": "number",
+						"format": "double"
+					},
+					"pricePerUnit": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateOfferingRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateOfferingSchema_"
 			},
 			"infer_typeoffacilityResponseSchema_": {
 				"properties": {
@@ -5523,623 +6262,6 @@
 				]
 			}
 		},
-		"/profile/me": {
-			"get": {
-				"operationId": "GetMyProfile",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ProfileResponse_"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get the authenticated user's own profile.\nCreates an empty profile if one does not exist yet.",
-				"tags": [
-					"Profile"
-				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
-				"parameters": []
-			},
-			"patch": {
-				"operationId": "UpdateMyProfile",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ProfileResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Validation error",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Update the authenticated user's own profile.\nPerforms an upsert — creates the profile if it does not exist.",
-				"tags": [
-					"Profile"
-				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/UpdateProfileRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/profile/{userId}": {
-			"get": {
-				"operationId": "GetProfileByUserId",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ProfileResponse_"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Profile not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get any user's profile by userId.\nIntended for admin / staff use.",
-				"tags": [
-					"Profile"
-				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "userId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/facility-unit-type-offerings": {
-			"get": {
-				"operationId": "GetOfferings",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_PaginatedData_FacilityUnitTypeOfferingResponse__"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid query parameters",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get list of facility unit type offerings (with pagination, filter, sorting)",
-				"tags": [
-					"Facility Unit Type Offerings"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "query",
-						"name": "maxPrice",
-						"required": false,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "minPrice",
-						"required": false,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "status",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "billingUnit",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/BillingUnitEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "unitTypeId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "facilityId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "search",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortOrder",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"asc",
-								"desc"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortBy",
-						"required": true,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"createdAt",
-								"updatedAt",
-								"pricePerUnit",
-								"minRentalDays"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "page",
-						"required": true,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					}
-				]
-			},
-			"post": {
-				"operationId": "CreateOffering",
-				"responses": {
-					"201": {
-						"description": "Offering created successfully",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Validation error, inactive Facility/UnitType, or offering already exists",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Facility or Unit Type not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Create a new facility unit type offering",
-				"tags": [
-					"Facility Unit Type Offerings"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateOfferingRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/facility-unit-type-offerings/{id}": {
-			"get": {
-				"operationId": "GetOfferingById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid ID format",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Offering not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Get facility unit type offering details by ID",
-				"tags": [
-					"Facility Unit Type Offerings"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			},
-			"patch": {
-				"operationId": "UpdateOffering",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Validation error or invalid ID",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Offering not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Update facility unit type offering",
-				"tags": [
-					"Facility Unit Type Offerings"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/UpdateOfferingRequest"
-							}
-						}
-					}
-				}
-			},
-			"delete": {
-				"operationId": "DeleteOffering",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_null_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid ID format",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Offering not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Soft-delete facility unit type offering",
-				"tags": [
-					"Facility Unit Type Offerings"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/facility-unit-type-offerings/facility/{facilityId}/unit-type/{unitTypeId}": {
-			"get": {
-				"operationId": "GetOfferingByFacilityAndUnitType",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid ID format",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Offering not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Quick lookup offering by facilityId and unitTypeId\n(used by StorageUnit, Reservation, Contract)",
-				"tags": [
-					"Facility Unit Type Offerings"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "facilityId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "path",
-						"name": "unitTypeId",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/facility-unit-type-offerings/{id}/restore": {
-			"post": {
-				"operationId": "RestoreOffering",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Offering is not deleted or invalid ID",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Offering not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Facility Unit Type Offerings"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
 		"/auth/send-otp": {
 			"post": {
 				"operationId": "SendOtp",
@@ -6550,6 +6672,163 @@
 						}
 					}
 				}
+			}
+		},
+		"/profile/me": {
+			"get": {
+				"operationId": "GetMyProfile",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ProfileResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get the authenticated user's own profile.\nCreates an empty profile if one does not exist yet.",
+				"tags": [
+					"Profile"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": []
+			},
+			"patch": {
+				"operationId": "UpdateMyProfile",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ProfileResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update the authenticated user's own profile.\nPerforms an upsert — creates the profile if it does not exist.",
+				"tags": [
+					"Profile"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateProfileRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/profile/{userId}": {
+			"get": {
+				"operationId": "GetProfileByUserId",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ProfileResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Profile not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get any user's profile by userId.\nIntended for admin / staff use.",
+				"tags": [
+					"Profile"
+				],
+				"security": [
+					{
+						"bearerAuth": []
+					},
+					{
+						"cookieAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/audit-logs": {
@@ -7086,6 +7365,1580 @@
 				]
 			}
 		},
+		"/reservations": {
+			"post": {
+				"operationId": "CreateReservation",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request data or insufficient inventory",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility or Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new reservation in PENDING status (Customer).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateReservationRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetReservations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_ReservationResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get paginated list of reservations.\nCustomers only see their own reservations.\nStaff/Managers can filter across facilities.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "startDateTo",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDateFrom",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "reservationCode",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ReservationStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageUnitId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityUnitTypeOfferingId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"updatedAt",
+								"startDate",
+								"totalAmount"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/reservations/process-expired": {
+			"post": {
+				"operationId": "ProcessExpiredReservations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Process and expire overdue holding reservations (Cron/Admin).\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/reservations/{id}": {
+			"get": {
+				"operationId": "GetReservationById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get detailed reservation by ID.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid state or reservation already received",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update reservation details (Customer, only allowed while in PENDING status).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/receive": {
+			"post": {
+				"operationId": "ReceiveReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid reservation status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager marks reservation as received (PENDING -> RECEIVED).\nLocks the reservation from customer updates.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/reservations/{id}/assign-unit": {
+			"post": {
+				"operationId": "AssignStorageUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Unit not available, invalid status, or concurrency conflict",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation or Storage unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager assigns a physical storage unit and locks inventory (RECEIVED -> PENDING_PAYMENT).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignStorageUnitRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/reject": {
+			"post": {
+				"operationId": "RejectReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid reservation status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager rejects reservation (REJECTED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RejectReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/pay-deposit": {
+			"post": {
+				"operationId": "PayDeposit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Holding expired or invalid reservation status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer pays reservation deposit (PENDING_PAYMENT / PAYMENT_FAILED -> PAYMENT_SUCCESSFUL).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/PayDepositRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/payment-failed": {
+			"post": {
+				"operationId": "HandlePaymentFailure",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Handle payment failure callback (PENDING_PAYMENT -> PAYMENT_FAILED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/PaymentFailureRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/retry-payment": {
+			"post": {
+				"operationId": "RetryPayment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Holding expired or invalid reservation status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer retries deposit payment after failure (PAYMENT_FAILED -> PENDING_PAYMENT).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/reservations/{id}/confirm": {
+			"post": {
+				"operationId": "ConfirmReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Deposit not paid or invalid status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Confirm reservation after successful deposit (Staff/Manager: PAYMENT_SUCCESSFUL -> CONFIRMED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ConfirmReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/cancel": {
+			"post": {
+				"operationId": "CancelReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Reservation cannot be cancelled",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel reservation (CANCELLED).\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/complete": {
+			"post": {
+				"operationId": "CompleteReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Mark reservation as completed (Staff/Manager: CONFIRMED -> COMPLETED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-unit-type-offerings": {
+			"get": {
+				"operationId": "GetOfferings",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_FacilityUnitTypeOfferingResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get list of facility unit type offerings (with pagination, filter, sorting)",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "maxPrice",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "minPrice",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "billingUnit",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/BillingUnitEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "unitTypeId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"updatedAt",
+								"pricePerUnit",
+								"minRentalDays"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateOffering",
+				"responses": {
+					"201": {
+						"description": "Offering created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error, inactive Facility/UnitType, or offering already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility or Unit Type not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new facility unit type offering",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateOfferingRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/facility-unit-type-offerings/{id}": {
+			"get": {
+				"operationId": "GetOfferingById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get facility unit type offering details by ID",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update facility unit type offering",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateOfferingRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Soft-delete facility unit type offering",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-unit-type-offerings/facility/{facilityId}/unit-type/{unitTypeId}": {
+			"get": {
+				"operationId": "GetOfferingByFacilityAndUnitType",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid ID format",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Quick lookup offering by facilityId and unitTypeId\n(used by StorageUnit, Reservation, Contract)",
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "unitTypeId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-unit-type-offerings/{id}/restore": {
+			"post": {
+				"operationId": "RestoreOffering",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityUnitTypeOfferingResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Offering is not deleted or invalid ID",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Offering not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/my-facility": {
 			"get": {
 				"operationId": "GetMyFacility",
@@ -7141,7 +8994,7 @@
 						}
 					}
 				},
-				"description": "Tra cứu thông tin chi tiết cơ sở mà Facility Manager hiện tại đang phụ trách.\nDanh tính được xác định từ token đăng nhập.",
+				"description": "Tra cứu thông tin chi tiết cơ sở mà Facility Manager hiện tại đang phụ trách.\r\nDanh tính được xác định từ token đăng nhập.",
 				"tags": [
 					"Facility Manager"
 				],
@@ -7204,7 +9057,7 @@
 						}
 					}
 				},
-				"description": "Dashboard thống kê tổng quan cơ sở: số lượng phòng theo trạng thái, tỷ lệ lấp đầy (occupancyRate),\ntổng tiện ích, số lượng đang sử dụng, và số tiện ích hết hàng.",
+				"description": "Dashboard thống kê tổng quan cơ sở: số lượng phòng theo trạng thái, tỷ lệ lấp đầy (occupancyRate),\r\ntổng tiện ích, số lượng đang sử dụng, và số tiện ích hết hàng.",
 				"tags": [
 					"Facility Manager"
 				],
@@ -7277,7 +9130,7 @@
 						}
 					}
 				},
-				"description": "Lấy danh sách nhân viên (FACILITY_STAFF) thuộc cơ sở do Facility Manager quản lý.\nHỗ trợ phân trang, tìm kiếm theo tên/email/sđt, lọc theo trạng thái, và sắp xếp.",
+				"description": "Lấy danh sách nhân viên (FACILITY_STAFF) thuộc cơ sở do Facility Manager quản lý.\r\nHỗ trợ phân trang, tìm kiếm theo tên/email/sđt, lọc theo trạng thái, và sắp xếp.",
 				"tags": [
 					"Facility Manager"
 				],
