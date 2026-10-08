@@ -47,6 +47,8 @@ export interface IContract extends SoftDeleteDocument {
   billingUnit: BillingUnitEnum;
   rentalPrice: number;
   depositAmount: number;
+  depositPaidAt?: Date | null;
+  depositPaymentId?: Types.ObjectId | null;
   totalPeriodicPrice: number;
 
   amenities: IContractAmenity[];
@@ -221,6 +223,15 @@ const contractSchema = new Schema<IContract>(
       type: Number,
       required: true,
       min: 0,
+    },
+    depositPaidAt: {
+      type: Date,
+      default: null,
+    },
+    depositPaymentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Payment',
+      default: null,
     },
     totalPeriodicPrice: {
       type: Number,

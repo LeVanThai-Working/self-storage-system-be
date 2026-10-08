@@ -1649,7 +1649,9 @@
 					"renew",
 					"terminate",
 					"add_amenity",
-					"remove_amenity"
+					"remove_amenity",
+					"confirm_payment",
+					"receive_payment"
 				],
 				"type": "string"
 			},
@@ -1666,7 +1668,8 @@
 					"storage_unit",
 					"reservation",
 					"approval_request",
-					"contract"
+					"contract",
+					"payment"
 				],
 				"type": "string"
 			},
@@ -2043,6 +2046,16 @@
 						"type": "string"
 					},
 					"lastPaymentError": {
+						"type": "string"
+					},
+					"paymentId": {
+						"type": "string"
+					},
+					"paidAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"paidAt": {
 						"type": "string"
 					},
 					"cancelledAt": {
@@ -2587,37 +2600,6 @@
 			"RejectReservationRequest": {
 				"$ref": "#/components/schemas/infer_typeofrejectReservationSchema_"
 			},
-			"infer_typeofpayDepositSchema_": {
-				"properties": {
-					"transactionRef": {
-						"type": "string"
-					},
-					"paymentMethod": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"paymentMethod"
-				],
-				"type": "object"
-			},
-			"PayDepositRequest": {
-				"$ref": "#/components/schemas/infer_typeofpayDepositSchema_"
-			},
-			"infer_typeofpaymentFailureSchema_": {
-				"properties": {
-					"errorReason": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"errorReason"
-				],
-				"type": "object"
-			},
-			"PaymentFailureRequest": {
-				"$ref": "#/components/schemas/infer_typeofpaymentFailureSchema_"
-			},
 			"infer_typeofconfirmReservationSchema_": {
 				"properties": {
 					"notes": {
@@ -2642,6 +2624,524 @@
 			},
 			"CancelReservationRequest": {
 				"$ref": "#/components/schemas/infer_typeofcancelReservationSchema_"
+			},
+			"SepayWebhookPayload": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"gateway": {
+						"type": "string",
+						"nullable": true
+					},
+					"transactionDate": {
+						"type": "string",
+						"nullable": true
+					},
+					"accountNumber": {
+						"type": "string",
+						"nullable": true
+					},
+					"subAccount": {
+						"type": "string",
+						"nullable": true
+					},
+					"code": {
+						"type": "string",
+						"nullable": true
+					},
+					"content": {
+						"type": "string",
+						"nullable": true
+					},
+					"transferType": {
+						"type": "string",
+						"nullable": true
+					},
+					"transferAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"accumulated": {
+						"type": "number",
+						"format": "double",
+						"nullable": true
+					},
+					"referenceCode": {
+						"type": "string",
+						"nullable": true
+					},
+					"description": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"id",
+					"transferAmount"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PaymentPurposeEnum": {
+				"enum": [
+					"reservation_deposit",
+					"contract_deposit"
+				],
+				"type": "string"
+			},
+			"PaymentMethodEnum": {
+				"enum": [
+					"sepay_qr",
+					"cash",
+					"bank_transfer"
+				],
+				"type": "string"
+			},
+			"PaymentStatusEnum": {
+				"enum": [
+					"pending",
+					"partially_paid",
+					"paid",
+					"expired",
+					"cancelled"
+				],
+				"type": "string"
+			},
+			"infer_typeofpaymentResponseSchema_": {
+				"properties": {
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"phone": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"customer": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"note": {
+						"type": "string"
+					},
+					"cancellationReason": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"cancelledBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"confirmedAt": {
+						"type": "string"
+					},
+					"confirmedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"sepayTransactionId": {
+						"type": "number",
+						"format": "double"
+					},
+					"paidAt": {
+						"type": "string"
+					},
+					"expiresAt": {
+						"type": "string"
+					},
+					"bankInfo": {
+						"properties": {
+							"accountName": {
+								"type": "string"
+							},
+							"accountNumber": {
+								"type": "string"
+							},
+							"bankCode": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"accountName",
+							"accountNumber",
+							"bankCode"
+						],
+						"type": "object"
+					},
+					"qrUrl": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/PaymentStatusEnum"
+					},
+					"method": {
+						"$ref": "#/components/schemas/PaymentMethodEnum"
+					},
+					"overpaidAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"paidAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"amount": {
+						"type": "number",
+						"format": "double"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"purpose": {
+						"$ref": "#/components/schemas/PaymentPurposeEnum"
+					},
+					"paymentCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"status",
+					"method",
+					"overpaidAmount",
+					"paidAmount",
+					"amount",
+					"facilityId",
+					"customerId",
+					"purpose",
+					"paymentCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"PaymentResponse": {
+				"$ref": "#/components/schemas/infer_typeofpaymentResponseSchema_"
+			},
+			"ApiResponse_PaymentResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaymentResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreatePaymentSchema_": {
+				"properties": {
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"purpose": {
+						"$ref": "#/components/schemas/PaymentPurposeEnum"
+					}
+				},
+				"required": [
+					"purpose"
+				],
+				"type": "object"
+			},
+			"CreatePaymentRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreatePaymentSchema_"
+			},
+			"PaginatedData_PaymentResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/PaymentResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_PaymentResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_PaymentResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofpaymentQuerySchema_": {
+				"properties": {
+					"createdAtTo": {
+						"type": "string"
+					},
+					"createdAtFrom": {
+						"type": "string"
+					},
+					"paymentCode": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/PaymentStatusEnum"
+					},
+					"purpose": {
+						"$ref": "#/components/schemas/PaymentPurposeEnum"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"PaymentQuery": {
+				"$ref": "#/components/schemas/infer_typeofpaymentQuerySchema_"
+			},
+			"infer_typeofcancelPaymentSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelPaymentRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelPaymentSchema_"
+			},
+			"PaymentMethodEnum.CASH": {
+				"enum": [
+					"cash"
+				],
+				"type": "string"
+			},
+			"PaymentMethodEnum.BANK_TRANSFER": {
+				"enum": [
+					"bank_transfer"
+				],
+				"type": "string"
+			},
+			"infer_typeofconfirmManualPaymentSchema_": {
+				"properties": {
+					"referenceCode": {
+						"type": "string"
+					},
+					"note": {
+						"type": "string"
+					},
+					"method": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/PaymentMethodEnum.CASH"
+							},
+							{
+								"$ref": "#/components/schemas/PaymentMethodEnum.BANK_TRANSFER"
+							}
+						]
+					}
+				},
+				"required": [
+					"note",
+					"method"
+				],
+				"type": "object"
+			},
+			"ConfirmManualPaymentRequest": {
+				"$ref": "#/components/schemas/infer_typeofconfirmManualPaymentSchema_"
 			},
 			"FacilityUnitTypeOfferingStatusEnum": {
 				"enum": [
@@ -4494,6 +4994,12 @@
 							"id"
 						],
 						"type": "object"
+					},
+					"depositPaymentId": {
+						"type": "string"
+					},
+					"depositPaidAt": {
+						"type": "string"
 					},
 					"actualCheckOutDate": {
 						"type": "string"
@@ -8804,170 +9310,6 @@
 				}
 			}
 		},
-		"/reservations/{id}/pay-deposit": {
-			"post": {
-				"operationId": "PayDeposit",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Holding expired or invalid reservation status",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Customer pays reservation deposit (PENDING_PAYMENT / PAYMENT_FAILED -> PAYMENT_SUCCESSFUL).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/PayDepositRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/reservations/{id}/payment-failed": {
-			"post": {
-				"operationId": "HandlePaymentFailure",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid status transition",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Handle payment failure callback (PENDING_PAYMENT -> PAYMENT_FAILED).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/PaymentFailureRequest"
-							}
-						}
-					}
-				}
-			}
-		},
 		"/reservations/{id}/retry-payment": {
 			"post": {
 				"operationId": "RetryPayment",
@@ -9274,6 +9616,542 @@
 						}
 					}
 				]
+			}
+		},
+		"/payments/sepay/webhook": {
+			"post": {
+				"operationId": "HandleSepayWebhook",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										},
+										"success": {
+											"type": "boolean"
+										}
+									},
+									"required": [
+										"success"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid SePay Webhook Authentication",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SepayWebhookPayload"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/payments": {
+			"post": {
+				"operationId": "CreatePayment",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Order is not awaiting payment or already expired",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation or Contract not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create or retrieve an active Payment request with dynamic VietQR code.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreatePaymentRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetPayments",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_PaymentResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get paginated list of payments.\nCustomers only see their own payments. Staff can filter across facilities.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "createdAtTo",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "createdAtFrom",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "paymentCode",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/PaymentStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "purpose",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/PaymentPurposeEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "reservationId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/payments/process-expired": {
+			"post": {
+				"operationId": "ProcessExpiredPayments",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Process expired pending payments (Cron / Batch job).\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/payments/{id}": {
+			"get": {
+				"operationId": "GetPaymentById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Payment not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get payment details by ID (polling for payment status).",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/payments/{id}/cancel": {
+			"post": {
+				"operationId": "CancelPayment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Payment cannot be cancelled in current status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Payment not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel an unsettled payment.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelPaymentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/payments/{id}/confirm-manual": {
+			"post": {
+				"operationId": "ConfirmManualPayment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Payment cannot be manually confirmed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Payment not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Staff/Manager confirms manual payment (Cash / Counter transfer).",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ConfirmManualPaymentRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/facility-unit-type-offerings": {
@@ -9791,7 +10669,7 @@
 						}
 					}
 				},
-				"description": "Tra cứu thông tin chi tiết cơ sở mà Facility Manager hiện tại đang phụ trách.\r\nDanh tính được xác định từ token đăng nhập.",
+				"description": "Tra cứu thông tin chi tiết cơ sở mà Facility Manager hiện tại đang phụ trách.\nDanh tính được xác định từ token đăng nhập.",
 				"tags": [
 					"Facility Manager"
 				],
@@ -9854,7 +10732,7 @@
 						}
 					}
 				},
-				"description": "Dashboard thống kê tổng quan cơ sở: số lượng phòng theo trạng thái, tỷ lệ lấp đầy (occupancyRate),\r\ntổng tiện ích, số lượng đang sử dụng, và số tiện ích hết hàng.",
+				"description": "Dashboard thống kê tổng quan cơ sở: số lượng phòng theo trạng thái, tỷ lệ lấp đầy (occupancyRate),\ntổng tiện ích, số lượng đang sử dụng, và số tiện ích hết hàng.",
 				"tags": [
 					"Facility Manager"
 				],
@@ -9927,7 +10805,7 @@
 						}
 					}
 				},
-				"description": "Lấy danh sách nhân viên (FACILITY_STAFF) thuộc cơ sở do Facility Manager quản lý.\r\nHỗ trợ phân trang, tìm kiếm theo tên/email/sđt, lọc theo trạng thái, và sắp xếp.",
+				"description": "Lấy danh sách nhân viên (FACILITY_STAFF) thuộc cơ sở do Facility Manager quản lý.\nHỗ trợ phân trang, tìm kiếm theo tên/email/sđt, lọc theo trạng thái, và sắp xếp.",
 				"tags": [
 					"Facility Manager"
 				],

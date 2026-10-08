@@ -26,8 +26,6 @@ import {
   cancelReservationSchema,
   confirmReservationSchema,
   createReservationSchema,
-  payDepositSchema,
-  paymentFailureSchema,
   rejectReservationSchema,
   reservationIdParamSchema,
   reservationQuerySchema,
@@ -36,8 +34,6 @@ import {
   type CancelReservationRequest,
   type ConfirmReservationRequest,
   type CreateReservationRequest,
-  type PayDepositRequest,
-  type PaymentFailureRequest,
   type RejectReservationRequest,
   type ReservationQuery,
   type UpdateReservationRequest,
@@ -382,85 +378,6 @@ export class ReservationController extends Controller {
   ): Promise<ApiResponse<ReservationResponse>> {
     const caller = extractCaller(req);
     const result = await this.reservationService.rejectReservation(
-      id,
-      caller.userId,
-      body
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Customer pays reservation deposit (PENDING_PAYMENT / PAYMENT_FAILED -> PAYMENT_SUCCESSFUL).
-   */
-  @Post('{id}/pay-deposit')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
-  @Middlewares(
-    validateRequest({
-      params: reservationIdParamSchema,
-      body: payDepositSchema,
-    })
-  )
-  @Response<ApiErrorResponse>(
-    400,
-    'Holding expired or invalid reservation status'
-  )
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async payDeposit(
-    @Request() req: ExpressRequest,
-    @Path() id: string,
-    @Body() body: PayDepositRequest
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const caller = extractCaller(req);
-    const result = await this.reservationService.payDeposit(
-      id,
-      caller.userId,
-      body
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Handle payment failure callback (PENDING_PAYMENT -> PAYMENT_FAILED).
-   */
-  @Post('{id}/payment-failed')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
-  @Middlewares(
-    validateRequest({
-      params: reservationIdParamSchema,
-      body: paymentFailureSchema,
-    })
-  )
-  @Response<ApiErrorResponse>(400, 'Invalid status transition')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async handlePaymentFailure(
-    @Request() req: ExpressRequest,
-    @Path() id: string,
-    @Body() body: PaymentFailureRequest
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const caller = extractCaller(req);
-    const result = await this.reservationService.handlePaymentFailure(
       id,
       caller.userId,
       body

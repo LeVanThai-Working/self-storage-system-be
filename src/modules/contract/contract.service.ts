@@ -370,6 +370,14 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
+    // Require walk-in contracts to have paid deposit before check-in
+    if (
+      contract.source === ContractSourceEnum.WALK_IN &&
+      !contract.depositPaidAt
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_506);
+    }
+
     const storageUnitId =
       contract.storageUnitId && typeof contract.storageUnitId === 'object'
         ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
@@ -417,6 +425,55 @@ export class ContractService {
       resourceId: id,
       before: this.formatContract(contract),
       after: formatted,
+    });
+
+    return validateResponse(contractResponseSchema, formatted);
+  }
+
+  // Mark contract deposit as paid (from Payment service or SePay Webhook)
+  @Transactional()
+  async markDepositPaid(
+    id: string,
+    paymentInfo: {
+      paymentId: string;
+      paidAmount: number;
+      paidAt: Date;
+      referenceCode?: string | null;
+    },
+    session?: ClientSession
+  ): Promise<ContractResponse> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    if (contract.status !== ContractStatusEnum.DRAFT) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    const updated = await this.contractRepository.update(
+      id,
+      {
+        depositPaidAt: paymentInfo.paidAt,
+        depositPaymentId: new Types.ObjectId(paymentInfo.paymentId),
+      },
+      session
+    );
+
+    const populated = await this.contractRepository.findById(id, session);
+    const formatted = this.formatContract(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RECEIVE_PAYMENT,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: id,
+      before: this.formatContract(contract),
+      after: formatted,
+      metadata: {
+        paymentId: paymentInfo.paymentId,
+        paidAmount: paymentInfo.paidAmount,
+        referenceCode: paymentInfo.referenceCode ?? null,
+      },
     });
 
     return validateResponse(contractResponseSchema, formatted);
@@ -1209,6 +1266,14 @@ export class ContractService {
       billingUnit: raw.billingUnit as BillingUnitEnum,
       rentalPrice: Number(raw.rentalPrice),
       depositAmount: Number(raw.depositAmount),
+      depositPaidAt: raw.depositPaidAt
+        ? raw.depositPaidAt instanceof Date
+          ? raw.depositPaidAt.toISOString()
+          : new Date(String(raw.depositPaidAt)).toISOString()
+        : null,
+      depositPaymentId: raw.depositPaymentId
+        ? String(raw.depositPaymentId)
+        : null,
       totalPeriodicPrice: Number(raw.totalPeriodicPrice),
       amenities,
       renewals,

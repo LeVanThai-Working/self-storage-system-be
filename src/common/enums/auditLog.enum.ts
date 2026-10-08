@@ -27,6 +27,8 @@ export enum AuditActionEnum {
   TERMINATE = 'terminate',
   ADD_AMENITY = 'add_amenity',
   REMOVE_AMENITY = 'remove_amenity',
+  CONFIRM_PAYMENT = 'confirm_payment',
+  RECEIVE_PAYMENT = 'receive_payment',
 }
 
 export enum AuditResourceEnum {
@@ -42,6 +44,7 @@ export enum AuditResourceEnum {
   RESERVATION = 'reservation',
   APPROVAL_REQUEST = 'approval_request',
   CONTRACT = 'contract',
+  PAYMENT = 'payment',
 }
 
 export enum AuditStatusEnum {

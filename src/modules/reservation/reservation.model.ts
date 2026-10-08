@@ -43,6 +43,9 @@ export interface IReservation extends SoftDeleteDocument {
   cancelledBy?: Types.ObjectId | null;
   cancelledAt?: Date | null;
   refundAmount?: number;
+  paidAt?: Date | null;
+  paidAmount?: number;
+  paymentId?: Types.ObjectId | null;
   lastPaymentError?: string | null;
   notes?: string | null;
   createdAt: Date;
@@ -213,6 +216,20 @@ const reservationSchema = new Schema<IReservation>(
       type: Number,
       default: 0,
       min: 0,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+    paidAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    paymentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Payment',
+      default: null,
     },
     lastPaymentError: {
       type: String,

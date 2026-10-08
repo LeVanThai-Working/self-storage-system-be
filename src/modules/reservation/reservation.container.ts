@@ -14,7 +14,7 @@ import { User } from '../user/user.model.ts';
 import { UserRepository } from '../user/user.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 
-const reservationRepository = new ReservationRepository(Reservation);
+export const reservationRepository = new ReservationRepository(Reservation);
 const facilityRepository = new FacilityRepository(Facility);
 const offeringRepository = new FacilityUnitTypeOfferingRepository(
   FacilityUnitTypeOffering

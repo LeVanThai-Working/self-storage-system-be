@@ -43,6 +43,20 @@ export const errorMiddleware: ErrorRequestHandler = (err, req, res, _next) => {
     messageCode = MESSAGE_CODE.MESSAGE_CODE_101;
     message = err.message;
   }
+  // tsoa ValidateError or errors with explicit status code
+  else if (
+    err &&
+    typeof err === 'object' &&
+    'status' in err &&
+    typeof (err as { status: unknown }).status === 'number'
+  ) {
+    statusCode = (err as { status: number }).status;
+    messageCode = MESSAGE_CODE.MESSAGE_CODE_101;
+    message = (err as Error).message || 'Validation Error';
+    if ('fields' in err) {
+      errors = (err as { fields: unknown }).fields;
+    }
+  }
   // Other Errors
   else if (err instanceof Error) {
     console.error('Unhandled Error:', err);

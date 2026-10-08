@@ -77,6 +77,8 @@ export const contractResponseSchema = z.object({
   billingUnit: z.enum(BillingUnitEnum),
   rentalPrice: z.number(),
   depositAmount: z.number(),
+  depositPaidAt: z.string().optional().nullable(),
+  depositPaymentId: z.string().optional().nullable(),
   totalPeriodicPrice: z.number(),
   amenities: z.array(contractAmenityResponseSchema),
   renewals: z.array(contractRenewalResponseSchema),
