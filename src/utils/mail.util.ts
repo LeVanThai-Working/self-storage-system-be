@@ -68,4 +68,20 @@ export class MailUtil {
       resetPasswordEmailTemplate(otp)
     );
   }
+
+  async sendNotificationEmail(
+    email: string,
+    title: string,
+    content: string
+  ): Promise<void> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <h2 style="color: #333333; margin-bottom: 16px;">${title}</h2>
+        <p style="color: #555555; font-size: 16px; line-height: 1.5;">${content}</p>
+        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 24px 0;" />
+        <p style="color: #999999; font-size: 12px;">This is an automated notification from Self Storage Management System.</p>
+      </div>
+    `;
+    await this.sendEmail(email, title, html);
+  }
 }

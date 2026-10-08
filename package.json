@@ -32,6 +32,7 @@
   },
   "homepage": "https://github.com/LeVanThai-Working/project_be#readme",
   "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -46,6 +47,7 @@
     "nodemailer": "^10.0.10",
     "passport": "^0.7.0",
     "passport-google-oauth2": "^0.2.0",
+    "socket.io": "^4.8.4",
     "swagger-ui-express": "^5.0.1",
     "tsoa": "^7.0.0-alpha.0",
     "zod": "^4.6.5"
@@ -72,6 +74,7 @@
     "husky": "^9.1.7",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.6",
+    "socket.io-client": "^4.8.4",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.70.0"

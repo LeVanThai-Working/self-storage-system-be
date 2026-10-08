@@ -45,6 +45,7 @@ export enum AuditResourceEnum {
   APPROVAL_REQUEST = 'approval_request',
   CONTRACT = 'contract',
   PAYMENT = 'payment',
+  NOTIFICATION = 'notification',
 }
 
 export enum AuditStatusEnum {
