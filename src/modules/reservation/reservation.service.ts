@@ -18,8 +18,6 @@ import type {
   CancelReservationRequest,
   ConfirmReservationRequest,
   CreateReservationRequest,
-  PayDepositRequest,
-  PaymentFailureRequest,
   RejectReservationRequest,
   ReservationQuery,
   UpdateReservationRequest,
@@ -223,6 +221,16 @@ export class ReservationService {
           : new Date(String(raw.cancelledAt)).toISOString()
         : null,
       refundAmount: Number(raw.refundAmount ?? 0),
+      paidAt: raw.paidAt
+        ? raw.paidAt instanceof Date
+          ? raw.paidAt.toISOString()
+          : new Date(String(raw.paidAt)).toISOString()
+        : null,
+      paidAmount:
+        raw.paidAmount !== undefined && raw.paidAmount !== null
+          ? Number(raw.paidAmount)
+          : null,
+      paymentId: raw.paymentId ? String(raw.paymentId) : null,
       lastPaymentError: (raw.lastPaymentError as string) ?? null,
       notes: (raw.notes as string) ?? null,
       customer: customerObj,
@@ -748,22 +756,21 @@ export class ReservationService {
     return validateResponse(reservationResponseSchema, formatted);
   }
 
-  // 6. Deposit payment successful (PENDING_PAYMENT / PAYMENT_FAILED -> PAYMENT_SUCCESSFUL)
-  async payDeposit(
+  // 6. Mark reservation deposit as paid (from Payment service or SePay Webhook)
+  @Transactional()
+  async markDepositPaid(
     id: string,
-    customerId: string,
-    data: PayDepositRequest
+    paymentInfo: {
+      paymentId: string;
+      paidAmount: number;
+      paidAt: Date;
+      referenceCode?: string | null;
+    },
+    session?: ClientSession
   ): Promise<ReservationResponse> {
-    const reservation = await this.reservationRepository.findById(id);
+    const reservation = await this.reservationRepository.findById(id, session);
     if (!reservation) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
-    }
-
-    if (
-      String(reservation.customerId._id || reservation.customerId) !==
-      customerId
-    ) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
     if (
@@ -777,65 +784,32 @@ export class ReservationService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_304);
     }
 
-    const updated = await this.reservationRepository.update(id, {
-      status: ReservationStatusEnum.PAYMENT_SUCCESSFUL,
-      lastPaymentError: null,
-    });
+    const updated = await this.reservationRepository.update(
+      id,
+      {
+        status: ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+        paidAt: paymentInfo.paidAt,
+        paidAmount: paymentInfo.paidAmount,
+        paymentId: new Types.ObjectId(paymentInfo.paymentId),
+        lastPaymentError: null,
+      },
+      session
+    );
 
-    const populated = await this.reservationRepository.findById(id);
+    const populated = await this.reservationRepository.findById(id, session);
     const formatted = this.formatReservation(populated || updated!);
 
     this.auditLogService?.record({
-      action: AuditActionEnum.UPDATE,
+      action: AuditActionEnum.RECEIVE_PAYMENT,
       resourceType: AuditResourceEnum.RESERVATION,
       resourceId: id,
       before: this.formatReservation(reservation),
       after: formatted,
       metadata: {
-        paymentMethod: data.paymentMethod,
-        transactionRef: data.transactionRef,
+        paymentId: paymentInfo.paymentId,
+        paidAmount: paymentInfo.paidAmount,
+        referenceCode: paymentInfo.referenceCode ?? null,
       },
-    });
-
-    return validateResponse(reservationResponseSchema, formatted);
-  }
-
-  // 7. Record payment failure (PENDING_PAYMENT -> PAYMENT_FAILED)
-  async handlePaymentFailure(
-    id: string,
-    customerId: string,
-    data: PaymentFailureRequest
-  ): Promise<ReservationResponse> {
-    const reservation = await this.reservationRepository.findById(id);
-    if (!reservation) {
-      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
-    }
-
-    if (
-      String(reservation.customerId._id || reservation.customerId) !==
-      customerId
-    ) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-    }
-
-    if (reservation.status !== ReservationStatusEnum.PENDING_PAYMENT) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_301);
-    }
-
-    const updated = await this.reservationRepository.update(id, {
-      status: ReservationStatusEnum.PAYMENT_FAILED,
-      lastPaymentError: data.errorReason,
-    });
-
-    const populated = await this.reservationRepository.findById(id);
-    const formatted = this.formatReservation(populated || updated!);
-
-    this.auditLogService?.record({
-      action: AuditActionEnum.UPDATE,
-      resourceType: AuditResourceEnum.RESERVATION,
-      resourceId: id,
-      before: this.formatReservation(reservation),
-      after: formatted,
     });
 
     return validateResponse(reservationResponseSchema, formatted);

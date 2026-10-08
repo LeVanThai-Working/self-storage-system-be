@@ -1643,7 +1643,15 @@
 					"toggle_maintenance",
 					"approve",
 					"reject",
-					"cancel"
+					"cancel",
+					"check_in",
+					"check_out",
+					"renew",
+					"terminate",
+					"add_amenity",
+					"remove_amenity",
+					"confirm_payment",
+					"receive_payment"
 				],
 				"type": "string"
 			},
@@ -1660,6 +1668,8 @@
 					"storage_unit",
 					"reservation",
 					"approval_request",
+					"contract",
+					"payment",
 					"notification"
 				],
 				"type": "string"
@@ -2037,6 +2047,16 @@
 						"type": "string"
 					},
 					"lastPaymentError": {
+						"type": "string"
+					},
+					"paymentId": {
+						"type": "string"
+					},
+					"paidAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"paidAt": {
 						"type": "string"
 					},
 					"cancelledAt": {
@@ -2581,37 +2601,6 @@
 			"RejectReservationRequest": {
 				"$ref": "#/components/schemas/infer_typeofrejectReservationSchema_"
 			},
-			"infer_typeofpayDepositSchema_": {
-				"properties": {
-					"transactionRef": {
-						"type": "string"
-					},
-					"paymentMethod": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"paymentMethod"
-				],
-				"type": "object"
-			},
-			"PayDepositRequest": {
-				"$ref": "#/components/schemas/infer_typeofpayDepositSchema_"
-			},
-			"infer_typeofpaymentFailureSchema_": {
-				"properties": {
-					"errorReason": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"errorReason"
-				],
-				"type": "object"
-			},
-			"PaymentFailureRequest": {
-				"$ref": "#/components/schemas/infer_typeofpaymentFailureSchema_"
-			},
 			"infer_typeofconfirmReservationSchema_": {
 				"properties": {
 					"notes": {
@@ -2636,6 +2625,524 @@
 			},
 			"CancelReservationRequest": {
 				"$ref": "#/components/schemas/infer_typeofcancelReservationSchema_"
+			},
+			"SepayWebhookPayload": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"gateway": {
+						"type": "string",
+						"nullable": true
+					},
+					"transactionDate": {
+						"type": "string",
+						"nullable": true
+					},
+					"accountNumber": {
+						"type": "string",
+						"nullable": true
+					},
+					"subAccount": {
+						"type": "string",
+						"nullable": true
+					},
+					"code": {
+						"type": "string",
+						"nullable": true
+					},
+					"content": {
+						"type": "string",
+						"nullable": true
+					},
+					"transferType": {
+						"type": "string",
+						"nullable": true
+					},
+					"transferAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"accumulated": {
+						"type": "number",
+						"format": "double",
+						"nullable": true
+					},
+					"referenceCode": {
+						"type": "string",
+						"nullable": true
+					},
+					"description": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"required": [
+					"id",
+					"transferAmount"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"PaymentPurposeEnum": {
+				"enum": [
+					"reservation_deposit",
+					"contract_deposit"
+				],
+				"type": "string"
+			},
+			"PaymentMethodEnum": {
+				"enum": [
+					"sepay_qr",
+					"cash",
+					"bank_transfer"
+				],
+				"type": "string"
+			},
+			"PaymentStatusEnum": {
+				"enum": [
+					"pending",
+					"partially_paid",
+					"paid",
+					"expired",
+					"cancelled"
+				],
+				"type": "string"
+			},
+			"infer_typeofpaymentResponseSchema_": {
+				"properties": {
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"phone": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"customer": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"note": {
+						"type": "string"
+					},
+					"cancellationReason": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"cancelledBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"confirmedAt": {
+						"type": "string"
+					},
+					"confirmedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"sepayTransactionId": {
+						"type": "number",
+						"format": "double"
+					},
+					"paidAt": {
+						"type": "string"
+					},
+					"expiresAt": {
+						"type": "string"
+					},
+					"bankInfo": {
+						"properties": {
+							"accountName": {
+								"type": "string"
+							},
+							"accountNumber": {
+								"type": "string"
+							},
+							"bankCode": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"accountName",
+							"accountNumber",
+							"bankCode"
+						],
+						"type": "object"
+					},
+					"qrUrl": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/PaymentStatusEnum"
+					},
+					"method": {
+						"$ref": "#/components/schemas/PaymentMethodEnum"
+					},
+					"overpaidAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"paidAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"amount": {
+						"type": "number",
+						"format": "double"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"purpose": {
+						"$ref": "#/components/schemas/PaymentPurposeEnum"
+					},
+					"paymentCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"status",
+					"method",
+					"overpaidAmount",
+					"paidAmount",
+					"amount",
+					"facilityId",
+					"customerId",
+					"purpose",
+					"paymentCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"PaymentResponse": {
+				"$ref": "#/components/schemas/infer_typeofpaymentResponseSchema_"
+			},
+			"ApiResponse_PaymentResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaymentResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreatePaymentSchema_": {
+				"properties": {
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"purpose": {
+						"$ref": "#/components/schemas/PaymentPurposeEnum"
+					}
+				},
+				"required": [
+					"purpose"
+				],
+				"type": "object"
+			},
+			"CreatePaymentRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreatePaymentSchema_"
+			},
+			"PaginatedData_PaymentResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/PaymentResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_PaymentResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_PaymentResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofpaymentQuerySchema_": {
+				"properties": {
+					"createdAtTo": {
+						"type": "string"
+					},
+					"createdAtFrom": {
+						"type": "string"
+					},
+					"paymentCode": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/PaymentStatusEnum"
+					},
+					"purpose": {
+						"$ref": "#/components/schemas/PaymentPurposeEnum"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"PaymentQuery": {
+				"$ref": "#/components/schemas/infer_typeofpaymentQuerySchema_"
+			},
+			"infer_typeofcancelPaymentSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelPaymentRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelPaymentSchema_"
+			},
+			"PaymentMethodEnum.CASH": {
+				"enum": [
+					"cash"
+				],
+				"type": "string"
+			},
+			"PaymentMethodEnum.BANK_TRANSFER": {
+				"enum": [
+					"bank_transfer"
+				],
+				"type": "string"
+			},
+			"infer_typeofconfirmManualPaymentSchema_": {
+				"properties": {
+					"referenceCode": {
+						"type": "string"
+					},
+					"note": {
+						"type": "string"
+					},
+					"method": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/PaymentMethodEnum.CASH"
+							},
+							{
+								"$ref": "#/components/schemas/PaymentMethodEnum.BANK_TRANSFER"
+							}
+						]
+					}
+				},
+				"required": [
+					"note",
+					"method"
+				],
+				"type": "object"
+			},
+			"ConfirmManualPaymentRequest": {
+				"$ref": "#/components/schemas/infer_typeofconfirmManualPaymentSchema_"
 			},
 			"NotificationTypeEnum": {
 				"enum": [
@@ -4546,6 +5053,802 @@
 			},
 			"AssignManagerRequest": {
 				"$ref": "#/components/schemas/infer_typeofassignManagerSchema_"
+			},
+			"ContractSourceEnum": {
+				"enum": [
+					"reservation",
+					"walk_in"
+				],
+				"type": "string"
+			},
+			"ContractStatusEnum": {
+				"enum": [
+					"draft",
+					"active",
+					"overdue",
+					"completed",
+					"cancelled",
+					"terminated"
+				],
+				"type": "string"
+			},
+			"infer_typeofcontractResponseSchema_": {
+				"properties": {
+					"assignedStaff": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"storageUnit": {
+						"properties": {
+							"zone": {
+								"type": "string"
+							},
+							"status": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"floor",
+							"unitNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"offering": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"minRentalDays": {
+								"type": "number",
+								"format": "double"
+							},
+							"depositMultiplier": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitTypeId": {
+								"type": "string"
+							},
+							"pricePerUnit": {
+								"type": "number",
+								"format": "double"
+							},
+							"billingUnit": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"pricePerUnit",
+							"billingUnit",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"phone": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"address",
+							"city",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"customer": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"terminatedAt": {
+						"type": "string"
+					},
+					"terminatedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"terminationReason": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"cancelledBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"cancellationReason": {
+						"type": "string"
+					},
+					"inspectionNotes": {
+						"type": "string"
+					},
+					"inspectedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"depositPaymentId": {
+						"type": "string"
+					},
+					"depositPaidAt": {
+						"type": "string"
+					},
+					"actualCheckOutDate": {
+						"type": "string"
+					},
+					"actualCheckInDate": {
+						"type": "string"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"termsAccepted": {
+						"type": "boolean"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ContractStatusEnum"
+					},
+					"additionalPaymentRequired": {
+						"type": "number",
+						"format": "double"
+					},
+					"refundAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"overdueFee": {
+						"type": "number",
+						"format": "double"
+					},
+					"damageFee": {
+						"type": "number",
+						"format": "double"
+					},
+					"renewalCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"renewals": {
+						"items": {
+							"properties": {
+								"note": {
+									"type": "string"
+								},
+								"renewedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"renewedAt": {
+									"type": "string"
+								},
+								"newEndDate": {
+									"type": "string"
+								},
+								"previousEndDate": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"renewedAt",
+								"newEndDate",
+								"previousEndDate"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"amenities": {
+						"items": {
+							"properties": {
+								"addedAt": {
+									"type": "string"
+								},
+								"totalPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"billingUnit": {
+									"$ref": "#/components/schemas/BillingUnitEnum"
+								},
+								"pricePerUnit": {
+									"type": "number",
+									"format": "double"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"name": {
+									"type": "string"
+								},
+								"amenityId": {
+									"type": "string"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"addedAt",
+								"totalPrice",
+								"billingUnit",
+								"pricePerUnit",
+								"quantity",
+								"name",
+								"amenityId",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"totalPeriodicPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"depositAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"rentalPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"endDate": {
+						"type": "string"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"source": {
+						"$ref": "#/components/schemas/ContractSourceEnum"
+					},
+					"contractCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"termsAccepted",
+					"status",
+					"additionalPaymentRequired",
+					"refundAmount",
+					"overdueFee",
+					"damageFee",
+					"renewalCount",
+					"renewals",
+					"amenities",
+					"totalPeriodicPrice",
+					"depositAmount",
+					"rentalPrice",
+					"billingUnit",
+					"endDate",
+					"startDate",
+					"facilityUnitTypeOfferingId",
+					"storageUnitId",
+					"facilityId",
+					"customerId",
+					"source",
+					"contractCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"ContractResponse": {
+				"$ref": "#/components/schemas/infer_typeofcontractResponseSchema_"
+			},
+			"ApiResponse_ContractResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ContractResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateContractSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					},
+					"amenities": {
+						"items": {
+							"properties": {
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"depositAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"rentalPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"endDate": {
+						"type": "string"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"source": {
+						"$ref": "#/components/schemas/ContractSourceEnum"
+					}
+				},
+				"required": [
+					"source"
+				],
+				"type": "object"
+			},
+			"CreateContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateContractSchema_"
+			},
+			"PaginatedData_ContractResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/ContractResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_ContractResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_ContractResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcontractQuerySchema_": {
+				"properties": {
+					"endDateTo": {
+						"type": "string"
+					},
+					"endDateFrom": {
+						"type": "string"
+					},
+					"startDateTo": {
+						"type": "string"
+					},
+					"startDateFrom": {
+						"type": "string"
+					},
+					"contractCode": {
+						"type": "string"
+					},
+					"source": {
+						"$ref": "#/components/schemas/ContractSourceEnum"
+					},
+					"status": {
+						"$ref": "#/components/schemas/ContractStatusEnum"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"ContractQuery": {
+				"$ref": "#/components/schemas/infer_typeofcontractQuerySchema_"
+			},
+			"infer_typeofcheckInContractSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"actualCheckInDate": {
+						"type": "string"
+					},
+					"termsAccepted": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"termsAccepted"
+				],
+				"type": "object"
+			},
+			"CheckInContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofcheckInContractSchema_"
+			},
+			"infer_typeofcancelContractSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelContractSchema_"
+			},
+			"infer_typeofrenewContractSchema_": {
+				"properties": {
+					"note": {
+						"type": "string"
+					},
+					"newEndDate": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"newEndDate"
+				],
+				"type": "object"
+			},
+			"RenewContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofrenewContractSchema_"
+			},
+			"infer_typeofaddContractAmenitySchema_": {
+				"properties": {
+					"quantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"facilityAmenityOfferingId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"quantity",
+					"facilityAmenityOfferingId"
+				],
+				"type": "object"
+			},
+			"AddContractAmenityRequest": {
+				"$ref": "#/components/schemas/infer_typeofaddContractAmenitySchema_"
+			},
+			"infer_typeofcheckOutContractSchema_": {
+				"properties": {
+					"actualCheckOutDate": {
+						"type": "string"
+					},
+					"inspectionNotes": {
+						"type": "string"
+					},
+					"damageFee": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"damageFee"
+				],
+				"type": "object"
+			},
+			"CheckOutContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofcheckOutContractSchema_"
+			},
+			"infer_typeofterminateContractSchema_": {
+				"properties": {
+					"terminationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"terminationReason"
+				],
+				"type": "object"
+			},
+			"TerminateContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofterminateContractSchema_"
 			},
 			"ApprovalRequestTargetTypeEnum": {
 				"enum": [
@@ -8322,170 +9625,6 @@
 				}
 			}
 		},
-		"/reservations/{id}/pay-deposit": {
-			"post": {
-				"operationId": "PayDeposit",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Holding expired or invalid reservation status",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Customer pays reservation deposit (PENDING_PAYMENT / PAYMENT_FAILED -> PAYMENT_SUCCESSFUL).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/PayDepositRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/reservations/{id}/payment-failed": {
-			"post": {
-				"operationId": "HandlePaymentFailure",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid status transition",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Handle payment failure callback (PENDING_PAYMENT -> PAYMENT_FAILED).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/PaymentFailureRequest"
-							}
-						}
-					}
-				}
-			}
-		},
 		"/reservations/{id}/retry-payment": {
 			"post": {
 				"operationId": "RetryPayment",
@@ -8792,6 +9931,542 @@
 						}
 					}
 				]
+			}
+		},
+		"/payments/sepay/webhook": {
+			"post": {
+				"operationId": "HandleSepayWebhook",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										},
+										"success": {
+											"type": "boolean"
+										}
+									},
+									"required": [
+										"success"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid SePay Webhook Authentication",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SepayWebhookPayload"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/payments": {
+			"post": {
+				"operationId": "CreatePayment",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Order is not awaiting payment or already expired",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation or Contract not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create or retrieve an active Payment request with dynamic VietQR code.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreatePaymentRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetPayments",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_PaymentResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get paginated list of payments.\nCustomers only see their own payments. Staff can filter across facilities.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "createdAtTo",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "createdAtFrom",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "paymentCode",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/PaymentStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "purpose",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/PaymentPurposeEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "reservationId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/payments/process-expired": {
+			"post": {
+				"operationId": "ProcessExpiredPayments",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Process expired pending payments (Cron / Batch job).\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/payments/{id}": {
+			"get": {
+				"operationId": "GetPaymentById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Payment not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get payment details by ID (polling for payment status).",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/payments/{id}/cancel": {
+			"post": {
+				"operationId": "CancelPayment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Payment cannot be cancelled in current status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Payment not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel an unsettled payment.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelPaymentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/payments/{id}/confirm-manual": {
+			"post": {
+				"operationId": "ConfirmManualPayment",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Payment cannot be manually confirmed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Payment not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Staff/Manager confirms manual payment (Cash / Counter transfer).",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ConfirmManualPaymentRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/notifications/test": {
@@ -10898,6 +12573,732 @@
 						}
 					}
 				]
+			}
+		},
+		"/contracts": {
+			"post": {
+				"operationId": "CreateContract",
+				"responses": {
+					"201": {
+						"description": "Contract Created Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new contract (From Reservation or Walk-in).\nStatus will be DRAFT.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateContractRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetContracts",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_ContractResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "View contracts list with pagination and scoped filters.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "endDateTo",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "endDateFrom",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDateTo",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDateFrom",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractCode",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "source",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ContractSourceEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/ContractStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityUnitTypeOfferingId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageUnitId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/contracts/process-overdue": {
+			"post": {
+				"operationId": "ProcessOverdue",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+								}
+							}
+						}
+					}
+				},
+				"description": "Batch process active contracts that have passed their endDate to mark them as OVERDUE.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/contracts/{id}": {
+			"get": {
+				"operationId": "GetContractById",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "View contract details by ID.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/contracts/{id}/check-in": {
+			"post": {
+				"operationId": "CheckInContract",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Check-in & Activate contract.\nChanges status from DRAFT to ACTIVE, storage unit becomes OCCUPIED.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CheckInContractRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/cancel": {
+			"post": {
+				"operationId": "CancelContract",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel DRAFT contract.\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelContractRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/renew": {
+			"post": {
+				"operationId": "RenewContract",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Renew contract by extending endDate.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RenewContractRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/amenities": {
+			"post": {
+				"operationId": "AddAmenity",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Add amenity to active contract.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AddContractAmenityRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/amenities/{amenityOfferingId}": {
+			"delete": {
+				"operationId": "RemoveAmenity",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Remove amenity from active contract.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "amenityOfferingId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/contracts/{id}/check-out": {
+			"post": {
+				"operationId": "CheckOutContract",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CheckOutContractRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/terminate": {
+			"post": {
+				"operationId": "TerminateContract",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Terminate contract early due to terms violation.\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/TerminateContractRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/approval-requests": {

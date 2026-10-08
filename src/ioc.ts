@@ -25,6 +25,10 @@ import { ReservationController } from './modules/reservation/reservation.control
 import { reservationController } from './modules/reservation/reservation.container.ts';
 import { FacilityManagerController } from './modules/facilityManager/facilityManager.controller.ts';
 import { facilityManagerController } from './modules/facilityManager/facilityManager.container.ts';
+import { ContractController } from './modules/contract/contract.controller.ts';
+import { contractController } from './modules/contract/contract.container.ts';
+import { PaymentController } from './modules/payment/payment.controller.ts';
+import { paymentController } from './modules/payment/payment.container.ts';
 import { NotificationController } from './modules/notification/notification.controller.ts';
 import { notificationController } from './modules/notification/notification.container.ts';
 
@@ -68,6 +72,12 @@ export const iocContainer: IocContainer = {
     }
     if (controller === FacilityManagerController) {
       return facilityManagerController as unknown as T;
+    }
+    if (controller === ContractController) {
+      return contractController as unknown as T;
+    }
+    if (controller === PaymentController) {
+      return paymentController as unknown as T;
     }
     if (controller === NotificationController) {
       return notificationController as unknown as T;

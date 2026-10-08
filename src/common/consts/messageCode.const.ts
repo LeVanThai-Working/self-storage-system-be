@@ -86,6 +86,50 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_307: 'MESSAGE_CODE_307',
   // Reservation Holding Time Exceeded
   MESSAGE_CODE_308: 'MESSAGE_CODE_308',
+
+  // ==========================================
+  // CONTRACT (400 - 408)
+  // ==========================================
+  // Contract Not Found
+  MESSAGE_CODE_400: 'MESSAGE_CODE_400',
+  // Invalid Contract Status Transition
+  MESSAGE_CODE_401: 'MESSAGE_CODE_401',
+  // Storage Unit Is Not Available For Contract
+  MESSAGE_CODE_402: 'MESSAGE_CODE_402',
+  // Contract Has Already Been Checked In
+  MESSAGE_CODE_403: 'MESSAGE_CODE_403',
+  // Contract Extension Date Must Be Greater Than Current End Date
+  MESSAGE_CODE_404: 'MESSAGE_CODE_404',
+  // Cannot Delete Entity With Active Contracts
+  MESSAGE_CODE_405: 'MESSAGE_CODE_405',
+  // Reservation Must Be Confirmed Or Completed To Create Contract
+  MESSAGE_CODE_406: 'MESSAGE_CODE_406',
+  // Storage Unit Facility Mismatch
+  MESSAGE_CODE_407: 'MESSAGE_CODE_407',
+  // Insufficient Amenity Quantity For Contract
+  MESSAGE_CODE_408: 'MESSAGE_CODE_408',
+
+  // ==========================================
+  // PAYMENT (500 - 508)
+  // ==========================================
+  // Payment Not Found
+  MESSAGE_CODE_500: 'MESSAGE_CODE_500',
+  // Invalid Payment Status Transition
+  MESSAGE_CODE_501: 'MESSAGE_CODE_501',
+  // Payment Has Expired
+  MESSAGE_CODE_502: 'MESSAGE_CODE_502',
+  // Invalid SePay Webhook Authentication
+  MESSAGE_CODE_503: 'MESSAGE_CODE_503',
+  // Payment Amount Insufficient
+  MESSAGE_CODE_504: 'MESSAGE_CODE_504',
+  // Order Is Not Awaiting Payment
+  MESSAGE_CODE_505: 'MESSAGE_CODE_505',
+  // Contract Deposit Not Paid
+  MESSAGE_CODE_506: 'MESSAGE_CODE_506',
+  // Payment Already Settled
+  MESSAGE_CODE_507: 'MESSAGE_CODE_507',
+  // Payment Account Mismatch
+  MESSAGE_CODE_508: 'MESSAGE_CODE_508',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -132,4 +176,28 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_306: 'Storage Unit Does Not Match Reserved Offering',
   MESSAGE_CODE_307: 'Insufficient Amenity Quantity For {0}',
   MESSAGE_CODE_308: 'Reservation Holding Time Exceeded',
+
+  // Contract
+  MESSAGE_CODE_400: 'Contract Not Found',
+  MESSAGE_CODE_401: 'Invalid Contract Status Transition',
+  MESSAGE_CODE_402: 'Storage Unit Is Not Available For Contract',
+  MESSAGE_CODE_403: 'Contract Has Already Been Checked In',
+  MESSAGE_CODE_404:
+    'Contract Extension Date Must Be Greater Than Current End Date',
+  MESSAGE_CODE_405: 'Cannot Delete Entity With Active Contracts',
+  MESSAGE_CODE_406:
+    'Reservation Must Be Confirmed Or Completed To Create Contract',
+  MESSAGE_CODE_407: 'Storage Unit Facility Mismatch',
+  MESSAGE_CODE_408: 'Insufficient Amenity Quantity For Contract',
+
+  // Payment
+  MESSAGE_CODE_500: 'Payment Not Found',
+  MESSAGE_CODE_501: 'Invalid Payment Status Transition',
+  MESSAGE_CODE_502: 'Payment Has Expired',
+  MESSAGE_CODE_503: 'Invalid SePay Webhook Authentication',
+  MESSAGE_CODE_504: 'Payment Amount Insufficient',
+  MESSAGE_CODE_505: 'Order Is Not Awaiting Payment',
+  MESSAGE_CODE_506: 'Contract Deposit Not Paid',
+  MESSAGE_CODE_507: 'Payment Already Settled',
+  MESSAGE_CODE_508: 'Payment Account Mismatch',
 };

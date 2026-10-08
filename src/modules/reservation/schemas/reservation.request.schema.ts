@@ -57,15 +57,6 @@ export const rejectReservationSchema = z.object({
     .max(500),
 });
 
-export const payDepositSchema = z.object({
-  paymentMethod: z.string().min(2).max(50).optional().default('credit_card'),
-  transactionRef: z.string().max(100).optional(),
-});
-
-export const paymentFailureSchema = z.object({
-  errorReason: z.string().min(2).max(500),
-});
-
 export const confirmReservationSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
@@ -108,8 +99,6 @@ export type CreateReservationRequest = z.infer<typeof createReservationSchema>;
 export type UpdateReservationRequest = z.infer<typeof updateReservationSchema>;
 export type AssignStorageUnitRequest = z.infer<typeof assignStorageUnitSchema>;
 export type RejectReservationRequest = z.infer<typeof rejectReservationSchema>;
-export type PayDepositRequest = z.infer<typeof payDepositSchema>;
-export type PaymentFailureRequest = z.infer<typeof paymentFailureSchema>;
 export type ConfirmReservationRequest = z.infer<
   typeof confirmReservationSchema
 >;
