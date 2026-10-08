@@ -35,6 +35,7 @@ export enum AuditResourceEnum {
   STORAGE_UNIT = 'storage_unit',
   RESERVATION = 'reservation',
   APPROVAL_REQUEST = 'approval_request',
+  NOTIFICATION = 'notification',
 }
 
 export enum AuditStatusEnum {

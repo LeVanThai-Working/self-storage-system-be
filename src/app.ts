@@ -1,4 +1,5 @@
 import express, { type Express, type Request, type Response } from 'express';
+import http from 'node:http';
 import 'dotenv/config';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
@@ -15,9 +16,15 @@ import { RegisterRoutes } from './routes/routes.ts';
 import cors from 'cors';
 import { corsOptions } from './config/cors.config.ts';
 import { requestContextMiddleware } from './middlewares/requestContext.middleware.ts';
+import { initSocketServer } from './config/socket.config.ts';
+import { socketTestHtml } from './common/templates/socketTest.template.ts';
 
 const app: Express = express();
+const httpServer = http.createServer(app);
 const port = Number(process.env.PORT) || 5000;
+
+// Initialize Socket.IO Server
+initSocketServer(httpServer);
 
 // Trust reverse proxy (Render, Cloudflare, Nginx)
 app.set('trust proxy', 1);
@@ -46,6 +53,11 @@ app.use(cors(corsOptions));
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello World!');
+});
+
+// Standalone Web Test Client for Realtime Notifications
+app.get('/test-socket', (_req: Request, res: Response) => {
+  res.send(socketTestHtml);
 });
 
 // Swagger Documentation
@@ -98,7 +110,7 @@ app.use((req, res, next) => {
 app.use(errorMiddleware);
 
 // Start the server
-app.listen(port, '0.0.0.0', () => {
+httpServer.listen(port, '0.0.0.0', () => {
   const publicUrl = serverUrl;
   console.log(`Server is running at ${publicUrl}`);
   console.log(`Swagger UI is available at ${publicUrl}/api-docs/`);
