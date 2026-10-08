@@ -64,6 +64,28 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_200: 'MESSAGE_CODE_200',
   // Invalid Token
   MESSAGE_CODE_201: 'MESSAGE_CODE_201',
+
+  // ==========================================
+  // RESERVATION (300 - 308)
+  // ==========================================
+  // Reservation Not Found
+  MESSAGE_CODE_300: 'MESSAGE_CODE_300',
+  // Invalid Reservation Status Transition
+  MESSAGE_CODE_301: 'MESSAGE_CODE_301',
+  // Reservation Cannot Be Updated After Being Received
+  MESSAGE_CODE_302: 'MESSAGE_CODE_302',
+  // Reservation Cannot Be Cancelled
+  MESSAGE_CODE_303: 'MESSAGE_CODE_303',
+  // Reservation Has Expired
+  MESSAGE_CODE_304: 'MESSAGE_CODE_304',
+  // Storage Unit Is Not Available For Reservation
+  MESSAGE_CODE_305: 'MESSAGE_CODE_305',
+  // Storage Unit Does Not Match Reserved Offering
+  MESSAGE_CODE_306: 'MESSAGE_CODE_306',
+  // Insufficient Amenity Quantity For {0}
+  MESSAGE_CODE_307: 'MESSAGE_CODE_307',
+  // Reservation Holding Time Exceeded
+  MESSAGE_CODE_308: 'MESSAGE_CODE_308',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -99,4 +121,15 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   // Validation & Token
   MESSAGE_CODE_200: '{0} Is Required',
   MESSAGE_CODE_201: 'Invalid Token',
+
+  // Reservation
+  MESSAGE_CODE_300: 'Reservation Not Found',
+  MESSAGE_CODE_301: 'Invalid Reservation Status Transition',
+  MESSAGE_CODE_302: 'Reservation Cannot Be Updated After Being Received',
+  MESSAGE_CODE_303: 'Reservation Cannot Be Cancelled',
+  MESSAGE_CODE_304: 'Reservation Has Expired',
+  MESSAGE_CODE_305: 'Storage Unit Is Not Available For Reservation',
+  MESSAGE_CODE_306: 'Storage Unit Does Not Match Reserved Offering',
+  MESSAGE_CODE_307: 'Insufficient Amenity Quantity For {0}',
+  MESSAGE_CODE_308: 'Reservation Holding Time Exceeded',
 };

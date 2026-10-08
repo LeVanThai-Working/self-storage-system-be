@@ -21,6 +21,8 @@ import { AuditLogController } from './modules/auditLog/auditLog.controller.ts';
 import { auditLogController } from './modules/auditLog/auditLog.container.ts';
 import { ApprovalRequestController } from './modules/approvalRequest/approvalRequest.controller.ts';
 import { approvalRequestController } from './modules/approvalRequest/approvalRequest.container.ts';
+import { ReservationController } from './modules/reservation/reservation.controller.ts';
+import { reservationController } from './modules/reservation/reservation.container.ts';
 import { FacilityManagerController } from './modules/facilityManager/facilityManager.controller.ts';
 import { facilityManagerController } from './modules/facilityManager/facilityManager.container.ts';
 import { NotificationController } from './modules/notification/notification.controller.ts';
@@ -60,6 +62,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === ApprovalRequestController) {
       return approvalRequestController as unknown as T;
+    }
+    if (controller === ReservationController) {
+      return reservationController as unknown as T;
     }
     if (controller === FacilityManagerController) {
       return facilityManagerController as unknown as T;
