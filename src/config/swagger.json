@@ -9079,7 +9079,7 @@
 						}
 					}
 				},
-				"description": "Get paginated list of reservations.\nCustomers only see their own reservations.\nStaff/Managers can filter across facilities.",
+				"description": "Get paginated list of reservations.\r\nCustomers only see their own reservations.\r\nStaff/Managers can filter across facilities.",
 				"tags": [
 					"Reservations"
 				],
@@ -9239,7 +9239,7 @@
 						}
 					}
 				},
-				"description": "Process and expire overdue holding reservations (Cron/Admin).\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
+				"description": "Process and expire overdue holding reservations (Cron/Admin).\r\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
 				"tags": [
 					"Reservations"
 				],
@@ -9444,7 +9444,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager marks reservation as received (PENDING -> RECEIVED).\nLocks the reservation from customer updates.",
+				"description": "Facility Manager marks reservation as received (PENDING -> RECEIVED).\r\nLocks the reservation from customer updates.",
 				"tags": [
 					"Reservations"
 				],
@@ -9834,7 +9834,7 @@
 						}
 					}
 				},
-				"description": "Cancel reservation (CANCELLED).\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
+				"description": "Cancel reservation (CANCELLED).\r\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
 				"tags": [
 					"Reservations"
 				],
@@ -9969,7 +9969,7 @@
 						}
 					}
 				},
-				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
+				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\r\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
 				"tags": [
 					"Payments"
 				],
@@ -10073,7 +10073,7 @@
 						}
 					}
 				},
-				"description": "Get paginated list of payments.\nCustomers only see their own payments. Staff can filter across facilities.",
+				"description": "Get paginated list of payments.\r\nCustomers only see their own payments. Staff can filter across facilities.",
 				"tags": [
 					"Payments"
 				],
@@ -10235,7 +10235,7 @@
 						}
 					}
 				},
-				"description": "Process expired pending payments (Cron / Batch job).\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"description": "Process expired pending payments (Cron / Batch job).\r\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
 				"tags": [
 					"Payments"
 				],
@@ -12620,7 +12620,7 @@
 						}
 					}
 				},
-				"description": "Create a new contract (From Reservation or Walk-in).\nStatus will be DRAFT.",
+				"description": "Create a new contract (From Reservation or Walk-in).\r\nStatus will be DRAFT.",
 				"tags": [
 					"Contracts"
 				],
@@ -12904,7 +12904,7 @@
 						}
 					}
 				},
-				"description": "Check-in & Activate contract.\nChanges status from DRAFT to ACTIVE, storage unit becomes OCCUPIED.",
+				"description": "Check-in & Activate contract.\r\nChanges status from DRAFT to ACTIVE, storage unit becomes OCCUPIED.",
 				"tags": [
 					"Contracts"
 				],
@@ -12966,7 +12966,7 @@
 						}
 					}
 				},
-				"description": "Cancel DRAFT contract.\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
+				"description": "Cancel DRAFT contract.\r\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
 				"tags": [
 					"Contracts"
 				],
@@ -13212,7 +13212,7 @@
 						}
 					}
 				},
-				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
+				"description": "Check-out & Liquidate contract.\r\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\r\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
 				"tags": [
 					"Contracts"
 				],
@@ -13274,7 +13274,7 @@
 						}
 					}
 				},
-				"description": "Terminate contract early due to terms violation.\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
+				"description": "Terminate contract early due to terms violation.\r\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
 				"tags": [
 					"Contracts"
 				],

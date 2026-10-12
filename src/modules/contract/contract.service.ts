@@ -172,6 +172,10 @@ export class ContractService {
           billingUnit: reservation.billingUnit,
           rentalPrice: reservation.basePrice,
           depositAmount: reservation.depositAmount,
+          depositPaidAt: reservation.paidAt || new Date(),
+          depositPaymentId: reservation.paymentId
+            ? new Types.ObjectId(String(reservation.paymentId))
+            : null,
           totalPeriodicPrice,
           amenities: contractAmenities,
           status: ContractStatusEnum.DRAFT,
