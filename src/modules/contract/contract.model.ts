@@ -21,7 +21,7 @@ export interface IContractAmenity {
   totalPrice: number;
   addedAt: Date;
 }
-
+// Addendum and Renewal interfaces are defined below
 export interface IContractAddendum {
   _id?: Types.ObjectId;
   addendumCode: string;

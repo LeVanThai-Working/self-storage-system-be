@@ -9544,7 +9544,7 @@
 						}
 					}
 				},
-				"description": "Get paginated list of reservations.\nCustomers only see their own reservations.\nStaff/Managers can filter across facilities.",
+				"description": "Get paginated list of reservations.\r\nCustomers only see their own reservations.\r\nStaff/Managers can filter across facilities.",
 				"tags": [
 					"Reservations"
 				],
@@ -9704,7 +9704,7 @@
 						}
 					}
 				},
-				"description": "Process and expire overdue holding reservations (Cron/Admin).\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
+				"description": "Process and expire overdue holding reservations (Cron/Admin).\r\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
 				"tags": [
 					"Reservations"
 				],
@@ -9909,7 +9909,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager marks reservation as received (PENDING -> RECEIVED).\nLocks the reservation from customer updates.",
+				"description": "Facility Manager marks reservation as received (PENDING -> RECEIVED).\r\nLocks the reservation from customer updates.",
 				"tags": [
 					"Reservations"
 				],
@@ -10299,7 +10299,7 @@
 						}
 					}
 				},
-				"description": "Cancel reservation (CANCELLED).\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
+				"description": "Cancel reservation (CANCELLED).\r\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
 				"tags": [
 					"Reservations"
 				],
@@ -10607,7 +10607,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager assigns a staff member for customer check-in.\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
+				"description": "Facility Manager assigns a staff member for customer check-in.\r\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
 				"tags": [
 					"Reservations"
 				],
