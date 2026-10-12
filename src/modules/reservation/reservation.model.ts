@@ -38,6 +38,8 @@ export interface IReservation extends SoftDeleteDocument {
   assignedAt?: Date | null;
   confirmedBy?: Types.ObjectId | null;
   confirmedAt?: Date | null;
+  assignedStaffId?: Types.ObjectId | null;
+  assignedStaffAt?: Date | null;
   rejectionReason?: string | null;
   cancellationReason?: string | null;
   cancelledBy?: Types.ObjectId | null;
@@ -192,6 +194,15 @@ const reservationSchema = new Schema<IReservation>(
       default: null,
     },
     confirmedAt: {
+      type: Date,
+      default: null,
+    },
+    assignedStaffId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    assignedStaffAt: {
       type: Date,
       default: null,
     },

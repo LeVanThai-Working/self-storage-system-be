@@ -22,18 +22,22 @@ import { validateRequest } from '../../middlewares/validate.middleware.ts';
 import { jwtUtil } from '../auth/auth.container.ts';
 import type { TokenPayload } from '../../utils/jwt.util.ts';
 import {
+  assignReservationStaffSchema,
   assignStorageUnitSchema,
   cancelReservationSchema,
   confirmReservationSchema,
   createReservationSchema,
+  markDepositPaidSchema,
   rejectReservationSchema,
   reservationIdParamSchema,
   reservationQuerySchema,
   updateReservationSchema,
+  type AssignReservationStaffRequest,
   type AssignStorageUnitRequest,
   type CancelReservationRequest,
   type ConfirmReservationRequest,
   type CreateReservationRequest,
+  type MarkDepositPaidRequest,
   type RejectReservationRequest,
   type ReservationQuery,
   type UpdateReservationRequest,
@@ -523,6 +527,108 @@ export class ReservationController extends Controller {
     const result = await this.reservationService.completeReservation(
       id,
       caller.userId
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
+      data: result,
+    };
+  }
+
+  /**
+   * Mark deposit as paid (webhook/payment callback: PENDING_PAYMENT -> PAYMENT_SUCCESSFUL).
+   */
+  @Post('{id}/mark-deposit-paid')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER (internal payment gateway callback)
+  @Middlewares(
+    validateRequest({
+      params: reservationIdParamSchema,
+      body: markDepositPaidSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Invalid reservation status')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Reservation not found')
+  public async markDepositPaid(
+    @Path() id: string,
+    @Body() body: MarkDepositPaidRequest
+  ): Promise<ApiResponse<ReservationResponse>> {
+    const result = await this.reservationService.markDepositPaid(id, {
+      paymentId: body.paymentId,
+      paidAmount: body.paidAmount,
+      paidAt: new Date(body.paidAt),
+      referenceCode: body.referenceCode,
+    });
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
+      data: result,
+    };
+  }
+
+  /**
+   * Mark deposit payment as failed (webhook/payment callback: PENDING_PAYMENT -> PAYMENT_FAILED).
+   */
+  @Post('{id}/payment-failed')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER (internal payment gateway callback)
+  @Middlewares(validateRequest({ params: reservationIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'Invalid reservation status')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Reservation not found')
+  public async handlePaymentFailure(
+    @Path() id: string
+  ): Promise<ApiResponse<ReservationResponse>> {
+    const result = await this.reservationService.handlePaymentFailure(id);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
+      data: result,
+    };
+  }
+
+  /**
+   * Facility Manager assigns a staff member for customer check-in.
+   * Only allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).
+   */
+  @Post('{id}/assign-staff')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Middlewares(
+    validateRequest({
+      params: reservationIdParamSchema,
+      body: assignReservationStaffSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Deposit not paid or staff invalid')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Reservation or Staff not found')
+  public async assignStaffToCheckIn(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: AssignReservationStaffRequest
+  ): Promise<ApiResponse<ReservationResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.reservationService.assignStaffToCheckIn(
+      id,
+      caller.userId,
+      body
     );
 
     return {

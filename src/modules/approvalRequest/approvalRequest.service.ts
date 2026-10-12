@@ -35,8 +35,14 @@ import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
 import { AmenityStatusEnum } from '../../common/enums/amenity.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
 import { FacilityAmenityOfferingStatusEnum } from '../../common/enums/facilityAmenityOffering.enum.ts';
+import {
+  NotificationChannelEnum,
+  NotificationPriorityEnum,
+  NotificationTypeEnum,
+} from '../../common/enums/notification.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { NotificationService } from '../notification/notification.service.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -51,7 +57,8 @@ export class ApprovalRequestService {
     private readonly unitTypeOfferingRepository: FacilityUnitTypeOfferingRepository,
     private readonly amenityRepository: AmenityRepository,
     private readonly amenityOfferingRepository: FacilityAmenityOfferingRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly notificationService?: NotificationService
   ) {}
 
   private calculateAreaAndVolume(dimensions: IDimensions): {
@@ -268,6 +275,37 @@ export class ApprovalRequestService {
           : populated,
     });
 
+    // Notify Ops & Admin about new approval request (non-blocking)
+    try {
+      this.notificationService
+        ?.dispatchToAudience({
+          facilityId: targetFacilityId,
+          roles: [RoleEnum.BUSINESS_OPS_MANAGER],
+          title: `Đề xuất phê duyệt mới từ cơ sở ${facility.name}`,
+          content: `Quản lý cơ sở ${user.name} vừa gửi đề xuất [${data.action}] cho [${data.targetType}] tại cơ sở "${facility.name}". Vui lòng thẩm định.`,
+          type: NotificationTypeEnum.APPROVAL_REQUEST,
+          priority: NotificationPriorityEnum.HIGH,
+          channels: [NotificationChannelEnum.IN_APP],
+          metadata: {
+            requestId: String(newRequest._id),
+            facilityId: targetFacilityId,
+            facilityName: facility.name,
+            requesterId: userId,
+            requesterName: user.name,
+            targetType: data.targetType,
+            action: data.action,
+          },
+        })
+        .catch((err) => {
+          console.warn(
+            'Failed to dispatch approval request notification to Ops:',
+            err?.message || err
+          );
+        });
+    } catch (err) {
+      console.warn('Error initiating approval request notification:', err);
+    }
+
     return validateResponse(
       approvalRequestResponseSchema,
       this.formatApprovalRequest(populated)
@@ -439,6 +477,23 @@ export class ApprovalRequestService {
 
     const reviewedAt = new Date();
 
+    const requesterDoc = request.requesterId as unknown as {
+      _id?: unknown;
+      id?: string;
+      email?: string;
+      name?: string;
+    } | null;
+    const requesterIdStr = String(
+      requesterDoc?._id || requesterDoc?.id || request.requesterId
+    );
+    const requesterEmail = requesterDoc?.email;
+    const facilityDoc = request.facilityId as unknown as {
+      name?: string;
+      _id?: unknown;
+    } | null;
+    const facilityName = facilityDoc?.name || 'Cơ sở';
+    const facilityIdStr = String(facilityDoc?._id || request.facilityId);
+
     if (data.action === ApprovalReviewDecisionEnum.REJECT) {
       await this.approvalRequestRepository.updateById(requestId, {
         status: ApprovalRequestStatusEnum.REJECTED,
@@ -460,6 +515,43 @@ export class ApprovalRequestService {
         },
       });
 
+      // Notify FM that request was rejected (non-blocking)
+      try {
+        const channels = [NotificationChannelEnum.IN_APP];
+        if (requesterEmail) {
+          channels.push(NotificationChannelEnum.EMAIL);
+        }
+        this.notificationService
+          ?.sendNotification({
+            recipientId: requesterIdStr,
+            facilityId: facilityIdStr,
+            title: 'Đề xuất phê duyệt bị từ chối',
+            content: `Đề xuất [${request.action}] cho [${request.targetType}] tại cơ sở "${facilityName}" của bạn đã bị từ chối bởi ${approver.name}. Lý do: ${data.rejectionReason || 'Không có lý do cụ thể'}.`,
+            type: NotificationTypeEnum.APPROVAL_REQUEST,
+            priority: NotificationPriorityEnum.HIGH,
+            channels,
+            metadata: {
+              requestId,
+              facilityId: facilityIdStr,
+              approverId,
+              approverName: approver.name,
+              targetType: request.targetType,
+              action: request.action,
+              status: ApprovalRequestStatusEnum.REJECTED,
+              rejectionReason: data.rejectionReason,
+              email: requesterEmail,
+            },
+          })
+          .catch((err) => {
+            console.warn(
+              'Failed to send rejection notification to FM:',
+              err?.message || err
+            );
+          });
+      } catch (err) {
+        console.warn('Error initiating rejection notification:', err);
+      }
+
       return validateResponse(
         approvalRequestResponseSchema,
         this.formatApprovalRequest(updated)
@@ -469,9 +561,6 @@ export class ApprovalRequestService {
     // =========================================================================
     // EXECUTION ENGINE: Apply payload to target collection automatically
     // =========================================================================
-    const facilityIdStr = String(
-      (request.facilityId as { _id?: unknown })?._id || request.facilityId
-    );
     const targetIdStr = request.targetId ? String(request.targetId) : null;
     const payload = request.payload;
 
@@ -694,6 +783,43 @@ export class ApprovalRequestService {
         reviewNotes: data.notes,
       },
     });
+
+    // Notify FM that request was approved (non-blocking)
+    try {
+      const channels = [NotificationChannelEnum.IN_APP];
+      if (requesterEmail) {
+        channels.push(NotificationChannelEnum.EMAIL);
+      }
+      this.notificationService
+        ?.sendNotification({
+          recipientId: requesterIdStr,
+          facilityId: facilityIdStr,
+          title: 'Đề xuất phê duyệt đã được chấp thuận',
+          content: `Đề xuất [${request.action}] cho [${request.targetType}] tại cơ sở "${facilityName}" của bạn đã được ${approver.name} phê duyệt thành công và đã có hiệu lực.`,
+          type: NotificationTypeEnum.APPROVAL_REQUEST,
+          priority: NotificationPriorityEnum.HIGH,
+          channels,
+          metadata: {
+            requestId,
+            facilityId: facilityIdStr,
+            approverId,
+            approverName: approver.name,
+            targetType: request.targetType,
+            action: request.action,
+            status: ApprovalRequestStatusEnum.APPROVED,
+            reviewNotes: data.notes,
+            email: requesterEmail,
+          },
+        })
+        .catch((err) => {
+          console.warn(
+            'Failed to send approval notification to FM:',
+            err?.message || err
+          );
+        });
+    } catch (err) {
+      console.warn('Error initiating approval notification:', err);
+    }
 
     return validateResponse(
       approvalRequestResponseSchema,

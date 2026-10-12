@@ -43,6 +43,7 @@ export class ReservationRepository {
       .populate('receivedBy', 'name email role')
       .populate('assignedBy', 'name email role')
       .populate('confirmedBy', 'name email role')
+      .populate('assignedStaffId', 'name email phoneNumber role')
       .populate('cancelledBy', 'name email role');
 
     if (session) {
@@ -60,7 +61,8 @@ export class ReservationRepository {
         'facilityUnitTypeOfferingId',
         'unitTypeId billingUnit pricePerUnit depositMultiplier minRentalDays status'
       )
-      .populate('storageUnitId', 'unitNumber floor zone status');
+      .populate('storageUnitId', 'unitNumber floor zone status')
+      .populate('assignedStaffId', 'name email phoneNumber role');
 
     if (session) {
       query.session(session);
@@ -135,6 +137,7 @@ export class ReservationRepository {
         { path: 'receivedBy', select: 'name email role' },
         { path: 'assignedBy', select: 'name email role' },
         { path: 'confirmedBy', select: 'name email role' },
+        { path: 'assignedStaffId', select: 'name email phoneNumber role' },
       ],
     });
   }

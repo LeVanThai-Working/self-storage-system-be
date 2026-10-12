@@ -12,6 +12,7 @@ import {
 export interface INotification extends SoftDeleteDocument {
   _id: mongoose.Types.ObjectId;
   recipientId: mongoose.Types.ObjectId;
+  facilityId?: mongoose.Types.ObjectId | null;
   title: string;
   content: string;
   type: NotificationTypeEnum;
@@ -30,6 +31,12 @@ const notificationSchema = new Schema<INotification>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
+    },
+    facilityId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Facility',
+      default: null,
       index: true,
     },
     title: {
@@ -79,6 +86,7 @@ const notificationSchema = new Schema<INotification>(
 // Compound indexes for optimal querying
 notificationSchema.index({ recipientId: 1, isRead: 1, createdAt: -1 });
 notificationSchema.index({ recipientId: 1, createdAt: -1 });
+notificationSchema.index({ facilityId: 1, createdAt: -1 });
 
 notificationSchema.plugin(MongooseDelete, {
   overrideMethods: 'all',

@@ -68,6 +68,20 @@ export const cancelReservationSchema = z.object({
     .max(500),
 });
 
+export const assignReservationStaffSchema = z.object({
+  staffId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid staff ID format'),
+  notes: z.string().max(1000).optional(),
+});
+
+export const markDepositPaidSchema = z.object({
+  paymentId: z.string().min(1, 'Payment ID is required'),
+  paidAmount: z.number().positive('Paid amount must be positive'),
+  paidAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date format (must be a valid ISO 8601 date string)',
+  }),
+  referenceCode: z.string().optional().nullable(),
+});
+
 export const reservationQuerySchema = paginationQuerySchema.extend({
   customerId: z
     .string()
@@ -103,5 +117,9 @@ export type ConfirmReservationRequest = z.infer<
   typeof confirmReservationSchema
 >;
 export type CancelReservationRequest = z.infer<typeof cancelReservationSchema>;
+export type AssignReservationStaffRequest = z.infer<
+  typeof assignReservationStaffSchema
+>;
+export type MarkDepositPaidRequest = z.infer<typeof markDepositPaidSchema>;
 export type ReservationQuery = z.infer<typeof reservationQuerySchema>;
 export type ReservationIdParam = z.infer<typeof reservationIdParamSchema>;

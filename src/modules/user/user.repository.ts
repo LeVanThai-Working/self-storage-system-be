@@ -63,6 +63,16 @@ export class UserRepository {
     return this.user.findOne({ googleId });
   }
 
+  async findUsersByRoles(
+    roles: RoleEnum[],
+    status: UserStatusEnum = UserStatusEnum.ACTIVE
+  ): Promise<IUser[]> {
+    return this.user.find({
+      role: { $in: roles },
+      status,
+    });
+  }
+
   async findStaffsByFacilityId(
     facilityId: string,
     query: {
