@@ -8,6 +8,7 @@ import {
 export const notificationResponseSchema = z.object({
   id: z.string(),
   recipientId: z.string(),
+  facilityId: z.string().nullable().optional(),
   title: z.string(),
   content: z.string(),
   type: z.nativeEnum(NotificationTypeEnum),

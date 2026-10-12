@@ -35,6 +35,10 @@ export class NotificationRepository {
       filter.priority = query.priority;
     }
 
+    if (query.facilityId) {
+      filter.facilityId = new mongoose.Types.ObjectId(query.facilityId);
+    }
+
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder || 'desc';
 

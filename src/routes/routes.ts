@@ -923,7 +923,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofnotificationResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"metadata":{"ref":"Record_string.unknown_"},"readAt":{"dataType":"string"},"isRead":{"dataType":"boolean","required":true},"channels":{"dataType":"array","array":{"dataType":"refEnum","ref":"NotificationChannelEnum"},"required":true},"priority":{"ref":"NotificationPriorityEnum","required":true},"type":{"ref":"NotificationTypeEnum","required":true},"content":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"recipientId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"metadata":{"ref":"Record_string.unknown_"},"readAt":{"dataType":"string"},"facilityId":{"dataType":"string"},"isRead":{"dataType":"boolean","required":true},"channels":{"dataType":"array","array":{"dataType":"refEnum","ref":"NotificationChannelEnum"},"required":true},"priority":{"ref":"NotificationPriorityEnum","required":true},"type":{"ref":"NotificationTypeEnum","required":true},"content":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"recipientId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationResponse": {
@@ -976,7 +976,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofnotificationQuerySchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"priority":{"ref":"NotificationPriorityEnum"},"type":{"ref":"NotificationTypeEnum"},"isRead":{"dataType":"boolean"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"facilityId":{"dataType":"string"},"priority":{"ref":"NotificationPriorityEnum"},"type":{"ref":"NotificationTypeEnum"},"isRead":{"dataType":"boolean"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationQuery": {
@@ -3748,7 +3748,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsNotificationController_getMyNotifications: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"priority":{"ref":"NotificationPriorityEnum"},"type":{"ref":"NotificationTypeEnum"},"isRead":{"dataType":"boolean"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"facilityId":{"dataType":"string"},"priority":{"ref":"NotificationPriorityEnum"},"type":{"ref":"NotificationTypeEnum"},"isRead":{"dataType":"boolean"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
         app.get('/notifications',
             ...(fetchMiddlewares<RequestHandler>(NotificationController)),

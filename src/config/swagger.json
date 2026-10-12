@@ -3186,6 +3186,9 @@
 					"readAt": {
 						"type": "string"
 					},
+					"facilityId": {
+						"type": "string"
+					},
 					"isRead": {
 						"type": "boolean"
 					},
@@ -3334,6 +3337,9 @@
 			},
 			"infer_typeofnotificationQuerySchema_": {
 				"properties": {
+					"facilityId": {
+						"type": "string"
+					},
 					"priority": {
 						"$ref": "#/components/schemas/NotificationPriorityEnum"
 					},
@@ -10543,6 +10549,14 @@
 				],
 				"security": [],
 				"parameters": [
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
 					{
 						"in": "query",
 						"name": "priority",
