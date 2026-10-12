@@ -28,7 +28,10 @@ import {
   PaymentTransactionResultEnum,
 } from '../../common/enums/payment.enum.ts';
 import { ReservationStatusEnum } from '../../common/enums/reservation.enum.ts';
-import { ContractStatusEnum } from '../../common/enums/contract.enum.ts';
+import {
+  ContractSourceEnum,
+  ContractStatusEnum,
+} from '../../common/enums/contract.enum.ts';
 import { RoleEnum } from '../../common/enums/user.enum.ts';
 import {
   AuditActionEnum,
@@ -331,7 +334,10 @@ export class PaymentService {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
       }
 
-      if (contract.depositPaidAt) {
+      if (
+        contract.depositPaidAt ||
+        contract.source === ContractSourceEnum.RESERVATION
+      ) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_507);
       }
 
