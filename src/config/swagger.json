@@ -2093,6 +2093,37 @@
 					"rejectionReason": {
 						"type": "string"
 					},
+					"assignedStaffAt": {
+						"type": "string"
+					},
+					"assignedStaff": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					},
 					"confirmedAt": {
 						"type": "string"
 					},
@@ -2625,6 +2656,49 @@
 			},
 			"CancelReservationRequest": {
 				"$ref": "#/components/schemas/infer_typeofcancelReservationSchema_"
+			},
+			"infer_typeofmarkDepositPaidSchema_": {
+				"properties": {
+					"referenceCode": {
+						"type": "string"
+					},
+					"paidAt": {
+						"type": "string"
+					},
+					"paidAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"paymentId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"paidAt",
+					"paidAmount",
+					"paymentId"
+				],
+				"type": "object"
+			},
+			"MarkDepositPaidRequest": {
+				"$ref": "#/components/schemas/infer_typeofmarkDepositPaidSchema_"
+			},
+			"infer_typeofassignReservationStaffSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"staffId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"staffId"
+				],
+				"type": "object"
+			},
+			"AssignReservationStaffRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignReservationStaffSchema_"
 			},
 			"SepayWebhookPayload": {
 				"properties": {
@@ -9937,6 +10011,242 @@
 						}
 					}
 				]
+			}
+		},
+		"/reservations/{id}/mark-deposit-paid": {
+			"post": {
+				"operationId": "MarkDepositPaid",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid reservation status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Mark deposit as paid (webhook/payment callback: PENDING_PAYMENT -> PAYMENT_SUCCESSFUL).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MarkDepositPaidRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/payment-failed": {
+			"post": {
+				"operationId": "HandlePaymentFailure",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid reservation status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Mark deposit payment as failed (webhook/payment callback: PENDING_PAYMENT -> PAYMENT_FAILED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/reservations/{id}/assign-staff": {
+			"post": {
+				"operationId": "AssignStaffToCheckIn",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Deposit not paid or staff invalid",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Reservation or Staff not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager assigns a staff member for customer check-in.\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignReservationStaffRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/payments/sepay/webhook": {
