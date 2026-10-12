@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import {
+  ContractAddendumStatusEnum,
+  ContractAddendumTypeEnum,
   ContractSourceEnum,
   ContractStatusEnum,
 } from '../../../common/enums/contract.enum.ts';
@@ -52,6 +54,34 @@ export const contractAmenityResponseSchema = z.object({
   addedAt: z.string(),
 });
 
+export const contractAddendumResponseSchema = z.object({
+  id: z.string(),
+  addendumCode: z.string(),
+  type: z.enum(ContractAddendumTypeEnum),
+  amenities: z.array(contractAmenityResponseSchema),
+  totalPeriodicPrice: z.number(),
+  damageFee: z.number(),
+  status: z.enum(ContractAddendumStatusEnum),
+  requestedBy: userSnapshotSchema.optional().nullable(),
+  requestedAt: z.string(),
+  approvedBy: userSnapshotSchema.optional().nullable(),
+  approvedAt: z.string().optional().nullable(),
+  assignedStaffId: z.string().optional().nullable(),
+  assignedStaff: userSnapshotSchema.optional().nullable(),
+  customerSigned: z.boolean(),
+  customerSignedAt: z.string().optional().nullable(),
+  staffSigned: z.boolean(),
+  staffSignedAt: z.string().optional().nullable(),
+  completedAt: z.string().optional().nullable(),
+  rejectionReason: z.string().optional().nullable(),
+  rejectedBy: userSnapshotSchema.optional().nullable(),
+  rejectedAt: z.string().optional().nullable(),
+  cancellationReason: z.string().optional().nullable(),
+  cancelledBy: userSnapshotSchema.optional().nullable(),
+  cancelledAt: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+
 export const contractRenewalResponseSchema = z.object({
   previousEndDate: z.string(),
   newEndDate: z.string(),
@@ -81,6 +111,7 @@ export const contractResponseSchema = z.object({
   depositPaymentId: z.string().optional().nullable(),
   totalPeriodicPrice: z.number(),
   amenities: z.array(contractAmenityResponseSchema),
+  addendums: z.array(contractAddendumResponseSchema),
   renewals: z.array(contractRenewalResponseSchema),
   renewalCount: z.number(),
   inspectedBy: userSnapshotSchema.optional().nullable(),
@@ -97,6 +128,10 @@ export const contractResponseSchema = z.object({
   terminatedAt: z.string().optional().nullable(),
   status: z.enum(ContractStatusEnum),
   termsAccepted: z.boolean(),
+  customerSigned: z.boolean(),
+  customerSignedAt: z.string().optional().nullable(),
+  staffSigned: z.boolean(),
+  staffSignedAt: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   customer: userSnapshotSchema.optional().nullable(),
   facility: facilitySnapshotSchema.optional().nullable(),
@@ -111,6 +146,9 @@ export const contractListResponseSchema = z.array(contractResponseSchema);
 
 export type ContractAmenityResponse = z.infer<
   typeof contractAmenityResponseSchema
+>;
+export type ContractAddendumResponse = z.infer<
+  typeof contractAddendumResponseSchema
 >;
 export type ContractRenewalResponse = z.infer<
   typeof contractRenewalResponseSchema

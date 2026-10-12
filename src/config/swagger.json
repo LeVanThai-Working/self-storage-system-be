@@ -1650,6 +1650,12 @@
 					"terminate",
 					"add_amenity",
 					"remove_amenity",
+					"sign_contract",
+					"create_addendum",
+					"approve_addendum",
+					"reject_addendum",
+					"sign_addendum",
+					"cancel_addendum",
 					"confirm_payment",
 					"receive_payment"
 				],
@@ -5141,6 +5147,23 @@
 				],
 				"type": "string"
 			},
+			"ContractAddendumTypeEnum": {
+				"enum": [
+					"add",
+					"remove"
+				],
+				"type": "string"
+			},
+			"ContractAddendumStatusEnum": {
+				"enum": [
+					"pending_approval",
+					"draft",
+					"active",
+					"rejected",
+					"cancelled"
+				],
+				"type": "string"
+			},
 			"ContractStatusEnum": {
 				"enum": [
 					"draft",
@@ -5300,6 +5323,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"staffSignedAt": {
+						"type": "string"
+					},
+					"customerSignedAt": {
+						"type": "string"
+					},
 					"terminatedAt": {
 						"type": "string"
 					},
@@ -5414,6 +5443,12 @@
 					"createdAt": {
 						"type": "string"
 					},
+					"staffSigned": {
+						"type": "boolean"
+					},
+					"customerSigned": {
+						"type": "boolean"
+					},
 					"termsAccepted": {
 						"type": "boolean"
 					},
@@ -5485,6 +5520,255 @@
 								"renewedAt",
 								"newEndDate",
 								"previousEndDate"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"addendums": {
+						"items": {
+							"properties": {
+								"notes": {
+									"type": "string"
+								},
+								"cancelledAt": {
+									"type": "string"
+								},
+								"cancelledBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"cancellationReason": {
+									"type": "string"
+								},
+								"rejectedAt": {
+									"type": "string"
+								},
+								"rejectedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"rejectionReason": {
+									"type": "string"
+								},
+								"completedAt": {
+									"type": "string"
+								},
+								"staffSignedAt": {
+									"type": "string"
+								},
+								"customerSignedAt": {
+									"type": "string"
+								},
+								"assignedStaff": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"assignedStaffId": {
+									"type": "string"
+								},
+								"approvedAt": {
+									"type": "string"
+								},
+								"approvedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"requestedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"staffSigned": {
+									"type": "boolean"
+								},
+								"customerSigned": {
+									"type": "boolean"
+								},
+								"requestedAt": {
+									"type": "string"
+								},
+								"status": {
+									"$ref": "#/components/schemas/ContractAddendumStatusEnum"
+								},
+								"damageFee": {
+									"type": "number",
+									"format": "double"
+								},
+								"totalPeriodicPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"amenities": {
+									"items": {
+										"properties": {
+											"addedAt": {
+												"type": "string"
+											},
+											"totalPrice": {
+												"type": "number",
+												"format": "double"
+											},
+											"billingUnit": {
+												"$ref": "#/components/schemas/BillingUnitEnum"
+											},
+											"pricePerUnit": {
+												"type": "number",
+												"format": "double"
+											},
+											"quantity": {
+												"type": "number",
+												"format": "double"
+											},
+											"name": {
+												"type": "string"
+											},
+											"amenityId": {
+												"type": "string"
+											},
+											"facilityAmenityOfferingId": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"addedAt",
+											"totalPrice",
+											"billingUnit",
+											"pricePerUnit",
+											"quantity",
+											"name",
+											"amenityId",
+											"facilityAmenityOfferingId"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"type": {
+									"$ref": "#/components/schemas/ContractAddendumTypeEnum"
+								},
+								"addendumCode": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"staffSigned",
+								"customerSigned",
+								"requestedAt",
+								"status",
+								"damageFee",
+								"totalPeriodicPrice",
+								"amenities",
+								"type",
+								"addendumCode",
+								"id"
 							],
 							"type": "object"
 						},
@@ -5581,6 +5865,8 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
+					"staffSigned",
+					"customerSigned",
 					"termsAccepted",
 					"status",
 					"additionalPaymentRequired",
@@ -5589,6 +5875,7 @@
 					"damageFee",
 					"renewalCount",
 					"renewals",
+					"addendums",
 					"amenities",
 					"totalPeriodicPrice",
 					"depositAmount",
@@ -5825,6 +6112,23 @@
 			"ContractQuery": {
 				"$ref": "#/components/schemas/infer_typeofcontractQuerySchema_"
 			},
+			"infer_typeofcustomerSignContractSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"termsAccepted": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"termsAccepted"
+				],
+				"type": "object"
+			},
+			"CustomerSignContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofcustomerSignContractSchema_"
+			},
 			"infer_typeofcheckInContractSchema_": {
 				"properties": {
 					"notes": {
@@ -5876,24 +6180,105 @@
 			"RenewContractRequest": {
 				"$ref": "#/components/schemas/infer_typeofrenewContractSchema_"
 			},
-			"infer_typeofaddContractAmenitySchema_": {
+			"infer_typeofcreateContractAddendumSchema_": {
 				"properties": {
-					"quantity": {
-						"type": "number",
-						"format": "double"
+					"notes": {
+						"type": "string"
 					},
-					"facilityAmenityOfferingId": {
+					"amenities": {
+						"items": {
+							"properties": {
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"type": {
+						"$ref": "#/components/schemas/ContractAddendumTypeEnum"
+					}
+				},
+				"required": [
+					"amenities",
+					"type"
+				],
+				"type": "object"
+			},
+			"CreateContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateContractAddendumSchema_"
+			},
+			"infer_typeofapproveContractAddendumSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ApproveContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofapproveContractAddendumSchema_"
+			},
+			"infer_typeofrejectContractAddendumSchema_": {
+				"properties": {
+					"rejectionReason": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"quantity",
-					"facilityAmenityOfferingId"
+					"rejectionReason"
 				],
 				"type": "object"
 			},
-			"AddContractAmenityRequest": {
-				"$ref": "#/components/schemas/infer_typeofaddContractAmenitySchema_"
+			"RejectContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofrejectContractAddendumSchema_"
+			},
+			"infer_typeofsignContractAddendumSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"damageFee": {
+						"type": "number",
+						"format": "double"
+					},
+					"termsAccepted": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"termsAccepted"
+				],
+				"type": "object"
+			},
+			"SignContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofsignContractAddendumSchema_"
+			},
+			"infer_typeofcancelContractAddendumSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelContractAddendumSchema_"
 			},
 			"infer_typeofcheckOutContractSchema_": {
 				"properties": {
@@ -10222,7 +10607,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager assigns a staff member for customer check-in.\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
+				"description": "Facility Manager assigns a staff member for customer check-in.\r\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
 				"tags": [
 					"Reservations"
 				],
@@ -10285,7 +10670,7 @@
 						}
 					}
 				},
-				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\r\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
+				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
 				"tags": [
 					"Payments"
 				],
@@ -10389,7 +10774,7 @@
 						}
 					}
 				},
-				"description": "Get paginated list of payments.\r\nCustomers only see their own payments. Staff can filter across facilities.",
+				"description": "Get paginated list of payments.\nCustomers only see their own payments. Staff can filter across facilities.",
 				"tags": [
 					"Payments"
 				],
@@ -10551,7 +10936,7 @@
 						}
 					}
 				},
-				"description": "Process expired pending payments (Cron / Batch job).\r\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"description": "Process expired pending payments (Cron / Batch job).\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
 				"tags": [
 					"Payments"
 				],
@@ -12944,7 +13329,7 @@
 						}
 					}
 				},
-				"description": "Create a new contract (From Reservation or Walk-in).\r\nStatus will be DRAFT.",
+				"description": "Create a new contract (From Reservation or Walk-in).\nStatus will be DRAFT.",
 				"tags": [
 					"Contracts"
 				],
@@ -13193,6 +13578,68 @@
 				]
 			}
 		},
+		"/contracts/{id}/customer-sign": {
+			"post": {
+				"operationId": "CustomerSignContract",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\nWhen both customerSigned and staffSigned are true, contract automatically becomes ACTIVE.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CustomerSignContractRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/contracts/{id}/check-in": {
 			"post": {
 				"operationId": "CheckInContract",
@@ -13228,7 +13675,7 @@
 						}
 					}
 				},
-				"description": "Check-in & Activate contract.\r\nChanges status from DRAFT to ACTIVE, storage unit becomes OCCUPIED.",
+				"description": "Staff confirms handover & signs contract on Web (Two-party signing: Staff side).\nWhen both customerSigned and staffSigned are true, contract automatically becomes ACTIVE and storage unit becomes OCCUPIED.",
 				"tags": [
 					"Contracts"
 				],
@@ -13290,7 +13737,7 @@
 						}
 					}
 				},
-				"description": "Cancel DRAFT contract.\r\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
+				"description": "Cancel DRAFT contract.\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
 				"tags": [
 					"Contracts"
 				],
@@ -13379,12 +13826,12 @@
 				}
 			}
 		},
-		"/contracts/{id}/amenities": {
+		"/contracts/{id}/addendums": {
 			"post": {
-				"operationId": "AddAmenity",
+				"operationId": "CreateAddendum",
 				"responses": {
-					"200": {
-						"description": "Success",
+					"201": {
+						"description": "Contract Addendum Created Successfully",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -13414,7 +13861,7 @@
 						}
 					}
 				},
-				"description": "Add amenity to active contract.",
+				"description": "Customer requests to add (install) or remove (uninstall) amenities for an ACTIVE contract (Creates Contract Addendum in PENDING_APPROVAL).",
 				"tags": [
 					"Contracts"
 				],
@@ -13434,16 +13881,16 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/AddContractAmenityRequest"
+								"$ref": "#/components/schemas/CreateContractAddendumRequest"
 							}
 						}
 					}
 				}
 			}
 		},
-		"/contracts/{id}/amenities/{amenityOfferingId}": {
-			"delete": {
-				"operationId": "RemoveAmenity",
+		"/contracts/{id}/addendums/{addendumId}/approve": {
+			"post": {
+				"operationId": "ApproveAddendum",
 				"responses": {
 					"200": {
 						"description": "Success",
@@ -13476,7 +13923,7 @@
 						}
 					}
 				},
-				"description": "Remove amenity from active contract.",
+				"description": "Facility Manager approves amenity addendum request (ADD or REMOVE), creates DRAFT addendum, and assigns staff for physical handover/uninstall.",
 				"tags": [
 					"Contracts"
 				],
@@ -13492,13 +13939,303 @@
 					},
 					{
 						"in": "path",
-						"name": "amenityOfferingId",
+						"name": "addendumId",
 						"required": true,
 						"schema": {
 							"type": "string"
 						}
 					}
-				]
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ApproveContractAddendumRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/reject": {
+			"post": {
+				"operationId": "RejectAddendum",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager rejects amenity addendum request and releases locked inventory (if ADD).",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RejectContractAddendumRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/customer-sign": {
+			"post": {
+				"operationId": "CustomerSignAddendum",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer signs addendum on Mobile (Two-party signing: Customer side).\nWhen both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SignContractAddendumRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/staff-sign": {
+			"post": {
+				"operationId": "StaffSignAddendum",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Staff confirms physical handover/uninstall & signs addendum on Web (Two-party signing: Staff side).\nWhen both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SignContractAddendumRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/cancel": {
+			"post": {
+				"operationId": "CancelAddendum",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel addendum (when PENDING_APPROVAL or DRAFT) and release locked amenity inventory (if ADD).",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelContractAddendumRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/contracts/{id}/check-out": {
@@ -13536,7 +14273,7 @@
 						}
 					}
 				},
-				"description": "Check-out & Liquidate contract.\r\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\r\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
+				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
 				"tags": [
 					"Contracts"
 				],
@@ -13598,7 +14335,7 @@
 						}
 					}
 				},
-				"description": "Terminate contract early due to terms violation.\r\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
+				"description": "Terminate contract early due to terms violation.\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
 				"tags": [
 					"Contracts"
 				],

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { paginationQuerySchema } from '../../../common/schemas/pagination.schema.ts';
 import { BillingUnitEnum } from '../../../common/enums/billing.enum.ts';
 import {
+  ContractAddendumTypeEnum,
   ContractSourceEnum,
   ContractStatusEnum,
 } from '../../../common/enums/contract.enum.ts';
@@ -136,6 +137,11 @@ export const checkInContractSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
+export const customerSignContractSchema = z.object({
+  termsAccepted: z.boolean().default(true),
+  notes: z.string().max(1000).optional(),
+});
+
 export const cancelContractSchema = z.object({
   cancellationReason: z
     .string()
@@ -148,9 +154,34 @@ export const renewContractSchema = z.object({
   note: z.string().max(1000).optional(),
 });
 
-export const addContractAmenitySchema = z.object({
-  facilityAmenityOfferingId: objectIdSchema,
-  quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+export const createContractAddendumSchema = z.object({
+  type: z.nativeEnum(ContractAddendumTypeEnum),
+  amenities: z
+    .array(contractAmenityInputSchema)
+    .min(1, 'At least 1 amenity item is required'),
+  notes: z.string().max(1000).optional(),
+});
+
+export const approveContractAddendumSchema = z.object({
+  assignedStaffId: objectIdSchema.optional(),
+  notes: z.string().max(1000).optional(),
+});
+
+export const rejectContractAddendumSchema = z.object({
+  rejectionReason: z.string().min(1, 'Rejection reason is required').max(1000),
+});
+
+export const signContractAddendumSchema = z.object({
+  termsAccepted: z.boolean().default(true),
+  damageFee: z.number().min(0).optional(),
+  notes: z.string().max(1000).optional(),
+});
+
+export const cancelContractAddendumSchema = z.object({
+  cancellationReason: z
+    .string()
+    .min(1, 'Cancellation reason is required')
+    .max(1000),
 });
 
 export const checkOutContractSchema = z.object({
@@ -184,17 +215,32 @@ export const contractIdParamSchema = z.object({
   id: objectIdSchema,
 });
 
-export const contractAmenityParamSchema = z.object({
+export const contractAddendumParamSchema = z.object({
   id: objectIdSchema,
-  amenityOfferingId: objectIdSchema,
+  addendumId: objectIdSchema,
 });
 
 export type CreateContractRequest = z.infer<typeof createContractSchema>;
 export type CheckInContractRequest = z.infer<typeof checkInContractSchema>;
+export type CustomerSignContractRequest = z.infer<
+  typeof customerSignContractSchema
+>;
 export type CancelContractRequest = z.infer<typeof cancelContractSchema>;
 export type RenewContractRequest = z.infer<typeof renewContractSchema>;
-export type AddContractAmenityRequest = z.infer<
-  typeof addContractAmenitySchema
+export type CreateContractAddendumRequest = z.infer<
+  typeof createContractAddendumSchema
+>;
+export type ApproveContractAddendumRequest = z.infer<
+  typeof approveContractAddendumSchema
+>;
+export type RejectContractAddendumRequest = z.infer<
+  typeof rejectContractAddendumSchema
+>;
+export type SignContractAddendumRequest = z.infer<
+  typeof signContractAddendumSchema
+>;
+export type CancelContractAddendumRequest = z.infer<
+  typeof cancelContractAddendumSchema
 >;
 export type CheckOutContractRequest = z.infer<typeof checkOutContractSchema>;
 export type TerminateContractRequest = z.infer<typeof terminateContractSchema>;

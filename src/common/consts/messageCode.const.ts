@@ -108,6 +108,16 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_407: 'MESSAGE_CODE_407',
   // Insufficient Amenity Quantity For Contract
   MESSAGE_CODE_408: 'MESSAGE_CODE_408',
+  // Contract Addendum Not Found
+  MESSAGE_CODE_409: 'MESSAGE_CODE_409',
+  // Invalid Contract Addendum Status Transition
+  MESSAGE_CODE_410: 'MESSAGE_CODE_410',
+  // Contract Terms Must Be Accepted
+  MESSAGE_CODE_411: 'MESSAGE_CODE_411',
+  // Party Has Already Signed
+  MESSAGE_CODE_412: 'MESSAGE_CODE_412',
+  // Insufficient Contracted Amenity Quantity To Remove
+  MESSAGE_CODE_413: 'MESSAGE_CODE_413',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -189,6 +199,11 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
     'Reservation Must Be Confirmed Or Completed To Create Contract',
   MESSAGE_CODE_407: 'Storage Unit Facility Mismatch',
   MESSAGE_CODE_408: 'Insufficient Amenity Quantity For Contract',
+  MESSAGE_CODE_409: 'Contract Addendum Not Found',
+  MESSAGE_CODE_410: 'Invalid Contract Addendum Status Transition',
+  MESSAGE_CODE_411: 'Contract Terms Must Be Accepted',
+  MESSAGE_CODE_412: 'Party Has Already Signed',
+  MESSAGE_CODE_413: 'Insufficient Contracted Amenity Quantity To Remove',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',
