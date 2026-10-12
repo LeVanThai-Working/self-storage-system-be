@@ -14,6 +14,7 @@ import {
   type ReservationResponse,
 } from './schemas/reservation.response.schema.ts';
 import type {
+  AssignReservationStaffRequest,
   AssignStorageUnitRequest,
   CancelReservationRequest,
   ConfirmReservationRequest,
@@ -30,8 +31,14 @@ import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
 import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
 import { FacilityAmenityOfferingStatusEnum } from '../../common/enums/facilityAmenityOffering.enum.ts';
+import {
+  NotificationChannelEnum,
+  NotificationPriorityEnum,
+  NotificationTypeEnum,
+} from '../../common/enums/notification.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { NotificationService } from '../notification/notification.service.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -45,7 +52,8 @@ export class ReservationService {
     private readonly amenityOfferingRepository: FacilityAmenityOfferingRepository,
     private readonly storageUnitRepository: StorageUnitRepository,
     private readonly userRepository: UserRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly notificationService?: NotificationService
   ) {}
 
   private generateReservationCode(): string {
@@ -163,6 +171,13 @@ export class ReservationService {
     const rawAmenities =
       (raw.amenities as Array<Record<string, unknown>>) || [];
 
+    const assignedStaffIdStr = raw.assignedStaffId
+      ? typeof raw.assignedStaffId === 'object' &&
+        '_id' in (raw.assignedStaffId as Record<string, unknown>)
+        ? String((raw.assignedStaffId as Record<string, unknown>)._id)
+        : String(raw.assignedStaffId)
+      : null;
+
     return {
       id: String(raw._id),
       reservationCode: String(raw.reservationCode),
@@ -212,6 +227,13 @@ export class ReservationService {
           ? raw.confirmedAt.toISOString()
           : new Date(String(raw.confirmedAt)).toISOString()
         : null,
+      assignedStaffId: assignedStaffIdStr,
+      assignedStaff: formatUserSnap(raw.assignedStaffId),
+      assignedStaffAt: raw.assignedStaffAt
+        ? raw.assignedStaffAt instanceof Date
+          ? raw.assignedStaffAt.toISOString()
+          : new Date(String(raw.assignedStaffAt)).toISOString()
+        : null,
       rejectionReason: (raw.rejectionReason as string) ?? null,
       cancellationReason: (raw.cancellationReason as string) ?? null,
       cancelledBy: formatUserSnap(raw.cancelledBy),
@@ -246,6 +268,143 @@ export class ReservationService {
           ? raw.updatedAt.toISOString()
           : new Date(String(raw.updatedAt)).toISOString(),
     };
+  }
+
+  private notifyFacilityManager(
+    facilityId: string,
+    title: string,
+    content: string,
+    metadata?: Record<string, unknown>
+  ): void {
+    if (!this.notificationService) return;
+    try {
+      this.facilityRepository
+        .findById(facilityId)
+        .then(async (facility) => {
+          if (!facility) return;
+          let managerId = facility.managerId
+            ? String(
+                (facility.managerId as { _id?: Types.ObjectId })._id ||
+                  facility.managerId
+              )
+            : null;
+
+          if (!managerId) {
+            const managers = await this.userRepository.findUsersByRoles([
+              RoleEnum.FACILITY_MANAGER,
+            ]);
+            const matched = managers.find(
+              (m) => String(m.assignedFacilityId) === facilityId
+            );
+            if (matched) {
+              managerId = String(matched._id);
+            }
+          }
+
+          if (managerId) {
+            await this.notificationService?.sendNotification({
+              recipientId: managerId,
+              facilityId,
+              title,
+              content,
+              type: NotificationTypeEnum.RESERVATION,
+              priority: NotificationPriorityEnum.HIGH,
+              channels: [NotificationChannelEnum.IN_APP],
+              metadata: {
+                ...metadata,
+                facilityId,
+                facilityName: facility.name,
+              },
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn(
+            'Failed to notify facility manager:',
+            err?.message || err
+          );
+        });
+    } catch (err) {
+      console.warn('Error initiating notification to facility manager:', err);
+    }
+  }
+
+  private notifyAssignedStaff(
+    staffId: string,
+    facilityId: string,
+    title: string,
+    content: string,
+    metadata?: Record<string, unknown>
+  ): void {
+    if (!this.notificationService) return;
+    try {
+      this.notificationService
+        .sendNotification({
+          recipientId: staffId,
+          facilityId,
+          title,
+          content,
+          type: NotificationTypeEnum.RESERVATION,
+          priority: NotificationPriorityEnum.HIGH,
+          channels: [NotificationChannelEnum.IN_APP],
+          metadata: {
+            ...metadata,
+            facilityId,
+            staffId,
+          },
+        })
+        .catch((err) => {
+          console.warn('Failed to notify assigned staff:', err?.message || err);
+        });
+    } catch (err) {
+      console.warn('Error initiating notification to assigned staff:', err);
+    }
+  }
+
+  private notifyCustomer(
+    customerId: string,
+    facilityId: string,
+    title: string,
+    content: string,
+    metadata?: Record<string, unknown>,
+    priority: NotificationPriorityEnum = NotificationPriorityEnum.NORMAL,
+    customChannels?: NotificationChannelEnum[]
+  ): void {
+    if (!this.notificationService) return;
+    try {
+      this.userRepository
+        .findById(customerId)
+        .then(async (customer) => {
+          if (!customer) return;
+          const channels = customChannels
+            ? [...customChannels]
+            : [NotificationChannelEnum.IN_APP];
+          if (!customChannels && customer.email) {
+            channels.push(NotificationChannelEnum.EMAIL);
+          }
+          await this.notificationService?.sendNotification({
+            recipientId: customerId,
+            facilityId,
+            title,
+            content,
+            type: NotificationTypeEnum.RESERVATION,
+            priority,
+            channels,
+            metadata: {
+              ...metadata,
+              facilityId,
+              customerId,
+              customerEmail: customer.email,
+              email: customer.email,
+            },
+          });
+        })
+        .catch((err) => {
+          console.warn('Failed to notify customer:', err?.message || err);
+        });
+    } catch (err) {
+      console.warn('Error initiating notification to customer:', err);
+    }
   }
 
   // 1. Customer creates initial reservation (PENDING)
@@ -420,6 +579,32 @@ export class ReservationService {
       resourceId: created._id.toString(),
       after: formatted,
     });
+
+    // Notify customer (In-App + Email)
+    this.notifyCustomer(
+      customerId,
+      data.facilityId,
+      `Yêu cầu đặt chỗ mới [${reservationCode}] đã được tiếp nhận`,
+      `Yêu cầu đặt giữ chỗ [${reservationCode}] tại cơ sở "${facility.name}" đã được ghi nhận. Quản lý cơ sở sẽ xem xét và phản hồi trong thời gian sớm nhất.`,
+      {
+        reservationId: created._id.toString(),
+        reservationCode,
+        facilityId: data.facilityId,
+      }
+    );
+
+    // Notify FM (In-App)
+    this.notifyFacilityManager(
+      data.facilityId,
+      `Yêu cầu đặt giữ chỗ mới [${reservationCode}]`,
+      `Khách hàng "${customer.name}" vừa gửi yêu cầu đặt chỗ mới [${reservationCode}] tại cơ sở "${facility.name}". Vui lòng tiếp nhận và xử lý.`,
+      {
+        reservationId: created._id.toString(),
+        reservationCode,
+        customerId,
+        customerName: customer.name,
+      }
+    );
 
     return validateResponse(reservationResponseSchema, formatted);
   }
@@ -605,6 +790,23 @@ export class ReservationService {
       after: formatted,
     });
 
+    const customerIdStr = String(
+      (reservation.customerId as { _id?: Types.ObjectId })._id ||
+        reservation.customerId
+    );
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã được tiếp nhận xử lý`,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã được cơ sở tiếp nhận và đang tiến hành kiểm tra xếp phòng kho cho bạn.`,
+      { reservationId: id, reservationCode: reservation.reservationCode }
+    );
+
     return validateResponse(reservationResponseSchema, formatted);
   }
 
@@ -714,6 +916,26 @@ export class ReservationService {
       after: formatted,
     });
 
+    const customerIdStr = String(
+      (reservation.customerId as { _id?: Types.ObjectId })._id ||
+        reservation.customerId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Phòng kho đã được gán - Vui lòng thanh toán tiền cọc [${reservation.reservationCode}]`,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã được xếp phòng "${unit.unitNumber}". Vui lòng thanh toán tiền cọc ${reservation.depositAmount.toLocaleString('vi-VN')} VNĐ trước ${expiresAt.toLocaleString('vi-VN')} để hoàn tất giữ chỗ.`,
+      {
+        reservationId: id,
+        reservationCode: reservation.reservationCode,
+        storageUnitId: data.storageUnitId,
+        unitNumber: unit.unitNumber,
+        expiresAt: expiresAt.toISOString(),
+      },
+      NotificationPriorityEnum.URGENT
+    );
+
     return validateResponse(reservationResponseSchema, formatted);
   }
 
@@ -752,6 +974,28 @@ export class ReservationService {
       before: this.formatReservation(reservation),
       after: formatted,
     });
+
+    const customerIdStr = String(
+      (reservation.customerId as { _id?: Types.ObjectId })._id ||
+        reservation.customerId
+    );
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã bị từ chối`,
+      `Rất tiếc, yêu cầu đặt chỗ [${reservation.reservationCode}] tại cơ sở đã bị từ chối. Lý do: ${data.rejectionReason}`,
+      {
+        reservationId: id,
+        reservationCode: reservation.reservationCode,
+        rejectionReason: data.rejectionReason,
+      },
+      NotificationPriorityEnum.HIGH
+    );
 
     return validateResponse(reservationResponseSchema, formatted);
   }
@@ -811,6 +1055,104 @@ export class ReservationService {
         referenceCode: paymentInfo.referenceCode ?? null,
       },
     });
+
+    const customerIdStr = String(
+      (reservation.customerId as { _id?: Types.ObjectId })._id ||
+        reservation.customerId
+    );
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+
+    // Notify customer (In-App + Email)
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Thanh toán tiền cọc thành công [${reservation.reservationCode}]`,
+      `Bạn đã thanh toán thành công số tiền cọc ${(paymentInfo.paidAmount || reservation.depositAmount).toLocaleString('vi-VN')} VNĐ cho đơn [${reservation.reservationCode}]. Quản lý cơ sở sẽ sớm xác nhận đơn đặt chỗ.`,
+      {
+        reservationId: id,
+        reservationCode: reservation.reservationCode,
+        paidAmount: paymentInfo.paidAmount,
+      }
+    );
+
+    // Notify FM (In-App)
+    this.notifyFacilityManager(
+      facilityIdStr,
+      `Khách hàng đã thanh toán cọc [${reservation.reservationCode}]`,
+      `Khách hàng đã hoàn tất thanh toán cọc cho đơn [${reservation.reservationCode}]. Vui lòng xác nhận đơn và phân công nhân viên hỗ trợ check-in khi khách đến.`,
+      {
+        reservationId: id,
+        reservationCode: reservation.reservationCode,
+        customerId: customerIdStr,
+        paidAmount: paymentInfo.paidAmount,
+      }
+    );
+
+    return validateResponse(reservationResponseSchema, formatted);
+  }
+
+  // 7. Handle payment failure (PENDING_PAYMENT -> PAYMENT_FAILED)
+  @Transactional()
+  async handlePaymentFailure(
+    id: string,
+    errorReason?: string,
+    session?: ClientSession
+  ): Promise<ReservationResponse> {
+    const reservation = await this.reservationRepository.findById(id, session);
+    if (!reservation) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
+    }
+
+    if (reservation.status !== ReservationStatusEnum.PENDING_PAYMENT) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_301);
+    }
+
+    const updated = await this.reservationRepository.update(
+      id,
+      {
+        status: ReservationStatusEnum.PAYMENT_FAILED,
+        lastPaymentError: errorReason || 'Payment failed',
+      },
+      session
+    );
+
+    const populated = await this.reservationRepository.findById(id, session);
+    const formatted = this.formatReservation(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.RESERVATION,
+      resourceId: id,
+      before: this.formatReservation(reservation),
+      after: formatted,
+      metadata: { errorReason },
+    });
+
+    const customerIdStr = String(
+      (reservation.customerId as { _id?: Types.ObjectId })._id ||
+        reservation.customerId
+    );
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Thanh toán tiền cọc không thành công [${reservation.reservationCode}]`,
+      `Giao dịch thanh toán cọc cho đơn [${reservation.reservationCode}] không thành công (${errorReason || 'Lỗi giao dịch'}). Bạn có thể thử lại trước hạn giữ chỗ.`,
+      {
+        reservationId: id,
+        reservationCode: reservation.reservationCode,
+        errorReason,
+      },
+      NotificationPriorityEnum.NORMAL,
+      [NotificationChannelEnum.IN_APP]
+    );
 
     return validateResponse(reservationResponseSchema, formatted);
   }
@@ -893,6 +1235,31 @@ export class ReservationService {
       before: this.formatReservation(reservation),
       after: formatted,
     });
+
+    const customerIdStr = String(
+      (reservation.customerId as { _id?: Types.ObjectId })._id ||
+        reservation.customerId
+    );
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+    const unitNumber = populated?.storageUnitId
+      ? (populated.storageUnitId as { unitNumber?: string }).unitNumber || 'N/A'
+      : 'N/A';
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã được xác nhận chính thức`,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã được cơ sở xác nhận thành công. Phòng kho "${unitNumber}" đã được khóa giữ chỗ sẵn sàng đón bạn.`,
+      {
+        reservationId: id,
+        reservationCode: reservation.reservationCode,
+        unitNumber,
+      },
+      NotificationPriorityEnum.HIGH
+    );
 
     return validateResponse(reservationResponseSchema, formatted);
   }
@@ -994,6 +1361,58 @@ export class ReservationService {
       after: formatted,
     });
 
+    const customerIdStr = String(
+      (reservation.customerId as { _id?: Types.ObjectId })._id ||
+        reservation.customerId
+    );
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+    const isCustomerCancel = String(actorId) === customerIdStr;
+
+    if (isCustomerCancel) {
+      // Customer cancelled -> Notify FM (In-App)
+      this.notifyFacilityManager(
+        facilityIdStr,
+        `Khách hàng đã huỷ đơn đặt chỗ [${reservation.reservationCode}]`,
+        `Khách hàng đã huỷ đơn đặt chỗ [${reservation.reservationCode}]. Phòng kho và tiện ích liên quan đã được tự động giải phóng.`,
+        {
+          reservationId: id,
+          reservationCode: reservation.reservationCode,
+          cancellationReason: data.cancellationReason,
+          refundAmount,
+        }
+      );
+      // Notify customer (In-App + Email)
+      this.notifyCustomer(
+        customerIdStr,
+        facilityIdStr,
+        `Đơn đặt chỗ [${reservation.reservationCode}] đã huỷ thành công`,
+        `Đơn đặt chỗ [${reservation.reservationCode}] đã được huỷ theo yêu cầu của bạn. Số tiền hoàn cọc: ${refundAmount.toLocaleString('vi-VN')} VNĐ.`,
+        {
+          reservationId: id,
+          reservationCode: reservation.reservationCode,
+          refundAmount,
+        }
+      );
+    } else {
+      // Facility cancelled -> Notify customer (In-App + Email)
+      this.notifyCustomer(
+        customerIdStr,
+        facilityIdStr,
+        `Đơn đặt chỗ [${reservation.reservationCode}] đã bị huỷ bởi cơ sở`,
+        `Đơn đặt chỗ [${reservation.reservationCode}] đã bị huỷ bởi cơ sở. Lý do: ${data.cancellationReason}. Số tiền hoàn cọc: ${refundAmount.toLocaleString('vi-VN')} VNĐ.`,
+        {
+          reservationId: id,
+          reservationCode: reservation.reservationCode,
+          cancellationReason: data.cancellationReason,
+          refundAmount,
+        },
+        NotificationPriorityEnum.HIGH
+      );
+    }
+
     return validateResponse(reservationResponseSchema, formatted);
   }
 
@@ -1044,6 +1463,24 @@ export class ReservationService {
         session
       );
       count++;
+
+      const customerIdStr = String(
+        (res.customerId as { _id?: Types.ObjectId })._id || res.customerId
+      );
+      const facilityIdStr = String(
+        (res.facilityId as { _id?: Types.ObjectId })._id || res.facilityId
+      );
+      this.notifyCustomer(
+        customerIdStr,
+        facilityIdStr,
+        `Đơn đặt chỗ [${res.reservationCode}] đã hết hạn giữ chỗ`,
+        `Đơn đặt chỗ [${res.reservationCode}] đã tự động hết hạn do quá thời gian giữ chỗ thanh toán cọc. Phòng kho và tiện ích đã được giải phóng.`,
+        {
+          reservationId: res._id.toString(),
+          reservationCode: res.reservationCode,
+        },
+        NotificationPriorityEnum.HIGH
+      );
     }
 
     return { processedCount: count };
@@ -1129,6 +1566,125 @@ export class ReservationService {
         completedBy: actorId,
       },
     });
+
+    const customerIdStr = String(
+      (reservation.customerId as { _id?: Types.ObjectId })._id ||
+        reservation.customerId
+    );
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã hoàn tất thủ tục`,
+      `Đơn đặt chỗ [${reservation.reservationCode}] của bạn đã hoàn tất thủ tục bàn giao. Chúc bạn có trải nghiệm tuyệt vời khi sử dụng dịch vụ kho tự quản!`,
+      { reservationId: id, reservationCode: reservation.reservationCode }
+    );
+
+    return validateResponse(reservationResponseSchema, formatted);
+  }
+
+  // 15. Manager assigns staff for customer check-in (PAYMENT_SUCCESSFUL or CONFIRMED)
+  @Transactional()
+  async assignStaffToCheckIn(
+    id: string,
+    managerId: string,
+    data: AssignReservationStaffRequest,
+    session?: ClientSession
+  ): Promise<ReservationResponse> {
+    const reservation = await this.reservationRepository.findById(id, session);
+    if (!reservation) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
+    }
+
+    // Guard: Only allowed after deposit is paid (PAYMENT_SUCCESSFUL or CONFIRMED)
+    if (
+      reservation.status !== ReservationStatusEnum.PAYMENT_SUCCESSFUL &&
+      reservation.status !== ReservationStatusEnum.CONFIRMED
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_301, [
+        'Check-in staff can only be assigned after deposit payment is completed',
+      ]);
+    }
+
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+
+    // Validate staff exists, is ACTIVE, has role FACILITY_STAFF, and belongs to the same facility
+    const staff = await this.userRepository.findById(data.staffId);
+    if (!staff) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Staff']);
+    }
+    if (staff.status !== UserStatusEnum.ACTIVE) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Staff']);
+    }
+    if (staff.role !== RoleEnum.FACILITY_STAFF) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_121, [
+        'FACILITY_STAFF',
+      ]);
+    }
+    if (
+      !staff.assignedFacilityId ||
+      String(staff.assignedFacilityId) !== facilityIdStr
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_122, ['Staff']);
+    }
+
+    const now = new Date();
+    const updatePayload: Partial<IReservation> = {
+      assignedStaffId: new Types.ObjectId(data.staffId),
+      assignedStaffAt: now,
+    };
+    if (data.notes) {
+      updatePayload.notes = data.notes;
+    }
+
+    const updated = await this.reservationRepository.update(
+      id,
+      updatePayload,
+      session
+    );
+    const populated = await this.reservationRepository.findById(id, session);
+    const formatted = this.formatReservation(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.RESERVATION,
+      resourceId: id,
+      before: this.formatReservation(reservation),
+      after: formatted,
+      metadata: {
+        assignedStaffId: data.staffId,
+        assignedBy: managerId,
+      },
+    });
+
+    // Notify assigned staff (In-App)
+    const unitNumber = populated?.storageUnitId
+      ? (populated.storageUnitId as { unitNumber?: string }).unitNumber || 'N/A'
+      : 'N/A';
+    const customerName = populated?.customerId
+      ? (populated.customerId as { name?: string }).name || 'Khách hàng'
+      : 'Khách hàng';
+
+    this.notifyAssignedStaff(
+      data.staffId,
+      facilityIdStr,
+      `Nhiệm vụ check-in mới: Đơn đặt chỗ [${reservation.reservationCode}]`,
+      `Quản lý cơ sở đã phân công bạn phụ trách check-in đón khách cho đơn đặt chỗ [${reservation.reservationCode}] (${customerName} - Phòng ${unitNumber}). Vui lòng chuẩn bị hỗ trợ khi khách đến.`,
+      {
+        reservationId: id,
+        reservationCode: reservation.reservationCode,
+        unitNumber,
+        customerName,
+        notes: data.notes,
+      }
+    );
 
     return validateResponse(reservationResponseSchema, formatted);
   }

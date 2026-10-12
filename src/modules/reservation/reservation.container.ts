@@ -13,6 +13,7 @@ import { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts'
 import { User } from '../user/user.model.ts';
 import { UserRepository } from '../user/user.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
+import { notificationService } from '../notification/notification.container.ts';
 
 export const reservationRepository = new ReservationRepository(Reservation);
 const facilityRepository = new FacilityRepository(Facility);
@@ -32,7 +33,8 @@ export const reservationService = new ReservationService(
   amenityOfferingRepository,
   storageUnitRepository,
   userRepository,
-  auditLogService
+  auditLogService,
+  notificationService
 );
 
 export const reservationController = new ReservationController(

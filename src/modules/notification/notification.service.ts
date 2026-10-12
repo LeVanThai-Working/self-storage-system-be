@@ -2,9 +2,12 @@ import mongoose from 'mongoose';
 import type { NotificationRepository } from './notification.repository.ts';
 import type { MailUtil } from '../../utils/mail.util.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { UserRepository } from '../user/user.repository.ts';
+import type { IUser } from '../user/user.model.ts';
 import type { INotification } from './notification.model.ts';
 import type {
   CreateNotificationInput,
+  DispatchNotificationInput,
   NotificationQuery,
 } from './schemas/notification.request.schema.ts';
 import {
@@ -17,6 +20,7 @@ import {
   NotificationChannelEnum,
   NotificationPriorityEnum,
 } from '../../common/enums/notification.enum.ts';
+import { RoleEnum } from '../../common/enums/user.enum.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
@@ -31,7 +35,8 @@ export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly mailUtil?: MailUtil,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly userRepository?: UserRepository
   ) {}
 
   private formatNotification(
@@ -40,6 +45,9 @@ export class NotificationService {
     return {
       id: notification._id.toString(),
       recipientId: notification.recipientId.toString(),
+      facilityId: notification.facilityId
+        ? notification.facilityId.toString()
+        : null,
       title: notification.title,
       content: notification.content,
       type: notification.type,
@@ -73,6 +81,9 @@ export class NotificationService {
     // 1. Save notification to MongoDB
     const createdDoc = await this.notificationRepository.create({
       recipientId: new mongoose.Types.ObjectId(input.recipientId),
+      facilityId: input.facilityId
+        ? new mongoose.Types.ObjectId(input.facilityId)
+        : null,
       title: input.title,
       content: input.content,
       type: input.type,
@@ -122,6 +133,64 @@ export class NotificationService {
     }
 
     return formatted;
+  }
+
+  /**
+   * Internal Core Method: Send notifications to multiple recipients safely (non-blocking)
+   */
+  async sendNotificationToUsers(
+    recipientIds: string[],
+    input: Omit<CreateNotificationInput, 'recipientId'>
+  ): Promise<void> {
+    if (!recipientIds || recipientIds.length === 0) return;
+    const uniqueIds = [...new Set(recipientIds.map((id) => id.toString()))];
+    await Promise.allSettled(
+      uniqueIds.map((recipientId) =>
+        this.sendNotification({
+          ...input,
+          recipientId,
+        })
+      )
+    );
+  }
+
+  /**
+   * Internal Core Method: Dispatch notifications to target audience by facility and/or roles
+   */
+  async dispatchToAudience(input: DispatchNotificationInput): Promise<void> {
+    if (!this.userRepository) {
+      console.warn(
+        'UserRepository not injected in NotificationService, cannot resolve audience'
+      );
+      return;
+    }
+
+    const { roles, facilityId, ...notificationData } = input;
+    let targetUsers: IUser[] = [];
+
+    if (roles && roles.length > 0) {
+      targetUsers = await this.userRepository.findUsersByRoles(roles);
+
+      if (facilityId) {
+        targetUsers = targetUsers.filter((u) => {
+          if (
+            u.role === RoleEnum.FACILITY_STAFF ||
+            u.role === RoleEnum.FACILITY_MANAGER
+          ) {
+            return String(u.assignedFacilityId) === facilityId;
+          }
+          return true;
+        });
+      }
+    }
+
+    const recipientIds = targetUsers.map((u) => String(u._id));
+    if (recipientIds.length > 0) {
+      await this.sendNotificationToUsers(recipientIds, {
+        ...notificationData,
+        facilityId,
+      });
+    }
   }
 
   /**

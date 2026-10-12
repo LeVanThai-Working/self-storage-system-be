@@ -15,6 +15,7 @@ import { AmenityRepository } from '../amenity/amenity.repository.ts';
 import { FacilityAmenityOffering } from '../facilityAmenityOffering/facilityAmenityOffering.model.ts';
 import { FacilityAmenityOfferingRepository } from '../facilityAmenityOffering/facilityAmenityOffering.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
+import { notificationService } from '../notification/notification.container.ts';
 
 const approvalRequestRepository = new ApprovalRequestRepository(
   ApprovalRequest
@@ -38,7 +39,8 @@ const approvalRequestService = new ApprovalRequestService(
   unitTypeOfferingRepository,
   amenityRepository,
   amenityOfferingRepository,
-  auditLogService
+  auditLogService,
+  notificationService
 );
 
 export const approvalRequestController = new ApprovalRequestController(

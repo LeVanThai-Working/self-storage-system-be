@@ -25,8 +25,14 @@ import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { RoleEnum, UserStatusEnum } from '../../common/enums/user.enum.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
+import {
+  NotificationChannelEnum,
+  NotificationPriorityEnum,
+  NotificationTypeEnum,
+} from '../../common/enums/notification.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { NotificationService } from '../notification/notification.service.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -39,7 +45,8 @@ export class FacilityService {
     private readonly offeringRepository?: FacilityUnitTypeOfferingRepository,
     private readonly storageUnitRepository?: StorageUnitRepository,
     private readonly amenityOfferingRepository?: FacilityAmenityOfferingRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly notificationService?: NotificationService
   ) {}
 
   private formatFacility(facility: unknown): unknown {
@@ -233,7 +240,10 @@ export class FacilityService {
 
     // 4. Check if current facility already has a manager -> unlink old manager
     const oldManagerId = facility.managerId ? String(facility.managerId) : null;
+    let oldManagerEmail: string | undefined;
     if (oldManagerId && oldManagerId !== data.managerId) {
+      const oldManager = await this.userRepository.findById(oldManagerId);
+      oldManagerEmail = oldManager?.email;
       await this.userRepository.updateUser(oldManagerId, {
         assignedFacilityId: null as unknown as Types.ObjectId,
       });
@@ -256,6 +266,69 @@ export class FacilityService {
       before: { managerId: oldManagerId },
       after: { managerId: data.managerId },
     });
+
+    // 7. Dispatch notifications (non-blocking fire-and-forget)
+    try {
+      const channels = [NotificationChannelEnum.IN_APP];
+      if (newManager.email) {
+        channels.push(NotificationChannelEnum.EMAIL);
+      }
+      this.notificationService
+        ?.sendNotification({
+          recipientId: String(newManager._id),
+          facilityId,
+          title: 'Bổ nhiệm Quản lý cơ sở',
+          content: `Bạn đã được phân công làm Quản lý cho cơ sở "${facility.name}".`,
+          type: NotificationTypeEnum.SYSTEM,
+          priority: NotificationPriorityEnum.HIGH,
+          channels,
+          metadata: {
+            facilityId,
+            facilityName: facility.name,
+            email: newManager.email,
+          },
+        })
+        .catch((err) => {
+          console.warn(
+            'Failed to send assignment notification to new manager:',
+            err?.message || err
+          );
+        });
+    } catch (err) {
+      console.warn('Error initiating notification to new manager:', err);
+    }
+
+    if (oldManagerId && oldManagerId !== data.managerId) {
+      try {
+        const channels = [NotificationChannelEnum.IN_APP];
+        if (oldManagerEmail) {
+          channels.push(NotificationChannelEnum.EMAIL);
+        }
+        this.notificationService
+          ?.sendNotification({
+            recipientId: oldManagerId,
+            facilityId,
+            title: 'Cập nhật phân công quản lý cơ sở',
+            content: `Bạn đã được huỷ phân công quản lý cơ sở "${facility.name}".`,
+            type: NotificationTypeEnum.SYSTEM,
+            priority: NotificationPriorityEnum.NORMAL,
+            channels,
+            metadata: {
+              facilityId,
+              facilityName: facility.name,
+              email: oldManagerEmail,
+            },
+          })
+          .catch((err) => {
+            console.warn(
+              'Failed to send unassignment notification to old manager:',
+              err?.message || err
+            );
+          });
+      } catch (err) {
+        console.warn('Error initiating notification to old manager:', err);
+      }
+    }
 
     return validateResponse(
       facilityResponseSchema,
