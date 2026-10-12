@@ -5,6 +5,8 @@ import MongooseDelete, {
 } from 'mongoose-delete';
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
 import {
+  ContractAddendumStatusEnum,
+  ContractAddendumTypeEnum,
   ContractSourceEnum,
   ContractStatusEnum,
 } from '../../common/enums/contract.enum.ts';
@@ -18,6 +20,33 @@ export interface IContractAmenity {
   billingUnit: BillingUnitEnum;
   totalPrice: number;
   addedAt: Date;
+}
+
+export interface IContractAddendum {
+  _id?: Types.ObjectId;
+  addendumCode: string;
+  type: ContractAddendumTypeEnum;
+  amenities: IContractAmenity[];
+  totalPeriodicPrice: number;
+  damageFee: number;
+  status: ContractAddendumStatusEnum;
+  requestedBy: Types.ObjectId;
+  requestedAt: Date;
+  approvedBy?: Types.ObjectId | null;
+  approvedAt?: Date | null;
+  assignedStaffId?: Types.ObjectId | null;
+  customerSigned: boolean;
+  customerSignedAt?: Date | null;
+  staffSigned: boolean;
+  staffSignedAt?: Date | null;
+  completedAt?: Date | null;
+  rejectionReason?: string | null;
+  rejectedBy?: Types.ObjectId | null;
+  rejectedAt?: Date | null;
+  cancellationReason?: string | null;
+  cancelledBy?: Types.ObjectId | null;
+  cancelledAt?: Date | null;
+  notes?: string | null;
 }
 
 export interface IContractRenewal {
@@ -52,6 +81,7 @@ export interface IContract extends SoftDeleteDocument {
   totalPeriodicPrice: number;
 
   amenities: IContractAmenity[];
+  addendums: IContractAddendum[];
   renewals: IContractRenewal[];
   renewalCount: number;
 
@@ -72,6 +102,10 @@ export interface IContract extends SoftDeleteDocument {
 
   status: ContractStatusEnum;
   termsAccepted: boolean;
+  customerSigned: boolean;
+  customerSignedAt?: Date | null;
+  staffSigned: boolean;
+  staffSignedAt?: Date | null;
   notes?: string | null;
 
   createdAt: Date;
@@ -120,6 +154,117 @@ const contractAmenitySchema = new Schema<IContractAmenity>(
     },
   },
   { _id: false }
+);
+
+const contractAddendumSchema = new Schema<IContractAddendum>(
+  {
+    addendumCode: {
+      type: String,
+      required: true,
+      uppercase: true,
+      trim: true,
+    },
+    type: {
+      type: String,
+      enum: Object.values(ContractAddendumTypeEnum),
+      default: ContractAddendumTypeEnum.ADD,
+      required: true,
+    },
+    amenities: {
+      type: [contractAmenitySchema],
+      default: [],
+    },
+    totalPeriodicPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    damageFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    status: {
+      type: String,
+      enum: Object.values(ContractAddendumStatusEnum),
+      default: ContractAddendumStatusEnum.PENDING_APPROVAL,
+      required: true,
+    },
+    requestedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    requestedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+    assignedStaffId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    customerSigned: {
+      type: Boolean,
+      default: false,
+    },
+    customerSignedAt: {
+      type: Date,
+      default: null,
+    },
+    staffSigned: {
+      type: Boolean,
+      default: false,
+    },
+    staffSignedAt: {
+      type: Date,
+      default: null,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+    rejectionReason: {
+      type: String,
+      default: null,
+    },
+    rejectedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    rejectedAt: {
+      type: Date,
+      default: null,
+    },
+    cancellationReason: {
+      type: String,
+      default: null,
+    },
+    cancelledBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+    notes: {
+      type: String,
+      default: null,
+    },
+  },
+  { _id: true }
 );
 
 const contractRenewalSchema = new Schema<IContractRenewal>(
@@ -242,6 +387,10 @@ const contractSchema = new Schema<IContract>(
       type: [contractAmenitySchema],
       default: [],
     },
+    addendums: {
+      type: [contractAddendumSchema],
+      default: [],
+    },
     renewals: {
       type: [contractRenewalSchema],
       default: [],
@@ -315,6 +464,22 @@ const contractSchema = new Schema<IContract>(
     termsAccepted: {
       type: Boolean,
       default: false,
+    },
+    customerSigned: {
+      type: Boolean,
+      default: false,
+    },
+    customerSignedAt: {
+      type: Date,
+      default: null,
+    },
+    staffSigned: {
+      type: Boolean,
+      default: false,
+    },
+    staffSignedAt: {
+      type: Date,
+      default: null,
     },
     notes: {
       type: String,
