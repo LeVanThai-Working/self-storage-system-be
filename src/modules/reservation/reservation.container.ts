@@ -15,6 +15,9 @@ import { UserRepository } from '../user/user.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { notificationService } from '../notification/notification.container.ts';
 
+import { facilityTimeSlotRepository } from '../facilityTimeSlot/facilityTimeSlot.container.ts';
+import { reservationQueue } from './reservation.queue.ts';
+
 export const reservationRepository = new ReservationRepository(Reservation);
 const facilityRepository = new FacilityRepository(Facility);
 const offeringRepository = new FacilityUnitTypeOfferingRepository(
@@ -33,8 +36,10 @@ export const reservationService = new ReservationService(
   amenityOfferingRepository,
   storageUnitRepository,
   userRepository,
+  facilityTimeSlotRepository,
   auditLogService,
-  notificationService
+  notificationService,
+  reservationQueue
 );
 
 export const reservationController = new ReservationController(

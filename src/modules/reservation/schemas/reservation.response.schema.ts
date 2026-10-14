@@ -56,6 +56,8 @@ export const reservationResponseSchema = z.object({
   facilityUnitTypeOfferingId: z.string(),
   storageUnitId: z.string().optional().nullable(),
   startDate: z.string(),
+  checkInDate: z.string(),
+  checkInTimeSlot: z.string(),
   rentalDuration: z.number(),
   billingUnit: z.enum(BillingUnitEnum),
   basePrice: z.number(),

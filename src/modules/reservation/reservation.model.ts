@@ -22,8 +22,10 @@ export interface IReservation extends SoftDeleteDocument {
   customerId: Types.ObjectId;
   facilityId: Types.ObjectId;
   facilityUnitTypeOfferingId: Types.ObjectId;
-  storageUnitId?: Types.ObjectId | null;
+  storageUnitId: Types.ObjectId;
   startDate: Date;
+  checkInDate: Date;
+  checkInTimeSlot: string;
   rentalDuration: number;
   billingUnit: BillingUnitEnum;
   basePrice: number;
@@ -124,11 +126,20 @@ const reservationSchema = new Schema<IReservation>(
     storageUnitId: {
       type: Schema.Types.ObjectId,
       ref: 'StorageUnit',
-      default: null,
+      required: true,
     },
     startDate: {
       type: Date,
       required: true,
+    },
+    checkInDate: {
+      type: Date,
+      required: true,
+    },
+    checkInTimeSlot: {
+      type: String,
+      required: true,
+      trim: true,
     },
     rentalDuration: {
       type: Number,
@@ -260,8 +271,27 @@ const reservationSchema = new Schema<IReservation>(
 // Compound indexes for optimal queries
 reservationSchema.index({ customerId: 1, status: 1, createdAt: -1 });
 reservationSchema.index({ facilityId: 1, status: 1, createdAt: -1 });
-reservationSchema.index({ storageUnitId: 1, status: 1 }, { sparse: true });
 reservationSchema.index({ status: 1, expiresAt: 1 });
+reservationSchema.index({ facilityId: 1, checkInDate: 1, checkInTimeSlot: 1 });
+
+// Partial Unique Index: Only ONE active reservation can lock a storageUnit at any time
+reservationSchema.index(
+  { storageUnitId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      storageUnitId: { $type: 'objectId' },
+      status: {
+        $in: [
+          ReservationStatusEnum.PENDING_PAYMENT,
+          ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+          ReservationStatusEnum.CONFIRMED,
+        ],
+      },
+      deleted: { $ne: true },
+    },
+  }
+);
 
 // Soft delete plugin
 reservationSchema.plugin(MongooseDelete, {

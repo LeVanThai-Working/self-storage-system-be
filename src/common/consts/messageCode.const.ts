@@ -86,6 +86,12 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_307: 'MESSAGE_CODE_307',
   // Reservation Holding Time Exceeded
   MESSAGE_CODE_308: 'MESSAGE_CODE_308',
+  // Storage Unit Has Just Been Booked By Another Customer
+  MESSAGE_CODE_309: 'MESSAGE_CODE_309',
+  // Time Slot Has Reached Maximum Capacity
+  MESSAGE_CODE_310: 'MESSAGE_CODE_310',
+  // Invalid Or Inactive Check-in Time Slot
+  MESSAGE_CODE_311: 'MESSAGE_CODE_311',
 
   // ==========================================
   // CONTRACT (400 - 408)
@@ -186,6 +192,9 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_306: 'Storage Unit Does Not Match Reserved Offering',
   MESSAGE_CODE_307: 'Insufficient Amenity Quantity For {0}',
   MESSAGE_CODE_308: 'Reservation Holding Time Exceeded',
+  MESSAGE_CODE_309: 'Storage Unit Has Just Been Booked By Another Customer',
+  MESSAGE_CODE_310: 'Time Slot Has Reached Maximum Capacity',
+  MESSAGE_CODE_311: 'Invalid Or Inactive Check-in Time Slot',
 
   // Contract
   MESSAGE_CODE_400: 'Contract Not Found',

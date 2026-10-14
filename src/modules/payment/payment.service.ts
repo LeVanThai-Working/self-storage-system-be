@@ -158,6 +158,7 @@ export class PaymentService {
           ? raw.confirmedAt.toISOString()
           : new Date(String(raw.confirmedAt)).toISOString()
         : null,
+      proofImageUrl: (raw.proofImageUrl as string) ?? null,
       cancelledBy,
       cancelledAt: raw.cancelledAt
         ? raw.cancelledAt instanceof Date
@@ -555,6 +556,7 @@ export class PaymentService {
         paidAt: now,
         method: data.method,
         referenceCode: data.referenceCode || null,
+        proofImageUrl: data.proofImageUrl || null,
         confirmedBy: new Types.ObjectId(staffId),
         confirmedAt: now,
         note: data.note,
@@ -605,6 +607,7 @@ export class PaymentService {
       metadata: {
         method: data.method,
         referenceCode: data.referenceCode || null,
+        proofImageUrl: data.proofImageUrl || null,
         note: data.note,
       },
     });
