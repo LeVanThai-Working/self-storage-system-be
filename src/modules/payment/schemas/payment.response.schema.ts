@@ -50,6 +50,7 @@ export const paymentResponseSchema = z.object({
   referenceCode: z.string().optional().nullable(),
   confirmedBy: userSnapshotSchema.optional().nullable(),
   confirmedAt: z.string().optional().nullable(),
+  proofImageUrl: z.string().optional().nullable(),
   cancelledBy: userSnapshotSchema.optional().nullable(),
   cancelledAt: z.string().optional().nullable(),
   cancellationReason: z.string().optional().nullable(),

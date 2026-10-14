@@ -15,14 +15,15 @@ import {
 } from './schemas/reservation.response.schema.ts';
 import type {
   AssignReservationStaffRequest,
-  AssignStorageUnitRequest,
   CancelReservationRequest,
   ConfirmReservationRequest,
   CreateReservationRequest,
-  RejectReservationRequest,
+  ReassignStorageUnitRequest,
   ReservationQuery,
   UpdateReservationRequest,
 } from './schemas/reservation.request.schema.ts';
+import type { FacilityTimeSlotRepository } from '../facilityTimeSlot/facilityTimeSlot.repository.ts';
+import type { ReservationQueue } from './reservation.queue.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { ReservationStatusEnum } from '../../common/enums/reservation.enum.ts';
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
@@ -30,7 +31,6 @@ import { RoleEnum, UserStatusEnum } from '../../common/enums/user.enum.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
 import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
-import { FacilityAmenityOfferingStatusEnum } from '../../common/enums/facilityAmenityOffering.enum.ts';
 import {
   NotificationChannelEnum,
   NotificationPriorityEnum,
@@ -52,8 +52,10 @@ export class ReservationService {
     private readonly amenityOfferingRepository: FacilityAmenityOfferingRepository,
     private readonly storageUnitRepository: StorageUnitRepository,
     private readonly userRepository: UserRepository,
+    private readonly facilityTimeSlotRepository?: FacilityTimeSlotRepository,
     private readonly auditLogService?: AuditLogService,
-    private readonly notificationService?: NotificationService
+    private readonly notificationService?: NotificationService,
+    private readonly reservationQueue?: ReservationQueue
   ) {}
 
   private generateReservationCode(): string {
@@ -189,6 +191,15 @@ export class ReservationService {
         raw.startDate instanceof Date
           ? raw.startDate.toISOString()
           : new Date(String(raw.startDate)).toISOString(),
+      checkInDate:
+        raw.checkInDate instanceof Date
+          ? raw.checkInDate.toISOString()
+          : raw.checkInDate
+            ? new Date(String(raw.checkInDate)).toISOString()
+            : raw.startDate instanceof Date
+              ? raw.startDate.toISOString()
+              : new Date(String(raw.startDate)).toISOString(),
+      checkInTimeSlot: String(raw.checkInTimeSlot || ''),
       rentalDuration: Number(raw.rentalDuration),
       billingUnit: raw.billingUnit as BillingUnitEnum,
       basePrice: Number(raw.basePrice),
@@ -407,10 +418,12 @@ export class ReservationService {
     }
   }
 
-  // 1. Customer creates initial reservation (PENDING)
+  // 1. Customer creates initial reservation (locks storage unit & enters PENDING_PAYMENT immediately)
+  @Transactional()
   async createReservation(
     customerId: string,
-    data: CreateReservationRequest
+    data: CreateReservationRequest,
+    session?: ClientSession
   ): Promise<ReservationResponse> {
     const customer = await this.userRepository.findById(customerId);
     if (!customer) {
@@ -430,29 +443,82 @@ export class ReservationService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Facility']);
     }
 
-    const offering = await this.offeringRepository.findById(
-      data.facilityUnitTypeOfferingId
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const checkInDate = new Date(data.checkInDate);
+    if (checkInDate < now) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+        'Check-in date cannot be in the past',
+      ]);
+    }
+
+    const startDate = data.startDate ? new Date(data.startDate) : checkInDate;
+
+    // Validate Check-in Time Slot Capacity
+    if (this.facilityTimeSlotRepository) {
+      const slot =
+        await this.facilityTimeSlotRepository.findByFacilityAndSlotName(
+          data.facilityId,
+          data.checkInTimeSlot
+        );
+      if (!slot || !slot.isActive) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_311, [
+          data.checkInTimeSlot,
+        ]);
+      }
+
+      const bookedCount =
+        await this.reservationRepository.countBookedInTimeSlot(
+          data.facilityId,
+          checkInDate,
+          data.checkInTimeSlot,
+          session
+        );
+      if (bookedCount >= slot.maxCapacity) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_310, [
+          data.checkInTimeSlot,
+        ]);
+      }
+    }
+
+    // Atomic Lock Storage Unit (Optimistic Concurrency Control)
+    const unit = await this.storageUnitRepository.findAndReserveUnitAtomic(
+      data.storageUnitId,
+      data.facilityId,
+      session
     );
+    if (!unit) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_309, [
+        'Storage unit has just been booked by another customer',
+      ]);
+    }
+
+    // Resolve FacilityUnitTypeOffering
+    const unitTypeIdStr = String(
+      (unit.unitTypeId as { _id?: Types.ObjectId })._id || unit.unitTypeId
+    );
+    const offering = data.facilityUnitTypeOfferingId
+      ? await this.offeringRepository.findById(
+          data.facilityUnitTypeOfferingId,
+          session
+        )
+      : await this.offeringRepository.findByFacilityAndUnitType(
+          data.facilityId,
+          unitTypeIdStr,
+          session
+        );
+
     if (!offering) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Offering']);
+    }
+    if (offering.status !== FacilityUnitTypeOfferingStatusEnum.ACTIVE) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Offering']);
     }
     if (
       String(offering.facilityId._id || offering.facilityId) !== data.facilityId
     ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
         'Offering does not belong to the specified facility',
-      ]);
-    }
-    if (offering.status !== FacilityUnitTypeOfferingStatusEnum.ACTIVE) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Offering']);
-    }
-
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const startDate = new Date(data.startDate);
-    if (startDate < now) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-        'Start date cannot be in the past',
       ]);
     }
 
@@ -465,7 +531,7 @@ export class ReservationService {
       ]);
     }
 
-    // Process amenities
+    // Process amenities atomically
     const parsedAmenities: IReservationAmenity[] = [];
     const seenAmenityIds = new Set<string>();
 
@@ -479,26 +545,11 @@ export class ReservationService {
         seenAmenityIds.add(item.facilityAmenityOfferingId);
 
         const amenityOffering = await this.amenityOfferingRepository.findById(
-          item.facilityAmenityOfferingId
+          item.facilityAmenityOfferingId,
+          session
         );
         if (!amenityOffering) {
           throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
-            'Amenity Offering',
-          ]);
-        }
-        if (
-          String(
-            amenityOffering.facilityId._id || amenityOffering.facilityId
-          ) !== data.facilityId
-        ) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-            'Amenity offering does not belong to the specified facility',
-          ]);
-        }
-        if (
-          amenityOffering.status !== FacilityAmenityOfferingStatusEnum.ACTIVE
-        ) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, [
             'Amenity Offering',
           ]);
         }
@@ -510,10 +561,15 @@ export class ReservationService {
           'type' in amenityOffering.amenityId &&
           (amenityOffering.amenityId as { type?: string }).type === 'service';
 
+        let reservedAmenity = amenityOffering;
         if (!isService) {
-          const total = amenityOffering.totalQuantity ?? 0;
-          const availableQty = total - amenityOffering.inUseQuantity;
-          if (availableQty < item.quantity) {
+          const atomicReserved =
+            await this.amenityOfferingRepository.reserveAmenityQuantityAtomic(
+              item.facilityAmenityOfferingId,
+              item.quantity,
+              session
+            );
+          if (!atomicReserved) {
             const amenityName =
               amenityOffering.amenityId &&
               typeof amenityOffering.amenityId === 'object' &&
@@ -524,27 +580,28 @@ export class ReservationService {
               amenityName,
             ]);
           }
+          reservedAmenity = atomicReserved;
         }
 
         const amenityName =
-          amenityOffering.amenityId &&
-          typeof amenityOffering.amenityId === 'object' &&
-          'name' in amenityOffering.amenityId
-            ? String(amenityOffering.amenityId.name)
+          reservedAmenity.amenityId &&
+          typeof reservedAmenity.amenityId === 'object' &&
+          'name' in reservedAmenity.amenityId
+            ? String(reservedAmenity.amenityId.name)
             : 'Amenity';
 
-        const totalPrice = amenityOffering.pricePerUnit * item.quantity;
+        const totalPrice = reservedAmenity.pricePerUnit * item.quantity;
         parsedAmenities.push({
-          facilityAmenityOfferingId: amenityOffering._id,
+          facilityAmenityOfferingId: reservedAmenity._id,
           amenityId:
-            typeof amenityOffering.amenityId === 'object' &&
-            '_id' in amenityOffering.amenityId
-              ? (amenityOffering.amenityId as { _id: Types.ObjectId })._id
-              : (amenityOffering.amenityId as Types.ObjectId),
+            typeof reservedAmenity.amenityId === 'object' &&
+            '_id' in reservedAmenity.amenityId
+              ? (reservedAmenity.amenityId as { _id: Types.ObjectId })._id
+              : (reservedAmenity.amenityId as Types.ObjectId),
           name: amenityName,
           quantity: item.quantity,
-          pricePerUnit: amenityOffering.pricePerUnit,
-          billingUnit: amenityOffering.billingUnit,
+          pricePerUnit: reservedAmenity.pricePerUnit,
+          billingUnit: reservedAmenity.billingUnit,
           totalPrice,
         });
       }
@@ -559,28 +616,36 @@ export class ReservationService {
     );
     const totalAmount = depositAmount + amenitiesTotal;
 
+    // 15-minute hold timer
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
     const reservationCode = this.generateReservationCode();
 
-    const created = await this.reservationRepository.create({
-      reservationCode,
-      customerId: new Types.ObjectId(customerId),
-      facilityId: new Types.ObjectId(data.facilityId),
-      facilityUnitTypeOfferingId: new Types.ObjectId(
-        data.facilityUnitTypeOfferingId
-      ),
-      startDate,
-      rentalDuration: data.rentalDuration,
-      billingUnit: offering.billingUnit,
-      basePrice,
-      depositAmount,
-      amenities: parsedAmenities,
-      totalAmount,
-      status: ReservationStatusEnum.PENDING,
-      notes: data.notes || null,
-    });
+    const created = await this.reservationRepository.create(
+      {
+        reservationCode,
+        customerId: new Types.ObjectId(customerId),
+        facilityId: new Types.ObjectId(data.facilityId),
+        facilityUnitTypeOfferingId: offering._id,
+        storageUnitId: unit._id,
+        startDate,
+        checkInDate,
+        checkInTimeSlot: data.checkInTimeSlot.trim(),
+        rentalDuration: data.rentalDuration,
+        billingUnit: offering.billingUnit,
+        basePrice,
+        depositAmount,
+        amenities: parsedAmenities,
+        totalAmount,
+        status: ReservationStatusEnum.PENDING_PAYMENT,
+        expiresAt,
+        notes: data.notes || null,
+      },
+      session
+    );
 
     const populated = await this.reservationRepository.findById(
-      created._id.toString()
+      created._id.toString(),
+      session
     );
     const formatted = this.formatReservation(populated || created);
 
@@ -595,27 +660,43 @@ export class ReservationService {
     this.notifyCustomer(
       customerId,
       data.facilityId,
-      `Yêu cầu đặt chỗ mới [${reservationCode}] đã được tiếp nhận`,
-      `Yêu cầu đặt giữ chỗ [${reservationCode}] tại cơ sở "${facility.name}" đã được ghi nhận. Quản lý cơ sở sẽ xem xét và phản hồi trong thời gian sớm nhất.`,
+      `Khóa giữ chỗ thành công [${reservationCode}] - Vui lòng thanh toán cọc`,
+      `Phòng kho "${unit.unitNumber}" đã được tạm khóa giữ chỗ cho bạn. Vui lòng hoàn tất thanh toán cọc ${depositAmount.toLocaleString('vi-VN')} VNĐ trong vòng 15 phút (trước ${expiresAt.toLocaleTimeString('vi-VN')}).`,
       {
         reservationId: created._id.toString(),
         reservationCode,
         facilityId: data.facilityId,
-      }
+        storageUnitId: data.storageUnitId,
+        unitNumber: unit.unitNumber,
+        expiresAt: expiresAt.toISOString(),
+      },
+      NotificationPriorityEnum.URGENT
     );
 
     // Notify FM (In-App)
     this.notifyFacilityManager(
       data.facilityId,
-      `Yêu cầu đặt giữ chỗ mới [${reservationCode}]`,
-      `Khách hàng "${customer.name}" vừa gửi yêu cầu đặt chỗ mới [${reservationCode}] tại cơ sở "${facility.name}". Vui lòng tiếp nhận và xử lý.`,
+      `Đơn đặt chỗ mới đang chờ thanh toán [${reservationCode}]`,
+      `Khách hàng "${customer.name}" vừa khóa giữ phòng "${unit.unitNumber}" cho khung giờ ${data.checkInTimeSlot} ngày ${checkInDate.toLocaleDateString('vi-VN')}.`,
       {
         reservationId: created._id.toString(),
         reservationCode,
         customerId,
         customerName: customer.name,
+        storageUnitId: data.storageUnitId,
+        unitNumber: unit.unitNumber,
       }
     );
+
+    // Dispatch delayed job to auto-release lock after 15 minutes via BullMQ
+    this.reservationQueue
+      ?.addExpireReservationJob(created._id.toString(), 15 * 60 * 1000)
+      .catch((err: Error) => {
+        console.error(
+          '[ReservationService] Failed to schedule BullMQ expiration job:',
+          err.message
+        );
+      });
 
     return validateResponse(reservationResponseSchema, formatted);
   }
@@ -781,63 +862,12 @@ export class ReservationService {
     return validateResponse(reservationResponseSchema, formatted);
   }
 
-  // 3. Manager receives reservation (PENDING -> RECEIVED)
-  async receiveReservation(
-    id: string,
-    managerId: string
-  ): Promise<ReservationResponse> {
-    const reservation = await this.reservationRepository.findById(id);
-    if (!reservation) {
-      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
-    }
-
-    if (reservation.status !== ReservationStatusEnum.PENDING) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_301);
-    }
-
-    const updated = await this.reservationRepository.update(id, {
-      status: ReservationStatusEnum.RECEIVED,
-      receivedBy: new Types.ObjectId(managerId),
-      receivedAt: new Date(),
-    });
-
-    const populated = await this.reservationRepository.findById(id);
-    const formatted = this.formatReservation(populated || updated!);
-
-    this.auditLogService?.record({
-      action: AuditActionEnum.UPDATE,
-      resourceType: AuditResourceEnum.RESERVATION,
-      resourceId: id,
-      before: this.formatReservation(reservation),
-      after: formatted,
-    });
-
-    const customerIdStr = String(
-      (reservation.customerId as { _id?: Types.ObjectId })._id ||
-        reservation.customerId
-    );
-    const facilityIdStr = String(
-      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
-        reservation.facilityId
-    );
-
-    this.notifyCustomer(
-      customerIdStr,
-      facilityIdStr,
-      `Đơn đặt chỗ [${reservation.reservationCode}] đã được tiếp nhận xử lý`,
-      `Đơn đặt chỗ [${reservation.reservationCode}] đã được cơ sở tiếp nhận và đang tiến hành kiểm tra xếp phòng kho cho bạn.`,
-      { reservationId: id, reservationCode: reservation.reservationCode }
-    );
-
-    return validateResponse(reservationResponseSchema, formatted);
-  }
-
-  // 4. Manager reviews & assigns physical storage unit (RECEIVED / PENDING -> PENDING_PAYMENT)
+  // 3. Manager reassigns physical storage unit when current unit encounters unexpected maintenance
   @Transactional()
-  async assignStorageUnit(
+  async reassignStorageUnit(
     id: string,
     managerId: string,
-    data: AssignStorageUnitRequest,
+    data: ReassignStorageUnitRequest,
     session?: ClientSession
   ): Promise<ReservationResponse> {
     const reservation = await this.reservationRepository.findById(id, session);
@@ -846,96 +876,55 @@ export class ReservationService {
     }
 
     if (
-      reservation.status !== ReservationStatusEnum.PENDING &&
-      reservation.status !== ReservationStatusEnum.RECEIVED
+      reservation.status !== ReservationStatusEnum.CONFIRMED &&
+      reservation.status !== ReservationStatusEnum.PAYMENT_SUCCESSFUL
     ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_301);
     }
 
-    const unit = await this.storageUnitRepository.findById(
-      data.storageUnitId,
-      session
-    );
-    if (!unit) {
-      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
-    }
-
     const facilityIdStr = String(
-      reservation.facilityId._id || reservation.facilityId
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
     );
-    if (String(unit.facilityId._id || unit.facilityId) !== facilityIdStr) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_306);
-    }
 
-    // Verify unitTypeId matches offering
-    const offering = await this.offeringRepository.findById(
-      String(
-        reservation.facilityUnitTypeOfferingId._id ||
-          reservation.facilityUnitTypeOfferingId
-      )
-    );
-    if (
-      !offering ||
-      String(unit.unitTypeId._id || unit.unitTypeId) !==
-        String(offering.unitTypeId._id || offering.unitTypeId)
-    ) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_306);
-    }
-
-    if (unit.status !== StorageUnitStatusEnum.AVAILABLE) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_305);
-    }
-
-    // Atomic update storage unit to RESERVED
-    await this.storageUnitRepository.updateById(
-      data.storageUnitId,
-      { status: StorageUnitStatusEnum.RESERVED },
+    // Atomic reserve new unit
+    const newUnit = await this.storageUnitRepository.findAndReserveUnitAtomic(
+      data.newStorageUnitId,
+      facilityIdStr,
       session
     );
+    if (!newUnit) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_309, [
+        'New storage unit is not available',
+      ]);
+    }
 
-    // Reserve amenity inventory (only for physical goods)
-    for (const a of reservation.amenities) {
-      const amenityOffering = await this.amenityOfferingRepository.findById(
-        a.facilityAmenityOfferingId.toString(),
+    // Release old unit back to available
+    if (reservation.storageUnitId) {
+      const oldUnitId = String(
+        (reservation.storageUnitId as { _id?: Types.ObjectId })._id ||
+          reservation.storageUnitId
+      );
+      await this.storageUnitRepository.updateById(
+        oldUnitId,
+        { status: StorageUnitStatusEnum.AVAILABLE },
         session
       );
-      if (amenityOffering) {
-        const isService =
-          amenityOffering.amenityId &&
-          typeof amenityOffering.amenityId === 'object' &&
-          'type' in amenityOffering.amenityId &&
-          (amenityOffering.amenityId as { type?: string }).type === 'service';
-
-        // Services have no physical inventory to lock
-        if (!isService) {
-          await this.amenityOfferingRepository.updateById(
-            amenityOffering._id.toString(),
-            { inUseQuantity: amenityOffering.inUseQuantity + a.quantity },
-            session
-          );
-        }
-      }
     }
 
-    const holdingHours = data.holdingHours || 24;
-    const expiresAt = new Date(Date.now() + holdingHours * 60 * 60 * 1000);
-
-    const updatePayload: Partial<IReservation> = {
-      storageUnitId: new Types.ObjectId(data.storageUnitId),
-      assignedBy: new Types.ObjectId(managerId),
-      assignedAt: new Date(),
-      expiresAt,
-      status: ReservationStatusEnum.PENDING_PAYMENT,
-    };
-    if (data.notes) {
-      updatePayload.notes = data.notes;
-    }
+    const updatedNotes = reservation.notes
+      ? `${reservation.notes} | Đổi phòng kho: ${data.reason}`
+      : `Đổi phòng kho: ${data.reason}`;
 
     const updated = await this.reservationRepository.update(
       id,
-      updatePayload,
+      {
+        storageUnitId: newUnit._id,
+        notes: updatedNotes,
+      },
       session
     );
+
     const populated = await this.reservationRepository.findById(id, session);
     const formatted = this.formatReservation(populated || updated!);
 
@@ -945,6 +934,11 @@ export class ReservationService {
       resourceId: id,
       before: this.formatReservation(reservation),
       after: formatted,
+      metadata: {
+        reason: data.reason,
+        previousStorageUnitId: reservation.storageUnitId,
+        newStorageUnitId: data.newStorageUnitId,
+      },
     });
 
     const customerIdStr = String(
@@ -955,77 +949,14 @@ export class ReservationService {
     this.notifyCustomer(
       customerIdStr,
       facilityIdStr,
-      `Phòng kho đã được gán - Vui lòng thanh toán tiền cọc [${reservation.reservationCode}]`,
-      `Đơn đặt chỗ [${reservation.reservationCode}] đã được xếp phòng "${unit.unitNumber}". Vui lòng thanh toán tiền cọc ${reservation.depositAmount.toLocaleString('vi-VN')} VNĐ trước ${expiresAt.toLocaleString('vi-VN')} để hoàn tất giữ chỗ.`,
+      `Thông báo điều chỉnh phòng kho [${reservation.reservationCode}]`,
+      `Cơ sở đã hỗ trợ đổi sang phòng kho mới "${newUnit.unitNumber}" cho đơn [${reservation.reservationCode}] do: ${data.reason}. Lịch hẹn check-in của bạn không thay đổi.`,
       {
         reservationId: id,
         reservationCode: reservation.reservationCode,
-        storageUnitId: data.storageUnitId,
-        unitNumber: unit.unitNumber,
-        expiresAt: expiresAt.toISOString(),
-      },
-      NotificationPriorityEnum.URGENT
-    );
-
-    return validateResponse(reservationResponseSchema, formatted);
-  }
-
-  // 5. Manager rejects reservation (REJECTED)
-  async rejectReservation(
-    id: string,
-    managerId: string,
-    data: RejectReservationRequest
-  ): Promise<ReservationResponse> {
-    const reservation = await this.reservationRepository.findById(id);
-    if (!reservation) {
-      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
-    }
-
-    if (
-      reservation.status !== ReservationStatusEnum.PENDING &&
-      reservation.status !== ReservationStatusEnum.RECEIVED
-    ) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_301);
-    }
-
-    const updated = await this.reservationRepository.update(id, {
-      status: ReservationStatusEnum.REJECTED,
-      rejectionReason: data.rejectionReason,
-      assignedBy: new Types.ObjectId(managerId),
-      assignedAt: new Date(),
-    });
-
-    const populated = await this.reservationRepository.findById(id);
-    const formatted = this.formatReservation(populated || updated!);
-
-    this.auditLogService?.record({
-      action: AuditActionEnum.UPDATE,
-      resourceType: AuditResourceEnum.RESERVATION,
-      resourceId: id,
-      before: this.formatReservation(reservation),
-      after: formatted,
-    });
-
-    const customerIdStr = String(
-      (reservation.customerId as { _id?: Types.ObjectId })._id ||
-        reservation.customerId
-    );
-    const facilityIdStr = String(
-      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
-        reservation.facilityId
-    );
-
-    this.notifyCustomer(
-      customerIdStr,
-      facilityIdStr,
-      `Đơn đặt chỗ [${reservation.reservationCode}] đã bị từ chối`,
-      `Rất tiếc, yêu cầu đặt chỗ [${reservation.reservationCode}] tại cơ sở đã bị từ chối. Lý do: ${data.rejectionReason}`,
-      {
-        reservationId: id,
-        reservationCode: reservation.reservationCode,
-        rejectionReason: data.rejectionReason,
-      },
-      NotificationPriorityEnum.HIGH
+        newStorageUnitId: data.newStorageUnitId,
+        unitNumber: newUnit.unitNumber,
+      }
     );
 
     return validateResponse(reservationResponseSchema, formatted);
@@ -1086,6 +1017,16 @@ export class ReservationService {
         referenceCode: paymentInfo.referenceCode ?? null,
       },
     });
+
+    // Remove the delayed expiration job from BullMQ since payment is complete
+    this.reservationQueue
+      ?.removeExpireReservationJob(id)
+      .catch((err: Error) => {
+        console.error(
+          '[ReservationService] Failed to remove BullMQ expiration job:',
+          err.message
+        );
+      });
 
     const customerIdStr = String(
       (reservation.customerId as { _id?: Types.ObjectId })._id ||
@@ -1246,8 +1187,38 @@ export class ReservationService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_301);
     }
 
+    const staff = await this.userRepository.findById(data.assignedStaffId);
+    if (!staff || staff.status !== UserStatusEnum.ACTIVE) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+        'Assigned Staff',
+      ]);
+    }
+    if (
+      staff.role !== RoleEnum.FACILITY_STAFF &&
+      staff.role !== RoleEnum.FACILITY_MANAGER
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_121, [
+        'facility_staff or facility_manager',
+      ]);
+    }
+
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+    if (
+      staff.assignedFacilityId &&
+      String(staff.assignedFacilityId) !== facilityIdStr
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_122, [
+        'Assigned Staff does not belong to this facility',
+      ]);
+    }
+
     const updatePayload: Partial<IReservation> = {
       status: ReservationStatusEnum.CONFIRMED,
+      assignedStaffId: new Types.ObjectId(data.assignedStaffId),
+      assignedStaffAt: new Date(),
       confirmedBy: new Types.ObjectId(staffId),
       confirmedAt: new Date(),
     };
@@ -1265,29 +1236,49 @@ export class ReservationService {
       resourceId: id,
       before: this.formatReservation(reservation),
       after: formatted,
+      metadata: {
+        assignedStaffId: data.assignedStaffId,
+      },
     });
 
     const customerIdStr = String(
       (reservation.customerId as { _id?: Types.ObjectId })._id ||
         reservation.customerId
     );
-    const facilityIdStr = String(
-      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
-        reservation.facilityId
-    );
     const unitNumber = populated?.storageUnitId
       ? (populated.storageUnitId as { unitNumber?: string }).unitNumber || 'N/A'
       : 'N/A';
 
-    this.notifyCustomer(
-      customerIdStr,
+    const checkInDateStr = reservation.checkInDate
+      ? new Date(reservation.checkInDate).toLocaleDateString('vi-VN')
+      : '';
+
+    // Notify assigned staff
+    this.notifyAssignedStaff(
+      data.assignedStaffId,
       facilityIdStr,
-      `Đơn đặt chỗ [${reservation.reservationCode}] đã được xác nhận chính thức`,
-      `Đơn đặt chỗ [${reservation.reservationCode}] đã được cơ sở xác nhận thành công. Phòng kho "${unitNumber}" đã được khóa giữ chỗ sẵn sàng đón bạn.`,
+      `Phân công tiếp đón khách check-in [${reservation.reservationCode}]`,
+      `Bạn được phân công tiếp đón khách hàng đến check-in nhận phòng kho "${unitNumber}" vào khung giờ ${reservation.checkInTimeSlot || ''} ngày ${checkInDateStr}.`,
       {
         reservationId: id,
         reservationCode: reservation.reservationCode,
         unitNumber,
+        checkInTimeSlot: reservation.checkInTimeSlot,
+        checkInDate: checkInDateStr,
+      }
+    );
+
+    // Notify customer
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã được xác nhận chính thức`,
+      `Đơn đặt chỗ [${reservation.reservationCode}] đã được cơ sở xác nhận thành công. Phòng kho "${unitNumber}" đã sẵn sàng đón bạn vào khung giờ ${reservation.checkInTimeSlot || ''} ngày ${checkInDateStr}. Nhân viên hỗ trợ: ${staff.name}.`,
+      {
+        reservationId: id,
+        reservationCode: reservation.reservationCode,
+        unitNumber,
+        staffName: staff.name,
       },
       NotificationPriorityEnum.HIGH
     );
@@ -1455,6 +1446,89 @@ export class ReservationService {
     return validateResponse(reservationResponseSchema, formatted);
   }
 
+  // Automatically expire single reservation from BullMQ delayed job
+  @Transactional()
+  async expireSingleReservation(
+    id: string,
+    session?: ClientSession
+  ): Promise<boolean> {
+    const res = await this.reservationRepository.findById(id, session);
+    if (!res) {
+      return false;
+    }
+
+    // Only expire if reservation is still waiting for deposit payment
+    if (
+      res.status !== ReservationStatusEnum.PENDING_PAYMENT &&
+      res.status !== ReservationStatusEnum.PAYMENT_FAILED
+    ) {
+      return false;
+    }
+
+    if (res.storageUnitId) {
+      const unitIdStr = String(
+        (res.storageUnitId as { _id?: Types.ObjectId })._id || res.storageUnitId
+      );
+      await this.storageUnitRepository.updateById(
+        unitIdStr,
+        { status: StorageUnitStatusEnum.AVAILABLE },
+        session
+      );
+    }
+
+    if (res.amenities) {
+      for (const a of res.amenities) {
+        const offering = await this.amenityOfferingRepository.findById(
+          a.facilityAmenityOfferingId.toString(),
+          session
+        );
+        if (offering) {
+          const isService =
+            offering.amenityId &&
+            typeof offering.amenityId === 'object' &&
+            'type' in offering.amenityId &&
+            (offering.amenityId as { type?: string }).type === 'service';
+
+          if (!isService) {
+            const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
+            await this.amenityOfferingRepository.updateById(
+              offering._id.toString(),
+              { inUseQuantity: newQty },
+              session
+            );
+          }
+        }
+      }
+    }
+
+    await this.reservationRepository.update(
+      id,
+      { status: ReservationStatusEnum.EXPIRED },
+      session
+    );
+
+    const customerIdStr = String(
+      (res.customerId as { _id?: Types.ObjectId })._id || res.customerId
+    );
+    const facilityIdStr = String(
+      (res.facilityId as { _id?: Types.ObjectId })._id || res.facilityId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${res.reservationCode}] đã hết hạn giữ chỗ`,
+      `Đơn đặt chỗ [${res.reservationCode}] đã tự động hết hạn do quá thời gian giữ chỗ thanh toán cọc (15 phút). Phòng kho và tiện ích đã được giải phóng.`,
+      {
+        reservationId: res._id.toString(),
+        reservationCode: res.reservationCode,
+      },
+      NotificationPriorityEnum.HIGH
+    );
+
+    return true;
+  }
+
   // 11. Automatically handle expired reservations (EXPIRED)
   @Transactional()
   async processExpiredReservations(
@@ -1486,12 +1560,20 @@ export class ReservationService {
             session
           );
           if (offering) {
-            const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
-            await this.amenityOfferingRepository.updateById(
-              offering._id.toString(),
-              { inUseQuantity: newQty },
-              session
-            );
+            const isService =
+              offering.amenityId &&
+              typeof offering.amenityId === 'object' &&
+              'type' in offering.amenityId &&
+              (offering.amenityId as { type?: string }).type === 'service';
+
+            if (!isService) {
+              const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
+              await this.amenityOfferingRepository.updateById(
+                offering._id.toString(),
+                { inUseQuantity: newQty },
+                session
+              );
+            }
           }
         }
       }
@@ -1726,5 +1808,47 @@ export class ReservationService {
     );
 
     return validateResponse(reservationResponseSchema, formatted);
+  }
+
+  // 15. Automatically handle overdue check-ins (CONFIRMED -> OVERDUE)
+  @Transactional()
+  async processOverdueReservations(
+    session?: ClientSession
+  ): Promise<{ processedCount: number }> {
+    const overdueList = await this.reservationRepository.findOverdueCheckIn(
+      new Date(),
+      session
+    );
+    let count = 0;
+
+    for (const res of overdueList) {
+      await this.reservationRepository.update(
+        res._id.toString(),
+        { status: ReservationStatusEnum.OVERDUE },
+        session
+      );
+      count++;
+
+      const customerIdStr = String(
+        (res.customerId as { _id?: Types.ObjectId })._id || res.customerId
+      );
+      const facilityIdStr = String(
+        (res.facilityId as { _id?: Types.ObjectId })._id || res.facilityId
+      );
+
+      this.notifyCustomer(
+        customerIdStr,
+        facilityIdStr,
+        `Đơn đặt chỗ [${res.reservationCode}] đã quá hạn check-in`,
+        `Đơn đặt chỗ [${res.reservationCode}] đã quá ngày hẹn check-in. Vui lòng liên hệ cơ sở để được hỗ trợ.`,
+        {
+          reservationId: res._id.toString(),
+          reservationCode: res.reservationCode,
+        },
+        NotificationPriorityEnum.HIGH
+      );
+    }
+
+    return { processedCount: count };
   }
 }

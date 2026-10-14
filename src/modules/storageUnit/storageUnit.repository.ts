@@ -236,4 +236,42 @@ export class StorageUnitRepository {
   async restoreById(id: string) {
     return this.storageUnit.restore({ _id: id });
   }
+
+  // Atomic conditional update to reserve a unit (prevent race conditions)
+  async findAndReserveUnitAtomic(
+    id: string,
+    facilityId: string,
+    session?: ClientSession
+  ) {
+    const q = this.storageUnit
+      .findOneAndUpdate(
+        {
+          _id: id,
+          facilityId,
+          status: StorageUnitStatusEnum.AVAILABLE,
+          deleted: false,
+        },
+        {
+          status: StorageUnitStatusEnum.RESERVED,
+        },
+        {
+          returnDocument: 'after',
+        }
+      )
+      .populate(POPULATE_FACILITY)
+      .populate(POPULATE_UNIT_TYPE);
+    if (session) q.session(session);
+    return q;
+  }
+
+  // Get full 2D map layout (all units of facility with their statuses)
+  async getMapLayoutByFacility(facilityId: string) {
+    return this.storageUnit
+      .find({
+        facilityId,
+        deleted: false,
+      })
+      .populate(POPULATE_UNIT_TYPE)
+      .sort({ floor: 1, zone: 1, unitNumber: 1 });
+  }
 }

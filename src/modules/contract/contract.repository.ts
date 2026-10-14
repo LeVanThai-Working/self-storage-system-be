@@ -50,7 +50,12 @@ export class ContractRepository {
       .populate('inspectedBy', 'name email role')
       .populate('cancelledBy', 'name email role')
       .populate('terminatedBy', 'name email role')
-      .populate('renewals.renewedBy', 'name email role');
+      .populate('renewals.renewedBy', 'name email role')
+      .populate('addendums.requestedBy', 'name email role phoneNumber')
+      .populate('addendums.approvedBy', 'name email role')
+      .populate('addendums.assignedStaffId', 'name email role phoneNumber')
+      .populate('addendums.rejectedBy', 'name email role')
+      .populate('addendums.cancelledBy', 'name email role');
 
     if (session) {
       query.session(session);
@@ -163,6 +168,15 @@ export class ContractRepository {
         },
         { path: 'storageUnitId', select: 'unitNumber floor zone status' },
         { path: 'assignedStaffId', select: 'name email role phoneNumber' },
+        {
+          path: 'addendums.requestedBy',
+          select: 'name email role phoneNumber',
+        },
+        { path: 'addendums.approvedBy', select: 'name email role' },
+        {
+          path: 'addendums.assignedStaffId',
+          select: 'name email role phoneNumber',
+        },
       ],
     });
   }

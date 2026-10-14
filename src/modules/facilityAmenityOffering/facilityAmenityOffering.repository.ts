@@ -254,4 +254,33 @@ export class FacilityAmenityOfferingRepository {
   async restoreById(id: string) {
     return this.offering.restore({ _id: id });
   }
+
+  // Atomic conditional update to reserve amenity inventory
+  async reserveAmenityQuantityAtomic(
+    id: string,
+    quantity: number,
+    session?: ClientSession
+  ) {
+    const q = this.offering
+      .findOneAndUpdate(
+        {
+          _id: id,
+          status: FacilityAmenityOfferingStatusEnum.ACTIVE,
+          deleted: false,
+          $expr: {
+            $lte: [{ $add: ['$inUseQuantity', quantity] }, '$totalQuantity'],
+          },
+        },
+        {
+          $inc: { inUseQuantity: quantity },
+        },
+        {
+          returnDocument: 'after',
+        }
+      )
+      .populate(POPULATE_FACILITY)
+      .populate(POPULATE_AMENITY);
+    if (session) q.session(session);
+    return q;
+  }
 }

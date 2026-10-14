@@ -14,6 +14,13 @@ export interface IDimensions {
   height: number;
 }
 
+export interface IDefaultRackConfig {
+  rackCount: number;
+  tiersPerRack: number;
+  tierDimensions?: IDimensions;
+  tierMaxWeightKg?: number;
+}
+
 export interface IUnitType extends SoftDeleteDocument {
   name: string;
   description?: string;
@@ -25,6 +32,7 @@ export interface IUnitType extends SoftDeleteDocument {
   imageUrl?: string;
   images?: string[];
   features?: string[];
+  defaultRackConfig?: IDefaultRackConfig;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,6 +74,17 @@ const unitTypeSchema = new mongoose.Schema<IUnitType>(
     imageUrl: { type: String },
     images: { type: [String], default: [] },
     features: { type: [String], default: [] },
+    defaultRackConfig: {
+      type: new mongoose.Schema<IDefaultRackConfig>(
+        {
+          rackCount: { type: Number, required: true, min: 0 },
+          tiersPerRack: { type: Number, required: true, min: 0 },
+          tierDimensions: { type: dimensionsSchema },
+          tierMaxWeightKg: { type: Number, min: 0 },
+        },
+        { _id: false }
+      ),
+    },
   },
   {
     timestamps: true,

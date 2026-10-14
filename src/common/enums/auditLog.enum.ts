@@ -27,6 +27,12 @@ export enum AuditActionEnum {
   TERMINATE = 'terminate',
   ADD_AMENITY = 'add_amenity',
   REMOVE_AMENITY = 'remove_amenity',
+  SIGN_CONTRACT = 'sign_contract',
+  CREATE_ADDENDUM = 'create_addendum',
+  APPROVE_ADDENDUM = 'approve_addendum',
+  REJECT_ADDENDUM = 'reject_addendum',
+  SIGN_ADDENDUM = 'sign_addendum',
+  CANCEL_ADDENDUM = 'cancel_addendum',
   CONFIRM_PAYMENT = 'confirm_payment',
   RECEIVE_PAYMENT = 'receive_payment',
 }
@@ -46,6 +52,8 @@ export enum AuditResourceEnum {
   CONTRACT = 'contract',
   PAYMENT = 'payment',
   NOTIFICATION = 'notification',
+  STORAGE_RACK = 'storage_rack',
+  RACK_TIER = 'rack_tier',
 }
 
 export enum AuditStatusEnum {

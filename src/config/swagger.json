@@ -1186,6 +1186,581 @@
 			"ToggleMaintenanceRequest": {
 				"$ref": "#/components/schemas/infer_typeoftoggleMaintenanceSchema_"
 			},
+			"RackStatusEnum": {
+				"enum": [
+					"active",
+					"maintenance",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"RackTierStatusEnum": {
+				"enum": [
+					"available",
+					"occupied",
+					"maintenance",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"infer_typeofstorageRackResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"storageUnit": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"zone": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"unitNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"tiers": {
+						"items": {
+							"properties": {
+								"updatedAt": {
+									"type": "string"
+								},
+								"createdAt": {
+									"type": "string"
+								},
+								"notes": {
+									"type": "string"
+								},
+								"volume": {
+									"type": "number",
+									"format": "double"
+								},
+								"dimensions": {
+									"properties": {
+										"height": {
+											"type": "number",
+											"format": "double"
+										},
+										"width": {
+											"type": "number",
+											"format": "double"
+										},
+										"length": {
+											"type": "number",
+											"format": "double"
+										}
+									},
+									"required": [
+										"height",
+										"width",
+										"length"
+									],
+									"type": "object"
+								},
+								"maxWeightKg": {
+									"type": "number",
+									"format": "double"
+								},
+								"status": {
+									"$ref": "#/components/schemas/RackTierStatusEnum"
+								},
+								"tierCode": {
+									"type": "string"
+								},
+								"tierNumber": {
+									"type": "number",
+									"format": "double"
+								},
+								"storageRackId": {
+									"type": "string"
+								},
+								"storageUnitId": {
+									"type": "string"
+								},
+								"facilityId": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"status",
+								"tierCode",
+								"tierNumber",
+								"storageRackId",
+								"storageUnitId",
+								"facilityId",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"tierCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"rackCode": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"tierCount",
+					"rackCode",
+					"storageUnitId",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"StorageRackResponse": {
+				"$ref": "#/components/schemas/infer_typeofstorageRackResponseSchema_"
+			},
+			"PaginatedData_StorageRackResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/StorageRackResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_StorageRackResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_StorageRackResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofstorageRackQuerySchema_": {
+				"properties": {
+					"rackCode": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"updatedAt",
+							"rackCode",
+							"tierCount"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"StorageRackQuery": {
+				"$ref": "#/components/schemas/infer_typeofstorageRackQuerySchema_"
+			},
+			"ApiResponse_StorageRackResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/StorageRackResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_StorageRackResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/StorageRackResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateStorageRackSchema_": {
+				"properties": {
+					"defaultTierDimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"defaultTierMaxWeightKg": {
+						"type": "number",
+						"format": "double"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"name": {
+						"type": "string"
+					},
+					"tierCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"rackCode": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"tierCount",
+					"rackCode",
+					"storageUnitId"
+				],
+				"type": "object"
+			},
+			"CreateStorageRackRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateStorageRackSchema_"
+			},
+			"infer_typeofupdateStorageRackSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateStorageRackRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateStorageRackSchema_"
+			},
+			"infer_typeofrackTierResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"volume": {
+						"type": "number",
+						"format": "double"
+					},
+					"dimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"maxWeightKg": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackTierStatusEnum"
+					},
+					"tierCode": {
+						"type": "string"
+					},
+					"tierNumber": {
+						"type": "number",
+						"format": "double"
+					},
+					"storageRackId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"tierCode",
+					"tierNumber",
+					"storageRackId",
+					"storageUnitId",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"RackTierResponse": {
+				"$ref": "#/components/schemas/infer_typeofrackTierResponseSchema_"
+			},
+			"ApiResponse_RackTierResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RackTierResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofupdateRackTierSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackTierStatusEnum"
+					},
+					"dimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"maxWeightKg": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateRackTierRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateRackTierSchema_"
+			},
 			"ApiResponse__message-string__": {
 				"properties": {
 					"success": {
@@ -1678,6 +2253,12 @@
 					"terminate",
 					"add_amenity",
 					"remove_amenity",
+					"sign_contract",
+					"create_addendum",
+					"approve_addendum",
+					"reject_addendum",
+					"sign_addendum",
+					"cancel_addendum",
 					"confirm_payment",
 					"receive_payment"
 				],
@@ -1698,7 +2279,9 @@
 					"approval_request",
 					"contract",
 					"payment",
-					"notification"
+					"notification",
+					"storage_rack",
+					"rack_tier"
 				],
 				"type": "string"
 			},
@@ -1947,7 +2530,8 @@
 					"completed",
 					"cancelled",
 					"expired",
-					"rejected"
+					"rejected",
+					"overdue"
 				],
 				"type": "string"
 			},
@@ -2315,6 +2899,12 @@
 						"type": "number",
 						"format": "double"
 					},
+					"checkInTimeSlot": {
+						"type": "string"
+					},
+					"checkInDate": {
+						"type": "string"
+					},
 					"startDate": {
 						"type": "string"
 					},
@@ -2345,6 +2935,8 @@
 					"basePrice",
 					"billingUnit",
 					"rentalDuration",
+					"checkInTimeSlot",
+					"checkInDate",
 					"startDate",
 					"facilityUnitTypeOfferingId",
 					"facilityId",
@@ -2391,6 +2983,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"startDate": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
 					"amenities": {
 						"items": {
 							"properties": {
@@ -2414,10 +3012,13 @@
 						"type": "number",
 						"format": "double"
 					},
-					"startDate": {
+					"checkInTimeSlot": {
 						"type": "string"
 					},
-					"facilityUnitTypeOfferingId": {
+					"checkInDate": {
+						"type": "string"
+					},
+					"storageUnitId": {
 						"type": "string"
 					},
 					"facilityId": {
@@ -2427,8 +3028,9 @@
 				"required": [
 					"amenities",
 					"rentalDuration",
-					"startDate",
-					"facilityUnitTypeOfferingId",
+					"checkInTimeSlot",
+					"checkInDate",
+					"storageUnitId",
 					"facilityId"
 				],
 				"type": "object"
@@ -2617,6 +3219,12 @@
 					},
 					"startDate": {
 						"type": "string"
+					},
+					"checkInTimeSlot": {
+						"type": "string"
+					},
+					"checkInDate": {
+						"type": "string"
 					}
 				},
 				"type": "object"
@@ -2624,48 +3232,36 @@
 			"UpdateReservationRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateReservationSchema_"
 			},
-			"infer_typeofassignStorageUnitSchema_": {
+			"infer_typeofreassignStorageUnitSchema_": {
 				"properties": {
-					"notes": {
+					"reason": {
 						"type": "string"
 					},
-					"holdingHours": {
-						"type": "number",
-						"format": "double"
-					},
-					"storageUnitId": {
+					"newStorageUnitId": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"holdingHours",
-					"storageUnitId"
+					"reason",
+					"newStorageUnitId"
 				],
 				"type": "object"
 			},
-			"AssignStorageUnitRequest": {
-				"$ref": "#/components/schemas/infer_typeofassignStorageUnitSchema_"
-			},
-			"infer_typeofrejectReservationSchema_": {
-				"properties": {
-					"rejectionReason": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"rejectionReason"
-				],
-				"type": "object"
-			},
-			"RejectReservationRequest": {
-				"$ref": "#/components/schemas/infer_typeofrejectReservationSchema_"
+			"ReassignStorageUnitRequest": {
+				"$ref": "#/components/schemas/infer_typeofreassignStorageUnitSchema_"
 			},
 			"infer_typeofconfirmReservationSchema_": {
 				"properties": {
 					"notes": {
 						"type": "string"
+					},
+					"assignedStaffId": {
+						"type": "string"
 					}
 				},
+				"required": [
+					"assignedStaffId"
+				],
 				"type": "object"
 			},
 			"ConfirmReservationRequest": {
@@ -2904,6 +3500,9 @@
 							"id"
 						],
 						"type": "object"
+					},
+					"proofImageUrl": {
+						"type": "string"
 					},
 					"confirmedAt": {
 						"type": "string"
@@ -3220,6 +3819,9 @@
 			},
 			"infer_typeofconfirmManualPaymentSchema_": {
 				"properties": {
+					"proofImageUrl": {
+						"type": "string"
+					},
 					"referenceCode": {
 						"type": "string"
 					},
@@ -3912,6 +4514,263 @@
 			},
 			"UpdateOfferingRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateOfferingSchema_"
+			},
+			"infer_typeofavailableTimeSlotItemResponseSchema_": {
+				"properties": {
+					"isAvailable": {
+						"type": "boolean"
+					},
+					"availableCapacity": {
+						"type": "number",
+						"format": "double"
+					},
+					"bookedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"maxCapacity": {
+						"type": "number",
+						"format": "double"
+					},
+					"endTime": {
+						"type": "string"
+					},
+					"startTime": {
+						"type": "string"
+					},
+					"slotName": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"isAvailable",
+					"availableCapacity",
+					"bookedCount",
+					"maxCapacity",
+					"endTime",
+					"startTime",
+					"slotName",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"AvailableTimeSlotItemResponse": {
+				"$ref": "#/components/schemas/infer_typeofavailableTimeSlotItemResponseSchema_"
+			},
+			"ApiResponse_AvailableTimeSlotItemResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/AvailableTimeSlotItemResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeoffacilityTimeSlotResponseSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"isActive": {
+						"type": "boolean"
+					},
+					"maxCapacity": {
+						"type": "number",
+						"format": "double"
+					},
+					"endTime": {
+						"type": "string"
+					},
+					"startTime": {
+						"type": "string"
+					},
+					"slotName": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"isActive",
+					"maxCapacity",
+					"endTime",
+					"startTime",
+					"slotName",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"FacilityTimeSlotResponse": {
+				"$ref": "#/components/schemas/infer_typeoffacilityTimeSlotResponseSchema_"
+			},
+			"ApiResponse_FacilityTimeSlotResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityTimeSlotResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_FacilityTimeSlotResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilityTimeSlotResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateFacilityTimeSlotSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"isActive": {
+						"type": "boolean"
+					},
+					"maxCapacity": {
+						"type": "number",
+						"format": "double"
+					},
+					"endTime": {
+						"type": "string"
+					},
+					"startTime": {
+						"type": "string"
+					},
+					"slotName": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"isActive",
+					"maxCapacity",
+					"endTime",
+					"startTime",
+					"slotName",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateFacilityTimeSlotRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateFacilityTimeSlotSchema_"
+			},
+			"infer_typeofupdateFacilityTimeSlotSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"isActive": {
+						"type": "boolean"
+					},
+					"maxCapacity": {
+						"type": "number",
+						"format": "double"
+					},
+					"endTime": {
+						"type": "string"
+					},
+					"startTime": {
+						"type": "string"
+					},
+					"slotName": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateFacilityTimeSlotRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateFacilityTimeSlotSchema_"
 			},
 			"infer_typeoffacilityResponseSchema_": {
 				"properties": {
@@ -5188,6 +6047,23 @@
 				],
 				"type": "string"
 			},
+			"ContractAddendumTypeEnum": {
+				"enum": [
+					"add",
+					"remove"
+				],
+				"type": "string"
+			},
+			"ContractAddendumStatusEnum": {
+				"enum": [
+					"pending_approval",
+					"draft",
+					"active",
+					"rejected",
+					"cancelled"
+				],
+				"type": "string"
+			},
 			"ContractStatusEnum": {
 				"enum": [
 					"draft",
@@ -5347,6 +6223,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"staffSignedAt": {
+						"type": "string"
+					},
+					"customerSignedAt": {
+						"type": "string"
+					},
 					"terminatedAt": {
 						"type": "string"
 					},
@@ -5461,6 +6343,12 @@
 					"createdAt": {
 						"type": "string"
 					},
+					"staffSigned": {
+						"type": "boolean"
+					},
+					"customerSigned": {
+						"type": "boolean"
+					},
 					"termsAccepted": {
 						"type": "boolean"
 					},
@@ -5532,6 +6420,255 @@
 								"renewedAt",
 								"newEndDate",
 								"previousEndDate"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"addendums": {
+						"items": {
+							"properties": {
+								"notes": {
+									"type": "string"
+								},
+								"cancelledAt": {
+									"type": "string"
+								},
+								"cancelledBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"cancellationReason": {
+									"type": "string"
+								},
+								"rejectedAt": {
+									"type": "string"
+								},
+								"rejectedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"rejectionReason": {
+									"type": "string"
+								},
+								"completedAt": {
+									"type": "string"
+								},
+								"staffSignedAt": {
+									"type": "string"
+								},
+								"customerSignedAt": {
+									"type": "string"
+								},
+								"assignedStaff": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"assignedStaffId": {
+									"type": "string"
+								},
+								"approvedAt": {
+									"type": "string"
+								},
+								"approvedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"requestedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"staffSigned": {
+									"type": "boolean"
+								},
+								"customerSigned": {
+									"type": "boolean"
+								},
+								"requestedAt": {
+									"type": "string"
+								},
+								"status": {
+									"$ref": "#/components/schemas/ContractAddendumStatusEnum"
+								},
+								"damageFee": {
+									"type": "number",
+									"format": "double"
+								},
+								"totalPeriodicPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"amenities": {
+									"items": {
+										"properties": {
+											"addedAt": {
+												"type": "string"
+											},
+											"totalPrice": {
+												"type": "number",
+												"format": "double"
+											},
+											"billingUnit": {
+												"$ref": "#/components/schemas/BillingUnitEnum"
+											},
+											"pricePerUnit": {
+												"type": "number",
+												"format": "double"
+											},
+											"quantity": {
+												"type": "number",
+												"format": "double"
+											},
+											"name": {
+												"type": "string"
+											},
+											"amenityId": {
+												"type": "string"
+											},
+											"facilityAmenityOfferingId": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"addedAt",
+											"totalPrice",
+											"billingUnit",
+											"pricePerUnit",
+											"quantity",
+											"name",
+											"amenityId",
+											"facilityAmenityOfferingId"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"type": {
+									"$ref": "#/components/schemas/ContractAddendumTypeEnum"
+								},
+								"addendumCode": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"staffSigned",
+								"customerSigned",
+								"requestedAt",
+								"status",
+								"damageFee",
+								"totalPeriodicPrice",
+								"amenities",
+								"type",
+								"addendumCode",
+								"id"
 							],
 							"type": "object"
 						},
@@ -5628,6 +6765,8 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
+					"staffSigned",
+					"customerSigned",
 					"termsAccepted",
 					"status",
 					"additionalPaymentRequired",
@@ -5636,6 +6775,7 @@
 					"damageFee",
 					"renewalCount",
 					"renewals",
+					"addendums",
 					"amenities",
 					"totalPeriodicPrice",
 					"depositAmount",
@@ -5872,6 +7012,23 @@
 			"ContractQuery": {
 				"$ref": "#/components/schemas/infer_typeofcontractQuerySchema_"
 			},
+			"infer_typeofcustomerSignContractSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"termsAccepted": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"termsAccepted"
+				],
+				"type": "object"
+			},
+			"CustomerSignContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofcustomerSignContractSchema_"
+			},
 			"infer_typeofcheckInContractSchema_": {
 				"properties": {
 					"notes": {
@@ -5923,24 +7080,105 @@
 			"RenewContractRequest": {
 				"$ref": "#/components/schemas/infer_typeofrenewContractSchema_"
 			},
-			"infer_typeofaddContractAmenitySchema_": {
+			"infer_typeofcreateContractAddendumSchema_": {
 				"properties": {
-					"quantity": {
-						"type": "number",
-						"format": "double"
+					"notes": {
+						"type": "string"
 					},
-					"facilityAmenityOfferingId": {
+					"amenities": {
+						"items": {
+							"properties": {
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"facilityAmenityOfferingId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"facilityAmenityOfferingId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"type": {
+						"$ref": "#/components/schemas/ContractAddendumTypeEnum"
+					}
+				},
+				"required": [
+					"amenities",
+					"type"
+				],
+				"type": "object"
+			},
+			"CreateContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateContractAddendumSchema_"
+			},
+			"infer_typeofapproveContractAddendumSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ApproveContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofapproveContractAddendumSchema_"
+			},
+			"infer_typeofrejectContractAddendumSchema_": {
+				"properties": {
+					"rejectionReason": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"quantity",
-					"facilityAmenityOfferingId"
+					"rejectionReason"
 				],
 				"type": "object"
 			},
-			"AddContractAmenityRequest": {
-				"$ref": "#/components/schemas/infer_typeofaddContractAmenitySchema_"
+			"RejectContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofrejectContractAddendumSchema_"
+			},
+			"infer_typeofsignContractAddendumSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"damageFee": {
+						"type": "number",
+						"format": "double"
+					},
+					"termsAccepted": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"termsAccepted"
+				],
+				"type": "object"
+			},
+			"SignContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofsignContractAddendumSchema_"
+			},
+			"infer_typeofcancelContractAddendumSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelContractAddendumRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelContractAddendumSchema_"
 			},
 			"infer_typeofcheckOutContractSchema_": {
 				"properties": {
@@ -7731,6 +8969,58 @@
 				]
 			}
 		},
+		"/storage-units/facility/{facilityId}/map-layout": {
+			"get": {
+				"operationId": "GetFacilityMapLayout",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitResponse-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or facility inactive",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get full 2D map layout (all units of facility with their statuses: available, reserved, occupied, under_maintenance)",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/storage-units/{id}": {
 			"get": {
 				"operationId": "GetStorageUnitById",
@@ -7993,6 +9283,495 @@
 				"description": "Restore soft-deleted storage unit\n\n//",
 				"tags": [
 					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-racks": {
+			"get": {
+				"operationId": "GetStorageRacks",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_StorageRackResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get list of storage racks (with pagination, filter by facilityId, storageUnitId, status, rackCode)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "rackCode",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RackStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageUnitId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"updatedAt",
+								"rackCode",
+								"tierCount"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateStorageRack",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or duplicate rack code",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new storage rack manually in a storage unit (automatically creates its tiers)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateStorageRackRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/storage-racks/unit/{unitId}": {
+			"get": {
+				"operationId": "GetRacksByUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse-Array_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all storage racks and their tiers for a specific storage unit",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "unitId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-racks/{id}": {
+			"get": {
+				"operationId": "GetStorageRackById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Rack not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get detail of a storage rack by ID (including all its tiers)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateStorageRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Rack not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update storage rack information (name, status, notes)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateStorageRackRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteStorageRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Rack not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Soft delete a storage rack (cascade deletes all its tiers)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-racks/unit/{unitId}/provision": {
+			"post": {
+				"operationId": "ProvisionRacks",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Storage unit does not have default rack config",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Auto-provision racks and tiers for a storage unit based on its UnitType default rack config",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "unitId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-racks/tiers/{id}": {
+			"patch": {
+				"operationId": "UpdateRackTier",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RackTierResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Rack Tier not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update rack tier specifications (dimensions, max weight, status, notes)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateRackTierRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/storage-racks/{id}/restore": {
+			"post": {
+				"operationId": "RestoreStorageRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Rack not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Restore a soft-deleted storage rack and its tiers",
+				"tags": [
+					"Storage Racks"
 				],
 				"security": [],
 				"parameters": [
@@ -9125,7 +10904,7 @@
 						}
 					},
 					"400": {
-						"description": "Invalid request data or insufficient inventory",
+						"description": "Invalid request data or unit/amenity unavailable",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -9155,7 +10934,7 @@
 						}
 					}
 				},
-				"description": "Create a new reservation in PENDING status (Customer).",
+				"description": "Create a new reservation in PENDING_PAYMENT status with 15-minute lock (Customer).",
 				"tags": [
 					"Reservations"
 				],
@@ -9206,7 +10985,7 @@
 						}
 					}
 				},
-				"description": "Get paginated list of reservations.\r\nCustomers only see their own reservations.\r\nStaff/Managers can filter across facilities.",
+				"description": "Get paginated list of reservations.\nCustomers only see their own reservations.\nStaff/Managers can filter across facilities.",
 				"tags": [
 					"Reservations"
 				],
@@ -9366,7 +11145,50 @@
 						}
 					}
 				},
-				"description": "Process and expire overdue holding reservations (Cron/Admin).\r\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
+				"description": "Process and expire overdue holding reservations (Cron/Admin).\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/reservations/process-overdue": {
+			"post": {
+				"operationId": "ProcessOverdueReservations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Process and mark overdue check-ins (CONFIRMED -> OVERDUE) (Cron/Admin).\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
 				"tags": [
 					"Reservations"
 				],
@@ -9516,9 +11338,9 @@
 				}
 			}
 		},
-		"/reservations/{id}/receive": {
+		"/reservations/{id}/reassign-unit": {
 			"post": {
-				"operationId": "ReceiveReservation",
+				"operationId": "ReassignStorageUnit",
 				"responses": {
 					"200": {
 						"description": "Ok",
@@ -9531,79 +11353,7 @@
 						}
 					},
 					"400": {
-						"description": "Invalid reservation status transition",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Facility Manager marks reservation as received (PENDING -> RECEIVED).\r\nLocks the reservation from customer updates.",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/reservations/{id}/assign-unit": {
-			"post": {
-				"operationId": "AssignStorageUnit",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Unit not available, invalid status, or concurrency conflict",
+						"description": "Unit not available or invalid status",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -9643,7 +11393,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager assigns a physical storage unit and locks inventory (RECEIVED -> PENDING_PAYMENT).",
+				"description": "Facility Manager reassigns a physical storage unit due to unexpected maintenance.",
 				"tags": [
 					"Reservations"
 				],
@@ -9663,89 +11413,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/AssignStorageUnitRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/reservations/{id}/reject": {
-			"post": {
-				"operationId": "RejectReservation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid reservation status transition",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Facility Manager rejects reservation (REJECTED).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/RejectReservationRequest"
+								"$ref": "#/components/schemas/ReassignStorageUnitRequest"
 							}
 						}
 					}
@@ -9961,7 +11629,7 @@
 						}
 					}
 				},
-				"description": "Cancel reservation (CANCELLED).\r\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
+				"description": "Cancel reservation (CANCELLED).\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
 				"tags": [
 					"Reservations"
 				],
@@ -10269,7 +11937,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager assigns a staff member for customer check-in.\r\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
+				"description": "Facility Manager assigns a staff member for customer check-in.\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
 				"tags": [
 					"Reservations"
 				],
@@ -10332,7 +12000,7 @@
 						}
 					}
 				},
-				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\r\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
+				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
 				"tags": [
 					"Payments"
 				],
@@ -10436,7 +12104,7 @@
 						}
 					}
 				},
-				"description": "Get paginated list of payments.\r\nCustomers only see their own payments. Staff can filter across facilities.",
+				"description": "Get paginated list of payments.\nCustomers only see their own payments. Staff can filter across facilities.",
 				"tags": [
 					"Payments"
 				],
@@ -10598,7 +12266,7 @@
 						}
 					}
 				},
-				"description": "Process expired pending payments (Cron / Batch job).\r\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"description": "Process expired pending payments (Cron / Batch job).\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
 				"tags": [
 					"Payments"
 				],
@@ -11603,6 +13271,243 @@
 				},
 				"tags": [
 					"Facility Unit Type Offerings"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-time-slots/facility/{facilityId}/available": {
+			"get": {
+				"operationId": "GetAvailableSlots",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AvailableTimeSlotItemResponse-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get available check-in time slots and remaining capacity for a specific date in a facility",
+				"tags": [
+					"Facility Time Slots"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "date",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-time-slots/facility/{facilityId}": {
+			"get": {
+				"operationId": "GetSlotsByFacility",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityTimeSlotResponse-Array_"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all time slots configured for a facility (Manager/Admin view)",
+				"tags": [
+					"Facility Time Slots"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/facility-time-slots": {
+			"post": {
+				"operationId": "CreateTimeSlot",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityTimeSlotResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new check-in time slot for a facility",
+				"tags": [
+					"Facility Time Slots"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateFacilityTimeSlotRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/facility-time-slots/{id}": {
+			"patch": {
+				"operationId": "UpdateTimeSlot",
+				"responses": {
+					"200": {
+						"description": "Updated",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilityTimeSlotResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Time Slot Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update an existing time slot",
+				"tags": [
+					"Facility Time Slots"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateFacilityTimeSlotRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteTimeSlot",
+				"responses": {
+					"200": {
+						"description": "Deleted",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Time Slot Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Soft-delete a time slot",
+				"tags": [
+					"Facility Time Slots"
 				],
 				"security": [],
 				"parameters": [
@@ -12991,7 +14896,7 @@
 						}
 					}
 				},
-				"description": "Create a new contract (From Reservation or Walk-in).\r\nStatus will be DRAFT.",
+				"description": "Create a new contract (From Reservation or Walk-in).\nStatus will be DRAFT.",
 				"tags": [
 					"Contracts"
 				],
@@ -13240,6 +15145,68 @@
 				]
 			}
 		},
+		"/contracts/{id}/customer-sign": {
+			"post": {
+				"operationId": "CustomerSignContract",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\nWhen both customerSigned and staffSigned are true, contract automatically becomes ACTIVE.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CustomerSignContractRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/contracts/{id}/check-in": {
 			"post": {
 				"operationId": "CheckInContract",
@@ -13275,7 +15242,7 @@
 						}
 					}
 				},
-				"description": "Check-in & Activate contract.\r\nChanges status from DRAFT to ACTIVE, storage unit becomes OCCUPIED.",
+				"description": "Staff confirms handover & signs contract on Web (Two-party signing: Staff side).\nWhen both customerSigned and staffSigned are true, contract automatically becomes ACTIVE and storage unit becomes OCCUPIED.",
 				"tags": [
 					"Contracts"
 				],
@@ -13337,7 +15304,7 @@
 						}
 					}
 				},
-				"description": "Cancel DRAFT contract.\r\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
+				"description": "Cancel DRAFT contract.\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
 				"tags": [
 					"Contracts"
 				],
@@ -13426,12 +15393,12 @@
 				}
 			}
 		},
-		"/contracts/{id}/amenities": {
+		"/contracts/{id}/addendums": {
 			"post": {
-				"operationId": "AddAmenity",
+				"operationId": "CreateAddendum",
 				"responses": {
-					"200": {
-						"description": "Success",
+					"201": {
+						"description": "Contract Addendum Created Successfully",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -13461,7 +15428,7 @@
 						}
 					}
 				},
-				"description": "Add amenity to active contract.",
+				"description": "Customer requests to add (install) or remove (uninstall) amenities for an ACTIVE contract (Creates Contract Addendum in PENDING_APPROVAL).",
 				"tags": [
 					"Contracts"
 				],
@@ -13481,16 +15448,16 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/AddContractAmenityRequest"
+								"$ref": "#/components/schemas/CreateContractAddendumRequest"
 							}
 						}
 					}
 				}
 			}
 		},
-		"/contracts/{id}/amenities/{amenityOfferingId}": {
-			"delete": {
-				"operationId": "RemoveAmenity",
+		"/contracts/{id}/addendums/{addendumId}/approve": {
+			"post": {
+				"operationId": "ApproveAddendum",
 				"responses": {
 					"200": {
 						"description": "Success",
@@ -13523,7 +15490,7 @@
 						}
 					}
 				},
-				"description": "Remove amenity from active contract.",
+				"description": "Facility Manager approves amenity addendum request (ADD or REMOVE), creates DRAFT addendum, and assigns staff for physical handover/uninstall.",
 				"tags": [
 					"Contracts"
 				],
@@ -13539,13 +15506,303 @@
 					},
 					{
 						"in": "path",
-						"name": "amenityOfferingId",
+						"name": "addendumId",
 						"required": true,
 						"schema": {
 							"type": "string"
 						}
 					}
-				]
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ApproveContractAddendumRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/reject": {
+			"post": {
+				"operationId": "RejectAddendum",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager rejects amenity addendum request and releases locked inventory (if ADD).",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RejectContractAddendumRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/customer-sign": {
+			"post": {
+				"operationId": "CustomerSignAddendum",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer signs addendum on Mobile (Two-party signing: Customer side).\nWhen both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SignContractAddendumRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/staff-sign": {
+			"post": {
+				"operationId": "StaffSignAddendum",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Staff confirms physical handover/uninstall & signs addendum on Web (Two-party signing: Staff side).\nWhen both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SignContractAddendumRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/cancel": {
+			"post": {
+				"operationId": "CancelAddendum",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel addendum (when PENDING_APPROVAL or DRAFT) and release locked amenity inventory (if ADD).",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelContractAddendumRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/contracts/{id}/check-out": {
@@ -13583,7 +15840,7 @@
 						}
 					}
 				},
-				"description": "Check-out & Liquidate contract.\r\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\r\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
+				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
 				"tags": [
 					"Contracts"
 				],
@@ -13645,7 +15902,7 @@
 						}
 					}
 				},
-				"description": "Terminate contract early due to terms violation.\r\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
+				"description": "Terminate contract early due to terms violation.\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
 				"tags": [
 					"Contracts"
 				],

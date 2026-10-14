@@ -13,7 +13,7 @@ import { FacilityAmenityOfferingRepository } from '../facilityAmenityOffering/fa
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { notificationService } from '../notification/notification.container.ts';
 
-const facilityRepository = new FacilityRepository(Facility);
+export const facilityRepository = new FacilityRepository(Facility);
 
 // UserRepository is required to validate managerId in assignManager
 const userRepository = new UserRepository(User);

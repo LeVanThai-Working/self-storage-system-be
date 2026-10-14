@@ -29,6 +29,7 @@ export interface IPayment extends SoftDeleteDocument {
   referenceCode?: string | null;
   confirmedBy?: Types.ObjectId | null;
   confirmedAt?: Date | null;
+  proofImageUrl?: string | null;
   cancelledBy?: Types.ObjectId | null;
   cancelledAt?: Date | null;
   cancellationReason?: string | null;
@@ -148,6 +149,10 @@ const paymentSchema = new Schema<IPayment>(
     },
     confirmedAt: {
       type: Date,
+      default: null,
+    },
+    proofImageUrl: {
+      type: String,
       default: null,
     },
     cancelledBy: {

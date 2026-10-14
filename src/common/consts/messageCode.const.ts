@@ -86,6 +86,12 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_307: 'MESSAGE_CODE_307',
   // Reservation Holding Time Exceeded
   MESSAGE_CODE_308: 'MESSAGE_CODE_308',
+  // Storage Unit Has Just Been Booked By Another Customer
+  MESSAGE_CODE_309: 'MESSAGE_CODE_309',
+  // Time Slot Has Reached Maximum Capacity
+  MESSAGE_CODE_310: 'MESSAGE_CODE_310',
+  // Invalid Or Inactive Check-in Time Slot
+  MESSAGE_CODE_311: 'MESSAGE_CODE_311',
 
   // ==========================================
   // CONTRACT (400 - 408)
@@ -108,6 +114,16 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_407: 'MESSAGE_CODE_407',
   // Insufficient Amenity Quantity For Contract
   MESSAGE_CODE_408: 'MESSAGE_CODE_408',
+  // Contract Addendum Not Found
+  MESSAGE_CODE_409: 'MESSAGE_CODE_409',
+  // Invalid Contract Addendum Status Transition
+  MESSAGE_CODE_410: 'MESSAGE_CODE_410',
+  // Contract Terms Must Be Accepted
+  MESSAGE_CODE_411: 'MESSAGE_CODE_411',
+  // Party Has Already Signed
+  MESSAGE_CODE_412: 'MESSAGE_CODE_412',
+  // Insufficient Contracted Amenity Quantity To Remove
+  MESSAGE_CODE_413: 'MESSAGE_CODE_413',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -130,6 +146,18 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_507: 'MESSAGE_CODE_507',
   // Payment Account Mismatch
   MESSAGE_CODE_508: 'MESSAGE_CODE_508',
+
+  // ==========================================
+  // STORAGE RACK & TIER (600 - 603)
+  // ==========================================
+  // Storage Rack Not Found
+  MESSAGE_CODE_600: 'MESSAGE_CODE_600',
+  // Rack Tier Not Found
+  MESSAGE_CODE_601: 'MESSAGE_CODE_601',
+  // Invalid Storage Rack Status Transition
+  MESSAGE_CODE_602: 'MESSAGE_CODE_602',
+  // Storage Rack Code Already Exists
+  MESSAGE_CODE_603: 'MESSAGE_CODE_603',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -176,6 +204,9 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_306: 'Storage Unit Does Not Match Reserved Offering',
   MESSAGE_CODE_307: 'Insufficient Amenity Quantity For {0}',
   MESSAGE_CODE_308: 'Reservation Holding Time Exceeded',
+  MESSAGE_CODE_309: 'Storage Unit Has Just Been Booked By Another Customer',
+  MESSAGE_CODE_310: 'Time Slot Has Reached Maximum Capacity',
+  MESSAGE_CODE_311: 'Invalid Or Inactive Check-in Time Slot',
 
   // Contract
   MESSAGE_CODE_400: 'Contract Not Found',
@@ -189,6 +220,11 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
     'Reservation Must Be Confirmed Or Completed To Create Contract',
   MESSAGE_CODE_407: 'Storage Unit Facility Mismatch',
   MESSAGE_CODE_408: 'Insufficient Amenity Quantity For Contract',
+  MESSAGE_CODE_409: 'Contract Addendum Not Found',
+  MESSAGE_CODE_410: 'Invalid Contract Addendum Status Transition',
+  MESSAGE_CODE_411: 'Contract Terms Must Be Accepted',
+  MESSAGE_CODE_412: 'Party Has Already Signed',
+  MESSAGE_CODE_413: 'Insufficient Contracted Amenity Quantity To Remove',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',
@@ -200,4 +236,10 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_506: 'Contract Deposit Not Paid',
   MESSAGE_CODE_507: 'Payment Already Settled',
   MESSAGE_CODE_508: 'Payment Account Mismatch',
+
+  // Storage Rack & Tier
+  MESSAGE_CODE_600: 'Storage Rack Not Found',
+  MESSAGE_CODE_601: 'Rack Tier Not Found',
+  MESSAGE_CODE_602: 'Invalid Storage Rack Status Transition',
+  MESSAGE_CODE_603: 'Storage Rack Code Already Exists',
 };

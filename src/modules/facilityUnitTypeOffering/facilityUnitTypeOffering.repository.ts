@@ -1,4 +1,4 @@
-import type { FilterQuery } from 'mongoose';
+import type { FilterQuery, ClientSession } from 'mongoose';
 import type { SoftDeleteModel } from 'mongoose-delete';
 import type { IFacilityUnitTypeOffering } from './facilityUnitTypeOffering.model.ts';
 import type { OfferingQuery } from './schemas/facilityUnitTypeOffering.request.schema.ts';
@@ -70,18 +70,30 @@ export class FacilityUnitTypeOfferingRepository {
     });
   }
 
-  async findById(id: string) {
-    return this.offering
+  async findById(id: string, session?: ClientSession) {
+    const query = this.offering
       .findById(id)
       .populate(POPULATE_FACILITY)
       .populate(POPULATE_UNIT_TYPE);
+    if (session) {
+      query.session(session);
+    }
+    return query;
   }
 
-  async findByFacilityAndUnitType(facilityId: string, unitTypeId: string) {
-    return this.offering
+  async findByFacilityAndUnitType(
+    facilityId: string,
+    unitTypeId: string,
+    session?: ClientSession
+  ) {
+    const query = this.offering
       .findOne({ facilityId, unitTypeId })
       .populate(POPULATE_FACILITY)
       .populate(POPULATE_UNIT_TYPE);
+    if (session) {
+      query.session(session);
+    }
+    return query;
   }
 
   // Check duplicate including soft-deleted records
