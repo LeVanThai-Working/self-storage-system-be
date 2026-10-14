@@ -18,6 +18,7 @@ export interface IFacility extends SoftDeleteDocument {
   email?: string;
   description?: string;
   status: FacilityStatusEnum;
+  images?: string[];
   managerId?: mongoose.Types.ObjectId;
   operatingHours?: IOperatingHours;
   createdAt: Date;
@@ -45,6 +46,10 @@ const facilitySchema = new mongoose.Schema<IFacility>(
       enum: Object.values(FacilityStatusEnum),
       default: FacilityStatusEnum.ACTIVE,
       required: true,
+    },
+    images: {
+      type: [String],
+      default: [],
     },
     managerId: {
       type: mongoose.Schema.Types.ObjectId,

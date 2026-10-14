@@ -443,6 +443,12 @@ export class FacilityService {
         tags: rawAmenity.tags ?? [],
       };
 
+      const isService =
+        amenity &&
+        typeof amenity === 'object' &&
+        'type' in amenity &&
+        amenity.type === 'service';
+
       return {
         id: String(item._id || item.id),
         facilityId: String(facility._id || facility.id),
@@ -450,9 +456,11 @@ export class FacilityService {
         amenity,
         pricePerUnit: item.pricePerUnit,
         billingUnit: item.billingUnit,
-        totalQuantity: item.totalQuantity,
-        inUseQuantity: item.inUseQuantity,
-        availableQuantity: Math.max(0, item.totalQuantity - item.inUseQuantity),
+        totalQuantity: isService ? null : (item.totalQuantity ?? 0),
+        inUseQuantity: isService ? null : item.inUseQuantity,
+        availableQuantity: isService
+          ? null
+          : Math.max(0, (item.totalQuantity ?? 0) - item.inUseQuantity),
         status: item.status,
       };
     });

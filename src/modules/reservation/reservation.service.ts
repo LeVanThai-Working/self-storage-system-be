@@ -503,16 +503,27 @@ export class ReservationService {
           ]);
         }
 
-        const availableQty =
-          amenityOffering.totalQuantity - amenityOffering.inUseQuantity;
-        if (availableQty < item.quantity) {
-          const amenityName =
-            amenityOffering.amenityId &&
-            typeof amenityOffering.amenityId === 'object' &&
-            'name' in amenityOffering.amenityId
-              ? String(amenityOffering.amenityId.name)
-              : 'Amenity';
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_307, [amenityName]);
+        // Check if amenity is SERVICE (services do not track physical inventory)
+        const isService =
+          amenityOffering.amenityId &&
+          typeof amenityOffering.amenityId === 'object' &&
+          'type' in amenityOffering.amenityId &&
+          (amenityOffering.amenityId as { type?: string }).type === 'service';
+
+        if (!isService) {
+          const total = amenityOffering.totalQuantity ?? 0;
+          const availableQty = total - amenityOffering.inUseQuantity;
+          if (availableQty < item.quantity) {
+            const amenityName =
+              amenityOffering.amenityId &&
+              typeof amenityOffering.amenityId === 'object' &&
+              'name' in amenityOffering.amenityId
+                ? String(amenityOffering.amenityId.name)
+                : 'Amenity';
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_307, [
+              amenityName,
+            ]);
+          }
         }
 
         const amenityName =
@@ -701,16 +712,27 @@ export class ReservationService {
           ]);
         }
 
-        const availableQty =
-          amenityOffering.totalQuantity - amenityOffering.inUseQuantity;
-        if (availableQty < item.quantity) {
-          const amenityName =
-            amenityOffering.amenityId &&
-            typeof amenityOffering.amenityId === 'object' &&
-            'name' in amenityOffering.amenityId
-              ? String(amenityOffering.amenityId.name)
-              : 'Amenity';
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_307, [amenityName]);
+        // Check if amenity is SERVICE (services do not track physical inventory)
+        const isService =
+          amenityOffering.amenityId &&
+          typeof amenityOffering.amenityId === 'object' &&
+          'type' in amenityOffering.amenityId &&
+          (amenityOffering.amenityId as { type?: string }).type === 'service';
+
+        if (!isService) {
+          const total = amenityOffering.totalQuantity ?? 0;
+          const availableQty = total - amenityOffering.inUseQuantity;
+          if (availableQty < item.quantity) {
+            const amenityName =
+              amenityOffering.amenityId &&
+              typeof amenityOffering.amenityId === 'object' &&
+              'name' in amenityOffering.amenityId
+                ? String(amenityOffering.amenityId.name)
+                : 'Amenity';
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_307, [
+              amenityName,
+            ]);
+          }
         }
 
         const amenityName =
@@ -871,18 +893,27 @@ export class ReservationService {
       session
     );
 
-    // Reserve amenity inventory
+    // Reserve amenity inventory (only for physical goods)
     for (const a of reservation.amenities) {
       const amenityOffering = await this.amenityOfferingRepository.findById(
         a.facilityAmenityOfferingId.toString(),
         session
       );
       if (amenityOffering) {
-        await this.amenityOfferingRepository.updateById(
-          amenityOffering._id.toString(),
-          { inUseQuantity: amenityOffering.inUseQuantity + a.quantity },
-          session
-        );
+        const isService =
+          amenityOffering.amenityId &&
+          typeof amenityOffering.amenityId === 'object' &&
+          'type' in amenityOffering.amenityId &&
+          (amenityOffering.amenityId as { type?: string }).type === 'service';
+
+        // Services have no physical inventory to lock
+        if (!isService) {
+          await this.amenityOfferingRepository.updateById(
+            amenityOffering._id.toString(),
+            { inUseQuantity: amenityOffering.inUseQuantity + a.quantity },
+            session
+          );
+        }
       }
     }
 
@@ -1328,12 +1359,20 @@ export class ReservationService {
           session
         );
         if (offering) {
-          const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
-          await this.amenityOfferingRepository.updateById(
-            offering._id.toString(),
-            { inUseQuantity: newQty },
-            session
-          );
+          const isService =
+            offering.amenityId &&
+            typeof offering.amenityId === 'object' &&
+            'type' in offering.amenityId &&
+            (offering.amenityId as { type?: string }).type === 'service';
+
+          if (!isService) {
+            const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
+            await this.amenityOfferingRepository.updateById(
+              offering._id.toString(),
+              { inUseQuantity: newQty },
+              session
+            );
+          }
         }
       }
     }

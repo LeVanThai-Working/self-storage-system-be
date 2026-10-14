@@ -11,7 +11,7 @@ export interface IFacilityAmenityOffering extends SoftDeleteDocument {
   amenityId: mongoose.Types.ObjectId;
   billingUnit: BillingUnitEnum;
   pricePerUnit: number;
-  totalQuantity: number;
+  totalQuantity?: number | null;
   inUseQuantity: number;
   status: FacilityAmenityOfferingStatusEnum;
   notes?: string;
@@ -46,7 +46,7 @@ const facilityAmenityOfferingSchema =
       totalQuantity: {
         type: Number,
         min: 0,
-        default: 0,
+        default: null,
       },
       inUseQuantity: {
         type: Number,

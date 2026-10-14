@@ -16,6 +16,7 @@ export const createUnitTypeSchema = z.object({
   description: z.string().max(1000).optional(),
   dimensions: dimensionsRequestSchema,
   category: z.enum(UnitTypeCategoryEnum).optional(),
+  imageUrl: z.string().url('Invalid image URL format').optional(),
   images: z.array(z.string()).optional(),
   features: z.array(z.string()).optional(),
 });
@@ -26,6 +27,7 @@ export const updateUnitTypeSchema = z.object({
   dimensions: dimensionsRequestSchema.optional(),
   category: z.enum(UnitTypeCategoryEnum).optional(),
   status: z.enum(UnitTypeStatusEnum).optional(),
+  imageUrl: z.string().url('Invalid image URL format').optional(),
   images: z.array(z.string()).optional(),
   features: z.array(z.string()).optional(),
 });

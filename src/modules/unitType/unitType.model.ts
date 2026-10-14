@@ -22,6 +22,7 @@ export interface IUnitType extends SoftDeleteDocument {
   volume: number;
   category?: UnitTypeCategoryEnum;
   status: UnitTypeStatusEnum;
+  imageUrl?: string;
   images?: string[];
   features?: string[];
   createdAt: Date;
@@ -62,6 +63,7 @@ const unitTypeSchema = new mongoose.Schema<IUnitType>(
       default: UnitTypeStatusEnum.ACTIVE,
       required: true,
     },
+    imageUrl: { type: String },
     images: { type: [String], default: [] },
     features: { type: [String], default: [] },
   },

@@ -34,6 +34,11 @@ export const createStorageUnitSchema = z.object({
     ])
     .default(StorageUnitStatusEnum.AVAILABLE)
     .optional(),
+  images: z
+    .array(z.string().url('Invalid image URL format'))
+    .min(3, 'Storage unit requires at least 3 images')
+    .max(10, 'Storage unit allows a maximum of 10 images')
+    .optional(),
   notes: z
     .string()
     .max(1000, 'Notes must not exceed 1000 characters')
@@ -59,6 +64,11 @@ export const updateStorageUnitSchema = z.object({
     .optional(),
   status: z
     .enum([StorageUnitStatusEnum.AVAILABLE, StorageUnitStatusEnum.INACTIVE])
+    .optional(),
+  images: z
+    .array(z.string().url('Invalid image URL format'))
+    .min(3, 'Storage unit requires at least 3 images')
+    .max(10, 'Storage unit allows a maximum of 10 images')
     .optional(),
   notes: z
     .string()

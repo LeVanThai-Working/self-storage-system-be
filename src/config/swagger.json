@@ -407,6 +407,9 @@
 						},
 						"type": "array"
 					},
+					"imageUrl": {
+						"type": "string"
+					},
 					"category": {
 						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
 					},
@@ -613,6 +616,9 @@
 						},
 						"type": "array"
 					},
+					"imageUrl": {
+						"type": "string"
+					},
 					"category": {
 						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
 					},
@@ -667,6 +673,9 @@
 							"type": "string"
 						},
 						"type": "array"
+					},
+					"imageUrl": {
+						"type": "string"
 					},
 					"status": {
 						"$ref": "#/components/schemas/UnitTypeStatusEnum"
@@ -822,6 +831,12 @@
 					"zone": {
 						"type": "string"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"status": {
 						"$ref": "#/components/schemas/StorageUnitStatusEnum"
 					},
@@ -843,6 +858,7 @@
 					}
 				},
 				"required": [
+					"images",
 					"status",
 					"floor",
 					"unitNumber",
@@ -1066,6 +1082,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"status": {
 						"anyOf": [
 							{
@@ -1111,6 +1133,12 @@
 				"properties": {
 					"notes": {
 						"type": "string"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"status": {
 						"anyOf": [
@@ -3920,6 +3948,12 @@
 					"phone": {
 						"type": "string"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityStatusEnum"
 					},
@@ -3937,6 +3971,7 @@
 					}
 				},
 				"required": [
+					"images",
 					"status",
 					"city",
 					"address",
@@ -4230,6 +4265,18 @@
 					"notes": {
 						"type": "string"
 					},
+					"availableQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"inUseQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
 					"amenity": {
 						"properties": {
 							"description": {
@@ -4300,18 +4347,6 @@
 					"status": {
 						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
 					},
-					"availableQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"inUseQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"totalQuantity": {
-						"type": "number",
-						"format": "double"
-					},
 					"billingUnit": {
 						"$ref": "#/components/schemas/BillingUnitEnum"
 					},
@@ -4331,9 +4366,6 @@
 				},
 				"required": [
 					"status",
-					"availableQuantity",
-					"inUseQuantity",
-					"totalQuantity",
 					"billingUnit",
 					"pricePerUnit",
 					"amenityId",
@@ -4522,12 +4554,12 @@
 					"notes": {
 						"type": "string"
 					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-					},
 					"totalQuantity": {
 						"type": "number",
 						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
 					},
 					"billingUnit": {
 						"$ref": "#/components/schemas/BillingUnitEnum"
@@ -4545,7 +4577,6 @@
 				},
 				"required": [
 					"status",
-					"totalQuantity",
 					"billingUnit",
 					"pricePerUnit",
 					"amenityId",
@@ -4734,9 +4765,6 @@
 					"amenityOfferings": {
 						"items": {
 							"properties": {
-								"status": {
-									"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-								},
 								"availableQuantity": {
 									"type": "number",
 									"format": "double"
@@ -4748,6 +4776,9 @@
 								"totalQuantity": {
 									"type": "number",
 									"format": "double"
+								},
+								"status": {
+									"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
 								},
 								"billingUnit": {
 									"$ref": "#/components/schemas/BillingUnitEnum"
@@ -4806,9 +4837,6 @@
 							},
 							"required": [
 								"status",
-								"availableQuantity",
-								"inUseQuantity",
-								"totalQuantity",
 								"billingUnit",
 								"pricePerUnit",
 								"amenity",
@@ -4965,6 +4993,12 @@
 							"phone": {
 								"type": "string"
 							},
+							"images": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
 							"status": {
 								"$ref": "#/components/schemas/FacilityStatusEnum"
 							},
@@ -4982,6 +5016,7 @@
 							}
 						},
 						"required": [
+							"images",
 							"status",
 							"city",
 							"address",
@@ -5047,6 +5082,12 @@
 						],
 						"type": "object"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"description": {
 						"type": "string"
 					},
@@ -5092,6 +5133,12 @@
 							"open"
 						],
 						"type": "object"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityStatusEnum"
@@ -10222,7 +10269,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager assigns a staff member for customer check-in.\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
+				"description": "Facility Manager assigns a staff member for customer check-in.\r\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
 				"tags": [
 					"Reservations"
 				],

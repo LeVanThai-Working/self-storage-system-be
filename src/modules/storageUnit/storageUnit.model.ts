@@ -12,6 +12,7 @@ export interface IStorageUnit extends SoftDeleteDocument {
   floor: number;
   zone?: string;
   status: StorageUnitStatusEnum;
+  images?: string[];
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -52,6 +53,10 @@ const storageUnitSchema = new mongoose.Schema<IStorageUnit>(
       enum: Object.values(StorageUnitStatusEnum),
       default: StorageUnitStatusEnum.AVAILABLE,
       required: true,
+    },
+    images: {
+      type: [String],
+      default: [],
     },
     notes: {
       type: String,
