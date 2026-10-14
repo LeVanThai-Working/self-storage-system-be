@@ -18,6 +18,10 @@ import { corsOptions } from './config/cors.config.ts';
 import { requestContextMiddleware } from './middlewares/requestContext.middleware.ts';
 import { initSocketServer } from './config/socket.config.ts';
 import { socketTestHtml } from './common/templates/socketTest.template.ts';
+import {
+  initReservationWorker,
+  closeReservationWorker,
+} from './modules/reservation/reservation.worker.ts';
 
 const app: Express = express();
 const httpServer = http.createServer(app);
@@ -32,10 +36,11 @@ app.set('trust proxy', 1);
 // Attach request-scoped context (requestId, ip, user-agent, actor)
 app.use(requestContextMiddleware);
 
-// Connect to Database & Redis
+// Connect to Database, Redis & BullMQ Workers
 const initServices = async () => {
   await connect();
   await connectRedis();
+  await initReservationWorker();
 };
 initServices();
 
@@ -114,4 +119,18 @@ httpServer.listen(port, '0.0.0.0', () => {
   const publicUrl = serverUrl;
   console.log(`Server is running at ${publicUrl}`);
   console.log(`Swagger UI is available at ${publicUrl}/api-docs/`);
+});
+
+// Graceful shutdown
+const shutdown = async (signal: string) => {
+  console.log(`\nReceived ${signal}. Gracefully shutting down...`);
+  await closeReservationWorker();
+  process.exit(0);
+};
+
+process.on('SIGINT', () => {
+  void shutdown('SIGINT');
+});
+process.on('SIGTERM', () => {
+  void shutdown('SIGTERM');
 });

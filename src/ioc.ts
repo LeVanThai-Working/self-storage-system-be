@@ -31,6 +31,8 @@ import { PaymentController } from './modules/payment/payment.controller.ts';
 import { paymentController } from './modules/payment/payment.container.ts';
 import { NotificationController } from './modules/notification/notification.controller.ts';
 import { notificationController } from './modules/notification/notification.container.ts';
+import { FacilityTimeSlotController } from './modules/facilityTimeSlot/facilityTimeSlot.controller.ts';
+import { facilityTimeSlotController } from './modules/facilityTimeSlot/facilityTimeSlot.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -81,6 +83,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === NotificationController) {
       return notificationController as unknown as T;
+    }
+    if (controller === FacilityTimeSlotController) {
+      return facilityTimeSlotController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

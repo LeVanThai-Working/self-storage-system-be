@@ -515,4 +515,19 @@ export class StorageUnitService {
     );
     return updated as IStorageUnit;
   }
+
+  // Get full 2D map layout (all units of facility with their statuses)
+  async getFacilityMapLayout(
+    facilityId: string
+  ): Promise<StorageUnitResponse[]> {
+    const facility = await this.facilityRepository.findById(facilityId);
+    if (!facility) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
+    }
+
+    const units =
+      await this.storageUnitRepository.getMapLayoutByFacility(facilityId);
+    const formatted = units.map((u) => this.formatStorageUnit(u));
+    return validateResponse(storageUnitListResponseSchema, formatted);
+  }
 }

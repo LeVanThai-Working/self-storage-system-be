@@ -220,4 +220,55 @@ export class ReservationRepository {
 
     return doc;
   }
+
+  /**
+   * Count active reservations for a given facility, date, and time slot to verify capacity.
+   */
+  async countBookedInTimeSlot(
+    facilityId: string,
+    checkInDate: Date,
+    checkInTimeSlot: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const startOfDay = new Date(checkInDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(checkInDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const query = this.reservation.countDocuments({
+      facilityId,
+      checkInDate: { $gte: startOfDay, $lte: endOfDay },
+      checkInTimeSlot: checkInTimeSlot.trim(),
+      status: {
+        $in: [
+          ReservationStatusEnum.PENDING_PAYMENT,
+          ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+          ReservationStatusEnum.CONFIRMED,
+        ],
+      },
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Finds all reservations that were confirmed but the customer never checked in on the scheduled date.
+   */
+  async findOverdueCheckIn(now: Date = new Date(), session?: ClientSession) {
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const query = this.reservation.find({
+      status: ReservationStatusEnum.CONFIRMED,
+      checkInDate: { $lt: startOfToday },
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
 }

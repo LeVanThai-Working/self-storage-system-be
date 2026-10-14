@@ -23,41 +23,41 @@ export const createReservationSchema = z.object({
   facilityId: z
     .string()
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid facility ID format'),
+  storageUnitId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid storage unit ID format'),
+  checkInDate: dateStringSchema,
+  checkInTimeSlot: z.string().min(3).max(50).trim(),
   facilityUnitTypeOfferingId: z
     .string()
-    .regex(
-      /^[0-9a-fA-F]{24}$/,
-      'Invalid facility unit type offering ID format'
-    ),
-  startDate: dateStringSchema,
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid facility unit type offering ID format')
+    .optional(),
+  startDate: dateStringSchema.optional(),
   rentalDuration: z.number().int().min(1, 'Rental duration must be at least 1'),
   amenities: z.array(reservationAmenityInputSchema).optional().default([]),
   notes: z.string().max(1000).optional(),
 });
 
 export const updateReservationSchema = z.object({
+  checkInDate: dateStringSchema.optional(),
+  checkInTimeSlot: z.string().min(3).max(50).trim().optional(),
   startDate: dateStringSchema.optional(),
   rentalDuration: z.number().int().min(1).optional(),
   amenities: z.array(reservationAmenityInputSchema).optional(),
   notes: z.string().max(1000).optional(),
 });
 
-export const assignStorageUnitSchema = z.object({
-  storageUnitId: z
+export const reassignStorageUnitSchema = z.object({
+  newStorageUnitId: z
     .string()
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid storage unit ID format'),
-  holdingHours: z.number().int().min(1).max(168).optional().default(24),
-  notes: z.string().max(1000).optional(),
-});
-
-export const rejectReservationSchema = z.object({
-  rejectionReason: z
-    .string()
-    .min(3, 'Rejection reason must be at least 3 characters')
-    .max(500),
+  reason: z.string().min(3).max(500),
 });
 
 export const confirmReservationSchema = z.object({
+  assignedStaffId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid staff ID format'),
   notes: z.string().max(1000).optional(),
 });
 
@@ -111,8 +111,9 @@ export const reservationQuerySchema = paginationQuerySchema.extend({
 
 export type CreateReservationRequest = z.infer<typeof createReservationSchema>;
 export type UpdateReservationRequest = z.infer<typeof updateReservationSchema>;
-export type AssignStorageUnitRequest = z.infer<typeof assignStorageUnitSchema>;
-export type RejectReservationRequest = z.infer<typeof rejectReservationSchema>;
+export type ReassignStorageUnitRequest = z.infer<
+  typeof reassignStorageUnitSchema
+>;
 export type ConfirmReservationRequest = z.infer<
   typeof confirmReservationSchema
 >;

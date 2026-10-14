@@ -98,6 +98,28 @@ export class StorageUnitController extends Controller {
   }
 
   /**
+   * Get full 2D map layout (all units of facility with their statuses: available, reserved, occupied, under_maintenance)
+   */
+  @Get('facility/{facilityId}/map-layout')
+  @Middlewares(validateRequest({ params: facilityIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'Invalid request or facility inactive')
+  @Response<ApiErrorResponse>(404, 'Facility not found')
+  public async getFacilityMapLayout(
+    @Path() facilityId: string
+  ): Promise<ApiResponse<StorageUnitResponse[]>> {
+    const units =
+      await this.storageUnitService.getFacilityMapLayout(facilityId);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: units,
+    };
+  }
+
+  /**
    * Get physical storage unit details by ID
    */
   @Get('{id}')

@@ -23,22 +23,20 @@ import { jwtUtil } from '../auth/auth.container.ts';
 import type { TokenPayload } from '../../utils/jwt.util.ts';
 import {
   assignReservationStaffSchema,
-  assignStorageUnitSchema,
   cancelReservationSchema,
   confirmReservationSchema,
   createReservationSchema,
   markDepositPaidSchema,
-  rejectReservationSchema,
+  reassignStorageUnitSchema,
   reservationIdParamSchema,
   reservationQuerySchema,
   updateReservationSchema,
   type AssignReservationStaffRequest,
-  type AssignStorageUnitRequest,
   type CancelReservationRequest,
   type ConfirmReservationRequest,
   type CreateReservationRequest,
   type MarkDepositPaidRequest,
-  type RejectReservationRequest,
+  type ReassignStorageUnitRequest,
   type ReservationQuery,
   type UpdateReservationRequest,
 } from './schemas/reservation.request.schema.ts';
@@ -123,7 +121,7 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Create a new reservation in PENDING status (Customer).
+   * Create a new reservation in PENDING_PAYMENT status with 15-minute lock (Customer).
    */
   @Post('')
   // @Security('bearerAuth')
@@ -133,7 +131,7 @@ export class ReservationController extends Controller {
   @SuccessResponse(201, 'Created')
   @Response<ApiErrorResponse>(
     400,
-    'Invalid request data or insufficient inventory'
+    'Invalid request data or unit/amenity unavailable'
   )
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(404, 'Facility or Offering not found')
@@ -203,6 +201,30 @@ export class ReservationController extends Controller {
     ApiResponse<{ processedCount: number }>
   > {
     const result = await this.reservationService.processExpiredReservations();
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: result,
+    };
+  }
+
+  /**
+   * Process and mark overdue check-ins (CONFIRMED -> OVERDUE) (Cron/Admin).
+   * Note: Placed before dynamic path param '{id}' to prevent route collision.
+   */
+  @Post('process-overdue')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  public async processOverdueReservations(): Promise<
+    ApiResponse<{ processedCount: number }>
+  > {
+    const result = await this.reservationService.processOverdueReservations();
 
     return {
       success: true,
@@ -286,102 +308,29 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Facility Manager marks reservation as received (PENDING -> RECEIVED).
-   * Locks the reservation from customer updates.
+   * Facility Manager reassigns a physical storage unit due to unexpected maintenance.
    */
-  @Post('{id}/receive')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
-  @Middlewares(validateRequest({ params: reservationIdParamSchema }))
-  @Response<ApiErrorResponse>(400, 'Invalid reservation status transition')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async receiveReservation(
-    @Request() req: ExpressRequest,
-    @Path() id: string
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const caller = extractCaller(req);
-    const result = await this.reservationService.receiveReservation(
-      id,
-      caller.userId
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Facility Manager assigns a physical storage unit and locks inventory (RECEIVED -> PENDING_PAYMENT).
-   */
-  @Post('{id}/assign-unit')
+  @Post('{id}/reassign-unit')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Middlewares(
     validateRequest({
       params: reservationIdParamSchema,
-      body: assignStorageUnitSchema,
+      body: reassignStorageUnitSchema,
     })
   )
-  @Response<ApiErrorResponse>(
-    400,
-    'Unit not available, invalid status, or concurrency conflict'
-  )
+  @Response<ApiErrorResponse>(400, 'Unit not available or invalid status')
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Reservation or Storage unit not found')
-  public async assignStorageUnit(
+  public async reassignStorageUnit(
     @Request() req: ExpressRequest,
     @Path() id: string,
-    @Body() body: AssignStorageUnitRequest
+    @Body() body: ReassignStorageUnitRequest
   ): Promise<ApiResponse<ReservationResponse>> {
     const caller = extractCaller(req);
-    const result = await this.reservationService.assignStorageUnit(
-      id,
-      caller.userId,
-      body
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Facility Manager rejects reservation (REJECTED).
-   */
-  @Post('{id}/reject')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
-  @Middlewares(
-    validateRequest({
-      params: reservationIdParamSchema,
-      body: rejectReservationSchema,
-    })
-  )
-  @Response<ApiErrorResponse>(400, 'Invalid reservation status transition')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async rejectReservation(
-    @Request() req: ExpressRequest,
-    @Path() id: string,
-    @Body() body: RejectReservationRequest
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const caller = extractCaller(req);
-    const result = await this.reservationService.rejectReservation(
+    const result = await this.reservationService.reassignStorageUnit(
       id,
       caller.userId,
       body
