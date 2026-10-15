@@ -37,6 +37,8 @@ import { StorageRackController } from './modules/storageRack/storageRack.control
 import { storageRackController } from './modules/storageRack/storageRack.container.ts';
 import { CustomerSkuController } from './modules/customerSku/customerSku.controller.ts';
 import { customerSkuController } from './modules/customerSku/customerSku.container.ts';
+import { UploadController } from './modules/upload/upload.controller.ts';
+import { uploadController } from './modules/upload/upload.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -96,6 +98,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === CustomerSkuController) {
       return customerSkuController as unknown as T;
+    }
+    if (controller === UploadController) {
+      return uploadController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`
