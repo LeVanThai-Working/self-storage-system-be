@@ -9932,7 +9932,7 @@
 						}
 					}
 				},
-				"description": "Generates a signed payload (signature, timestamp, apiKey, cloudName, folder)\r\nfor uploading files directly to Cloudinary from client-side applications.",
+				"description": "Generates a signed payload (signature, timestamp, apiKey, cloudName, folder)\nfor uploading files directly to Cloudinary from client-side applications.",
 				"tags": [
 					"Upload"
 				],
@@ -15408,7 +15408,7 @@
 						}
 					}
 				},
-				"description": "Tạo mã hàng SKU mới\r\nChỉ dành riêng cho Customer tự khai báo danh mục hàng hóa của mình",
+				"description": "Tạo mã hàng SKU mới\nChỉ dành riêng cho Customer tự khai báo danh mục hàng hóa của mình",
 				"tags": [
 					"Customer SKU"
 				],
@@ -15469,7 +15469,7 @@
 						}
 					}
 				},
-				"description": "Lấy danh sách SKU có phân trang và bộ lọc\r\nCustomer chỉ xem được của mình; FM xem theo customerId của khách thuê tại cơ sở; Staff bị chặn",
+				"description": "Lấy danh sách SKU có phân trang và bộ lọc\nCustomer chỉ xem được của mình; FM xem theo customerId của khách thuê tại cơ sở; Staff bị chặn",
 				"tags": [
 					"Customer SKU"
 				],
@@ -15715,7 +15715,7 @@
 						}
 					}
 				},
-				"description": "Cập nhật thông tin SKU\r\nChỉ dành cho Customer sở hữu SKU đó",
+				"description": "Cập nhật thông tin SKU\nChỉ dành cho Customer sở hữu SKU đó",
 				"tags": [
 					"Customer SKU"
 				],
@@ -15785,7 +15785,7 @@
 						}
 					}
 				},
-				"description": "Xoá mềm SKU\r\nChặn xoá nếu SKU còn tồn kho",
+				"description": "Xoá mềm SKU\nChặn xoá nếu SKU còn tồn kho",
 				"tags": [
 					"Customer SKU"
 				],
