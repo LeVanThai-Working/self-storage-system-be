@@ -12,9 +12,12 @@ import { StorageUnit } from '../storageUnit/storageUnit.model.ts';
 import { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
 import { User } from '../user/user.model.ts';
 import { UserRepository } from '../user/user.repository.ts';
+import { Payment, PaymentTransaction } from '../payment/payment.model.ts';
+import { PaymentRepository } from '../payment/payment.repository.ts';
+import { Contract } from '../contract/contract.model.ts';
+import { ContractRepository } from '../contract/contract.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { notificationService } from '../notification/notification.container.ts';
-
 import { facilityTimeSlotRepository } from '../facilityTimeSlot/facilityTimeSlot.container.ts';
 import { reservationQueue } from './reservation.queue.ts';
 
@@ -28,6 +31,8 @@ const amenityOfferingRepository = new FacilityAmenityOfferingRepository(
 );
 const storageUnitRepository = new StorageUnitRepository(StorageUnit);
 const userRepository = new UserRepository(User);
+const paymentRepository = new PaymentRepository(Payment, PaymentTransaction);
+const contractRepository = new ContractRepository(Contract);
 
 export const reservationService = new ReservationService(
   reservationRepository,
@@ -36,10 +41,12 @@ export const reservationService = new ReservationService(
   amenityOfferingRepository,
   storageUnitRepository,
   userRepository,
+  paymentRepository,
   facilityTimeSlotRepository,
   auditLogService,
   notificationService,
-  reservationQueue
+  reservationQueue,
+  contractRepository
 );
 
 export const reservationController = new ReservationController(

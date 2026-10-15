@@ -41,7 +41,7 @@ async function processReservationJob(job: Job): Promise<void> {
       );
       const result = await reservationService.processOverdueReservations();
       console.log(
-        `[ReservationWorker] Completed overdue scan. Processed: ${result.processedCount} reservations.`
+        `[ReservationWorker] Completed overdue scan. Overdue: ${result.overdueCount}, No-show: ${result.noShowCount}, Unconfirmed refund: ${result.unconfirmedCount}.`
       );
       break;
     }

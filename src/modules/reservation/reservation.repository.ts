@@ -2,7 +2,11 @@ import type { ClientSession, FilterQuery } from 'mongoose';
 import type { SoftDeleteModel } from 'mongoose-delete';
 import type { IReservation } from './reservation.model.ts';
 import { paginate, type PaginateResult } from '../../utils/pagination.util.ts';
-import { ReservationStatusEnum } from '../../common/enums/reservation.enum.ts';
+import {
+  RefundStatusEnum,
+  ReservationStatusEnum,
+} from '../../common/enums/reservation.enum.ts';
+import { endOfDayVN, startOfDayVN } from '../../utils/date.util.ts';
 
 export interface ReservationQueryFilter {
   page?: number;
@@ -14,9 +18,12 @@ export interface ReservationQueryFilter {
   facilityUnitTypeOfferingId?: string;
   storageUnitId?: string;
   status?: ReservationStatusEnum;
+  refundStatus?: RefundStatusEnum;
   reservationCode?: string;
   startDateFrom?: string | Date;
   startDateTo?: string | Date;
+  checkInDateFrom?: string | Date;
+  checkInDateTo?: string | Date;
 }
 
 export class ReservationRepository {
@@ -40,11 +47,13 @@ export class ReservationRepository {
         'unitTypeId billingUnit pricePerUnit depositMultiplier minRentalDays status'
       )
       .populate('storageUnitId', 'unitNumber floor zone status')
-      .populate('receivedBy', 'name email role')
-      .populate('assignedBy', 'name email role')
       .populate('confirmedBy', 'name email role')
       .populate('assignedStaffId', 'name email phoneNumber role')
-      .populate('cancelledBy', 'name email role');
+      .populate('cancelledBy', 'name email role')
+      .populate('refundedBy', 'name email role')
+      .populate('unitChangeHistory.fromUnitId', 'unitNumber floor zone status')
+      .populate('unitChangeHistory.toUnitId', 'unitNumber floor zone status')
+      .populate('unitChangeHistory.changedBy', 'name email role');
 
     if (session) {
       query.session(session);
@@ -62,12 +71,26 @@ export class ReservationRepository {
         'unitTypeId billingUnit pricePerUnit depositMultiplier minRentalDays status'
       )
       .populate('storageUnitId', 'unitNumber floor zone status')
-      .populate('assignedStaffId', 'name email phoneNumber role');
+      .populate('confirmedBy', 'name email role')
+      .populate('assignedStaffId', 'name email phoneNumber role')
+      .populate('cancelledBy', 'name email role')
+      .populate('refundedBy', 'name email role');
 
     if (session) {
       query.session(session);
     }
     return query.exec();
+  }
+
+  async existsByCode(code: string, session?: ClientSession): Promise<boolean> {
+    const query = this.reservation.exists({
+      reservationCode: code.toUpperCase(),
+    });
+    if (session) {
+      query.session(session);
+    }
+    const result = await query.exec();
+    return Boolean(result);
   }
 
   async findPaginated(
@@ -100,6 +123,10 @@ export class ReservationRepository {
       filter.status = query.status;
     }
 
+    if (query.refundStatus) {
+      filter.refundStatus = query.refundStatus;
+    }
+
     if (query.reservationCode) {
       filter.reservationCode = {
         $regex: query.reservationCode.trim(),
@@ -114,6 +141,16 @@ export class ReservationRepository {
       }
       if (query.startDateTo) {
         filter.startDate.$lte = new Date(query.startDateTo);
+      }
+    }
+
+    if (query.checkInDateFrom || query.checkInDateTo) {
+      filter.checkInDate = {};
+      if (query.checkInDateFrom) {
+        filter.checkInDate.$gte = new Date(query.checkInDateFrom);
+      }
+      if (query.checkInDateTo) {
+        filter.checkInDate.$lte = new Date(query.checkInDateTo);
       }
     }
 
@@ -134,10 +171,10 @@ export class ReservationRepository {
           select: 'unitTypeId billingUnit pricePerUnit status',
         },
         { path: 'storageUnitId', select: 'unitNumber floor zone status' },
-        { path: 'receivedBy', select: 'name email role' },
-        { path: 'assignedBy', select: 'name email role' },
         { path: 'confirmedBy', select: 'name email role' },
         { path: 'assignedStaffId', select: 'name email phoneNumber role' },
+        { path: 'cancelledBy', select: 'name email role' },
+        { path: 'refundedBy', select: 'name email role' },
       ],
     });
   }
@@ -185,13 +222,9 @@ export class ReservationRepository {
    */
   async findExpired(now: Date = new Date(), session?: ClientSession) {
     const query = this.reservation.find({
-      status: {
-        $in: [
-          ReservationStatusEnum.PENDING_PAYMENT,
-          ReservationStatusEnum.PAYMENT_FAILED,
-        ],
-      },
+      status: ReservationStatusEnum.PENDING_PAYMENT,
       expiresAt: { $ne: null, $lt: now },
+      deleted: false,
     });
     if (session) {
       query.session(session);
@@ -230,10 +263,8 @@ export class ReservationRepository {
     checkInTimeSlot: string,
     session?: ClientSession
   ): Promise<number> {
-    const startOfDay = new Date(checkInDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(checkInDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    const startOfDay = startOfDayVN(checkInDate);
+    const endOfDay = endOfDayVN(checkInDate);
 
     const query = this.reservation.countDocuments({
       facilityId,
@@ -244,6 +275,7 @@ export class ReservationRepository {
           ReservationStatusEnum.PENDING_PAYMENT,
           ReservationStatusEnum.PAYMENT_SUCCESSFUL,
           ReservationStatusEnum.CONFIRMED,
+          ReservationStatusEnum.OVERDUE,
         ],
       },
       deleted: false,
@@ -258,14 +290,110 @@ export class ReservationRepository {
    * Finds all reservations that were confirmed but the customer never checked in on the scheduled date.
    */
   async findOverdueCheckIn(now: Date = new Date(), session?: ClientSession) {
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = startOfDayVN(now);
 
     const query = this.reservation.find({
       status: ReservationStatusEnum.CONFIRMED,
       checkInDate: { $lt: startOfToday },
       deleted: false,
     });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Finds all overdue reservations whose 24-hour grace period has expired (no-show).
+   */
+  async findNoShow(now: Date = new Date(), session?: ClientSession) {
+    const query = this.reservation.find({
+      status: ReservationStatusEnum.OVERDUE,
+      graceExpiresAt: { $ne: null, $lt: now },
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Finds paid reservations that have past checkInDate without confirmation.
+   */
+  async findPaidPastCheckIn(now: Date = new Date(), session?: ClientSession) {
+    const startOfToday = startOfDayVN(now);
+
+    const query = this.reservation.find({
+      status: ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+      checkInDate: { $lt: startOfToday },
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Count active pending reservations for a customer.
+   */
+  async countActivePendingByCustomer(
+    customerId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const query = this.reservation.countDocuments({
+      customerId,
+      status: ReservationStatusEnum.PENDING_PAYMENT,
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Count all active reservations for a customer (pending, paid, confirmed, overdue).
+   */
+  async countActiveByCustomer(
+    customerId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const query = this.reservation.countDocuments({
+      customerId,
+      status: {
+        $in: [
+          ReservationStatusEnum.PENDING_PAYMENT,
+          ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+          ReservationStatusEnum.CONFIRMED,
+          ReservationStatusEnum.OVERDUE,
+        ],
+      },
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Atomically increment refundAmount and set refundStatus to PENDING (e.g. for late/orphaned payments).
+   */
+  async addRefundAmountAtomic(
+    id: string,
+    additionalAmount: number,
+    session?: ClientSession
+  ): Promise<IReservation | null> {
+    const query = this.reservation.findByIdAndUpdate(
+      id,
+      {
+        $inc: { refundAmount: additionalAmount },
+        $set: { refundStatus: RefundStatusEnum.PENDING },
+      },
+      { new: true }
+    );
     if (session) {
       query.session(session);
     }

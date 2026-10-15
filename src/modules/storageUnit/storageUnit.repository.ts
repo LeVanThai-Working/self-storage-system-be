@@ -264,6 +264,29 @@ export class StorageUnitRepository {
     return q;
   }
 
+  // Atomic conditional update to release a reserved unit back to available or under maintenance
+  async releaseReservedUnitAtomic(
+    id: string,
+    newStatus: StorageUnitStatusEnum = StorageUnitStatusEnum.AVAILABLE,
+    session?: ClientSession
+  ) {
+    const q = this.storageUnit.findOneAndUpdate(
+      {
+        _id: id,
+        status: StorageUnitStatusEnum.RESERVED,
+        deleted: false,
+      },
+      {
+        status: newStatus,
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
+    if (session) q.session(session);
+    return q;
+  }
+
   // Get full 2D map layout (all units of facility with their statuses)
   async getMapLayoutByFacility(facilityId: string) {
     return this.storageUnit
