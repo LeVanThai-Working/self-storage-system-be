@@ -19,6 +19,7 @@ export const unitTypeResponseSchema = z.object({
   volume: z.number(),
   category: z.enum(UnitTypeCategoryEnum).optional().nullable(),
   status: z.enum(UnitTypeStatusEnum),
+  imageUrl: z.string().optional().nullable(),
   images: z.array(z.string()).optional().nullable(),
   features: z.array(z.string()).optional().nullable(),
   createdAt: z.union([

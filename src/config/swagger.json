@@ -407,6 +407,9 @@
 						},
 						"type": "array"
 					},
+					"imageUrl": {
+						"type": "string"
+					},
 					"category": {
 						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
 					},
@@ -613,6 +616,9 @@
 						},
 						"type": "array"
 					},
+					"imageUrl": {
+						"type": "string"
+					},
 					"category": {
 						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
 					},
@@ -667,6 +673,9 @@
 							"type": "string"
 						},
 						"type": "array"
+					},
+					"imageUrl": {
+						"type": "string"
 					},
 					"status": {
 						"$ref": "#/components/schemas/UnitTypeStatusEnum"
@@ -822,6 +831,12 @@
 					"zone": {
 						"type": "string"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"status": {
 						"$ref": "#/components/schemas/StorageUnitStatusEnum"
 					},
@@ -843,6 +858,7 @@
 					}
 				},
 				"required": [
+					"images",
 					"status",
 					"floor",
 					"unitNumber",
@@ -1066,6 +1082,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"status": {
 						"anyOf": [
 							{
@@ -1112,6 +1134,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"status": {
 						"anyOf": [
 							{
@@ -1157,6 +1185,581 @@
 			},
 			"ToggleMaintenanceRequest": {
 				"$ref": "#/components/schemas/infer_typeoftoggleMaintenanceSchema_"
+			},
+			"RackStatusEnum": {
+				"enum": [
+					"active",
+					"maintenance",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"RackTierStatusEnum": {
+				"enum": [
+					"available",
+					"occupied",
+					"maintenance",
+					"inactive"
+				],
+				"type": "string"
+			},
+			"infer_typeofstorageRackResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"storageUnit": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"zone": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"unitNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"tiers": {
+						"items": {
+							"properties": {
+								"updatedAt": {
+									"type": "string"
+								},
+								"createdAt": {
+									"type": "string"
+								},
+								"notes": {
+									"type": "string"
+								},
+								"volume": {
+									"type": "number",
+									"format": "double"
+								},
+								"dimensions": {
+									"properties": {
+										"height": {
+											"type": "number",
+											"format": "double"
+										},
+										"width": {
+											"type": "number",
+											"format": "double"
+										},
+										"length": {
+											"type": "number",
+											"format": "double"
+										}
+									},
+									"required": [
+										"height",
+										"width",
+										"length"
+									],
+									"type": "object"
+								},
+								"maxWeightKg": {
+									"type": "number",
+									"format": "double"
+								},
+								"status": {
+									"$ref": "#/components/schemas/RackTierStatusEnum"
+								},
+								"tierCode": {
+									"type": "string"
+								},
+								"tierNumber": {
+									"type": "number",
+									"format": "double"
+								},
+								"storageRackId": {
+									"type": "string"
+								},
+								"storageUnitId": {
+									"type": "string"
+								},
+								"facilityId": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"status",
+								"tierCode",
+								"tierNumber",
+								"storageRackId",
+								"storageUnitId",
+								"facilityId",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"tierCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"rackCode": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"tierCount",
+					"rackCode",
+					"storageUnitId",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"StorageRackResponse": {
+				"$ref": "#/components/schemas/infer_typeofstorageRackResponseSchema_"
+			},
+			"PaginatedData_StorageRackResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/StorageRackResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_StorageRackResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_StorageRackResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofstorageRackQuerySchema_": {
+				"properties": {
+					"rackCode": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"updatedAt",
+							"rackCode",
+							"tierCount"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"StorageRackQuery": {
+				"$ref": "#/components/schemas/infer_typeofstorageRackQuerySchema_"
+			},
+			"ApiResponse_StorageRackResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/StorageRackResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_StorageRackResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/StorageRackResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateStorageRackSchema_": {
+				"properties": {
+					"defaultTierDimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"defaultTierMaxWeightKg": {
+						"type": "number",
+						"format": "double"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"name": {
+						"type": "string"
+					},
+					"tierCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"rackCode": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"tierCount",
+					"rackCode",
+					"storageUnitId"
+				],
+				"type": "object"
+			},
+			"CreateStorageRackRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateStorageRackSchema_"
+			},
+			"infer_typeofupdateStorageRackSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateStorageRackRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateStorageRackSchema_"
+			},
+			"infer_typeofrackTierResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"volume": {
+						"type": "number",
+						"format": "double"
+					},
+					"dimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"maxWeightKg": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackTierStatusEnum"
+					},
+					"tierCode": {
+						"type": "string"
+					},
+					"tierNumber": {
+						"type": "number",
+						"format": "double"
+					},
+					"storageRackId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"tierCode",
+					"tierNumber",
+					"storageRackId",
+					"storageUnitId",
+					"facilityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"RackTierResponse": {
+				"$ref": "#/components/schemas/infer_typeofrackTierResponseSchema_"
+			},
+			"ApiResponse_RackTierResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RackTierResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofupdateRackTierSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RackTierStatusEnum"
+					},
+					"dimensions": {
+						"properties": {
+							"height": {
+								"type": "number",
+								"format": "double"
+							},
+							"width": {
+								"type": "number",
+								"format": "double"
+							},
+							"length": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"height",
+							"width",
+							"length"
+						],
+						"type": "object"
+					},
+					"maxWeightKg": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateRackTierRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateRackTierSchema_"
 			},
 			"ApiResponse__message-string__": {
 				"properties": {
@@ -1676,7 +2279,9 @@
 					"approval_request",
 					"contract",
 					"payment",
-					"notification"
+					"notification",
+					"storage_rack",
+					"rack_tier"
 				],
 				"type": "string"
 			},
@@ -4202,6 +4807,12 @@
 					"phone": {
 						"type": "string"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityStatusEnum"
 					},
@@ -4219,6 +4830,7 @@
 					}
 				},
 				"required": [
+					"images",
 					"status",
 					"city",
 					"address",
@@ -4512,6 +5124,18 @@
 					"notes": {
 						"type": "string"
 					},
+					"availableQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"inUseQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
 					"amenity": {
 						"properties": {
 							"description": {
@@ -4582,18 +5206,6 @@
 					"status": {
 						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
 					},
-					"availableQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"inUseQuantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"totalQuantity": {
-						"type": "number",
-						"format": "double"
-					},
 					"billingUnit": {
 						"$ref": "#/components/schemas/BillingUnitEnum"
 					},
@@ -4613,9 +5225,6 @@
 				},
 				"required": [
 					"status",
-					"availableQuantity",
-					"inUseQuantity",
-					"totalQuantity",
 					"billingUnit",
 					"pricePerUnit",
 					"amenityId",
@@ -4804,12 +5413,12 @@
 					"notes": {
 						"type": "string"
 					},
-					"status": {
-						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-					},
 					"totalQuantity": {
 						"type": "number",
 						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
 					},
 					"billingUnit": {
 						"$ref": "#/components/schemas/BillingUnitEnum"
@@ -4827,7 +5436,6 @@
 				},
 				"required": [
 					"status",
-					"totalQuantity",
 					"billingUnit",
 					"pricePerUnit",
 					"amenityId",
@@ -5016,9 +5624,6 @@
 					"amenityOfferings": {
 						"items": {
 							"properties": {
-								"status": {
-									"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
-								},
 								"availableQuantity": {
 									"type": "number",
 									"format": "double"
@@ -5030,6 +5635,9 @@
 								"totalQuantity": {
 									"type": "number",
 									"format": "double"
+								},
+								"status": {
+									"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
 								},
 								"billingUnit": {
 									"$ref": "#/components/schemas/BillingUnitEnum"
@@ -5088,9 +5696,6 @@
 							},
 							"required": [
 								"status",
-								"availableQuantity",
-								"inUseQuantity",
-								"totalQuantity",
 								"billingUnit",
 								"pricePerUnit",
 								"amenity",
@@ -5247,6 +5852,12 @@
 							"phone": {
 								"type": "string"
 							},
+							"images": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
 							"status": {
 								"$ref": "#/components/schemas/FacilityStatusEnum"
 							},
@@ -5264,6 +5875,7 @@
 							}
 						},
 						"required": [
+							"images",
 							"status",
 							"city",
 							"address",
@@ -5329,6 +5941,12 @@
 						],
 						"type": "object"
 					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"description": {
 						"type": "string"
 					},
@@ -5374,6 +5992,12 @@
 							"open"
 						],
 						"type": "object"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityStatusEnum"
@@ -8659,6 +9283,495 @@
 				"description": "Restore soft-deleted storage unit\n\n//",
 				"tags": [
 					"Storage Units"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-racks": {
+			"get": {
+				"operationId": "GetStorageRacks",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_StorageRackResponse__"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid query parameters",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get list of storage racks (with pagination, filter by facilityId, storageUnitId, status, rackCode)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "rackCode",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RackStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageUnitId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"updatedAt",
+								"rackCode",
+								"tierCount"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			},
+			"post": {
+				"operationId": "CreateStorageRack",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid request or duplicate rack code",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new storage rack manually in a storage unit (automatically creates its tiers)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateStorageRackRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/storage-racks/unit/{unitId}": {
+			"get": {
+				"operationId": "GetRacksByUnit",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse-Array_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get all storage racks and their tiers for a specific storage unit",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "unitId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-racks/{id}": {
+			"get": {
+				"operationId": "GetStorageRackById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Rack not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get detail of a storage rack by ID (including all its tiers)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateStorageRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Rack not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update storage rack information (name, status, notes)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateStorageRackRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteStorageRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_null_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Rack not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Soft delete a storage rack (cascade deletes all its tiers)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-racks/unit/{unitId}/provision": {
+			"post": {
+				"operationId": "ProvisionRacks",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Storage unit does not have default rack config",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Auto-provision racks and tiers for a storage unit based on its UnitType default rack config",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "unitId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/storage-racks/tiers/{id}": {
+			"patch": {
+				"operationId": "UpdateRackTier",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RackTierResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Rack Tier not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Update rack tier specifications (dimensions, max weight, status, notes)",
+				"tags": [
+					"Storage Racks"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateRackTierRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/storage-racks/{id}/restore": {
+			"post": {
+				"operationId": "RestoreStorageRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Rack not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Restore a soft-deleted storage rack and its tiers",
+				"tags": [
+					"Storage Racks"
 				],
 				"security": [],
 				"parameters": [

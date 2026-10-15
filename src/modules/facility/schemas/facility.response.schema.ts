@@ -26,6 +26,7 @@ export const facilityResponseSchema = z.object({
   email: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   status: z.enum(FacilityStatusEnum),
+  images: z.array(z.string()).default([]),
   managerId: z.string().optional().nullable(),
   operatingHours: operatingHoursResponseSchema.optional().nullable(),
   createdAt: z.union([
@@ -87,9 +88,9 @@ export const publicAmenityOfferingSchema = z.object({
   amenity: publicAmenityDetailSchema,
   pricePerUnit: z.number(),
   billingUnit: z.enum(BillingUnitEnum),
-  totalQuantity: z.number(),
-  inUseQuantity: z.number(),
-  availableQuantity: z.number(),
+  totalQuantity: z.number().nullable().optional(),
+  inUseQuantity: z.number().nullable().optional(),
+  availableQuantity: z.number().nullable().optional(),
   status: z.enum(FacilityAmenityOfferingStatusEnum),
 });
 

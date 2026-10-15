@@ -544,14 +544,43 @@ export class ReservationService {
         }
         seenAmenityIds.add(item.facilityAmenityOfferingId);
 
-        const reservedAmenity =
-          await this.amenityOfferingRepository.reserveAmenityQuantityAtomic(
-            item.facilityAmenityOfferingId,
-            item.quantity,
-            session
-          );
-        if (!reservedAmenity) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_307, ['Amenity']);
+        const amenityOffering = await this.amenityOfferingRepository.findById(
+          item.facilityAmenityOfferingId,
+          session
+        );
+        if (!amenityOffering) {
+          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+            'Amenity Offering',
+          ]);
+        }
+
+        // Check if amenity is SERVICE (services do not track physical inventory)
+        const isService =
+          amenityOffering.amenityId &&
+          typeof amenityOffering.amenityId === 'object' &&
+          'type' in amenityOffering.amenityId &&
+          (amenityOffering.amenityId as { type?: string }).type === 'service';
+
+        let reservedAmenity = amenityOffering;
+        if (!isService) {
+          const atomicReserved =
+            await this.amenityOfferingRepository.reserveAmenityQuantityAtomic(
+              item.facilityAmenityOfferingId,
+              item.quantity,
+              session
+            );
+          if (!atomicReserved) {
+            const amenityName =
+              amenityOffering.amenityId &&
+              typeof amenityOffering.amenityId === 'object' &&
+              'name' in amenityOffering.amenityId
+                ? String(amenityOffering.amenityId.name)
+                : 'Amenity';
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_307, [
+              amenityName,
+            ]);
+          }
+          reservedAmenity = atomicReserved;
         }
 
         const amenityName =
@@ -764,16 +793,27 @@ export class ReservationService {
           ]);
         }
 
-        const availableQty =
-          amenityOffering.totalQuantity - amenityOffering.inUseQuantity;
-        if (availableQty < item.quantity) {
-          const amenityName =
-            amenityOffering.amenityId &&
-            typeof amenityOffering.amenityId === 'object' &&
-            'name' in amenityOffering.amenityId
-              ? String(amenityOffering.amenityId.name)
-              : 'Amenity';
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_307, [amenityName]);
+        // Check if amenity is SERVICE (services do not track physical inventory)
+        const isService =
+          amenityOffering.amenityId &&
+          typeof amenityOffering.amenityId === 'object' &&
+          'type' in amenityOffering.amenityId &&
+          (amenityOffering.amenityId as { type?: string }).type === 'service';
+
+        if (!isService) {
+          const total = amenityOffering.totalQuantity ?? 0;
+          const availableQty = total - amenityOffering.inUseQuantity;
+          if (availableQty < item.quantity) {
+            const amenityName =
+              amenityOffering.amenityId &&
+              typeof amenityOffering.amenityId === 'object' &&
+              'name' in amenityOffering.amenityId
+                ? String(amenityOffering.amenityId.name)
+                : 'Amenity';
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_307, [
+              amenityName,
+            ]);
+          }
         }
 
         const amenityName =
@@ -1310,12 +1350,20 @@ export class ReservationService {
           session
         );
         if (offering) {
-          const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
-          await this.amenityOfferingRepository.updateById(
-            offering._id.toString(),
-            { inUseQuantity: newQty },
-            session
-          );
+          const isService =
+            offering.amenityId &&
+            typeof offering.amenityId === 'object' &&
+            'type' in offering.amenityId &&
+            (offering.amenityId as { type?: string }).type === 'service';
+
+          if (!isService) {
+            const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
+            await this.amenityOfferingRepository.updateById(
+              offering._id.toString(),
+              { inUseQuantity: newQty },
+              session
+            );
+          }
         }
       }
     }
@@ -1435,12 +1483,20 @@ export class ReservationService {
           session
         );
         if (offering) {
-          const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
-          await this.amenityOfferingRepository.updateById(
-            offering._id.toString(),
-            { inUseQuantity: newQty },
-            session
-          );
+          const isService =
+            offering.amenityId &&
+            typeof offering.amenityId === 'object' &&
+            'type' in offering.amenityId &&
+            (offering.amenityId as { type?: string }).type === 'service';
+
+          if (!isService) {
+            const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
+            await this.amenityOfferingRepository.updateById(
+              offering._id.toString(),
+              { inUseQuantity: newQty },
+              session
+            );
+          }
         }
       }
     }
@@ -1504,12 +1560,20 @@ export class ReservationService {
             session
           );
           if (offering) {
-            const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
-            await this.amenityOfferingRepository.updateById(
-              offering._id.toString(),
-              { inUseQuantity: newQty },
-              session
-            );
+            const isService =
+              offering.amenityId &&
+              typeof offering.amenityId === 'object' &&
+              'type' in offering.amenityId &&
+              (offering.amenityId as { type?: string }).type === 'service';
+
+            if (!isService) {
+              const newQty = Math.max(0, offering.inUseQuantity - a.quantity);
+              await this.amenityOfferingRepository.updateById(
+                offering._id.toString(),
+                { inUseQuantity: newQty },
+                session
+              );
+            }
           }
         }
       }

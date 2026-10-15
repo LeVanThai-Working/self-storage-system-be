@@ -54,9 +54,24 @@ export class FacilityAmenityOfferingService {
       obj.id = String(obj._id);
     }
 
-    const total = typeof obj.totalQuantity === 'number' ? obj.totalQuantity : 0;
-    const inUse = typeof obj.inUseQuantity === 'number' ? obj.inUseQuantity : 0;
-    obj.availableQuantity = Math.max(0, total - inUse);
+    // Determine if amenity is of type SERVICE
+    const isService =
+      obj.amenityId &&
+      typeof obj.amenityId === 'object' &&
+      'type' in (obj.amenityId as Record<string, unknown>) &&
+      (obj.amenityId as Record<string, unknown>).type === 'service';
+
+    if (isService) {
+      obj.totalQuantity = null;
+      obj.inUseQuantity = null;
+      obj.availableQuantity = null;
+    } else {
+      const total =
+        typeof obj.totalQuantity === 'number' ? obj.totalQuantity : 0;
+      const inUse =
+        typeof obj.inUseQuantity === 'number' ? obj.inUseQuantity : 0;
+      obj.availableQuantity = Math.max(0, total - inUse);
+    }
 
     // Map populated facilityId -> facility
     if (obj.facilityId && typeof obj.facilityId === 'object') {
@@ -245,7 +260,11 @@ export class FacilityAmenityOfferingService {
     }
 
     // Inventory validation rule: totalQuantity cannot be less than inUseQuantity
-    if (data.totalQuantity !== undefined) {
+    if (
+      data.totalQuantity !== undefined &&
+      data.totalQuantity !== null &&
+      offering.inUseQuantity > 0
+    ) {
       if (data.totalQuantity < offering.inUseQuantity) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
           `Total quantity (${data.totalQuantity}) cannot be less than currently in-use quantity (${offering.inUseQuantity})`,

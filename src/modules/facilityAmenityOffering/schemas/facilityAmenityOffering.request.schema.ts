@@ -16,7 +16,8 @@ export const createFacilityAmenityOfferingSchema = z.object({
     .number()
     .int('Total quantity must be an integer')
     .min(0, 'Total quantity must be greater than or equal to 0')
-    .default(0),
+    .optional()
+    .nullable(),
   status: z
     .nativeEnum(FacilityAmenityOfferingStatusEnum)
     .default(FacilityAmenityOfferingStatusEnum.ACTIVE),
@@ -34,7 +35,8 @@ export const updateFacilityAmenityOfferingSchema = z
       .number()
       .int('Total quantity must be an integer')
       .min(0, 'Total quantity must be greater than or equal to 0')
-      .optional(),
+      .optional()
+      .nullable(),
     status: z.nativeEnum(FacilityAmenityOfferingStatusEnum).optional(),
     notes: z
       .string()

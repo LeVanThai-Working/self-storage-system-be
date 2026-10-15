@@ -52,6 +52,8 @@ export enum AuditResourceEnum {
   CONTRACT = 'contract',
   PAYMENT = 'payment',
   NOTIFICATION = 'notification',
+  STORAGE_RACK = 'storage_rack',
+  RACK_TIER = 'rack_tier',
 }
 
 export enum AuditStatusEnum {

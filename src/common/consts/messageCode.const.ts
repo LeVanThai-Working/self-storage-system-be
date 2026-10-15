@@ -146,6 +146,18 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_507: 'MESSAGE_CODE_507',
   // Payment Account Mismatch
   MESSAGE_CODE_508: 'MESSAGE_CODE_508',
+
+  // ==========================================
+  // STORAGE RACK & TIER (600 - 603)
+  // ==========================================
+  // Storage Rack Not Found
+  MESSAGE_CODE_600: 'MESSAGE_CODE_600',
+  // Rack Tier Not Found
+  MESSAGE_CODE_601: 'MESSAGE_CODE_601',
+  // Invalid Storage Rack Status Transition
+  MESSAGE_CODE_602: 'MESSAGE_CODE_602',
+  // Storage Rack Code Already Exists
+  MESSAGE_CODE_603: 'MESSAGE_CODE_603',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -224,4 +236,10 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_506: 'Contract Deposit Not Paid',
   MESSAGE_CODE_507: 'Payment Already Settled',
   MESSAGE_CODE_508: 'Payment Account Mismatch',
+
+  // Storage Rack & Tier
+  MESSAGE_CODE_600: 'Storage Rack Not Found',
+  MESSAGE_CODE_601: 'Rack Tier Not Found',
+  MESSAGE_CODE_602: 'Invalid Storage Rack Status Transition',
+  MESSAGE_CODE_603: 'Storage Rack Code Already Exists',
 };

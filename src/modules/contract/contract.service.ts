@@ -272,18 +272,26 @@ export class ContractService {
             ]);
           }
 
-          const available =
-            amenityOffering.totalQuantity - amenityOffering.inUseQuantity;
-          if (amenityOffering.totalQuantity > 0 && available < item.quantity) {
-            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_408);
-          }
+          const isService =
+            amenityOffering.amenityId &&
+            typeof amenityOffering.amenityId === 'object' &&
+            'type' in amenityOffering.amenityId &&
+            (amenityOffering.amenityId as { type?: string }).type === 'service';
 
-          // Lock amenity inventory
-          await this.amenityOfferingRepository.updateById(
-            String(amenityOffering._id),
-            { inUseQuantity: amenityOffering.inUseQuantity + item.quantity },
-            session
-          );
+          if (!isService) {
+            const total = amenityOffering.totalQuantity ?? 0;
+            const available = total - amenityOffering.inUseQuantity;
+            if (total > 0 && available < item.quantity) {
+              throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_408);
+            }
+
+            // Lock amenity inventory
+            await this.amenityOfferingRepository.updateById(
+              String(amenityOffering._id),
+              { inUseQuantity: amenityOffering.inUseQuantity + item.quantity },
+              session
+            );
+          }
 
           const amenityName =
             amenityOffering.amenityId &&
@@ -629,12 +637,20 @@ export class ContractService {
         session
       );
       if (offering) {
-        const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
-        await this.amenityOfferingRepository.updateById(
-          offeringId,
-          { inUseQuantity: newInUse },
-          session
-        );
+        const isService =
+          offering.amenityId &&
+          typeof offering.amenityId === 'object' &&
+          'type' in offering.amenityId &&
+          (offering.amenityId as { type?: string }).type === 'service';
+
+        if (!isService) {
+          const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
+          await this.amenityOfferingRepository.updateById(
+            offeringId,
+            { inUseQuantity: newInUse },
+            session
+          );
+        }
       }
     }
 
@@ -779,17 +795,26 @@ export class ContractService {
           ]);
         }
 
-        const available = offering.totalQuantity - offering.inUseQuantity;
-        if (offering.totalQuantity > 0 && available < item.quantity) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_408);
-        }
+        const isService =
+          offering.amenityId &&
+          typeof offering.amenityId === 'object' &&
+          'type' in offering.amenityId &&
+          (offering.amenityId as { type?: string }).type === 'service';
 
-        // Lock inventory while ADD addendum is pending/draft
-        await this.amenityOfferingRepository.updateById(
-          String(offering._id),
-          { inUseQuantity: offering.inUseQuantity + item.quantity },
-          session
-        );
+        if (!isService) {
+          const total = offering.totalQuantity ?? 0;
+          const available = total - offering.inUseQuantity;
+          if (total > 0 && available < item.quantity) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_408);
+          }
+
+          // Lock inventory
+          await this.amenityOfferingRepository.updateById(
+            String(offering._id),
+            { inUseQuantity: offering.inUseQuantity + item.quantity },
+            session
+          );
+        }
 
         const amenityName =
           offering.amenityId &&
@@ -1287,12 +1312,20 @@ export class ContractService {
         session
       );
       if (offering) {
-        const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
-        await this.amenityOfferingRepository.updateById(
-          offeringId,
-          { inUseQuantity: newInUse },
-          session
-        );
+        const isService =
+          offering.amenityId &&
+          typeof offering.amenityId === 'object' &&
+          'type' in offering.amenityId &&
+          (offering.amenityId as { type?: string }).type === 'service';
+
+        if (!isService) {
+          const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
+          await this.amenityOfferingRepository.updateById(
+            offeringId,
+            { inUseQuantity: newInUse },
+            session
+          );
+        }
       }
     }
 
@@ -1383,12 +1416,20 @@ export class ContractService {
         session
       );
       if (offering) {
-        const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
-        await this.amenityOfferingRepository.updateById(
-          offeringId,
-          { inUseQuantity: newInUse },
-          session
-        );
+        const isService =
+          offering.amenityId &&
+          typeof offering.amenityId === 'object' &&
+          'type' in offering.amenityId &&
+          (offering.amenityId as { type?: string }).type === 'service';
+
+        if (!isService) {
+          const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
+          await this.amenityOfferingRepository.updateById(
+            offeringId,
+            { inUseQuantity: newInUse },
+            session
+          );
+        }
       }
     }
 
@@ -1531,12 +1572,20 @@ export class ContractService {
         session
       );
       if (offering) {
-        const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
-        await this.amenityOfferingRepository.updateById(
-          offeringId,
-          { inUseQuantity: newInUse },
-          session
-        );
+        const isService =
+          offering.amenityId &&
+          typeof offering.amenityId === 'object' &&
+          'type' in offering.amenityId &&
+          (offering.amenityId as { type?: string }).type === 'service';
+
+        if (!isService) {
+          const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
+          await this.amenityOfferingRepository.updateById(
+            offeringId,
+            { inUseQuantity: newInUse },
+            session
+          );
+        }
       }
     }
   }
