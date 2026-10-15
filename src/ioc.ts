@@ -33,6 +33,10 @@ import { NotificationController } from './modules/notification/notification.cont
 import { notificationController } from './modules/notification/notification.container.ts';
 import { FacilityTimeSlotController } from './modules/facilityTimeSlot/facilityTimeSlot.controller.ts';
 import { facilityTimeSlotController } from './modules/facilityTimeSlot/facilityTimeSlot.container.ts';
+import { StorageRackController } from './modules/storageRack/storageRack.controller.ts';
+import { storageRackController } from './modules/storageRack/storageRack.container.ts';
+import { CustomerSkuController } from './modules/customerSku/customerSku.controller.ts';
+import { customerSkuController } from './modules/customerSku/customerSku.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -86,6 +90,12 @@ export const iocContainer: IocContainer = {
     }
     if (controller === FacilityTimeSlotController) {
       return facilityTimeSlotController as unknown as T;
+    }
+    if (controller === StorageRackController) {
+      return storageRackController as unknown as T;
+    }
+    if (controller === CustomerSkuController) {
+      return customerSkuController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

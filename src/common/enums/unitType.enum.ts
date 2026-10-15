@@ -6,7 +6,6 @@ export enum UnitTypeStatusEnum {
 export enum UnitTypeCategoryEnum {
   LOCKER = 'locker',
   SMALL = 'small',
-  MEDIUM = 'medium',
   LARGE = 'large',
-  CLIMATE_CONTROLLED = 'climate_controlled',
+  WAREHOUSE_RACK = 'warehouse_rack',
 }

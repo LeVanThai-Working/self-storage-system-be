@@ -158,6 +158,20 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_602: 'MESSAGE_CODE_602',
   // Storage Rack Code Already Exists
   MESSAGE_CODE_603: 'MESSAGE_CODE_603',
+
+  // ==========================================
+  // CUSTOMER SKU (610 - 614)
+  // ==========================================
+  // Customer SKU Not Found
+  MESSAGE_CODE_610: 'MESSAGE_CODE_610',
+  // Customer SKU Code Already Exists
+  MESSAGE_CODE_611: 'MESSAGE_CODE_611',
+  // Customer SKU Barcode Already Exists
+  MESSAGE_CODE_612: 'MESSAGE_CODE_612',
+  // Cannot Delete SKU With Active Inventory
+  MESSAGE_CODE_613: 'MESSAGE_CODE_613',
+  // Invalid Customer SKU Status Transition
+  MESSAGE_CODE_614: 'MESSAGE_CODE_614',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -242,4 +256,11 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_601: 'Rack Tier Not Found',
   MESSAGE_CODE_602: 'Invalid Storage Rack Status Transition',
   MESSAGE_CODE_603: 'Storage Rack Code Already Exists',
+
+  // Customer SKU
+  MESSAGE_CODE_610: 'Customer SKU Not Found',
+  MESSAGE_CODE_611: 'Customer SKU Code Already Exists',
+  MESSAGE_CODE_612: 'Customer SKU Barcode Already Exists',
+  MESSAGE_CODE_613: 'Cannot Delete SKU With Active Inventory',
+  MESSAGE_CODE_614: 'Invalid Customer SKU Status Transition',
 };
