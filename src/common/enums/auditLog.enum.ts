@@ -58,6 +58,7 @@ export enum AuditResourceEnum {
   NOTIFICATION = 'notification',
   STORAGE_RACK = 'storage_rack',
   RACK_TIER = 'rack_tier',
+  CUSTOMER_SKU = 'customer_sku',
 }
 
 export enum AuditStatusEnum {

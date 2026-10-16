@@ -63,7 +63,7 @@ const unitTypeSchema = new mongoose.Schema<IUnitType>(
     category: {
       type: String,
       enum: Object.values(UnitTypeCategoryEnum),
-      default: UnitTypeCategoryEnum.MEDIUM,
+      default: UnitTypeCategoryEnum.SMALL,
     },
     status: {
       type: String,

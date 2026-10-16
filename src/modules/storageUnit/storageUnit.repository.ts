@@ -15,7 +15,7 @@ const POPULATE_FACILITY = {
 
 const POPULATE_UNIT_TYPE = {
   path: 'unitTypeId',
-  select: 'name category area volume status dimensions',
+  select: 'name category area volume status dimensions defaultRackConfig',
 };
 
 export class StorageUnitRepository {
