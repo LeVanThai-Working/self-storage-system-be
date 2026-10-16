@@ -30,9 +30,10 @@ import {
 } from './schemas/storageRack.response.schema.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
-import type {
-  IDefaultRackConfig,
-  IDimensions,
+import {
+  UnitType,
+  type IDefaultRackConfig,
+  type IDimensions,
 } from '../unitType/unitType.model.ts';
 import type { IStorageRack } from './storageRack.model.ts';
 import type { IRackTier } from './rackTier.model.ts';
@@ -274,6 +275,13 @@ export class StorageRackService {
 
     const tierVolume = this.calculateVolume(config.tierDimensions);
 
+    const resolvedFacilityId =
+      typeof facilityId === 'object' &&
+      facilityId !== null &&
+      '_id' in (facilityId as object)
+        ? String((facilityId as { _id: unknown })._id)
+        : String(facilityId);
+
     for (let r = 1; r <= config.rackCount; r++) {
       const rackCode = `R${String(r).padStart(2, '0')}`;
 
@@ -288,7 +296,7 @@ export class StorageRackService {
       const createdRack = await this.storageRackRepository.create(
         {
           facilityId: new Types.ObjectId(
-            facilityId
+            resolvedFacilityId
           ) as unknown as IStorageRack['facilityId'],
           storageUnitId: new Types.ObjectId(
             storageUnitId
@@ -345,22 +353,35 @@ export class StorageRackService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
     }
 
-    const unitType = (
+    let config = (
       unit as unknown as {
         unitTypeId?: { defaultRackConfig?: IDefaultRackConfig };
       }
-    ).unitTypeId;
-    const config = unitType?.defaultRackConfig;
+    ).unitTypeId?.defaultRackConfig;
+
+    if (!config || !config.rackCount || config.rackCount <= 0) {
+      const rawUnitTypeId =
+        typeof unit.unitTypeId === 'object' &&
+        unit.unitTypeId !== null &&
+        '_id' in (unit.unitTypeId as object)
+          ? (unit.unitTypeId as { _id: unknown })._id
+          : unit.unitTypeId;
+      const utDoc = await UnitType.findById(rawUnitTypeId);
+      config = utDoc?.defaultRackConfig;
+    }
 
     if (!config || config.rackCount <= 0 || config.tiersPerRack <= 0) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
     }
 
-    await this.provisionRacksForUnit(
-      storageUnitId,
-      String(unit.facilityId),
-      config
-    );
+    const resolvedFacilityId =
+      typeof unit.facilityId === 'object' &&
+      unit.facilityId !== null &&
+      '_id' in (unit.facilityId as object)
+        ? String((unit.facilityId as { _id: unknown })._id)
+        : String(unit.facilityId);
+
+    await this.provisionRacksForUnit(storageUnitId, resolvedFacilityId, config);
 
     return this.getRacksByStorageUnit(storageUnitId);
   }
