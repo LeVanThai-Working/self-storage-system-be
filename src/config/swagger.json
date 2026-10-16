@@ -869,7 +869,11 @@
 					"sign_addendum",
 					"cancel_addendum",
 					"confirm_payment",
-					"receive_payment"
+					"receive_payment",
+					"inventory_in",
+					"inventory_out",
+					"inventory_move",
+					"inventory_adjust"
 				],
 				"type": "string"
 			},
@@ -891,7 +895,9 @@
 					"notification",
 					"storage_rack",
 					"rack_tier",
-					"customer_sku"
+					"customer_sku",
+					"customer_inventory",
+					"inventory_movement"
 				],
 				"type": "string"
 			},
@@ -6488,6 +6494,917 @@
 			},
 			"UpdateCustomerSkuRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateCustomerSkuSchema_"
+			},
+			"infer_typeofcustomerInventoryResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"sku": {
+						"properties": {
+							"imageUrl": {
+								"type": "string"
+							},
+							"barcode": {
+								"type": "string"
+							},
+							"category": {
+								"type": "string"
+							},
+							"uom": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"skuCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"uom",
+							"name",
+							"skuCode",
+							"id"
+						],
+						"type": "object"
+					},
+					"rackTier": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"maxWeightKg": {
+								"type": "number",
+								"format": "double"
+							},
+							"tierCode": {
+								"type": "string"
+							},
+							"tierNumber": {
+								"type": "number",
+								"format": "double"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"tierCode",
+							"tierNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"storageRack": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"rackCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"rackCode",
+							"id"
+						],
+						"type": "object"
+					},
+					"storageUnit": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"zone": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"unitNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"contract": {
+						"properties": {
+							"endDate": {
+								"type": "string"
+							},
+							"startDate": {
+								"type": "string"
+							},
+							"status": {
+								"type": "string"
+							},
+							"contractCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"contractCode",
+							"id"
+						],
+						"type": "object"
+					},
+					"customer": {
+						"properties": {
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"lastMovementAt": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string"
+					},
+					"storageRackId": {
+						"type": "string"
+					},
+					"quantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"quantity",
+					"skuId",
+					"storageUnitId",
+					"facilityId",
+					"contractId",
+					"customerId",
+					"id"
+				],
+				"type": "object"
+			},
+			"CustomerInventoryResponse": {
+				"$ref": "#/components/schemas/infer_typeofcustomerInventoryResponseSchema_"
+			},
+			"ApiResponse_CustomerInventoryResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/CustomerInventoryResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofstockInRequestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string"
+					},
+					"quantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"quantity",
+					"skuId",
+					"contractId"
+				],
+				"type": "object"
+			},
+			"StockInRequest": {
+				"$ref": "#/components/schemas/infer_typeofstockInRequestSchema_"
+			},
+			"infer_typeofstockOutRequestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string"
+					},
+					"quantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"quantity",
+					"skuId",
+					"contractId"
+				],
+				"type": "object"
+			},
+			"StockOutRequest": {
+				"$ref": "#/components/schemas/infer_typeofstockOutRequestSchema_"
+			},
+			"infer_typeofstockMoveRequestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"toRackTierId": {
+						"type": "string"
+					},
+					"fromRackTierId": {
+						"type": "string"
+					},
+					"quantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"quantity",
+					"skuId",
+					"contractId"
+				],
+				"type": "object"
+			},
+			"StockMoveRequest": {
+				"$ref": "#/components/schemas/infer_typeofstockMoveRequestSchema_"
+			},
+			"infer_typeofstockAdjustRequestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"newQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"reason",
+					"newQuantity",
+					"skuId",
+					"contractId"
+				],
+				"type": "object"
+			},
+			"StockAdjustRequest": {
+				"$ref": "#/components/schemas/infer_typeofstockAdjustRequestSchema_"
+			},
+			"MovementTypeEnum": {
+				"enum": [
+					"in",
+					"out",
+					"move",
+					"adjust"
+				],
+				"type": "string"
+			},
+			"infer_typeofinventoryMovementResponseSchema_": {
+				"properties": {
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"performer": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"toRackTier": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"maxWeightKg": {
+								"type": "number",
+								"format": "double"
+							},
+							"tierCode": {
+								"type": "string"
+							},
+							"tierNumber": {
+								"type": "number",
+								"format": "double"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"tierCode",
+							"tierNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"fromRackTier": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"maxWeightKg": {
+								"type": "number",
+								"format": "double"
+							},
+							"tierCode": {
+								"type": "string"
+							},
+							"tierNumber": {
+								"type": "number",
+								"format": "double"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"tierCode",
+							"tierNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"sku": {
+						"properties": {
+							"imageUrl": {
+								"type": "string"
+							},
+							"barcode": {
+								"type": "string"
+							},
+							"category": {
+								"type": "string"
+							},
+							"uom": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"skuCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"uom",
+							"name",
+							"skuCode",
+							"id"
+						],
+						"type": "object"
+					},
+					"storageUnit": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"zone": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"unitNumber",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"contract": {
+						"properties": {
+							"endDate": {
+								"type": "string"
+							},
+							"startDate": {
+								"type": "string"
+							},
+							"status": {
+								"type": "string"
+							},
+							"contractCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"contractCode",
+							"id"
+						],
+						"type": "object"
+					},
+					"customer": {
+						"properties": {
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"toRackTierId": {
+						"type": "string"
+					},
+					"fromRackTierId": {
+						"type": "string"
+					},
+					"customerInventoryId": {
+						"type": "string"
+					},
+					"performedBy": {
+						"type": "string"
+					},
+					"newQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"previousQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"quantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"type": {
+						"$ref": "#/components/schemas/MovementTypeEnum"
+					},
+					"movementCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"performedBy",
+					"newQuantity",
+					"previousQuantity",
+					"quantity",
+					"skuId",
+					"storageUnitId",
+					"facilityId",
+					"contractId",
+					"customerId",
+					"type",
+					"movementCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"InventoryMovementResponse": {
+				"$ref": "#/components/schemas/infer_typeofinventoryMovementResponseSchema_"
+			},
+			"PaginatedData_InventoryMovementResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/InventoryMovementResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_InventoryMovementResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_InventoryMovementResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofinventoryMovementQuerySchema_": {
+				"properties": {
+					"endDate": {
+						"type": "string"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"type": {
+						"$ref": "#/components/schemas/MovementTypeEnum"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"type",
+							"createdAt",
+							"quantity"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"InventoryMovementQuery": {
+				"$ref": "#/components/schemas/infer_typeofinventoryMovementQuerySchema_"
+			},
+			"PaginatedData_CustomerInventoryResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/CustomerInventoryResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_CustomerInventoryResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_CustomerInventoryResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcustomerInventoryQuerySchema_": {
+				"properties": {
+					"minQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string"
+					},
+					"storageRackId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"quantity",
+							"lastMovementAt"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"CustomerInventoryQuery": {
+				"$ref": "#/components/schemas/infer_typeofcustomerInventoryQuerySchema_"
 			},
 			"ContractSourceEnum": {
 				"enum": [
@@ -15840,6 +16757,659 @@
 				"description": "Khôi phục SKU đã xoá mềm",
 				"tags": [
 					"Customer SKU"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/customer-inventories/in": {
+			"post": {
+				"operationId": "StockIn",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_CustomerInventoryResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "1. Nhập hàng vào kho/tầng kệ (Stock In)\nKhách hàng tự nhập thêm hàng vào khoang chứa hoặc tầng kệ của mình.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/StockInRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer-inventories/out": {
+			"post": {
+				"operationId": "StockOut",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_CustomerInventoryResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "2. Xuất hàng khỏi kho/tầng kệ (Stock Out)\nKhách hàng tự lấy bớt hàng ra khỏi khoang chứa hoặc tầng kệ.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/StockOutRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer-inventories/move": {
+			"post": {
+				"operationId": "StockMove",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_CustomerInventoryResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "3. Chuyển vị trí hàng nội bộ giữa các tầng kệ (Stock Move)\nKhách hàng dời hàng giữa các vị trí trong khoang chứa của mình.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/StockMoveRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer-inventories/adjust": {
+			"post": {
+				"operationId": "StockAdjust",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_CustomerInventoryResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "4. Kiểm kê / Điều chỉnh số lượng tồn kho (Stock Adjust)\nKhách hàng tự đếm và cập nhật số lượng tồn thực tế kèm lý do bắt buộc.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/StockAdjustRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer-inventories/movements": {
+			"get": {
+				"operationId": "FindAllMovements",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_InventoryMovementResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "5. Tra cứu nhật ký biến động kho (Inventory Movement Ledger)\nLịch sử giao dịch sổ cái nhập/xuất/chuyển/kiểm kê.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "endDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "type",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/MovementTypeEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "skuId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageUnitId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"type",
+								"createdAt",
+								"quantity"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/customer-inventories": {
+			"get": {
+				"operationId": "FindAllInventories",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_CustomerInventoryResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "6. Tra cứu danh sách tồn kho hiện hành\nXem số lượng tồn hiện tại của các SKU tại các vị trí/tầng kệ.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "minQuantity",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "skuId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "rackTierId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageRackId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageUnitId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"quantity",
+								"lastMovementAt"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/customer-inventories/{id}": {
+			"get": {
+				"operationId": "FindInventoryById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_CustomerInventoryResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "7. Chi tiết 1 bản ghi tồn kho theo ID",
+				"tags": [
+					"Customer Inventories"
 				],
 				"security": [],
 				"parameters": [

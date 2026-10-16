@@ -172,6 +172,28 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_613: 'MESSAGE_CODE_613',
   // Invalid Customer SKU Status Transition
   MESSAGE_CODE_614: 'MESSAGE_CODE_614',
+
+  // ==========================================
+  // CUSTOMER INVENTORY & MOVEMENT (620 - 628)
+  // ==========================================
+  // Inventory Record Not Found
+  MESSAGE_CODE_620: 'MESSAGE_CODE_620',
+  // Insufficient Inventory Quantity
+  MESSAGE_CODE_621: 'MESSAGE_CODE_621',
+  // Contract Must Be Active To Perform Inventory Operations
+  MESSAGE_CODE_622: 'MESSAGE_CODE_622',
+  // Storage Unit Does Not Belong To Contract
+  MESSAGE_CODE_623: 'MESSAGE_CODE_623',
+  // Rack Tier Does Not Belong To Storage Unit
+  MESSAGE_CODE_624: 'MESSAGE_CODE_624',
+  // Rack Tier Is Inactive Or Under Maintenance
+  MESSAGE_CODE_625: 'MESSAGE_CODE_625',
+  // Invalid Inventory Movement Quantity
+  MESSAGE_CODE_626: 'MESSAGE_CODE_626',
+  // Destination Tier Must Be Different From Source Tier
+  MESSAGE_CODE_627: 'MESSAGE_CODE_627',
+  // SKU Does Not Belong To Customer
+  MESSAGE_CODE_628: 'MESSAGE_CODE_628',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -263,4 +285,15 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_612: 'Customer SKU Barcode Already Exists',
   MESSAGE_CODE_613: 'Cannot Delete SKU With Active Inventory',
   MESSAGE_CODE_614: 'Invalid Customer SKU Status Transition',
+
+  // Customer Inventory & Movement
+  MESSAGE_CODE_620: 'Inventory Record Not Found',
+  MESSAGE_CODE_621: 'Insufficient Inventory Quantity',
+  MESSAGE_CODE_622: 'Contract Must Be Active To Perform Inventory Operations',
+  MESSAGE_CODE_623: 'Storage Unit Does Not Belong To Contract',
+  MESSAGE_CODE_624: 'Rack Tier Does Not Belong To Storage Unit',
+  MESSAGE_CODE_625: 'Rack Tier Is Inactive Or Under Maintenance',
+  MESSAGE_CODE_626: 'Invalid Inventory Movement Quantity',
+  MESSAGE_CODE_627: 'Destination Tier Must Be Different From Source Tier',
+  MESSAGE_CODE_628: 'SKU Does Not Belong To Customer',
 };
