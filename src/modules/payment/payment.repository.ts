@@ -85,6 +85,30 @@ export class PaymentRepository {
     return query.exec();
   }
 
+  async cancelActiveByReservation(
+    reservationId: string,
+    reason: string = 'Reservation cancelled or expired',
+    session?: ClientSession
+  ) {
+    const query = this.payment.updateMany(
+      {
+        reservationId,
+        status: {
+          $in: [PaymentStatusEnum.PENDING, PaymentStatusEnum.PARTIALLY_PAID],
+        },
+      },
+      {
+        status: PaymentStatusEnum.CANCELLED,
+        cancellationReason: reason,
+        cancelledAt: new Date(),
+      }
+    );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
   async findActiveByContract(contractId: string, session?: ClientSession) {
     const query = this.payment.findOne({
       contractId,

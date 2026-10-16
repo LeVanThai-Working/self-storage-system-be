@@ -283,4 +283,30 @@ export class FacilityAmenityOfferingRepository {
     if (session) q.session(session);
     return q;
   }
+
+  // Atomic conditional update to release reserved amenity inventory
+  async releaseAmenityQuantityAtomic(
+    id: string,
+    quantity: number,
+    session?: ClientSession
+  ) {
+    const q = this.offering
+      .findOneAndUpdate(
+        {
+          _id: id,
+          deleted: false,
+          inUseQuantity: { $gte: quantity },
+        },
+        {
+          $inc: { inUseQuantity: -quantity },
+        },
+        {
+          returnDocument: 'after',
+        }
+      )
+      .populate(POPULATE_FACILITY)
+      .populate(POPULATE_AMENITY);
+    if (session) q.session(session);
+    return q;
+  }
 }

@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { paginationQuerySchema } from '../../../common/schemas/pagination.schema.ts';
-import { ReservationStatusEnum } from '../../../common/enums/reservation.enum.ts';
+import {
+  RefundStatusEnum,
+  ReservationStatusEnum,
+} from '../../../common/enums/reservation.enum.ts';
 
 export const reservationIdParamSchema = z.object({
   id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid reservation ID format'),
@@ -38,20 +41,15 @@ export const createReservationSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
-export const updateReservationSchema = z.object({
-  checkInDate: dateStringSchema.optional(),
-  checkInTimeSlot: z.string().min(3).max(50).trim().optional(),
-  startDate: dateStringSchema.optional(),
-  rentalDuration: z.number().int().min(1).optional(),
-  amenities: z.array(reservationAmenityInputSchema).optional(),
-  notes: z.string().max(1000).optional(),
-});
-
 export const reassignStorageUnitSchema = z.object({
   newStorageUnitId: z
     .string()
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid storage unit ID format'),
   reason: z.string().min(3).max(500),
+  oldUnitStatus: z
+    .enum(['under_maintenance', 'available'])
+    .default('under_maintenance')
+    .optional(),
 });
 
 export const confirmReservationSchema = z.object({
@@ -73,13 +71,9 @@ export const assignReservationStaffSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
-export const markDepositPaidSchema = z.object({
-  paymentId: z.string().min(1, 'Payment ID is required'),
-  paidAmount: z.number().positive('Paid amount must be positive'),
-  paidAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: 'Invalid date format (must be a valid ISO 8601 date string)',
-  }),
-  referenceCode: z.string().optional().nullable(),
+export const confirmRefundSchema = z.object({
+  referenceCode: z.string().max(100).optional().nullable(),
+  notes: z.string().max(500).optional().nullable(),
 });
 
 export const reservationQuerySchema = paginationQuerySchema.extend({
@@ -100,17 +94,19 @@ export const reservationQuerySchema = paginationQuerySchema.extend({
     .regex(/^[0-9a-fA-F]{24}$/)
     .optional(),
   status: z.nativeEnum(ReservationStatusEnum).optional(),
+  refundStatus: z.nativeEnum(RefundStatusEnum).optional(),
   reservationCode: z.string().optional(),
   startDateFrom: dateStringSchema.optional(),
   startDateTo: dateStringSchema.optional(),
+  checkInDateFrom: dateStringSchema.optional(),
+  checkInDateTo: dateStringSchema.optional(),
   sortBy: z
-    .enum(['createdAt', 'startDate', 'totalAmount', 'updatedAt'])
+    .enum(['createdAt', 'startDate', 'checkInDate', 'totalAmount', 'updatedAt'])
     .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
 
 export type CreateReservationRequest = z.infer<typeof createReservationSchema>;
-export type UpdateReservationRequest = z.infer<typeof updateReservationSchema>;
 export type ReassignStorageUnitRequest = z.infer<
   typeof reassignStorageUnitSchema
 >;
@@ -121,6 +117,6 @@ export type CancelReservationRequest = z.infer<typeof cancelReservationSchema>;
 export type AssignReservationStaffRequest = z.infer<
   typeof assignReservationStaffSchema
 >;
-export type MarkDepositPaidRequest = z.infer<typeof markDepositPaidSchema>;
+export type ConfirmRefundRequest = z.infer<typeof confirmRefundSchema>;
 export type ReservationQuery = z.infer<typeof reservationQuerySchema>;
 export type ReservationIdParam = z.infer<typeof reservationIdParamSchema>;

@@ -12,7 +12,11 @@ import {
   ContractStatusEnum,
 } from '../../common/enums/contract.enum.ts';
 import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
-import { ReservationStatusEnum } from '../../common/enums/reservation.enum.ts';
+import {
+  RefundStatusEnum,
+  ReservationCancelSourceEnum,
+  ReservationStatusEnum,
+} from '../../common/enums/reservation.enum.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -101,10 +105,10 @@ export class ContractService {
         throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
       }
 
-      // Reservation must be CONFIRMED or COMPLETED
+      // Reservation must be CONFIRMED or OVERDUE (within grace period)
       if (
         reservation.status !== ReservationStatusEnum.CONFIRMED &&
-        reservation.status !== ReservationStatusEnum.COMPLETED
+        reservation.status !== ReservationStatusEnum.OVERDUE
       ) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_406);
       }
@@ -418,8 +422,9 @@ export class ContractService {
       );
 
       if (contract.reservationId) {
-        await this.reservationRepository.update(
+        await this.reservationRepository.atomicUpdateStatus(
           String(contract.reservationId),
+          [ReservationStatusEnum.CONFIRMED, ReservationStatusEnum.OVERDUE],
           { status: ReservationStatusEnum.COMPLETED },
           session
         );
@@ -508,8 +513,9 @@ export class ContractService {
 
       // If contract was created from Reservation, complete the reservation
       if (contract.reservationId) {
-        await this.reservationRepository.update(
+        await this.reservationRepository.atomicUpdateStatus(
           String(contract.reservationId),
+          [ReservationStatusEnum.CONFIRMED, ReservationStatusEnum.OVERDUE],
           { status: ReservationStatusEnum.COMPLETED },
           session
         );
@@ -652,6 +658,25 @@ export class ContractService {
           );
         }
       }
+    }
+
+    // If contract was created from Reservation, cancel the reservation (deposit forfeited)
+    if (contract.reservationId) {
+      await this.reservationRepository.atomicUpdateStatus(
+        String(contract.reservationId),
+        [ReservationStatusEnum.CONFIRMED, ReservationStatusEnum.OVERDUE],
+        {
+          status: ReservationStatusEnum.CANCELLED,
+          cancellationReason:
+            'Hợp đồng khởi tạo từ đơn đặt chỗ đã bị huỷ (mất 100% tiền cọc)',
+          cancelledAt: new Date(),
+          cancelledBy: new Types.ObjectId(actorId),
+          cancellationSource: ReservationCancelSourceEnum.SYSTEM,
+          refundAmount: 0,
+          refundStatus: RefundStatusEnum.NONE,
+        },
+        session
+      );
     }
 
     // Deposit is forfeited (refundAmount = 0)

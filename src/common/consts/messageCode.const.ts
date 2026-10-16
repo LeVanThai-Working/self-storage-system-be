@@ -92,6 +92,22 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_310: 'MESSAGE_CODE_310',
   // Invalid Or Inactive Check-in Time Slot
   MESSAGE_CODE_311: 'MESSAGE_CODE_311',
+  // Facility Cannot Cancel A Confirmed Reservation
+  MESSAGE_CODE_312: 'MESSAGE_CODE_312',
+  // Check-in Date Is Too Far In The Future
+  MESSAGE_CODE_313: 'MESSAGE_CODE_313',
+  // Too Many Pending Reservations
+  MESSAGE_CODE_314: 'MESSAGE_CODE_314',
+  // Check-in Time Slot Has Already Passed
+  MESSAGE_CODE_315: 'MESSAGE_CODE_315',
+  // Replacement Unit Tier Is Lower Than Reserved
+  MESSAGE_CODE_316: 'MESSAGE_CODE_316',
+  // Refund Is Not Pending
+  MESSAGE_CODE_317: 'MESSAGE_CODE_317',
+  // Reservation Has An Active Linked Contract
+  MESSAGE_CODE_318: 'MESSAGE_CODE_318',
+  // Check-in Date Has Already Passed
+  MESSAGE_CODE_319: 'MESSAGE_CODE_319',
 
   // ==========================================
   // CONTRACT (400 - 408)
@@ -221,6 +237,15 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_309: 'Storage Unit Has Just Been Booked By Another Customer',
   MESSAGE_CODE_310: 'Time Slot Has Reached Maximum Capacity',
   MESSAGE_CODE_311: 'Invalid Or Inactive Check-in Time Slot',
+  MESSAGE_CODE_312: 'Facility Cannot Cancel A Confirmed Reservation',
+  MESSAGE_CODE_313: 'Check-in Date Is Too Far In The Future',
+  MESSAGE_CODE_314: 'Too Many Pending Reservations',
+  MESSAGE_CODE_315: 'Check-in Time Slot Has Already Passed',
+  MESSAGE_CODE_316: 'Replacement Unit Tier Is Lower Than Reserved',
+  MESSAGE_CODE_317: 'Refund Is Not Pending',
+  MESSAGE_CODE_318: 'Reservation Has An Active Linked Contract',
+  MESSAGE_CODE_319:
+    'Check-in Date Has Already Passed, Cannot Confirm Reservation',
 
   // Contract
   MESSAGE_CODE_400: 'Contract Not Found',

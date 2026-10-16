@@ -4,7 +4,6 @@ import {
   Tags,
   Get,
   Post,
-  Patch,
   Body,
   Path,
   Queries,
@@ -24,21 +23,19 @@ import type { TokenPayload } from '../../utils/jwt.util.ts';
 import {
   assignReservationStaffSchema,
   cancelReservationSchema,
+  confirmRefundSchema,
   confirmReservationSchema,
   createReservationSchema,
-  markDepositPaidSchema,
   reassignStorageUnitSchema,
   reservationIdParamSchema,
   reservationQuerySchema,
-  updateReservationSchema,
   type AssignReservationStaffRequest,
   type CancelReservationRequest,
+  type ConfirmRefundRequest,
   type ConfirmReservationRequest,
   type CreateReservationRequest,
-  type MarkDepositPaidRequest,
   type ReassignStorageUnitRequest,
   type ReservationQuery,
-  type UpdateReservationRequest,
 } from './schemas/reservation.request.schema.ts';
 import type { ReservationResponse } from './schemas/reservation.response.schema.ts';
 import type {
@@ -66,7 +63,6 @@ function extractCaller(req: ExpressRequest): CallerInfo {
     };
   }
 
-  // Fallback 1: x-user-id and x-user-role headers
   const headerUserId = req.headers['x-user-id'] as string | undefined;
   const headerUserRole = req.headers['x-user-role'] as string | undefined;
   if (headerUserId) {
@@ -76,7 +72,6 @@ function extractCaller(req: ExpressRequest): CallerInfo {
     };
   }
 
-  // Fallback 2: Authorization header
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith('Bearer ')) {
     try {
@@ -94,7 +89,6 @@ function extractCaller(req: ExpressRequest): CallerInfo {
     }
   }
 
-  // Fallback 3: cookie
   const cookieToken = req.cookies?.accessToken;
   if (cookieToken) {
     try {
@@ -121,7 +115,7 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Create a new reservation in PENDING_PAYMENT status with 15-minute lock (Customer).
+   * Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).
    */
   @Post('')
   // @Security('bearerAuth')
@@ -129,12 +123,8 @@ export class ReservationController extends Controller {
   // TODO: Role authorization: CUSTOMER
   @Middlewares(validateRequest({ body: createReservationSchema }))
   @SuccessResponse(201, 'Created')
-  @Response<ApiErrorResponse>(
-    400,
-    'Invalid request data or unit/amenity unavailable'
-  )
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(404, 'Facility or Offering not found')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(404, 'Not Found')
   public async createReservation(
     @Request() req: ExpressRequest,
     @Body() body: CreateReservationRequest
@@ -144,7 +134,6 @@ export class ReservationController extends Controller {
       caller.userId,
       body
     );
-
     this.setStatus(201);
     return {
       success: true,
@@ -156,17 +145,13 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Get paginated list of reservations.
-   * Customers only see their own reservations.
-   * Staff/Managers can filter across facilities.
+   * List reservations with pagination & scoping.
    */
   @Get('')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Middlewares(validateRequest({ query: reservationQuerySchema }))
-  @Response<ApiErrorResponse>(400, 'Invalid query parameters')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
   public async getReservations(
     @Request() req: ExpressRequest,
     @Queries() query: ReservationQuery
@@ -177,7 +162,6 @@ export class ReservationController extends Controller {
       caller.userId,
       caller.role
     );
-
     return {
       success: true,
       statusCode: 200,
@@ -188,20 +172,17 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Process and expire overdue holding reservations (Cron/Admin).
-   * Note: Placed before dynamic path param '{id}' to prevent route collision.
+   * Batch process all expired reservations.
    */
   @Post('process-expired')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
   public async processExpiredReservations(): Promise<
     ApiResponse<{ processedCount: number }>
   > {
     const result = await this.reservationService.processExpiredReservations();
-
     return {
       success: true,
       statusCode: 200,
@@ -212,20 +193,21 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Process and mark overdue check-ins (CONFIRMED -> OVERDUE) (Cron/Admin).
-   * Note: Placed before dynamic path param '{id}' to prevent route collision.
+   * Batch process overdue check-ins and no-show auto cancellations.
    */
   @Post('process-overdue')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
   public async processOverdueReservations(): Promise<
-    ApiResponse<{ processedCount: number }>
+    ApiResponse<{
+      overdueCount: number;
+      noShowCount: number;
+      unconfirmedCount: number;
+    }>
   > {
     const result = await this.reservationService.processOverdueReservations();
-
     return {
       success: true,
       statusCode: 200,
@@ -236,16 +218,14 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Get detailed reservation by ID.
+   * Get single reservation detail by ID.
    */
   @Get('{id}')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Middlewares(validateRequest({ params: reservationIdParamSchema }))
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
+  @Response<ApiErrorResponse>(404, 'Not Found')
   public async getReservationById(
     @Request() req: ExpressRequest,
     @Path() id: string
@@ -256,7 +236,6 @@ export class ReservationController extends Controller {
       caller.userId,
       caller.role
     );
-
     return {
       success: true,
       statusCode: 200,
@@ -267,48 +246,7 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Update reservation details (Customer, only allowed while in PENDING status).
-   */
-  @Patch('{id}')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
-  @Middlewares(
-    validateRequest({
-      params: reservationIdParamSchema,
-      body: updateReservationSchema,
-    })
-  )
-  @Response<ApiErrorResponse>(
-    400,
-    'Invalid state or reservation already received'
-  )
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async updateReservation(
-    @Request() req: ExpressRequest,
-    @Path() id: string,
-    @Body() body: UpdateReservationRequest
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const caller = extractCaller(req);
-    const result = await this.reservationService.updateReservation(
-      id,
-      caller.userId,
-      body
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Facility Manager reassigns a physical storage unit due to unexpected maintenance.
+   * Facility Manager reassigns a physical storage unit (for CONFIRMED, PAYMENT_SUCCESSFUL, or OVERDUE reservations) due to unexpected maintenance.
    */
   @Post('{id}/reassign-unit')
   // @Security('bearerAuth')
@@ -320,10 +258,8 @@ export class ReservationController extends Controller {
       body: reassignStorageUnitSchema,
     })
   )
-  @Response<ApiErrorResponse>(400, 'Unit not available or invalid status')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation or Storage unit not found')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(404, 'Not Found')
   public async reassignStorageUnit(
     @Request() req: ExpressRequest,
     @Path() id: string,
@@ -333,54 +269,20 @@ export class ReservationController extends Controller {
     const result = await this.reservationService.reassignStorageUnit(
       id,
       caller.userId,
+      caller.role,
       body
     );
-
     return {
       success: true,
       statusCode: 200,
       messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Storage Unit']),
       data: result,
     };
   }
 
   /**
-   * Customer retries deposit payment after failure (PAYMENT_FAILED -> PENDING_PAYMENT).
-   */
-  @Post('{id}/retry-payment')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
-  @Middlewares(validateRequest({ params: reservationIdParamSchema }))
-  @Response<ApiErrorResponse>(
-    400,
-    'Holding expired or invalid reservation status'
-  )
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async retryPayment(
-    @Request() req: ExpressRequest,
-    @Path() id: string
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const caller = extractCaller(req);
-    const result = await this.reservationService.retryPayment(
-      id,
-      caller.userId
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Confirm reservation after successful deposit (Staff/Manager: PAYMENT_SUCCESSFUL -> CONFIRMED).
+   * Facility Staff officially confirms reservation after deposit payment.
    */
   @Post('{id}/confirm')
   // @Security('bearerAuth')
@@ -392,10 +294,8 @@ export class ReservationController extends Controller {
       body: confirmReservationSchema,
     })
   )
-  @Response<ApiErrorResponse>(400, 'Deposit not paid or invalid status')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(404, 'Not Found')
   public async confirmReservation(
     @Request() req: ExpressRequest,
     @Path() id: string,
@@ -405,9 +305,9 @@ export class ReservationController extends Controller {
     const result = await this.reservationService.confirmReservation(
       id,
       caller.userId,
+      caller.role,
       body
     );
-
     return {
       success: true,
       statusCode: 200,
@@ -418,8 +318,7 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Cancel reservation (CANCELLED).
-   * Calculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.
+   * Cancel reservation with refund policy enforcement (2-tier refund: >= 24h before check-in 100% refund, < 24h 0% refund; facility cannot cancel CONFIRMED/OVERDUE; blocks if active contract is linked).
    */
   @Post('{id}/cancel')
   // @Security('bearerAuth')
@@ -431,10 +330,9 @@ export class ReservationController extends Controller {
       body: cancelReservationSchema,
     })
   )
-  @Response<ApiErrorResponse>(400, 'Reservation cannot be cancelled')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
   @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
+  @Response<ApiErrorResponse>(404, 'Not Found')
   public async cancelReservation(
     @Request() req: ExpressRequest,
     @Path() id: string,
@@ -444,9 +342,9 @@ export class ReservationController extends Controller {
     const result = await this.reservationService.cancelReservation(
       id,
       caller.userId,
+      caller.role,
       body
     );
-
     return {
       success: true,
       statusCode: 200,
@@ -457,102 +355,7 @@ export class ReservationController extends Controller {
   }
 
   /**
-   * Mark reservation as completed (Staff/Manager: CONFIRMED -> COMPLETED).
-   */
-  @Post('{id}/complete')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
-  @Middlewares(validateRequest({ params: reservationIdParamSchema }))
-  @Response<ApiErrorResponse>(400, 'Invalid status transition')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async completeReservation(
-    @Request() req: ExpressRequest,
-    @Path() id: string
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const caller = extractCaller(req);
-    const result = await this.reservationService.completeReservation(
-      id,
-      caller.userId
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Mark deposit as paid (webhook/payment callback: PENDING_PAYMENT -> PAYMENT_SUCCESSFUL).
-   */
-  @Post('{id}/mark-deposit-paid')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER (internal payment gateway callback)
-  @Middlewares(
-    validateRequest({
-      params: reservationIdParamSchema,
-      body: markDepositPaidSchema,
-    })
-  )
-  @Response<ApiErrorResponse>(400, 'Invalid reservation status')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async markDepositPaid(
-    @Path() id: string,
-    @Body() body: MarkDepositPaidRequest
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const result = await this.reservationService.markDepositPaid(id, {
-      paymentId: body.paymentId,
-      paidAmount: body.paidAmount,
-      paidAt: new Date(body.paidAt),
-      referenceCode: body.referenceCode,
-    });
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Mark deposit payment as failed (webhook/payment callback: PENDING_PAYMENT -> PAYMENT_FAILED).
-   */
-  @Post('{id}/payment-failed')
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER (internal payment gateway callback)
-  @Middlewares(validateRequest({ params: reservationIdParamSchema }))
-  @Response<ApiErrorResponse>(400, 'Invalid reservation status')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation not found')
-  public async handlePaymentFailure(
-    @Path() id: string
-  ): Promise<ApiResponse<ReservationResponse>> {
-    const result = await this.reservationService.handlePaymentFailure(id);
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
-      data: result,
-    };
-  }
-
-  /**
-   * Facility Manager assigns a staff member for customer check-in.
-   * Only allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).
+   * Manager assigns or updates check-in reception staff.
    */
   @Post('{id}/assign-staff')
   // @Security('bearerAuth')
@@ -564,10 +367,8 @@ export class ReservationController extends Controller {
       body: assignReservationStaffSchema,
     })
   )
-  @Response<ApiErrorResponse>(400, 'Deposit not paid or staff invalid')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Reservation or Staff not found')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(404, 'Not Found')
   public async assignStaffToCheckIn(
     @Request() req: ExpressRequest,
     @Path() id: string,
@@ -577,14 +378,50 @@ export class ReservationController extends Controller {
     const result = await this.reservationService.assignStaffToCheckIn(
       id,
       caller.userId,
+      caller.role,
       body
     );
-
     return {
       success: true,
       statusCode: 200,
       messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Assigned Staff']),
+      data: result,
+    };
+  }
+
+  /**
+   * Facility Manager confirms deposit refund has been disbursed to customer (for CANCELLED or EXPIRED reservations with PENDING refund).
+   */
+  @Post('{id}/confirm-refund')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Middlewares(
+    validateRequest({
+      params: reservationIdParamSchema,
+      body: confirmRefundSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async confirmRefund(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: ConfirmRefundRequest
+  ): Promise<ApiResponse<ReservationResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.reservationService.confirmRefund(
+      id,
+      caller.userId,
+      caller.role,
+      body
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Refund']),
       data: result,
     };
   }

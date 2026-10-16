@@ -35,6 +35,10 @@ export enum AuditActionEnum {
   CANCEL_ADDENDUM = 'cancel_addendum',
   CONFIRM_PAYMENT = 'confirm_payment',
   RECEIVE_PAYMENT = 'receive_payment',
+  REASSIGN_UNIT = 'reassign_unit',
+  EXPIRE = 'expire',
+  MARK_OVERDUE = 'mark_overdue',
+  REFUND = 'refund',
 }
 
 export enum AuditResourceEnum {

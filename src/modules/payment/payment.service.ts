@@ -258,10 +258,7 @@ export class PaymentService {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
 
-      if (
-        reservation.status !== ReservationStatusEnum.PENDING_PAYMENT &&
-        reservation.status !== ReservationStatusEnum.PAYMENT_FAILED
-      ) {
+      if (reservation.status !== ReservationStatusEnum.PENDING_PAYMENT) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_505);
       }
 
@@ -756,6 +753,24 @@ export class PaymentService {
         PaymentTransactionResultEnum.LATE,
         String(payment._id)
       );
+      if (
+        payment.purpose === PaymentPurposeEnum.RESERVATION_DEPOSIT &&
+        payment.reservationId
+      ) {
+        try {
+          await this.reservationService.flagOrphanedPayment(
+            String(payment.reservationId),
+            Number(payload.transferAmount),
+            String(payment._id),
+            payload.referenceCode || payload.code || null
+          );
+        } catch (flagErr) {
+          console.warn(
+            `[PaymentService] Could not flag orphaned reservation payment:`,
+            (flagErr as Error)?.message || flagErr
+          );
+        }
+      }
       return {
         success: true,
         message: 'Payment was expired or cancelled (recorded as LATE)',
@@ -819,16 +834,44 @@ export class PaymentService {
         payment.purpose === PaymentPurposeEnum.RESERVATION_DEPOSIT &&
         payment.reservationId
       ) {
-        await this.reservationService.markDepositPaid(
-          String(payment.reservationId),
-          {
+        try {
+          await this.reservationService.markDepositPaid(
+            String(payment.reservationId),
+            {
+              paymentId,
+              paidAmount: newPaidAmount,
+              paidAt: now,
+              referenceCode: payload.referenceCode || payload.code || null,
+            },
+            session
+          );
+        } catch (err) {
+          console.warn(
+            `[PaymentService] Reservation ${payment.reservationId} deposit could not be settled:`,
+            (err as Error)?.message || err
+          );
+          await this.paymentRepository.updateTransactionResult(
+            transactionRecordId,
+            PaymentTransactionResultEnum.LATE,
             paymentId,
-            paidAmount: newPaidAmount,
-            paidAt: now,
-            referenceCode: payload.referenceCode || payload.code || null,
-          },
-          session
-        );
+            session
+          );
+          try {
+            await this.reservationService.flagOrphanedPayment(
+              String(payment.reservationId),
+              newPaidAmount,
+              paymentId,
+              payload.referenceCode || payload.code || null,
+              session
+            );
+          } catch (flagErr) {
+            console.warn(
+              `[PaymentService] Could not flag orphaned reservation payment on markDepositPaid failure:`,
+              (flagErr as Error)?.message || flagErr
+            );
+          }
+          return;
+        }
       } else if (
         payment.purpose === PaymentPurposeEnum.CONTRACT_DEPOSIT &&
         payment.contractId

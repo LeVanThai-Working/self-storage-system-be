@@ -368,7 +368,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","reassign_unit","expire","mark_overdue","refund"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
@@ -818,12 +818,22 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ReservationStatusEnum": {
         "dataType": "refEnum",
-        "enums": ["pending","received","pending_payment","payment_failed","payment_successful","confirmed","completed","cancelled","expired","rejected","overdue"],
+        "enums": ["pending_payment","payment_successful","confirmed","completed","cancelled","expired","overdue"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RefundStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["none","pending","refunded"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ReservationCancelSourceEnum": {
+        "dataType": "refEnum",
+        "enums": ["customer","facility","system"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofreservationResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"offering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"email":{"dataType":"string"},"phone":{"dataType":"string"},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"lastPaymentError":{"dataType":"string"},"paymentId":{"dataType":"string"},"paidAmount":{"dataType":"double"},"paidAt":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"rejectionReason":{"dataType":"string"},"assignedStaffAt":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedStaffId":{"dataType":"string"},"confirmedAt":{"dataType":"string"},"confirmedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedAt":{"dataType":"string"},"assignedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"receivedAt":{"dataType":"string"},"receivedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"expiresAt":{"dataType":"string"},"storageUnitId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"refundAmount":{"dataType":"double","required":true},"status":{"ref":"ReservationStatusEnum","required":true},"totalAmount":{"dataType":"double","required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"depositAmount":{"dataType":"double","required":true},"basePrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"rentalDuration":{"dataType":"double","required":true},"checkInTimeSlot":{"dataType":"string","required":true},"checkInDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"reservationCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"offering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"email":{"dataType":"string"},"phone":{"dataType":"string"},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"paymentId":{"dataType":"string"},"paidAmount":{"dataType":"double"},"paidAt":{"dataType":"string"},"refundNote":{"dataType":"string"},"refundReference":{"dataType":"string"},"refundedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"refundedAt":{"dataType":"string"},"cancellationSource":{"ref":"ReservationCancelSourceEnum"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"assignedStaffAt":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedStaffId":{"dataType":"string"},"confirmedAt":{"dataType":"string"},"confirmedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"graceExpiresAt":{"dataType":"string"},"expiresAt":{"dataType":"string"},"storageUnitId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"unitChangeHistory":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"changedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"toUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"fromUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"changedAt":{"dataType":"string","required":true},"reason":{"dataType":"string","required":true},"toUnitId":{"dataType":"string","required":true},"fromUnitId":{"dataType":"string","required":true}}},"required":true},"refundStatus":{"ref":"RefundStatusEnum","required":true},"forfeitedAmount":{"dataType":"double","required":true},"refundAmount":{"dataType":"double","required":true},"status":{"ref":"ReservationStatusEnum","required":true},"totalAmount":{"dataType":"double","required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"depositAmount":{"dataType":"double","required":true},"basePrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"rentalDuration":{"dataType":"double","required":true},"checkInTimeSlot":{"dataType":"string","required":true},"checkInDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"reservationCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ReservationResponse": {
@@ -876,7 +886,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofreservationQuerySchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"startDateTo":{"dataType":"string"},"startDateFrom":{"dataType":"string"},"reservationCode":{"dataType":"string"},"status":{"ref":"ReservationStatusEnum"},"storageUnitId":{"dataType":"string"},"facilityUnitTypeOfferingId":{"dataType":"string"},"facilityId":{"dataType":"string"},"customerId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["updatedAt"]},{"dataType":"enum","enums":["startDate"]},{"dataType":"enum","enums":["totalAmount"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"checkInDateTo":{"dataType":"string"},"checkInDateFrom":{"dataType":"string"},"startDateTo":{"dataType":"string"},"startDateFrom":{"dataType":"string"},"reservationCode":{"dataType":"string"},"refundStatus":{"ref":"RefundStatusEnum"},"status":{"ref":"ReservationStatusEnum"},"storageUnitId":{"dataType":"string"},"facilityUnitTypeOfferingId":{"dataType":"string"},"facilityId":{"dataType":"string"},"customerId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["updatedAt"]},{"dataType":"enum","enums":["startDate"]},{"dataType":"enum","enums":["checkInDate"]},{"dataType":"enum","enums":["totalAmount"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ReservationQuery": {
@@ -896,19 +906,21 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofupdateReservationSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"quantity":{"dataType":"double","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}}},"rentalDuration":{"dataType":"double"},"startDate":{"dataType":"string"},"checkInTimeSlot":{"dataType":"string"},"checkInDate":{"dataType":"string"}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "UpdateReservationRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofupdateReservationSchema_","validators":{}},
+    "ApiResponse__overdueCount-number--noShowCount-number--unconfirmedCount-number__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"dataType":"nestedObjectLiteral","nestedProperties":{"unconfirmedCount":{"dataType":"double","required":true},"noShowCount":{"dataType":"double","required":true},"overdueCount":{"dataType":"double","required":true}},"required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofreassignStorageUnitSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true},"newStorageUnitId":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"oldUnitStatus":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["under_maintenance"]},{"dataType":"enum","enums":["available"]}]},"reason":{"dataType":"string","required":true},"newStorageUnitId":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ReassignStorageUnitRequest": {
@@ -936,16 +948,6 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofcancelReservationSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofmarkDepositPaidSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"referenceCode":{"dataType":"string"},"paidAt":{"dataType":"string","required":true},"paidAmount":{"dataType":"double","required":true},"paymentId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "MarkDepositPaidRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofmarkDepositPaidSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofassignReservationStaffSchema_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"staffId":{"dataType":"string","required":true}},"validators":{}},
@@ -954,6 +956,16 @@ const models: TsoaRoute.Models = {
     "AssignReservationStaffRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofassignReservationStaffSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofconfirmRefundSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"referenceCode":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ConfirmRefundRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofconfirmRefundSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SepayWebhookPayload": {
@@ -3841,7 +3853,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsReservationController_getReservations: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"startDateTo":{"dataType":"string"},"startDateFrom":{"dataType":"string"},"reservationCode":{"dataType":"string"},"status":{"ref":"ReservationStatusEnum"},"storageUnitId":{"dataType":"string"},"facilityUnitTypeOfferingId":{"dataType":"string"},"facilityId":{"dataType":"string"},"customerId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["updatedAt"]},{"dataType":"enum","enums":["startDate"]},{"dataType":"enum","enums":["totalAmount"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"checkInDateTo":{"dataType":"string"},"checkInDateFrom":{"dataType":"string"},"startDateTo":{"dataType":"string"},"startDateFrom":{"dataType":"string"},"reservationCode":{"dataType":"string"},"refundStatus":{"ref":"RefundStatusEnum"},"status":{"ref":"ReservationStatusEnum"},"storageUnitId":{"dataType":"string"},"facilityUnitTypeOfferingId":{"dataType":"string"},"facilityId":{"dataType":"string"},"customerId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["updatedAt"]},{"dataType":"enum","enums":["startDate"]},{"dataType":"enum","enums":["checkInDate"]},{"dataType":"enum","enums":["totalAmount"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
         app.get('/reservations',
             ...(fetchMiddlewares<RequestHandler>(ReservationController)),
@@ -3979,43 +3991,6 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsReservationController_updateReservation: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"ref":"UpdateReservationRequest"},
-        };
-        app.patch('/reservations/:id',
-            ...(fetchMiddlewares<RequestHandler>(ReservationController)),
-            ...(fetchMiddlewares<RequestHandler>(ReservationController.prototype.updateReservation)),
-
-            async function ReservationController_updateReservation(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsReservationController_updateReservation, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<ReservationController>(ReservationController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'updateReservation',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsReservationController_reassignStorageUnit: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
@@ -4042,42 +4017,6 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'reassignStorageUnit',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsReservationController_retryPayment: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-        };
-        app.post('/reservations/:id/retry-payment',
-            ...(fetchMiddlewares<RequestHandler>(ReservationController)),
-            ...(fetchMiddlewares<RequestHandler>(ReservationController.prototype.retryPayment)),
-
-            async function ReservationController_retryPayment(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsReservationController_retryPayment, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<ReservationController>(ReservationController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'retryPayment',
                 controller,
                 response,
                 next,
@@ -4163,113 +4102,6 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsReservationController_completeReservation: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-        };
-        app.post('/reservations/:id/complete',
-            ...(fetchMiddlewares<RequestHandler>(ReservationController)),
-            ...(fetchMiddlewares<RequestHandler>(ReservationController.prototype.completeReservation)),
-
-            async function ReservationController_completeReservation(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsReservationController_completeReservation, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<ReservationController>(ReservationController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'completeReservation',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsReservationController_markDepositPaid: Record<string, TsoaRoute.ParameterSchema> = {
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"ref":"MarkDepositPaidRequest"},
-        };
-        app.post('/reservations/:id/mark-deposit-paid',
-            ...(fetchMiddlewares<RequestHandler>(ReservationController)),
-            ...(fetchMiddlewares<RequestHandler>(ReservationController.prototype.markDepositPaid)),
-
-            async function ReservationController_markDepositPaid(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsReservationController_markDepositPaid, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<ReservationController>(ReservationController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'markDepositPaid',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsReservationController_handlePaymentFailure: Record<string, TsoaRoute.ParameterSchema> = {
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-        };
-        app.post('/reservations/:id/payment-failed',
-            ...(fetchMiddlewares<RequestHandler>(ReservationController)),
-            ...(fetchMiddlewares<RequestHandler>(ReservationController.prototype.handlePaymentFailure)),
-
-            async function ReservationController_handlePaymentFailure(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsReservationController_handlePaymentFailure, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<ReservationController>(ReservationController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'handlePaymentFailure',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsReservationController_assignStaffToCheckIn: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
@@ -4296,6 +4128,43 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'assignStaffToCheckIn',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsReservationController_confirmRefund: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"ConfirmRefundRequest"},
+        };
+        app.post('/reservations/:id/confirm-refund',
+            ...(fetchMiddlewares<RequestHandler>(ReservationController)),
+            ...(fetchMiddlewares<RequestHandler>(ReservationController.prototype.confirmRefund)),
+
+            async function ReservationController_confirmRefund(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsReservationController_confirmRefund, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ReservationController>(ReservationController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'confirmRefund',
                 controller,
                 response,
                 next,
