@@ -39,6 +39,10 @@ export enum AuditActionEnum {
   INVENTORY_OUT = 'inventory_out',
   INVENTORY_MOVE = 'inventory_move',
   INVENTORY_ADJUST = 'inventory_adjust',
+  REASSIGN_UNIT = 'reassign_unit',
+  EXPIRE = 'expire',
+  MARK_OVERDUE = 'mark_overdue',
+  REFUND = 'refund',
 }
 
 export enum AuditResourceEnum {

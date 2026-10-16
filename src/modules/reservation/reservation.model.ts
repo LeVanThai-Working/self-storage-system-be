@@ -4,7 +4,11 @@ import MongooseDelete, {
   type SoftDeleteModel,
 } from 'mongoose-delete';
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
-import { ReservationStatusEnum } from '../../common/enums/reservation.enum.ts';
+import {
+  RefundStatusEnum,
+  ReservationCancelSourceEnum,
+  ReservationStatusEnum,
+} from '../../common/enums/reservation.enum.ts';
 
 export interface IReservationAmenity {
   facilityAmenityOfferingId: Types.ObjectId;
@@ -14,6 +18,14 @@ export interface IReservationAmenity {
   pricePerUnit: number;
   billingUnit: BillingUnitEnum;
   totalPrice: number;
+}
+
+export interface IReservationUnitChange {
+  fromUnitId: Types.ObjectId;
+  toUnitId: Types.ObjectId;
+  reason: string;
+  changedBy: Types.ObjectId;
+  changedAt: Date;
 }
 
 export interface IReservation extends SoftDeleteDocument {
@@ -34,23 +46,26 @@ export interface IReservation extends SoftDeleteDocument {
   totalAmount: number;
   status: ReservationStatusEnum;
   expiresAt?: Date | null;
-  receivedBy?: Types.ObjectId | null;
-  receivedAt?: Date | null;
-  assignedBy?: Types.ObjectId | null;
-  assignedAt?: Date | null;
+  graceExpiresAt?: Date | null;
   confirmedBy?: Types.ObjectId | null;
   confirmedAt?: Date | null;
   assignedStaffId?: Types.ObjectId | null;
   assignedStaffAt?: Date | null;
-  rejectionReason?: string | null;
   cancellationReason?: string | null;
   cancelledBy?: Types.ObjectId | null;
   cancelledAt?: Date | null;
+  cancellationSource?: ReservationCancelSourceEnum | null;
   refundAmount?: number;
+  forfeitedAmount?: number;
+  refundStatus: RefundStatusEnum;
+  refundedAt?: Date | null;
+  refundedBy?: Types.ObjectId | null;
+  refundReference?: string | null;
+  refundNote?: string | null;
   paidAt?: Date | null;
   paidAmount?: number;
   paymentId?: Types.ObjectId | null;
-  lastPaymentError?: string | null;
+  unitChangeHistory: IReservationUnitChange[];
   notes?: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -91,6 +106,36 @@ const reservationAmenitySchema = new Schema<IReservationAmenity>(
       type: Number,
       required: true,
       min: 0,
+    },
+  },
+  { _id: false }
+);
+
+const reservationUnitChangeSchema = new Schema<IReservationUnitChange>(
+  {
+    fromUnitId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StorageUnit',
+      required: true,
+    },
+    toUnitId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StorageUnit',
+      required: true,
+    },
+    reason: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    changedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    changedAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   { _id: false }
@@ -173,7 +218,7 @@ const reservationSchema = new Schema<IReservation>(
     status: {
       type: String,
       enum: Object.values(ReservationStatusEnum),
-      default: ReservationStatusEnum.PENDING,
+      default: ReservationStatusEnum.PENDING_PAYMENT,
       required: true,
       index: true,
     },
@@ -181,21 +226,7 @@ const reservationSchema = new Schema<IReservation>(
       type: Date,
       default: null,
     },
-    receivedBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
-    },
-    receivedAt: {
-      type: Date,
-      default: null,
-    },
-    assignedBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
-    },
-    assignedAt: {
+    graceExpiresAt: {
       type: Date,
       default: null,
     },
@@ -217,10 +248,6 @@ const reservationSchema = new Schema<IReservation>(
       type: Date,
       default: null,
     },
-    rejectionReason: {
-      type: String,
-      default: null,
-    },
     cancellationReason: {
       type: String,
       default: null,
@@ -234,10 +261,44 @@ const reservationSchema = new Schema<IReservation>(
       type: Date,
       default: null,
     },
+    cancellationSource: {
+      type: String,
+      enum: Object.values(ReservationCancelSourceEnum),
+      default: null,
+    },
     refundAmount: {
       type: Number,
       default: 0,
       min: 0,
+    },
+    forfeitedAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    refundStatus: {
+      type: String,
+      enum: Object.values(RefundStatusEnum),
+      default: RefundStatusEnum.NONE,
+      required: true,
+    },
+    refundedAt: {
+      type: Date,
+      default: null,
+    },
+    refundedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    refundReference: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    refundNote: {
+      type: String,
+      default: null,
     },
     paidAt: {
       type: Date,
@@ -253,9 +314,9 @@ const reservationSchema = new Schema<IReservation>(
       ref: 'Payment',
       default: null,
     },
-    lastPaymentError: {
-      type: String,
-      default: null,
+    unitChangeHistory: {
+      type: [reservationUnitChangeSchema],
+      default: [],
     },
     notes: {
       type: String,
@@ -272,6 +333,7 @@ const reservationSchema = new Schema<IReservation>(
 reservationSchema.index({ customerId: 1, status: 1, createdAt: -1 });
 reservationSchema.index({ facilityId: 1, status: 1, createdAt: -1 });
 reservationSchema.index({ status: 1, expiresAt: 1 });
+reservationSchema.index({ status: 1, graceExpiresAt: 1 });
 reservationSchema.index({ facilityId: 1, checkInDate: 1, checkInTimeSlot: 1 });
 
 // Partial Unique Index: Only ONE active reservation can lock a storageUnit at any time
@@ -286,9 +348,10 @@ reservationSchema.index(
           ReservationStatusEnum.PENDING_PAYMENT,
           ReservationStatusEnum.PAYMENT_SUCCESSFUL,
           ReservationStatusEnum.CONFIRMED,
+          ReservationStatusEnum.OVERDUE,
         ],
       },
-      deleted: { $ne: true },
+      deleted: false,
     },
   }
 );

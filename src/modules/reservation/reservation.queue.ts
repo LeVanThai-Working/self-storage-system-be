@@ -67,7 +67,7 @@ export class ReservationQueue {
   async setupOverdueRepeatableJob(): Promise<void> {
     await this.queue.upsertJobScheduler(
       'repeatable-check-overdue',
-      { pattern: '0 * * * *' },
+      { pattern: '*/15 * * * *' },
       {
         name: RESERVATION_JOB.CHECK_OVERDUE,
         data: { triggeredAt: new Date().toISOString() },

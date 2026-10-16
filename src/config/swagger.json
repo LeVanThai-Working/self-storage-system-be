@@ -873,7 +873,11 @@
 					"inventory_in",
 					"inventory_out",
 					"inventory_move",
-					"inventory_adjust"
+					"inventory_adjust",
+					"reassign_unit",
+					"expire",
+					"mark_overdue",
+					"refund"
 				],
 				"type": "string"
 			},
@@ -2598,17 +2602,29 @@
 			},
 			"ReservationStatusEnum": {
 				"enum": [
-					"pending",
-					"received",
 					"pending_payment",
-					"payment_failed",
 					"payment_successful",
 					"confirmed",
 					"completed",
 					"cancelled",
 					"expired",
-					"rejected",
 					"overdue"
+				],
+				"type": "string"
+			},
+			"RefundStatusEnum": {
+				"enum": [
+					"none",
+					"pending",
+					"refunded"
+				],
+				"type": "string"
+			},
+			"ReservationCancelSourceEnum": {
+				"enum": [
+					"customer",
+					"facility",
+					"system"
 				],
 				"type": "string"
 			},
@@ -2735,9 +2751,6 @@
 					"notes": {
 						"type": "string"
 					},
-					"lastPaymentError": {
-						"type": "string"
-					},
 					"paymentId": {
 						"type": "string"
 					},
@@ -2747,6 +2760,43 @@
 					},
 					"paidAt": {
 						"type": "string"
+					},
+					"refundNote": {
+						"type": "string"
+					},
+					"refundReference": {
+						"type": "string"
+					},
+					"refundedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"refundedAt": {
+						"type": "string"
+					},
+					"cancellationSource": {
+						"$ref": "#/components/schemas/ReservationCancelSourceEnum"
 					},
 					"cancelledAt": {
 						"type": "string"
@@ -2777,9 +2827,6 @@
 						"type": "object"
 					},
 					"cancellationReason": {
-						"type": "string"
-					},
-					"rejectionReason": {
 						"type": "string"
 					},
 					"assignedStaffAt": {
@@ -2841,61 +2888,8 @@
 						],
 						"type": "object"
 					},
-					"assignedAt": {
+					"graceExpiresAt": {
 						"type": "string"
-					},
-					"assignedBy": {
-						"properties": {
-							"role": {
-								"type": "string"
-							},
-							"phoneNumber": {
-								"type": "string"
-							},
-							"email": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							},
-							"id": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"email",
-							"name",
-							"id"
-						],
-						"type": "object"
-					},
-					"receivedAt": {
-						"type": "string"
-					},
-					"receivedBy": {
-						"properties": {
-							"role": {
-								"type": "string"
-							},
-							"phoneNumber": {
-								"type": "string"
-							},
-							"email": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							},
-							"id": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"email",
-							"name",
-							"id"
-						],
-						"type": "object"
 					},
 					"expiresAt": {
 						"type": "string"
@@ -2908,6 +2902,118 @@
 					},
 					"createdAt": {
 						"type": "string"
+					},
+					"unitChangeHistory": {
+						"items": {
+							"properties": {
+								"changedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"toUnit": {
+									"properties": {
+										"zone": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"floor",
+										"unitNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"fromUnit": {
+									"properties": {
+										"zone": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"floor",
+										"unitNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"changedAt": {
+									"type": "string"
+								},
+								"reason": {
+									"type": "string"
+								},
+								"toUnitId": {
+									"type": "string"
+								},
+								"fromUnitId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"changedAt",
+								"reason",
+								"toUnitId",
+								"fromUnitId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"refundStatus": {
+						"$ref": "#/components/schemas/RefundStatusEnum"
+					},
+					"forfeitedAmount": {
+						"type": "number",
+						"format": "double"
 					},
 					"refundAmount": {
 						"type": "number",
@@ -3004,6 +3110,9 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
+					"unitChangeHistory",
+					"refundStatus",
+					"forfeitedAmount",
 					"refundAmount",
 					"status",
 					"totalAmount",
@@ -3165,6 +3274,12 @@
 			},
 			"infer_typeofreservationQuerySchema_": {
 				"properties": {
+					"checkInDateTo": {
+						"type": "string"
+					},
+					"checkInDateFrom": {
+						"type": "string"
+					},
 					"startDateTo": {
 						"type": "string"
 					},
@@ -3173,6 +3288,9 @@
 					},
 					"reservationCode": {
 						"type": "string"
+					},
+					"refundStatus": {
+						"$ref": "#/components/schemas/RefundStatusEnum"
 					},
 					"status": {
 						"$ref": "#/components/schemas/ReservationStatusEnum"
@@ -3205,6 +3323,7 @@
 							"createdAt",
 							"updatedAt",
 							"startDate",
+							"checkInDate",
 							"totalAmount"
 						]
 					},
@@ -3266,51 +3385,63 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofupdateReservationSchema_": {
+			"ApiResponse__overdueCount-number--noShowCount-number--unconfirmedCount-number__": {
 				"properties": {
-					"notes": {
-						"type": "string"
+					"success": {
+						"type": "boolean"
 					},
-					"amenities": {
-						"items": {
-							"properties": {
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"facilityAmenityOfferingId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"quantity",
-								"facilityAmenityOfferingId"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"rentalDuration": {
+					"statusCode": {
 						"type": "number",
 						"format": "double"
 					},
-					"startDate": {
+					"messageCode": {
 						"type": "string"
 					},
-					"checkInTimeSlot": {
+					"message": {
 						"type": "string"
 					},
-					"checkInDate": {
-						"type": "string"
+					"data": {
+						"properties": {
+							"unconfirmedCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"noShowCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"overdueCount": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"unconfirmedCount",
+							"noShowCount",
+							"overdueCount"
+						],
+						"type": "object"
 					}
 				},
-				"type": "object"
-			},
-			"UpdateReservationRequest": {
-				"$ref": "#/components/schemas/infer_typeofupdateReservationSchema_"
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
 			"infer_typeofreassignStorageUnitSchema_": {
 				"properties": {
+					"oldUnitStatus": {
+						"type": "string",
+						"enum": [
+							"under_maintenance",
+							"available"
+						]
+					},
 					"reason": {
 						"type": "string"
 					},
@@ -3358,32 +3489,6 @@
 			"CancelReservationRequest": {
 				"$ref": "#/components/schemas/infer_typeofcancelReservationSchema_"
 			},
-			"infer_typeofmarkDepositPaidSchema_": {
-				"properties": {
-					"referenceCode": {
-						"type": "string"
-					},
-					"paidAt": {
-						"type": "string"
-					},
-					"paidAmount": {
-						"type": "number",
-						"format": "double"
-					},
-					"paymentId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"paidAt",
-					"paidAmount",
-					"paymentId"
-				],
-				"type": "object"
-			},
-			"MarkDepositPaidRequest": {
-				"$ref": "#/components/schemas/infer_typeofmarkDepositPaidSchema_"
-			},
 			"infer_typeofassignReservationStaffSchema_": {
 				"properties": {
 					"notes": {
@@ -3400,6 +3505,20 @@
 			},
 			"AssignReservationStaffRequest": {
 				"$ref": "#/components/schemas/infer_typeofassignReservationStaffSchema_"
+			},
+			"infer_typeofconfirmRefundSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ConfirmRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofconfirmRefundSchema_"
 			},
 			"SepayWebhookPayload": {
 				"properties": {
@@ -12333,17 +12452,7 @@
 						}
 					},
 					"400": {
-						"description": "Invalid request data or unit/amenity unavailable",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
+						"description": "Bad Request",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -12353,7 +12462,7 @@
 						}
 					},
 					"404": {
-						"description": "Facility or Offering not found",
+						"description": "Not Found",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -12363,7 +12472,7 @@
 						}
 					}
 				},
-				"description": "Create a new reservation in PENDING_PAYMENT status with 15-minute lock (Customer).",
+				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).",
 				"tags": [
 					"Reservations"
 				],
@@ -12392,34 +12501,30 @@
 								}
 							}
 						}
-					},
-					"400": {
-						"description": "Invalid query parameters",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
 					}
 				},
-				"description": "Get paginated list of reservations.\nCustomers only see their own reservations.\nStaff/Managers can filter across facilities.",
+				"description": "List reservations with pagination & scoping.",
 				"tags": [
 					"Reservations"
 				],
 				"security": [],
 				"parameters": [
+					{
+						"in": "query",
+						"name": "checkInDateTo",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "checkInDateFrom",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
 					{
 						"in": "query",
 						"name": "startDateTo",
@@ -12442,6 +12547,14 @@
 						"required": false,
 						"schema": {
 							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "refundStatus",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RefundStatusEnum"
 						}
 					},
 					{
@@ -12514,6 +12627,7 @@
 								"createdAt",
 								"updatedAt",
 								"startDate",
+								"checkInDate",
 								"totalAmount"
 							]
 						}
@@ -12562,19 +12676,9 @@
 								}
 							}
 						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
 					}
 				},
-				"description": "Process and expire overdue holding reservations (Cron/Admin).\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
+				"description": "Batch process all expired reservations.",
 				"tags": [
 					"Reservations"
 				],
@@ -12591,7 +12695,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+									"$ref": "#/components/schemas/ApiResponse__overdueCount-number--noShowCount-number--unconfirmedCount-number__"
 								}
 							}
 						}
@@ -12605,19 +12709,9 @@
 								}
 							}
 						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
 					}
 				},
-				"description": "Process and mark overdue check-ins (CONFIRMED -> OVERDUE) (Cron/Admin).\nNote: Placed before dynamic path param '{id}' to prevent route collision.",
+				"description": "Batch process overdue check-ins and no-show auto cancellations.",
 				"tags": [
 					"Reservations"
 				],
@@ -12639,28 +12733,8 @@
 							}
 						}
 					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
 					"404": {
-						"description": "Reservation not found",
+						"description": "Not Found",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -12670,7 +12744,7 @@
 						}
 					}
 				},
-				"description": "Get detailed reservation by ID.",
+				"description": "Get single reservation detail by ID.",
 				"tags": [
 					"Reservations"
 				],
@@ -12685,86 +12759,6 @@
 						}
 					}
 				]
-			},
-			"patch": {
-				"operationId": "UpdateReservation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid state or reservation already received",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Update reservation details (Customer, only allowed while in PENDING status).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/UpdateReservationRequest"
-							}
-						}
-					}
-				}
 			}
 		},
 		"/reservations/{id}/reassign-unit": {
@@ -12782,27 +12776,7 @@
 						}
 					},
 					"400": {
-						"description": "Unit not available or invalid status",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
+						"description": "Bad Request",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -12812,7 +12786,7 @@
 						}
 					},
 					"404": {
-						"description": "Reservation or Storage unit not found",
+						"description": "Not Found",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -12822,7 +12796,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager reassigns a physical storage unit due to unexpected maintenance.",
+				"description": "Facility Manager reassigns a physical storage unit (for CONFIRMED, PAYMENT_SUCCESSFUL, or OVERDUE reservations) due to unexpected maintenance.",
 				"tags": [
 					"Reservations"
 				],
@@ -12849,78 +12823,6 @@
 				}
 			}
 		},
-		"/reservations/{id}/retry-payment": {
-			"post": {
-				"operationId": "RetryPayment",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Holding expired or invalid reservation status",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Customer retries deposit payment after failure (PAYMENT_FAILED -> PENDING_PAYMENT).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
 		"/reservations/{id}/confirm": {
 			"post": {
 				"operationId": "ConfirmReservation",
@@ -12936,27 +12838,7 @@
 						}
 					},
 					"400": {
-						"description": "Deposit not paid or invalid status",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
+						"description": "Bad Request",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -12966,7 +12848,7 @@
 						}
 					},
 					"404": {
-						"description": "Reservation not found",
+						"description": "Not Found",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -12976,7 +12858,7 @@
 						}
 					}
 				},
-				"description": "Confirm reservation after successful deposit (Staff/Manager: PAYMENT_SUCCESSFUL -> CONFIRMED).",
+				"description": "Facility Staff officially confirms reservation after deposit payment.",
 				"tags": [
 					"Reservations"
 				],
@@ -13018,17 +12900,7 @@
 						}
 					},
 					"400": {
-						"description": "Reservation cannot be cancelled",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
+						"description": "Bad Request",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -13048,7 +12920,7 @@
 						}
 					},
 					"404": {
-						"description": "Reservation not found",
+						"description": "Not Found",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -13058,7 +12930,7 @@
 						}
 					}
 				},
-				"description": "Cancel reservation (CANCELLED).\nCalculates deposit refund (100% before CONFIRMED, 0% after CONFIRMED) and releases unit/amenities.",
+				"description": "Cancel reservation with refund policy enforcement (2-tier refund: >= 24h before check-in 100% refund, < 24h 0% refund; facility cannot cancel CONFIRMED/OVERDUE; blocks if active contract is linked).",
 				"tags": [
 					"Reservations"
 				],
@@ -13085,232 +12957,6 @@
 				}
 			}
 		},
-		"/reservations/{id}/complete": {
-			"post": {
-				"operationId": "CompleteReservation",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid status transition",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Mark reservation as completed (Staff/Manager: CONFIRMED -> COMPLETED).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/reservations/{id}/mark-deposit-paid": {
-			"post": {
-				"operationId": "MarkDepositPaid",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid reservation status",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Mark deposit as paid (webhook/payment callback: PENDING_PAYMENT -> PAYMENT_SUCCESSFUL).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/MarkDepositPaidRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/reservations/{id}/payment-failed": {
-			"post": {
-				"operationId": "HandlePaymentFailure",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid reservation status",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Reservation not found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "Mark deposit payment as failed (webhook/payment callback: PENDING_PAYMENT -> PAYMENT_FAILED).",
-				"tags": [
-					"Reservations"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
 		"/reservations/{id}/assign-staff": {
 			"post": {
 				"operationId": "AssignStaffToCheckIn",
@@ -13326,27 +12972,7 @@
 						}
 					},
 					"400": {
-						"description": "Deposit not paid or staff invalid",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
+						"description": "Bad Request",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -13356,7 +12982,7 @@
 						}
 					},
 					"404": {
-						"description": "Reservation or Staff not found",
+						"description": "Not Found",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -13366,7 +12992,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager assigns a staff member for customer check-in.\nOnly allowed after deposit payment (PAYMENT_SUCCESSFUL or CONFIRMED).",
+				"description": "Manager assigns or updates check-in reception staff.",
 				"tags": [
 					"Reservations"
 				],
@@ -13387,6 +13013,68 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/AssignReservationStaffRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/confirm-refund": {
+			"post": {
+				"operationId": "ConfirmRefund",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager confirms deposit refund has been disbursed to customer (for CANCELLED or EXPIRED reservations with PENDING refund).",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ConfirmRefundRequest"
 							}
 						}
 					}
