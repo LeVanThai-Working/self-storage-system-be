@@ -4,7 +4,13 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**/*', 'node_modules/**/*', 'src/routes/**/*'],
+    ignores: [
+      'dist/**/*',
+      'node_modules/**/*',
+      'src/routes/**/*',
+      'scratch/**/*.cjs',
+      'scratch/**/*.js',
+    ],
   },
 
   eslint.configs.recommended,
