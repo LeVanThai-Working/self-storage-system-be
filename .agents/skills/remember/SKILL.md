@@ -1,7 +1,7 @@
 ---
 name: remember
 description: >-
-  Use this skill when the user types /remember at the end of a work session. Saves the session summary into .agents/memory/memory.md (personal, gitignored, kept compact) and updates the shared task tracker docs/agent/PROGRESS.md (committed): task status, OPEN-decision assumptions, out-of-scope findings. Also ensures .agents/memory/ is in .gitignore and docs/agent/ is not.
+  Use this skill when the user types /remember at the end of a work session. Saves the session summary into .agents/memory/memory.md (personal, gitignored, kept compact) and updates the shared task tracker docs/agent/<scope>/PROGRESS.md (committed): task status, OPEN-decision assumptions, out-of-scope findings. Also ensures .agents/memory/ is in .gitignore and docs/agent/ is not.
 ---
 
 # Skill: /remember
@@ -12,7 +12,7 @@ Lưu lại tiến độ phiên làm việc hiện tại vào hai nơi, mỗi nơ
 
 File Vai trò Có commit không
 .agents/memory/memory.md Nhật ký cá nhân của agent: tóm tắt phiên, ghi chú, gotchas Không (nằm trong .gitignore)
-docs/agent/PROGRESS.md Theo dõi tiến độ chung theo task ID: trạng thái, giả định, phát hiện thêm Có (để mọi người và mọi agent cùng thấy)
+docs/agent/<scope>/PROGRESS.md Theo dõi tiến độ chung theo phân hệ `<scope>` và task ID: trạng thái, giả định, phát hiện thêm Có (để mọi người và mọi agent cùng thấy mà không xung đột giữa các phân hệ)
 
 Chạy skill này ở cuối mỗi phiên làm việc.
 
@@ -22,7 +22,7 @@ Khi người dùng gõ /remember, agent phải thực hiện tuần tự:
 
 Bước 1 — Đọc trạng thái hiện tại
 Đọc .agents/memory/memory.md. Nếu chưa tồn tại, tạo mới theo cấu trúc mẫu ở Bước 3.
-Đọc docs/agent/PROGRESS.md. Nếu chưa tồn tại, tạo mới theo cấu trúc mẫu ở Bước 4: bảng task lấy từ danh sách task trong docs/agent/PLAN.md với trạng thái TODO (nếu không có PLAN.md thì để bảng trống).
+Xác định phân hệ `<scope>` của phiên làm việc hiện tại (ví dụ `booking`, `warehouse`, ...). Đọc `docs/agent/<scope>/PROGRESS.md`. Nếu chưa tồn tại, tạo mới theo cấu trúc mẫu ở Bước 4: bảng task lấy từ danh sách task trong `docs/agent/<scope>/PLAN.md` với trạng thái TODO (nếu không có PLAN.md thì để bảng trống).
 Bước 2 — Tổng hợp phiên làm việc hiện tại
 
 Thu thập thông tin từ conversation hiện tại. Chỉ ghi những gì thực sự đã xảy ra, không suy đoán:
@@ -61,7 +61,7 @@ markdown
 
 ### [YYYY-MM-DD] — [Mô tả ngắn phiên làm việc]
 
-**Task:** `Txx` (hoặc "ngoài PLAN")
+**Task:** `<scope>/Txx` (hoặc "ngoài PLAN")
 
 **Thực hiện:**
 
@@ -98,7 +98,7 @@ Giữ file gọn để /overview không phải đọc quá nhiều:
 Phần "Task đã hoàn thiện ở phiên làm việc trước" chỉ giữ 5 phiên gần nhất.
 Khi có hơn 5 phiên, chuyển (không xóa) các phiên cũ nhất sang .agents/memory/archive/memory-archive.md (tạo nếu chưa có, ghi nối vào cuối).
 Không xóa nội dung nếu chưa chuyển sang archive.
-Bước 4 — Cập nhật PROGRESS.md
+Bước 4 — Cập nhật `docs/agent/<scope>/PROGRESS.md`
 
 Cấu trúc mẫu khi tạo mới:
 
@@ -150,17 +150,17 @@ Nếu chưa có entry cho .agents/memory/, thêm vào:
 # Agent memory (personal, do not commit)
 
 .agents/memory/
-Kiểm tra docs/agent/ không bị ignore (bởi docs/, docs/agent/ hay pattern tương tự). Nếu bị ignore, cảnh báo người dùng vì PROGRESS.md cần được commit. Không tự xóa pattern của người dùng.
+Kiểm tra `docs/agent/` không bị ignore (bởi `docs/`, `docs/agent/` hay pattern tương tự). Nếu bị ignore, cảnh báo người dùng vì `docs/agent/<scope>/PROGRESS.md` cần được commit. Không tự xóa pattern của người dùng.
 Bước 6 — Xác nhận
 
 Thông báo cho người dùng:
 
 ✅ Memory đã được lưu vào .agents/memory/memory.md
-✅ Tiến độ task đã cập nhật trong docs/agent/PROGRESS.md
+✅ Tiến độ task đã cập nhật trong docs/agent/<scope>/PROGRESS.md
 ✅ .gitignore đã được kiểm tra
 📝 Session [ngày] đã được ghi lại
 
-⚠️ docs/agent/PROGRESS.md cần được commit cùng thay đổi của task (skill này không tự commit).
+⚠️ docs/agent/<scope>/PROGRESS.md cần được commit cùng thay đổi của task (skill này không tự commit).
 
 Nếu có task chuyển sang DONE, BLOCKED, hoặc có phát hiện thêm mới, tóm tắt ngắn gọn ở cuối.
 

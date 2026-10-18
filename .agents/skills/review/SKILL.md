@@ -24,7 +24,7 @@ Kiểm tra phạm vi:
 File có trong diff nhưng không có trong plan: ⚠️ kèm lý do, hoặc ❌ nếu thay đổi hành vi ngoài task.
 File trong plan nhưng chưa có thay đổi: báo là chưa làm.
 File thuộc mục "Những gì KHÔNG thay đổi" mà bị sửa: ❌.
-Nếu task có ID trong docs/agent/PLAN.md: đọc lại phần "Done khi" của task và đối chiếu từng tiêu chí.
+Nếu task có ID trong `docs/agent/<scope>/PLAN.md`: đọc lại phần "Done khi" của task và đối chiếu từng tiêu chí.
 Bước 2 — Kiểm tra từng file đã thay đổi
 
 Với mỗi file được tạo/sửa, kiểm tra theo AGENTS.md. Mục nào không áp dụng thì ghi N/A.
@@ -70,7 +70,7 @@ Không swallow errors
 Message code mới nằm đúng messageCode.const.ts, không trùng mã đã có và không dùng lại mã cho ý nghĩa khác
 Checklist Phân quyền (AGENTS.md mục 14)
 Kiểm tra phạm vi tài nguyên nằm trong service: CUSTOMER chỉ tài nguyên của mình, FACILITY_STAFF/FACILITY_MANAGER chỉ trong assignedFacilityId (assertFacilityAccess), chưa gán cơ sở thì 403
-Quy tắc ai được ký / duyệt / hoàn tiền / chấm dứt khớp ma trận quyền trong docs/agent/PLAN.md
+Quy tắc ai được ký / duyệt / hoàn tiền / chấm dứt khớp ma trận quyền trong `docs/agent/<scope>/PLAN.md`
 Không dùng x-user-id, body hay query để xác định quyền ngoài chuỗi fallback caller của dev; fallback không chạy ở production
 Endpoint nhạy cảm có test hoặc kịch bản kiểm thử cho ca bị chặn (chéo cơ sở, chéo khách hàng)
 Checklist Transaction và đồng thời (AGENTS.md mục 20)
