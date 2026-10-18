@@ -332,41 +332,65 @@ userSchema.plugin(MongooseDelete, {
 - **Refresh Token:** 7 ngày, RTR (Refresh Token Rotation) + Family Token trong Redis
 - **Protected routes:** dùng `@Security('bearerAuth')` hoặc `@Security('cookieAuth')` trong tsoa controller
 - **tsoa authentication:** implement qua `expressAuthentication()` trong `src/middlewares/auth.tsoa.ts`
-- **[MUST] Trì hoãn phân quyền Role đến Phase hoàn thiện cuối cùng:**
-  Phân quyền (Role Authorization) và kích hoạt xác thực `@Security` trên các module nghiệp vụ sẽ được triển khai đồng loạt sau khi hoàn thành tất cả các module.
-- **[MUST] Quy tắc ghi nhận Role & Ẩn `@Security` trong giai đoạn phát triển:**
-  1. **Ẩn `@Security`:** Tạm thời comment out `// @Security('bearerAuth')` và `// @Security('cookieAuth')` để tránh block kiểm thử và luồng gọi API giữa các module.
-  2. **Ghi chú Role (`// TODO: Role authorization:`):** Mọi endpoint nhạy cảm/cần phân quyền **bắt buộc** phải có comment đánh dấu role chính xác ngay trên decorator HTTP method (`@Post`, `@Patch`, `@Delete`, `@Get`) để sẵn sàng cho phase hoàn thiện bảo mật:
-     ```ts
-     // @Security('bearerAuth')
-     // @Security('cookieAuth')
-     // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
-     @Post('')
-     ```
-  3. **Nhận diện Caller linh hoạt (Fallback Pattern):** Khi `@Security` đang được ẩn, controller không bắt buộc `req.user` phải tồn tại từ tsoa middleware. Hãy dùng helper trích xuất an toàn:
-     `req.user` ➔ header `x-user-id` ➔ giải mã JWT token nếu client có gửi `Bearer` ➔ fallback id từ body/query ➔ throw `AppError(401, MESSAGE_CODE.MESSAGE_CODE_102)` nếu không có thông tin caller.
+
+### [MUST] Hai lớp phân quyền: lớp nào được hoãn, lớp nào không
+
+| Lớp                                          | Nội dung                                                                                                                                | Thời điểm triển khai                                                      |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Xác thực + role gate (decorator)             | `@Security('bearerAuth')`, `@Security('cookieAuth')` và chặn theo role ở tầng route                                                     | **Hoãn** đến phase hoàn thiện cuối cùng, theo quy tắc ẩn `@Security` dưới |
+| Quy tắc nghiệp vụ theo vai trò và tài nguyên | Chủ tài nguyên (khách chỉ thao tác dữ liệu của mình), phạm vi cơ sở (`assertFacilityAccess`), ai được ký / duyệt / hoàn tiền / chấm dứt | **KHÔNG hoãn.** Làm trong service, ngay trong task tạo hoặc sửa endpoint  |
+
+**Lý do:** lớp thứ hai là business rule (ví dụ chỉ chủ hợp đồng mới được ký, chỉ `FACILITY_MANAGER` của cơ sở mới được ký nhận kho). Nếu hoãn, endpoint cho phép thao tác chéo cơ sở hoặc chéo khách hàng, và việc bật `@Security` sau này không vá được lỗ hổng đó.
+
+Quy tắc phạm vi tài nguyên (kiểm tra trong service):
+
+- `CUSTOMER`: chỉ thao tác tài nguyên có `customerId === caller.userId`.
+- `FACILITY_STAFF`, `FACILITY_MANAGER`: chỉ thao tác tài nguyên thuộc `user.assignedFacilityId`. Chưa được gán cơ sở thì từ chối (403, dùng mã đã có như `MESSAGE_CODE_103`).
+- `BUSINESS_OPS_MANAGER`, `SYSTEM_ADMIN`: phạm vi toàn hệ thống.
+- Ma trận quyền chi tiết theo từng endpoint nằm ở `docs/agent/PLAN.md` (mục ma trận quyền). Không tự suy diễn quyền cho endpoint không có trong ma trận, hãy hỏi.
+
+### [MUST] Quy tắc ghi nhận Role và ẩn `@Security` trong giai đoạn phát triển
+
+1. **Ẩn `@Security`:** tạm thời comment out `// @Security('bearerAuth')` và `// @Security('cookieAuth')` để tránh block kiểm thử và luồng gọi API giữa các module.
+2. **Ghi chú Role (`// TODO: Role authorization:`):** mọi endpoint nhạy cảm/cần phân quyền **bắt buộc** có comment đánh dấu role chính xác ngay trên decorator HTTP method (`@Post`, `@Patch`, `@Delete`, `@Get`) để sẵn sàng cho phase hoàn thiện bảo mật:
+   ```ts
+   // @Security('bearerAuth')
+   // @Security('cookieAuth')
+   // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+   @Post('')
+   ```
+3. **Nhận diện Caller:** dùng helper chung để lấy caller, không tự viết lại trong từng controller.
+   - **Production:** chỉ chấp nhận `req.user` từ token đã xác thực.
+   - **Dev/test (khi `@Security` đang ẩn):** chuỗi fallback `req.user` ➔ header `x-user-id` ➔ giải mã JWT nếu client gửi `Bearer` ➔ id từ body/query ➔ `throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102)` nếu không có thông tin caller.
+   - **[MUST]** Các bước fallback từ `x-user-id` trở đi chỉ chạy khi `NODE_ENV !== 'production'` **và** biến môi trường `ALLOW_INSECURE_CALLER_FALLBACK === 'true'`. Nếu cờ này bật khi `NODE_ENV === 'production'`, ứng dụng phải dừng ngay lúc khởi động. Lý do: header hoặc id trong body do client tự gửi, nên bất kỳ ai cũng có thể mạo danh người khác.
+   - Kiểm tra phạm vi tài nguyên (phía trên) luôn chạy trên id caller đã nhận diện, kể cả khi đang dùng fallback.
+4. Endpoint nhạy cảm (tiền, ký, hủy, chấm dứt, xác nhận hoàn tiền) phải có test phân quyền dương và âm, gồm ca chéo cơ sở và chéo khách hàng (xem mục 22).
 
 ---
 
 ## 15. Workflow khi thêm feature mới
 
 ```
+0. Đọc task và tài liệu nghiệp vụ; xác định chuyển trạng thái, thao tác tiền, quy tắc phân quyền liên quan (mục 14, 20, 21)
 1. Thêm/cập nhật Zod schema trong schemas/<domain>.request.schema.ts
 2. Thêm/cập nhật response schema nếu output contract thay đổi
-3. Thêm repository methods (chỉ persistence operations)
-4. Thêm service logic + AppError handling + ghi audit log (cho các mutation)
+3. Thêm repository methods (chỉ persistence operations; đổi trạng thái dùng conditional update)
+4. Thêm service logic + AppError handling + kiểm tra phân quyền theo tài nguyên (mục 14)
+   + @Transactional khi đổi nhiều bản ghi (mục 20) + ghi audit log (cho các mutation, mục 19)
 5. Wire dependencies trong <domain>.container.ts (inject auditLogService nếu cần)
 6. Thêm controller method với ResponseUtils / ApiResponse
 7. Thêm @openapi documentation (tsoa decorators)
-8. Thêm MESSAGE_CODE / AuditActionEnum / AuditResourceEnum mới nếu cần
+8. Thêm MESSAGE_CODE / AuditActionEnum / AuditResourceEnum mới nếu cần (đọc file nguồn trước, không tự đoán)
 9. Cập nhật ioc.ts nếu thêm controller mới
-10. Chạy: npm run check && npm run build
-11. Bàn giao FE: chạy `/fe-prompt <tên module>` để xuất prompt bàn giao contract (shared layer)
+10. Viết/chạy test (khi đã có framework) hoặc nêu kịch bản kiểm thử thủ công trong PR (mục 22)
+11. Chạy: npm run check && npm run build
+    (npm run check = npm run typecheck && npm run lint && npm run format:check; chưa bao gồm test)
+12. Bàn giao FE: nếu contract thay đổi, chạy `/fe-prompt <tên module>` để xuất prompt bàn giao (shared layer)
 ```
 
 ### Bàn giao Frontend sau khi hoàn thành module
 
-Khi hoàn thành một module backend, dùng slash command:
+Khi hoàn thành một module backend có thay đổi contract (endpoint, request schema, enum, error code, constant), dùng slash command:
 
 ```bash
 /fe-prompt <tên module>
@@ -374,9 +398,18 @@ Khi hoàn thành một module backend, dùng slash command:
 
 Lệnh này sẽ trích xuất toàn bộ request schemas, enums, error codes, constants và endpoints để tạo prompt gửi cho agent Frontend (chỉ làm tầng shared, không chứa response hay UI).
 
+Task chỉ siết phân quyền hoặc sửa logic nội bộ mà không đổi contract thì không cần chạy `/fe-prompt`.
+
 ---
 
-## 16. Enums hiện có
+## 16. Enums
+
+Danh sách enum thay đổi thường xuyên nên **không chép vào tài liệu này**. Luôn đọc file nguồn:
+
+- Enum dùng chung: `src/common/enums/`
+- Enum cục bộ của module: trong thư mục `src/modules/<domain>/`
+
+Chỉ giữ lại enum vai trò vì mọi quy tắc phân quyền đều dựa vào nó:
 
 ```ts
 enum RoleEnum {
@@ -386,82 +419,32 @@ enum RoleEnum {
   FACILITY_MANAGER = 'facility_manager',
   BUSINESS_OPS_MANAGER = 'business_ops_manager',
 }
-
-enum UserStatusEnum {
-  INACTIVE = 'inactive',
-  ACTIVE = 'active',
-  BANNED = 'banned',
-  DELETED = 'deleted',
-}
-
-enum AuthProviderEnum {
-  LOCAL = 'local',
-  GOOGLE = 'google',
-}
-
-enum AuditActionEnum {
-  REGISTER = 'register',
-  LOGIN = 'login',
-  LOGIN_GOOGLE = 'login_google',
-  LOGOUT = 'logout',
-  SEND_OTP = 'send_otp',
-  FORGOT_PASSWORD = 'forgot_password',
-  RESET_PASSWORD = 'reset_password',
-  CHANGE_PASSWORD = 'change_password',
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  RESTORE = 'restore',
-  ASSIGN_MANAGER = 'assign_manager',
-  TOGGLE_MAINTENANCE = 'toggle_maintenance',
-}
-
-enum AuditResourceEnum {
-  AUTH = 'auth',
-  USER = 'user',
-  PROFILE = 'profile',
-  FACILITY = 'facility',
-  UNIT_TYPE = 'unit_type',
-  AMENITY = 'amenity',
-  FACILITY_UNIT_TYPE_OFFERING = 'facility_unit_type_offering',
-  FACILITY_AMENITY_OFFERING = 'facility_amenity_offering',
-  STORAGE_UNIT = 'storage_unit',
-  RESERVATION = 'reservation',
-}
-
-enum AuditStatusEnum {
-  SUCCESS = 'success',
-  FAILURE = 'failure',
-}
 ```
+
+`AuditActionEnum`, `AuditResourceEnum`, `AuditStatusEnum` cũng đọc từ file nguồn. Khi thêm hành động hoặc tài nguyên mới cần ghi audit, bổ sung member vào đúng enum nếu chưa tồn tại (ví dụ `CANCEL`, `CONFIRM`, `SIGN`, `CHECK_IN`, `CHECK_OUT`, `TERMINATE`, `APPROVE`, `REFUND`; tài nguyên `CONTRACT`, `CONTRACT_ADDENDUM`, `PAYMENT`, `REFUND_REQUEST`). Kiểm tra file nguồn trước để không tạo trùng.
 
 ---
 
-## 17. Message Codes hiện có
+## 17. Message Codes
 
-| Code               | Ý nghĩa                                  | Nhóm / Mục đích                           |
-| ------------------ | ---------------------------------------- | ----------------------------------------- |
-| `MESSAGE_CODE_001` | Operation Successful                     | Thành công (001-004)                      |
-| `MESSAGE_CODE_002` | {0} Created Successfully                 | Thành công                                |
-| `MESSAGE_CODE_003` | {0} Updated Successfully                 | Thành công                                |
-| `MESSAGE_CODE_004` | {0} Deleted Successfully                 | Thành công                                |
-| `MESSAGE_CODE_101` | Invalid Request                          | Lỗi chung (101-106)                       |
-| `MESSAGE_CODE_102` | Unauthorized Access                      | Lỗi chung                                 |
-| `MESSAGE_CODE_103` | Access Denied                            | Lỗi chung                                 |
-| `MESSAGE_CODE_104` | {0} Not Found                            | Lỗi chung                                 |
-| `MESSAGE_CODE_105` | {0} Already Exists                       | Lỗi chung                                 |
-| `MESSAGE_CODE_106` | Internal Server Error                    | Lỗi chung                                 |
-| `MESSAGE_CODE_107` | Invalid Email Or Password                | Xác thực & Đăng nhập (107-109)            |
-| `MESSAGE_CODE_108` | {0} Email Is Not Verified                | Xác thực & Đăng nhập                      |
-| `MESSAGE_CODE_109` | Invalid Or Expired OTP                   | Xác thực & Đăng nhập                      |
-| `MESSAGE_CODE_110` | {0} Is Inactive                          | Trạng thái tài khoản & thực thể (110-112) |
-| `MESSAGE_CODE_111` | {0} Is Banned Or Locked                  | Trạng thái tài khoản & thực thể           |
-| `MESSAGE_CODE_112` | {0} Has Been Deleted                     | Trạng thái tài khoản & thực thể           |
-| `MESSAGE_CODE_120` | {0} Role Is Invalid                      | Xét vai trò & phân quyền (120-122)        |
-| `MESSAGE_CODE_121` | User Must Have Role {0}                  | Xét vai trò & phân quyền                  |
-| `MESSAGE_CODE_122` | You Do Not Have Permission To Manage {0} | Xét vai trò & phân quyền                  |
-| `MESSAGE_CODE_200` | {0} Is Required                          | Validation & Token (200-201)              |
-| `MESSAGE_CODE_201` | Invalid Token                            | Validation & Token                        |
+Danh sách message code **không chép vào tài liệu này** vì đã có nhiều mã ngoài các nhóm cơ bản (ví dụ các mã nhóm 3xx và 4xx của Reservation và Contract). Luôn đọc `src/common/consts/messageCode.const.ts` để biết mã nào đã tồn tại và ý nghĩa của nó.
+
+Nhóm cơ bản (ổn định):
+
+| Nhóm        | Mục đích                                                               |
+| ----------- | ---------------------------------------------------------------------- |
+| `001`–`004` | Thành công                                                             |
+| `101`–`106` | Lỗi chung (invalid, unauthorized, denied, not found, exists, internal) |
+| `107`–`109` | Xác thực và đăng nhập                                                  |
+| `110`–`112` | Trạng thái tài khoản và thực thể                                       |
+| `120`–`122` | Vai trò và phân quyền                                                  |
+| `200`–`201` | Validation và token                                                    |
+
+Quy tắc:
+
+- Không dùng lại mã đã có cho ý nghĩa khác, không tự đoán ý nghĩa của mã chưa đọc.
+- Mã mới lấy số kế tiếp trong nhóm phù hợp, thêm vào file nguồn và ghi vào mô tả task.
+- Mỗi lỗi nghiệp vụ mới (ví dụ khách chưa ký, kho không còn ở trạng thái mong đợi) có mã riêng, không dùng chung `MESSAGE_CODE_101`.
 
 ---
 
@@ -487,6 +470,12 @@ Sau mỗi `write_to_file`, kiểm tra file size > 0 trước khi tiếp tục:
 ```powershell
 # Verify file không rỗng sau khi ghi
 Get-Item <path> | Select-Object Length  # Phải > 0
+```
+
+```bash
+# Tương đương trên bash/zsh (macOS, Linux, WSL)
+wc -c < <path>       # Phải > 0
+test -s <path> && echo OK
 ```
 
 ### [MUST] Thứ tự ghi file trong một module mới
@@ -573,3 +562,97 @@ Luôn ghi theo thứ tự sau, **từng file một**:
 4. **Async Context:** KHÔNG cần truyền thủ công `actorId`, `ip`, `userAgent`, `requestId`. Hệ thống `AsyncLocalStorage` (`requestContext.util.ts`) tự động trích xuất thông tin user đã đăng nhập.
 5. **Hỗ trợ Transaction (`@Transactional`):** Log được giữ trong bộ đệm tự động và **chỉ ghi xuống DB khi transaction commit thành công**. Nếu transaction rollback/retry, buffer bị huỷ bỏ, tránh log ảo (phantom logs).
 6. **Non-blocking & An toàn:** Ghi log chạy fire-and-forget, không bao giờ làm gián đoạn hoặc ném lỗi ảnh hưởng đến nghiệp vụ chính của người dùng.
+
+### [MUST] Audit cho job nền (cron, BullMQ worker)
+
+Job nền không có request context nên `AsyncLocalStorage` không có thông tin user. Mọi thao tác do job thực hiện (hủy no-show, chuyển OVERDUE, hết hạn thanh toán, tự hủy đơn) phải ghi audit với actor `SYSTEM` truyền tường minh. Nếu `AuditLogService.record` chưa hỗ trợ ghi đè actor, bổ sung tham số `actor` tùy chọn (làm thành task riêng và ghi vào `PROGRESS.md`). Không để audit ghi rỗng người thực hiện.
+
+### [MUST] Audit bền cho thao tác tiền và pháp lý
+
+Ghi log fire-and-forget phù hợp với thao tác thường, nhưng **không đủ** cho: thu tiền, xác nhận thu thủ công, hoàn tiền, tịch thu hoặc quyết toán cọc, ký hợp đồng và phụ lục, chấm dứt hợp đồng. Với nhóm này, nếu ghi audit thất bại thì bằng chứng bị mất sau khi dữ liệu đã đổi. Yêu cầu:
+
+- Ghi audit trong cùng transaction với thay đổi dữ liệu, hoặc dùng cơ chế retry/outbox đã thống nhất.
+- Lỗi ghi audit của nhóm này phải log ở mức `error` và có cảnh báo, không nuốt im lặng.
+- Cho đến khi cơ chế bền được dựng, ghi rõ trong PR rằng thao tác này đang dùng audit best-effort.
+
+### [MUST] Dữ liệu nhạy cảm trong audit
+
+Trường mới có dữ liệu cá nhân hoặc tài chính (số tài khoản ngân hàng, số CCCD, ảnh giấy tờ, mã tham chiếu giao dịch) phải được thêm vào danh sách mask của `AuditLogService` trước khi merge.
+
+---
+
+## 20. Transaction, đồng thời và side effect
+
+- **[MUST]** Thao tác đổi nhiều bản ghi liên quan (đơn đặt chỗ, kho, hợp đồng, thanh toán, hoàn tiền) chạy trong **một** `@Transactional()` ở service. Truyền `session` xuống mọi repository call của nghiệp vụ đó theo cơ chế hiện có (session là tham số cuối).
+- **[MUST]** Đổi trạng thái bằng conditional update, không đọc rồi ghi:
+  ```ts
+  // ✅ Đúng — chỉ thành công nếu trạng thái hiện tại đúng như mong đợi
+  const updated = await repo.atomicUpdateStatus(id, expectedStatus, payload);
+  if (!updated) {
+    // đã bị tiến trình khác đổi: bỏ qua hoặc throw AppError, KHÔNG chạy tiếp các bước phụ thuộc
+  }
+
+  // ❌ Sai — đọc rồi ghi, hai request song song cùng thành công
+  const doc = await repo.findById(id);
+  if (doc.status === expectedStatus) await repo.update(id, payload);
+  ```
+- **[MUST]** Giữ và nhả kho dùng các hàm atomic đã có (ví dụ `findAndReserveUnitAtomic`, `markOccupiedAtomic`, `releaseReservedUnitAtomic`, `releaseOccupiedUnitAtomic`). Không tự viết update trạng thái kho thủ công. Kiểm tra tên hàm hiện có trong repository trước khi dùng.
+- **[MUST]** Side effect ngoài DB (notification, Socket.IO, email, BullMQ job, gọi dịch vụ bên thứ ba) chỉ chạy **sau khi commit** thông qua `afterCommitHooks`, vì `withTransaction` có thể chạy lại callback và rollback sẽ không thu hồi được thông báo đã gửi.
+- **[MUST]** Không dùng fallback "chạy không session" ở production và không thêm `try/catch` nuốt lỗi transaction. Production phải chạy MongoDB replica set; ứng dụng kiểm tra điều này lúc khởi động và dừng nếu thiếu.
+- **Job nền (cron, BullMQ):**
+  - Xử lý từng bản ghi trong transaction riêng hoặc batch nhỏ (20–50 bản ghi); bắt lỗi từng bản ghi, ghi log kèm cảnh báo rồi đi tiếp. Một bản ghi lỗi không được chặn các bản ghi còn lại.
+  - Truy vấn quét luôn có `limit`.
+  - Mọi bước idempotent: chạy lại hoặc chạy song song với thao tác tay không gây hại.
+- **Idempotency:** endpoint tạo mới và endpoint liên quan tiền nhận idempotency key hoặc dùng khóa tự nhiên; webhook dùng id giao dịch của bên thứ ba làm khóa chống trùng.
+- **State machine:** mỗi entity có một bảng chuyển trạng thái hợp lệ đặt ở một nơi (const hoặc service), không rải điều kiện trạng thái khắp code. Thêm hoặc đổi trạng thái phải cập nhật bảng này và kèm test.
+
+---
+
+## 21. Tiền và thời gian
+
+- **[MUST]** Tiền VND lưu bằng số nguyên (đơn vị đồng), không dùng `float`. Công thức tính tiền (phí trễ hạn, cấn trừ cọc, hoàn tiền) nằm trong hàm thuần có test, một quy tắc làm tròn duy nhất. Không tính tiền trong controller.
+- **[MUST]** Lưu thời điểm ở dạng UTC. Mọi so sánh theo "ngày" dùng helper giờ Việt Nam đã có (ví dụ `startOfDayVN`, `endOfDayVN`); tìm trong codebase và dùng lại, không tự viết lại. Chuẩn hóa ngày đầu vào về đầu ngày giờ VN tại boundary (schema hoặc service), không tin giá trị 00:00 UTC do client gửi.
+- **[MUST]** Hạn và mốc (ân hạn check-in, hết hạn, mốc hủy miễn phí) được tính tại thời điểm kiểm tra từ dữ liệu gốc, không phụ thuộc cờ hay trạng thái do job đặt. Job chỉ là lớp dọn dẹp, không phải nguồn sự thật duy nhất.
+- **[MUST]** Giá và chính sách áp dụng cho một đơn hoặc hợp đồng được snapshot lúc tạo (giá, tiền cọc, quy tắc hủy và tịch thu, phiên bản điều khoản). Thay đổi cấu hình sau đó không làm đổi quyền lợi của bản ghi cũ.
+
+---
+
+## 22. Testing
+
+**Hiện trạng:** dự án chưa có test framework. `npm run check` hiện chỉ chạy `typecheck`, `lint` và `format:check`, không chạy test.
+
+- Việc dựng test framework là một task riêng (xem `docs/agent/PLAN.md`, task T0.5), cần xác nhận lựa chọn công cụ trước. Đề xuất: Vitest (phù hợp ESM và import đuôi `.ts`) cùng `mongodb-memory-server` ở chế độ replica set. **Không tự cài framework ngoài task được giao.**
+- **Khi chưa có framework:** mọi thay đổi nghiệp vụ phải kèm "Kịch bản kiểm thử thủ công" trong PR: gọi endpoint nào, với role nào, kết quả mong đợi, và ít nhất một ca âm (bị chặn đúng).
+- **Khi đã có framework:**
+  - Thêm `npm test` vào `npm run check`.
+  - Test phải chạy trên MongoDB replica set để kiểm chứng transaction và atomic update, không dựa vào fallback không session.
+  - Mỗi endpoint đổi dữ liệu có test phân quyền dương và âm, gồm ca chéo cơ sở và chéo khách hàng.
+  - Mỗi chuyển trạng thái có test cho cả ca hợp lệ và ca bị chặn; thao tác tiền và kho có test chạy song song.
+  - Sửa lỗi phải bắt đầu bằng test tái hiện lỗi.
+
+---
+
+## 23. Cấu hình, dữ liệu nhạy cảm và migration
+
+- **Cấu hình:** số tiền, thời hạn, tỷ lệ, ngưỡng duyệt lấy từ cấu hình tập trung (ví dụ `reservation.config.ts`), không hardcode literal trong service. Feature flag đọc từ biến môi trường, mặc định ở trạng thái an toàn (tắt).
+- **Dữ liệu nhạy cảm** (số tài khoản ngân hàng, số CCCD, ảnh giấy tờ):
+  - Mã hóa khi lưu, che khi trả về và khi hiển thị (ví dụ `****1234`), không log nguyên văn.
+  - Phân quyền xem theo vai trò; tuân thủ Nghị định 13/2023/NĐ-CP.
+  - Thêm vào danh sách mask của audit (mục 19).
+- **Migration:**
+  - Trường mới có giá trị mặc định; script backfill idempotent (chạy lại không gây hại) kèm cách rollback ghi trong PR.
+  - Giữ trường cũ ở dạng alias hoặc dữ liệu dẫn xuất cho đến khi FE chuyển xong (ví dụ `refundAmount`, `refundStatus`, `staffSigned`).
+  - Không xóa hoặc đổi tên trường đang được FE dùng trong cùng PR với thay đổi logic.
+
+---
+
+## 24. Làm việc theo task
+
+Áp dụng khi nhận một task từ `docs/agent/PLAN.md`:
+
+1. **Khảo sát trước khi sửa:** báo cáo ngắn hiện trạng code (file, hàm, endpoint liên quan) và những chỗ khác với mô tả nghiệp vụ. Mô tả nghiệp vụ do con người viết, code mới là sự thật; khác nhau thì báo lại, không tự chọn bên.
+2. **Một task một PR nhỏ**, revert được độc lập. Không gộp refactor với đổi hành vi.
+3. **Quyết định đang mở `[OPEN Dx]`:** dùng giá trị mặc định ghi trong tài liệu task, đặt sau config hoặc feature flag, ghi giả định trong PR và `docs/agent/PROGRESS.md`. Không tự quyết chính sách tiền, thời hạn hay tỷ lệ.
+4. **Không sửa ngoài phạm vi:** phát hiện lỗi ngoài task thì ghi vào danh sách "phát hiện thêm" trong `PROGRESS.md`, không tự sửa.
+5. **Nộp kèm mỗi task:** danh sách file đã đổi, giả định đã dùng, test hoặc kịch bản kiểm thử, rủi ro còn lại.
+6. **Tài liệu nghiệp vụ:** `docs/agent/PLAN.md` (task, ma trận quyền, ma trận hoàn/mất cọc), `docs/agent/business-rules-current.md` (hành vi hiện trạng), `docs/agent/PROGRESS.md` (tiến độ theo task ID).
