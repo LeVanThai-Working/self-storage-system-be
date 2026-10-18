@@ -35,6 +35,10 @@ export enum AuditActionEnum {
   CANCEL_ADDENDUM = 'cancel_addendum',
   CONFIRM_PAYMENT = 'confirm_payment',
   RECEIVE_PAYMENT = 'receive_payment',
+  INVENTORY_IN = 'inventory_in',
+  INVENTORY_OUT = 'inventory_out',
+  INVENTORY_MOVE = 'inventory_move',
+  INVENTORY_ADJUST = 'inventory_adjust',
   REASSIGN_UNIT = 'reassign_unit',
   EXPIRE = 'expire',
   MARK_OVERDUE = 'mark_overdue',
@@ -59,6 +63,8 @@ export enum AuditResourceEnum {
   STORAGE_RACK = 'storage_rack',
   RACK_TIER = 'rack_tier',
   CUSTOMER_SKU = 'customer_sku',
+  CUSTOMER_INVENTORY = 'customer_inventory',
+  INVENTORY_MOVEMENT = 'inventory_movement',
 }
 
 export enum AuditStatusEnum {

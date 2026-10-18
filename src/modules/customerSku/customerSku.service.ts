@@ -7,6 +7,7 @@ import {
   AuditResourceEnum,
 } from '../../common/enums/auditLog.enum.ts';
 import type { CustomerSkuRepository } from './customerSku.repository.ts';
+import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import type {
   CreateCustomerSkuRequest,
@@ -30,7 +31,8 @@ export interface CallerContext {
 export class CustomerSkuService {
   constructor(
     private readonly customerSkuRepository: CustomerSkuRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly customerInventoryRepository?: CustomerInventoryRepository
   ) {}
 
   /**
@@ -310,12 +312,11 @@ export class CustomerSkuService {
 
   /**
    * Hook kiểm tra số lượng tồn kho của SKU
-   * Được thiết kế sẵn sàng để Task 6C (CustomerInventory) liên kết
+   * Liên kết với Task 6C (CustomerInventory)
    */
   async getActiveInventoryQuantity(skuId: string): Promise<number> {
-    // Khi triển khai Task 6C, hàm này sẽ truy vấn CustomerInventory.countActiveQuantityBySkuId(skuId)
-    void skuId;
-    return 0;
+    if (!this.customerInventoryRepository) return 0;
+    return this.customerInventoryRepository.sumQuantityBySkuId(skuId);
   }
 
   /**
