@@ -16013,7 +16013,7 @@
 						}
 					}
 				},
-				"description": "Tạo mã hàng SKU mới\r\nChỉ dành riêng cho Customer tự khai báo danh mục hàng hóa của mình",
+				"description": "Tạo mã hàng SKU mới\nChỉ dành riêng cho Customer tự khai báo danh mục hàng hóa của mình",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16074,7 +16074,7 @@
 						}
 					}
 				},
-				"description": "Lấy danh sách SKU có phân trang và bộ lọc\r\nCustomer chỉ xem được của mình; FM xem theo customerId của khách thuê tại cơ sở; Staff bị chặn",
+				"description": "Lấy danh sách SKU có phân trang và bộ lọc\nCustomer chỉ xem được của mình; FM xem theo customerId của khách thuê tại cơ sở; Staff bị chặn",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16320,7 +16320,7 @@
 						}
 					}
 				},
-				"description": "Cập nhật thông tin SKU\r\nChỉ dành cho Customer sở hữu SKU đó",
+				"description": "Cập nhật thông tin SKU\nChỉ dành cho Customer sở hữu SKU đó",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16390,7 +16390,7 @@
 						}
 					}
 				},
-				"description": "Xoá mềm SKU\r\nChặn xoá nếu SKU còn tồn kho",
+				"description": "Xoá mềm SKU\nChặn xoá nếu SKU còn tồn kho",
 				"tags": [
 					"Customer SKU"
 				],
@@ -17146,6 +17146,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -17189,6 +17199,16 @@
 					},
 					"401": {
 						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -17354,6 +17374,26 @@
 								}
 							}
 						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
 					}
 				},
 				"description": "Batch process active contracts that have passed their endDate to mark them as OVERDUE.",
@@ -17374,6 +17414,26 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
 								}
 							}
 						}
@@ -17430,6 +17490,26 @@
 							}
 						}
 					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -17441,7 +17521,7 @@
 						}
 					}
 				},
-				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\nWhen both customerSigned and staffSigned are true, contract automatically becomes ACTIVE.",
+				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\nContract remains DRAFT until Facility Manager completes check-in.",
 				"tags": [
 					"Contracts"
 				],
@@ -17492,6 +17572,26 @@
 							}
 						}
 					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -17503,7 +17603,7 @@
 						}
 					}
 				},
-				"description": "Staff confirms handover & signs contract on Web (Two-party signing: Staff side).\nWhen both customerSigned and staffSigned are true, contract automatically becomes ACTIVE and storage unit becomes OCCUPIED.",
+				"description": "Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).\nRequires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.",
 				"tags": [
 					"Contracts"
 				],
@@ -17546,6 +17646,26 @@
 					},
 					"400": {
 						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -18090,6 +18210,26 @@
 							}
 						}
 					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -18144,6 +18284,26 @@
 					},
 					"400": {
 						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
 						"content": {
 							"application/json": {
 								"schema": {

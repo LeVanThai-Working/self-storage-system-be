@@ -76,6 +76,15 @@ export class ContractService {
     actorRole: string,
     session?: ClientSession
   ): Promise<ContractResponse> {
+    if (
+      actorRole !== RoleEnum.FACILITY_STAFF &&
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
     const contractCode = await this.generateContractCode();
 
     if (data.source === ContractSourceEnum.RESERVATION) {
@@ -105,6 +114,18 @@ export class ContractService {
         throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
       }
 
+      const customerId =
+        reservation.customerId && typeof reservation.customerId === 'object'
+          ? (reservation.customerId as { _id: Types.ObjectId })._id
+          : (reservation.customerId as Types.ObjectId);
+
+      const facilityId =
+        reservation.facilityId && typeof reservation.facilityId === 'object'
+          ? (reservation.facilityId as { _id: Types.ObjectId })._id
+          : (reservation.facilityId as Types.ObjectId);
+
+      await this.assertFacilityAccess(actorId, actorRole, String(facilityId));
+
       // Reservation must be CONFIRMED or OVERDUE (within grace period)
       if (
         reservation.status !== ReservationStatusEnum.CONFIRMED &&
@@ -116,16 +137,6 @@ export class ContractService {
       if (!reservation.storageUnitId) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_305);
       }
-
-      const customerId =
-        reservation.customerId && typeof reservation.customerId === 'object'
-          ? (reservation.customerId as { _id: Types.ObjectId })._id
-          : (reservation.customerId as Types.ObjectId);
-
-      const facilityId =
-        reservation.facilityId && typeof reservation.facilityId === 'object'
-          ? (reservation.facilityId as { _id: Types.ObjectId })._id
-          : (reservation.facilityId as Types.ObjectId);
 
       const storageUnitId =
         reservation.storageUnitId &&
@@ -214,6 +225,12 @@ export class ContractService {
       return validateResponse(contractResponseSchema, formatted);
     } else {
       // WALK_IN flow
+      await this.assertFacilityAccess(
+        actorId,
+        actorRole,
+        String(data.facilityId)
+      );
+
       const customer = await this.userRepository.findById(data.customerId!);
       if (!customer) {
         throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Customer']);
@@ -382,6 +399,7 @@ export class ContractService {
   async customerSignContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CustomerSignContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -390,8 +408,21 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
+    if (actorRole !== RoleEnum.CUSTOMER) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+    if (customerIdStr !== actorId) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
     if (contract.status !== ContractStatusEnum.DRAFT) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (contract.customerSigned) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_412);
     }
 
     if (data.termsAccepted === false) {
@@ -463,11 +494,12 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 2b. Staff confirms handover & signs contract on Web (Two-party signing: Staff side)
+  // 2b. Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side)
   @Transactional()
   async checkInContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CheckInContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -476,8 +508,29 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
     if (contract.status !== ContractStatusEnum.DRAFT) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (contract.staffSigned) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_412);
+    }
+
+    if (!contract.customerSigned) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_414);
     }
 
     if (data.termsAccepted === false) {
@@ -608,12 +661,30 @@ export class ContractService {
   async cancelContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CancelContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
     const contract = await this.contractRepository.findById(id, session);
     if (!contract) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    if (actorRole === RoleEnum.CUSTOMER) {
+      const customerIdStr = this.extractIdStr(contract.customerId);
+      if (customerIdStr !== actorId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else if (
+      actorRole === RoleEnum.FACILITY_STAFF ||
+      actorRole === RoleEnum.FACILITY_MANAGER ||
+      actorRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+      actorRole === RoleEnum.SYSTEM_ADMIN
+    ) {
+      const facilityIdStr = this.extractIdStr(contract.facilityId);
+      await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+    } else {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
     if (contract.status !== ContractStatusEnum.DRAFT) {
@@ -1268,6 +1339,7 @@ export class ContractService {
   async checkOutContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CheckOutContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1275,6 +1347,18 @@ export class ContractService {
     if (!contract) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
+
+    if (
+      actorRole !== RoleEnum.FACILITY_STAFF &&
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
 
     if (
       contract.status !== ContractStatusEnum.ACTIVE &&
@@ -1403,6 +1487,7 @@ export class ContractService {
   async terminateContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: TerminateContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1410,6 +1495,19 @@ export class ContractService {
     if (!contract) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
+
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
 
     if (
       contract.status !== ContractStatusEnum.ACTIVE &&
@@ -1494,7 +1592,36 @@ export class ContractService {
   }
 
   // 9. Batch process overdue contracts
-  async processOverdueContracts(): Promise<{ processedCount: number }> {
+  async processOverdueContracts(
+    actorId?: string,
+    actorRole?: string
+  ): Promise<{ processedCount: number }> {
+    if (actorId !== undefined || actorRole !== undefined) {
+      if (
+        actorRole !== RoleEnum.FACILITY_MANAGER &&
+        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        actorRole !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+          RoleEnum.FACILITY_MANAGER,
+        ]);
+      }
+
+      if (actorRole === RoleEnum.FACILITY_MANAGER) {
+        const user = actorId
+          ? await this.userRepository.findById(actorId)
+          : null;
+        if (!user) {
+          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+        }
+        if (!user.assignedFacilityId) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, [
+            'Assigned Facility',
+          ]);
+        }
+      }
+    }
+
     const overdueContracts =
       await this.contractRepository.findExpiredActiveContracts(new Date());
 
@@ -1520,15 +1647,22 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    // Role-based scoping: customer can only view own contract
+    // Role-based scoping: customer can only view own contract; staff/manager scoped by facility
     if (callerRole === RoleEnum.CUSTOMER) {
-      const customerIdStr = String(
-        (contract.customerId as unknown as { _id: Types.ObjectId })._id ||
-          contract.customerId
-      );
+      const customerIdStr = this.extractIdStr(contract.customerId);
       if (customerIdStr !== callerId) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
+    } else if (
+      callerRole === RoleEnum.FACILITY_STAFF ||
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+      callerRole === RoleEnum.SYSTEM_ADMIN
+    ) {
+      const facilityIdStr = this.extractIdStr(contract.facilityId);
+      await this.assertFacilityAccess(callerId, callerRole, facilityIdStr);
+    } else {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
     return validateResponse(
@@ -1545,9 +1679,25 @@ export class ContractService {
   ): Promise<PaginatedData<ContractResponse>> {
     const effectiveQuery = { ...query };
 
-    // Data scoping for customer
+    // Data scoping for customer and facility staff/manager
     if (callerRole === RoleEnum.CUSTOMER) {
       effectiveQuery.customerId = callerId;
+    } else if (
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.FACILITY_STAFF
+    ) {
+      const user = await this.userRepository.findById(callerId);
+      if (!user?.assignedFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, [
+          'Assigned Facility',
+        ]);
+      }
+      effectiveQuery.facilityId = String(user.assignedFacilityId);
+    } else if (
+      callerRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      callerRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
     const result = await this.contractRepository.findPaginated(effectiveQuery);
@@ -1561,6 +1711,45 @@ export class ContractService {
   // =========================================================================
   // HELPER METHODS
   // =========================================================================
+
+  private extractIdStr(ref: unknown): string {
+    if (ref && typeof ref === 'object' && '_id' in ref) {
+      return String((ref as { _id: unknown })._id);
+    }
+    return String(ref);
+  }
+
+  private async assertFacilityAccess(
+    userId: string,
+    userRole: string,
+    facilityId: string
+  ): Promise<void> {
+    if (
+      userRole === RoleEnum.SYSTEM_ADMIN ||
+      userRole === RoleEnum.BUSINESS_OPS_MANAGER
+    ) {
+      return;
+    }
+
+    if (
+      userRole !== RoleEnum.FACILITY_MANAGER &&
+      userRole !== RoleEnum.FACILITY_STAFF
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+    }
+
+    if (
+      !user.assignedFacilityId ||
+      String(user.assignedFacilityId) !== facilityId
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, ['Facility']);
+    }
+  }
 
   private async generateContractCode(): Promise<string> {
     const today = new Date();

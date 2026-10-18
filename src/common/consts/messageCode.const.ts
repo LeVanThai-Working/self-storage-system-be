@@ -140,6 +140,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_412: 'MESSAGE_CODE_412',
   // Insufficient Contracted Amenity Quantity To Remove
   MESSAGE_CODE_413: 'MESSAGE_CODE_413',
+  // Customer Must Sign Contract Before Check-In
+  MESSAGE_CODE_414: 'MESSAGE_CODE_414',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -286,6 +288,7 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_411: 'Contract Terms Must Be Accepted',
   MESSAGE_CODE_412: 'Party Has Already Signed',
   MESSAGE_CODE_413: 'Insufficient Contracted Amenity Quantity To Remove',
+  MESSAGE_CODE_414: 'Customer Must Sign Contract Before Check-In',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',

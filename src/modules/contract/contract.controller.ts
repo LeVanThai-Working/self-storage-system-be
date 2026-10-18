@@ -76,14 +76,19 @@ function extractCaller(req: ExpressRequest): CallerInfo {
     };
   }
 
-  // Fallback 1: x-user-id and x-user-role headers
-  const headerUserId = req.headers['x-user-id'] as string | undefined;
-  const headerUserRole = req.headers['x-user-role'] as string | undefined;
-  if (headerUserId) {
-    return {
-      userId: headerUserId,
-      role: headerUserRole || 'customer',
-    };
+  // Fallback 1: x-user-id and x-user-role headers (only allowed outside production when explicitly enabled)
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    process.env.ALLOW_INSECURE_CALLER_FALLBACK === 'true'
+  ) {
+    const headerUserId = req.headers['x-user-id'] as string | undefined;
+    const headerUserRole = req.headers['x-user-role'] as string | undefined;
+    if (headerUserId) {
+      return {
+        userId: headerUserId,
+        role: headerUserRole || 'customer',
+      };
+    }
   }
 
   // Fallback 2: Authorization header
@@ -120,15 +125,6 @@ function extractCaller(req: ExpressRequest): CallerInfo {
     }
   }
 
-  // Fallback 4: Customer ID from body (during local tests)
-  const body = req.body as { customerId?: string } | undefined;
-  if (body?.customerId) {
-    return {
-      userId: body.customerId,
-      role: 'customer',
-    };
-  }
-
   throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
 }
 
@@ -145,12 +141,13 @@ export class ContractController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER, FACILITY_STAFF, BUSINESS_OPS_MANAGER
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('')
   @Middlewares(validateRequest({ body: createContractSchema }))
   @SuccessResponse(201, 'Contract Created Successfully')
   @Response<ApiErrorResponse>(400, 'Bad Request')
   @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async createContract(
     @Request() req: ExpressRequest,
@@ -178,11 +175,12 @@ export class ContractController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: ALL (Scoped)
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('')
   @Middlewares(validateRequest({ query: contractQuerySchema }))
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   public async getContracts(
     @Request() req: ExpressRequest,
     @Queries() query: ContractQuery
@@ -208,13 +206,19 @@ export class ContractController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER, FACILITY_MANAGER
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('process-overdue')
   @SuccessResponse(200, 'Success')
-  public async processOverdue(): Promise<
-    ApiResponse<{ processedCount: number }>
-  > {
-    const result = await this.contractService.processOverdueContracts();
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  public async processOverdue(
+    @Request() req: ExpressRequest
+  ): Promise<ApiResponse<{ processedCount: number }>> {
+    const caller = extractCaller(req);
+    const result = await this.contractService.processOverdueContracts(
+      caller.userId,
+      caller.role
+    );
     return {
       success: true,
       statusCode: 200,
@@ -229,10 +233,12 @@ export class ContractController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: ALL (Scoped)
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('{id}')
   @Middlewares(validateRequest({ params: contractIdParamSchema }))
   @SuccessResponse(200, 'Success')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async getContractById(
     @Request() req: ExpressRequest,
@@ -256,7 +262,7 @@ export class ContractController extends Controller {
 
   /**
    * Customer signs contract terms on Mobile (Two-party signing: Customer side).
-   * When both customerSigned and staffSigned are true, contract automatically becomes ACTIVE.
+   * Contract remains DRAFT until Facility Manager completes check-in.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -270,6 +276,8 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async customerSignContract(
     @Request() req: ExpressRequest,
@@ -280,6 +288,7 @@ export class ContractController extends Controller {
     const contract = await this.contractService.customerSignContract(
       id,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -293,12 +302,12 @@ export class ContractController extends Controller {
   }
 
   /**
-   * Staff confirms handover & signs contract on Web (Two-party signing: Staff side).
-   * When both customerSigned and staffSigned are true, contract automatically becomes ACTIVE and storage unit becomes OCCUPIED.
+   * Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).
+   * Requires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER, FACILITY_STAFF
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/check-in')
   @Middlewares(
     validateRequest({
@@ -308,6 +317,8 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async checkInContract(
     @Request() req: ExpressRequest,
@@ -318,6 +329,7 @@ export class ContractController extends Controller {
     const contract = await this.contractService.checkInContract(
       id,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -336,7 +348,7 @@ export class ContractController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER, FACILITY_STAFF
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/cancel')
   @Middlewares(
     validateRequest({
@@ -346,6 +358,8 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async cancelContract(
     @Request() req: ExpressRequest,
@@ -356,6 +370,7 @@ export class ContractController extends Controller {
     const contract = await this.contractService.cancelContract(
       id,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -659,7 +674,7 @@ export class ContractController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER, FACILITY_STAFF
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/check-out')
   @Middlewares(
     validateRequest({
@@ -669,6 +684,8 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async checkOutContract(
     @Request() req: ExpressRequest,
@@ -679,6 +696,7 @@ export class ContractController extends Controller {
     const contract = await this.contractService.checkOutContract(
       id,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -697,7 +715,7 @@ export class ContractController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/terminate')
   @Middlewares(
     validateRequest({
@@ -707,6 +725,8 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async terminateContract(
     @Request() req: ExpressRequest,
@@ -717,6 +737,7 @@ export class ContractController extends Controller {
     const contract = await this.contractService.terminateContract(
       id,
       caller.userId,
+      caller.role,
       body
     );
 
