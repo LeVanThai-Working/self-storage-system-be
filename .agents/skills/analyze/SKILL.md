@@ -1,7 +1,7 @@
 ---
 name: analyze
 description: >-
-  Use this skill when the user types /analyze followed by a task description or a task ID from docs/agent/PLAN.md. Analyzes the task to identify required APIs, models, services, layers, shared resources and libraries, and also covers authorization, state transitions and concurrency, money and time rules, audit, tests, migration, and differences between the written business description and the actual code. Does NOT make any code changes — output only. Run this before /planning.
+  Use this skill when the user types /analyze followed by a task description or a task ID (e.g. T0.1 or <scope>/T0.1) from docs/agent/<scope>/PLAN.md. Analyzes the task to identify required APIs, models, services, layers, shared resources and libraries, and also covers authorization, state transitions and concurrency, money and time rules, audit, tests, migration, and differences between the written business description and the actual code. Does NOT make any code changes — output only. Run this before /planning.
 ---
 
 # Skill: /analyze
@@ -17,22 +17,22 @@ Khi người dùng gõ /analyze [mô tả task hoặc task ID], agent phải th�
 Bước 1 — Đọc context
 Đọc .agents/rules/AGENTS.md để nắm coding rules (đặc biệt mục 14, 19, 20–23)
 Đọc .agents/memory/memory.md để biết trạng thái hiện tại
-Nếu task có ID (ví dụ T0.1) hoặc thuộc dự án đang theo kế hoạch:
-docs/agent/PLAN.md: phần task, ma trận quyền, ma trận hoàn/mất cọc, danh sách quyết định
-docs/agent/business-rules-current.md: hành vi hiện trạng do con người mô tả
-docs/agent/PROGRESS.md: task đã xong, task phụ thuộc, giả định đã dùng
+Nếu task có ID (ví dụ `T0.1` hoặc `<scope>/T0.1`) hoặc thuộc một phân hệ đang theo kế hoạch trong `docs/agent/<scope>/` (tự động tìm `<scope>` chứa task ID đó nếu người dùng chỉ gõ `T0.1`):
+`docs/agent/<scope>/PLAN.md`: phần task, ma trận quyền, ma trận hoàn/mất cọc, danh sách quyết định
+`docs/agent/<scope>/business-rules-current.md` (nếu có): hành vi hiện trạng do con người mô tả
+`docs/agent/<scope>/PROGRESS.md`: task đã xong, task phụ thuộc, giả định đã dùng
 Đọc các file liên quan đến task (model, service, controller, schema, repository hiện có)
 Tìm trong codebase các helper đã có thay vì đoán tên: kiểm tra phạm vi cơ sở (assertFacilityAccess), các hàm atomic của repository, helper giờ VN (startOfDayVN, endOfDayVN), file config (ví dụ reservation.config.ts), AuditLogService, @Transactional
 Bước 2 — Kiểm tra trước khi phân tích
 A. Phụ thuộc
-Task phụ thuộc task nào? Task đó đã hoàn thành theo PROGRESS.md chưa?
+Task phụ thuộc task nào? Task đó đã hoàn thành theo `docs/agent/<scope>/PROGRESS.md` chưa?
 Nếu chưa: báo rõ và dừng, không phân tích tiếp.
 B. Quyết định đang mở
 Liệt kê mọi [OPEN Dx] liên quan đến task.
-Có giá trị mặc định trong PLAN.md: ghi lại giá trị đó và nơi sẽ đặt (config hoặc flag).
+Có giá trị mặc định trong `docs/agent/<scope>/PLAN.md`: ghi lại giá trị đó và nơi sẽ đặt (config hoặc flag).
 Không có mặc định: hỏi người dùng trước khi phân tích tiếp. Không tự chọn chính sách tiền, thời hạn hay tỷ lệ.
 C. Hiện trạng so với mô tả
-Đối chiếu mô tả nghiệp vụ (business-rules-current.md, PLAN.md, lời người dùng) với code thực tế.
+Đối chiếu mô tả nghiệp vụ (`docs/agent/<scope>/business-rules-current.md`, `docs/agent/<scope>/PLAN.md`, lời người dùng) với code thực tế.
 Mỗi chỗ khác nhau ghi rõ: mô tả nói gì, code làm gì, file và dòng nào.
 Mô tả do con người viết, code mới là sự thật. Khác nhau thì báo lại, không tự chọn bên và không tự sửa.
 Bước 3 — Phân tích task

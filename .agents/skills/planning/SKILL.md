@@ -17,8 +17,8 @@ Khi người dùng gõ /planning, agent phải thực hiện tuần tự:
 Bước 1 — Tổng hợp từ analyze và nạp context
 Dựa vào kết quả phân tích từ /analyze (hoặc phân tích lại nếu chưa có).
 Đọc .agents/rules/AGENTS.md, đặc biệt mục 14 (phân quyền), 15 (workflow), 18 (thứ tự ghi file), 19 (audit), 20–23 (transaction, tiền và thời gian, test, cấu hình và migration).
-Nếu task có ID trong docs/agent/PLAN.md (ví dụ T0.1): đọc phần task đó, ma trận quyền hoặc ma trận hoàn/mất cọc liên quan, các quyết định [OPEN Dx], và docs/agent/PROGRESS.md.
-Kiểm tra phụ thuộc: nếu task phụ thuộc task chưa hoàn thành theo PROGRESS.md, dừng lại và báo người dùng, không lập plan.
+Nếu task có ID trong `docs/agent/<scope>/PLAN.md` (ví dụ `T0.1` hoặc `booking/T0.1`): đọc phần task đó, ma trận quyền hoặc ma trận hoàn/mất cọc liên quan, các quyết định [OPEN Dx], và `docs/agent/<scope>/PROGRESS.md`.
+Kiểm tra phụ thuộc: nếu task phụ thuộc task chưa hoàn thành theo `docs/agent/<scope>/PROGRESS.md`, dừng lại và báo người dùng, không lập plan.
 Quyết định [OPEN Dx]:
 Có giá trị mặc định trong tài liệu task: dùng giá trị đó, đặt sau config hoặc feature flag, ghi vào mục "Giả định" của plan.
 Không có mặc định: hỏi người dùng, không tự chọn, không lập plan.
@@ -33,7 +33,7 @@ markdown
 
 ### Tổng quan
 
-- Task ID: `Txx` (hoặc "ngoài PLAN")
+- Task ID: `<scope>/Txx` (hoặc "ngoài PLAN")
 - Module: `src/modules/<domain>/`
 - Ước tính files cần tạo/sửa: N files
 - Breaking changes: Có / Không
@@ -119,7 +119,7 @@ markdown
 #### Phase 7 — Bàn giao
 
 - [ ] Nếu đổi contract FE: chạy `/fe-prompt <tên module>`
-- [ ] Chạy `/remember` để ghi tiến độ vào `docs/agent/PROGRESS.md` và memory
+- [ ] Chạy `/remember` để ghi tiến độ vào `docs/agent/<scope>/PROGRESS.md` và memory
 
 ### Files sẽ được tạo mới
 

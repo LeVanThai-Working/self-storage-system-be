@@ -347,7 +347,7 @@ Quy tắc phạm vi tài nguyên (kiểm tra trong service):
 - `CUSTOMER`: chỉ thao tác tài nguyên có `customerId === caller.userId`.
 - `FACILITY_STAFF`, `FACILITY_MANAGER`: chỉ thao tác tài nguyên thuộc `user.assignedFacilityId`. Chưa được gán cơ sở thì từ chối (403, dùng mã đã có như `MESSAGE_CODE_103`).
 - `BUSINESS_OPS_MANAGER`, `SYSTEM_ADMIN`: phạm vi toàn hệ thống.
-- Ma trận quyền chi tiết theo từng endpoint nằm ở `docs/agent/PLAN.md` (mục ma trận quyền). Không tự suy diễn quyền cho endpoint không có trong ma trận, hãy hỏi.
+- Ma trận quyền chi tiết theo từng endpoint nằm ở `docs/agent/<scope>/PLAN.md` (ví dụ `docs/agent/booking/PLAN.md`, mục ma trận quyền). Không tự suy diễn quyền cho endpoint không có trong ma trận, hãy hỏi.
 
 ### [MUST] Quy tắc ghi nhận Role và ẩn `@Security` trong giai đoạn phát triển
 
@@ -621,7 +621,7 @@ Trường mới có dữ liệu cá nhân hoặc tài chính (số tài khoản 
 
 **Hiện trạng:** dự án chưa có test framework. `npm run check` hiện chỉ chạy `typecheck`, `lint` và `format:check`, không chạy test.
 
-- Việc dựng test framework là một task riêng (xem `docs/agent/PLAN.md`, task T0.5), cần xác nhận lựa chọn công cụ trước. Đề xuất: Vitest (phù hợp ESM và import đuôi `.ts`) cùng `mongodb-memory-server` ở chế độ replica set. **Không tự cài framework ngoài task được giao.**
+- Việc dựng test framework là một task riêng (xem `docs/agent/<scope>/PLAN.md`, ví dụ `docs/agent/booking/PLAN.md`, task T0.5), cần xác nhận lựa chọn công cụ trước. Đề xuất: Vitest (phù hợp ESM và import đuôi `.ts`) cùng `mongodb-memory-server` ở chế độ replica set. **Không tự cài framework ngoài task được giao.**
 - **Khi chưa có framework:** mọi thay đổi nghiệp vụ phải kèm "Kịch bản kiểm thử thủ công" trong PR: gọi endpoint nào, với role nào, kết quả mong đợi, và ít nhất một ca âm (bị chặn đúng).
 - **Khi đã có framework:**
   - Thêm `npm test` vào `npm run check`.
@@ -648,11 +648,11 @@ Trường mới có dữ liệu cá nhân hoặc tài chính (số tài khoản 
 
 ## 24. Làm việc theo task
 
-Áp dụng khi nhận một task từ `docs/agent/PLAN.md`:
+Áp dụng khi nhận một task từ `docs/agent/<scope>/PLAN.md`:
 
 1. **Khảo sát trước khi sửa:** báo cáo ngắn hiện trạng code (file, hàm, endpoint liên quan) và những chỗ khác với mô tả nghiệp vụ. Mô tả nghiệp vụ do con người viết, code mới là sự thật; khác nhau thì báo lại, không tự chọn bên.
 2. **Một task một PR nhỏ**, revert được độc lập. Không gộp refactor với đổi hành vi.
-3. **Quyết định đang mở `[OPEN Dx]`:** dùng giá trị mặc định ghi trong tài liệu task, đặt sau config hoặc feature flag, ghi giả định trong PR và `docs/agent/PROGRESS.md`. Không tự quyết chính sách tiền, thời hạn hay tỷ lệ.
-4. **Không sửa ngoài phạm vi:** phát hiện lỗi ngoài task thì ghi vào danh sách "phát hiện thêm" trong `PROGRESS.md`, không tự sửa.
+3. **Quyết định đang mở `[OPEN Dx]`:** dùng giá trị mặc định ghi trong tài liệu task, đặt sau config hoặc feature flag, ghi giả định trong PR và `docs/agent/<scope>/PROGRESS.md`. Không tự quyết chính sách tiền, thời hạn hay tỷ lệ.
+4. **Không sửa ngoài phạm vi:** phát hiện lỗi ngoài task thì ghi vào danh sách "phát hiện thêm" trong `docs/agent/<scope>/PROGRESS.md`, không tự sửa.
 5. **Nộp kèm mỗi task:** danh sách file đã đổi, giả định đã dùng, test hoặc kịch bản kiểm thử, rủi ro còn lại.
-6. **Tài liệu nghiệp vụ:** `docs/agent/PLAN.md` (task, ma trận quyền, ma trận hoàn/mất cọc), `docs/agent/business-rules-current.md` (hành vi hiện trạng), `docs/agent/PROGRESS.md` (tiến độ theo task ID).
+6. **Tài liệu nghiệp vụ (chia theo phân hệ `<scope>` trong `docs/agent/<scope>/`, ví dụ `docs/agent/booking/`):** `PLAN.md` (task, ma trận quyền, ma trận hoàn/mất cọc), `business-rules-current.md` (hành vi hiện trạng), `PROGRESS.md` (tiến độ theo task ID).
