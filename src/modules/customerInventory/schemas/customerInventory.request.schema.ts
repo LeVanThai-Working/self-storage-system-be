@@ -109,6 +109,10 @@ export const inventoryMovementQuerySchema = paginationQuerySchema.extend({
   facilityId: z.string().regex(objectIdRegex).optional(),
   storageUnitId: z.string().regex(objectIdRegex).optional(),
   skuId: z.string().regex(objectIdRegex).optional(),
+  rackTierId: z
+    .string()
+    .regex(objectIdRegex, 'Invalid rackTierId format')
+    .optional(),
   customerId: z.string().regex(objectIdRegex).optional(),
   type: z.nativeEnum(MovementTypeEnum).optional(),
   startDate: z.string().optional(),
@@ -118,6 +122,20 @@ export const inventoryMovementQuerySchema = paginationQuerySchema.extend({
 
 export const inventoryIdParamSchema = z.object({
   id: z.string().regex(objectIdRegex, 'Invalid inventory ID format'),
+});
+
+export const storageUnitTreeParamSchema = z.object({
+  storageUnitId: z
+    .string()
+    .regex(objectIdRegex, 'Invalid storageUnitId format'),
+});
+
+export const skuLocationsParamSchema = z.object({
+  skuId: z.string().regex(objectIdRegex, 'Invalid skuId format'),
+});
+
+export const barcodeParamSchema = z.object({
+  barcode: z.string().trim().min(1, 'Barcode cannot be empty'),
 });
 
 export type StockInRequest = z.infer<typeof stockInRequestSchema>;
@@ -131,3 +149,6 @@ export type InventoryMovementQuery = z.infer<
   typeof inventoryMovementQuerySchema
 >;
 export type InventoryIdParam = z.infer<typeof inventoryIdParamSchema>;
+export type StorageUnitTreeParam = z.infer<typeof storageUnitTreeParamSchema>;
+export type SkuLocationsParam = z.infer<typeof skuLocationsParamSchema>;
+export type BarcodeParam = z.infer<typeof barcodeParamSchema>;

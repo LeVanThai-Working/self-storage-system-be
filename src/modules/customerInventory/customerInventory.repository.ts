@@ -212,4 +212,145 @@ export class CustomerInventoryRepository {
       ],
     });
   }
+
+  /**
+   * Lấy toàn bộ hàng hóa trong 1 phòng kho (phục vụ dựng Sơ đồ cây khoang chứa)
+   */
+  async findItemsByStorageUnitId(
+    storageUnitId: string,
+    session?: ClientSession
+  ) {
+    const query = this.inventory
+      .find({
+        storageUnitId: new Types.ObjectId(storageUnitId),
+        quantity: { $gt: 0 },
+        deleted: { $ne: true },
+      })
+      .populate(
+        'skuId',
+        'skuCode name category barcode uom dimensions volume weightKg imageUrl status'
+      )
+      .populate('rackTierId', 'tierNumber tierCode maxWeightKg status')
+      .populate('storageRackId', 'rackCode name status')
+      .populate('contractId', 'contractCode status customerId')
+      .populate('customerId', 'name email phoneNumber');
+
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Tra cứu tất cả các vị trí lưu trữ của 1 SKU
+   */
+  async findLocationsBySkuId(
+    skuId: string,
+    customerId?: string,
+    session?: ClientSession
+  ) {
+    const filter: FilterQuery<ICustomerInventory> = {
+      skuId: new Types.ObjectId(skuId),
+      quantity: { $gt: 0 },
+      deleted: { $ne: true },
+    };
+    if (customerId) {
+      filter.customerId = new Types.ObjectId(customerId);
+    }
+
+    const query = this.inventory
+      .find(filter)
+      .populate('facilityId', 'name city address')
+      .populate('contractId', 'contractCode status startDate endDate')
+      .populate('storageUnitId', 'unitNumber floor zone status')
+      .populate('storageRackId', 'rackCode name status')
+      .populate('rackTierId', 'tierNumber tierCode maxWeightKg status')
+      .sort({ lastMovementAt: -1 });
+
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Thống kê tổng hợp danh mục hàng hóa (category breakdown) cho dashboard khách hàng
+   */
+  async getDashboardCategoryBreakdown(
+    customerId: string,
+    session?: ClientSession
+  ): Promise<
+    Array<{ category: string; skuCount: number; totalQuantity: number }>
+  > {
+    const pipeline = [
+      {
+        $match: {
+          customerId: new Types.ObjectId(customerId),
+          quantity: { $gt: 0 },
+          deleted: { $ne: true },
+        },
+      },
+      {
+        $lookup: {
+          from: 'customerskus',
+          localField: 'skuId',
+          foreignField: '_id',
+          as: 'sku',
+        },
+      },
+      { $unwind: '$sku' },
+      {
+        $group: {
+          _id: { $ifNull: ['$sku.category', 'Khác'] },
+          skuIds: { $addToSet: '$skuId' },
+          totalQuantity: { $sum: '$quantity' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          category: '$_id',
+          skuCount: { $size: '$skuIds' },
+          totalQuantity: 1,
+        },
+      },
+      { $sort: { totalQuantity: -1 as const } },
+    ];
+
+    return session
+      ? this.inventory.aggregate(pipeline).session(session)
+      : this.inventory.aggregate(pipeline);
+  }
+
+  /**
+   * Đếm số lượng phòng kho khác nhau mà khách đang lưu trữ hàng
+   */
+  async countDistinctStorageUnits(
+    customerId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const pipeline = [
+      {
+        $match: {
+          customerId: new Types.ObjectId(customerId),
+          quantity: { $gt: 0 },
+          deleted: { $ne: true },
+        },
+      },
+      {
+        $group: {
+          _id: '$storageUnitId',
+        },
+      },
+      {
+        $count: 'total',
+      },
+    ];
+
+    const result = session
+      ? await this.inventory.aggregate(pipeline).session(session)
+      : await this.inventory.aggregate(pipeline);
+
+    return result[0]?.total || 0;
+  }
 }

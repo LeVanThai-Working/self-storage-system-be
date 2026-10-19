@@ -151,3 +151,145 @@ export type PaginatedCustomerInventoryResponse = z.infer<
 export type PaginatedInventoryMovementResponse = z.infer<
   typeof paginatedInventoryMovementResponseSchema
 >;
+
+// --- Schemas cho Task 6D: Tree Layout, SKU Locations & Dashboard Summary ---
+
+export const treeTierItemSchema = z.object({
+  inventoryId: z.string(),
+  quantity: z.number(),
+  lastMovementAt: z.union([
+    z.date().transform((d) => d.toISOString()),
+    z.string(),
+  ]),
+  notes: z.string().optional().nullable(),
+  sku: z.object({
+    id: z.string(),
+    skuCode: z.string(),
+    name: z.string(),
+    category: z.string().optional().nullable(),
+    barcode: z.string().optional().nullable(),
+    uom: z.string(),
+    dimensions: z
+      .object({
+        length: z.number(),
+        width: z.number(),
+        height: z.number(),
+      })
+      .optional()
+      .nullable(),
+    volume: z.number().optional().nullable(),
+    weightKg: z.number().optional().nullable(),
+    imageUrl: z.string().optional().nullable(),
+  }),
+});
+
+export const treeTierSchema = z.object({
+  id: z.string(),
+  tierNumber: z.number(),
+  tierCode: z.string(),
+  maxWeightKg: z.number().optional().nullable(),
+  dimensions: z
+    .object({
+      length: z.number(),
+      width: z.number(),
+      height: z.number(),
+    })
+    .optional()
+    .nullable(),
+  volume: z.number().optional().nullable(),
+  status: z.string().optional().nullable(),
+  items: z.array(treeTierItemSchema),
+});
+
+export const treeRackSchema = z.object({
+  id: z.string(),
+  rackCode: z.string(),
+  name: z.string().optional().nullable(),
+  status: z.string().optional().nullable(),
+  tierCount: z.number(),
+  tiers: z.array(treeTierSchema),
+});
+
+export const storageUnitInventoryTreeSummarySchema = z.object({
+  totalRacks: z.number(),
+  totalTiers: z.number(),
+  occupiedTiers: z.number(),
+  availableTiers: z.number(),
+  totalSkus: z.number(),
+  totalQuantity: z.number(),
+});
+
+export const storageUnitInventoryTreeResponseSchema = z.object({
+  storageUnit: inventoryStorageUnitSummarySchema,
+  contract: z
+    .object({
+      id: z.string(),
+      contractCode: z.string(),
+      status: z.string(),
+      startDate: z.string().optional().nullable(),
+      endDate: z.string().optional().nullable(),
+      customer: inventoryCustomerSummarySchema.optional().nullable(),
+    })
+    .optional()
+    .nullable(),
+  summary: storageUnitInventoryTreeSummarySchema,
+  racks: z.array(treeRackSchema),
+  unrackedItems: z.array(treeTierItemSchema),
+});
+
+export const skuLocationItemSchema = z.object({
+  inventoryId: z.string(),
+  quantity: z.number(),
+  lastMovementAt: z.union([
+    z.date().transform((d) => d.toISOString()),
+    z.string(),
+  ]),
+  notes: z.string().optional().nullable(),
+  facility: inventoryFacilitySummarySchema.optional().nullable(),
+  contract: inventoryContractSummarySchema.optional().nullable(),
+  storageUnit: inventoryStorageUnitSummarySchema.optional().nullable(),
+  storageRack: inventoryStorageRackSummarySchema.optional().nullable(),
+  rackTier: inventoryRackTierSummarySchema.optional().nullable(),
+});
+
+export const skuLocationsResponseSchema = z.object({
+  sku: z.object({
+    id: z.string(),
+    skuCode: z.string(),
+    name: z.string(),
+    category: z.string().optional().nullable(),
+    barcode: z.string().optional().nullable(),
+    uom: z.string(),
+    imageUrl: z.string().optional().nullable(),
+    totalQuantity: z.number(),
+  }),
+  locations: z.array(skuLocationItemSchema),
+});
+
+export const categoryBreakdownSchema = z.object({
+  category: z.string(),
+  skuCount: z.number(),
+  totalQuantity: z.number(),
+});
+
+export const customerInventorySummaryResponseSchema = z.object({
+  totalSkus: z.number(),
+  totalQuantity: z.number(),
+  totalActiveContracts: z.number(),
+  totalStorageUnits: z.number(),
+  categoryBreakdown: z.array(categoryBreakdownSchema),
+  recentMovements: z.array(inventoryMovementResponseSchema),
+});
+
+export type TreeTierItem = z.infer<typeof treeTierItemSchema>;
+export type TreeTier = z.infer<typeof treeTierSchema>;
+export type TreeRack = z.infer<typeof treeRackSchema>;
+export type StorageUnitInventoryTreeResponse = z.infer<
+  typeof storageUnitInventoryTreeResponseSchema
+>;
+export type SkuLocationItem = z.infer<typeof skuLocationItemSchema>;
+export type SkuLocationsResponse = z.infer<typeof skuLocationsResponseSchema>;
+export type CategoryBreakdown = z.infer<typeof categoryBreakdownSchema>;
+export type CustomerInventorySummaryResponse = z.infer<
+  typeof customerInventorySummaryResponseSchema
+>;
