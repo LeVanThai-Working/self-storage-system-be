@@ -3,7 +3,7 @@
 > Mô tả nghiệp vụ do hệ thống ghi nhận. Nếu có điểm khác biệt với code thực tế, code là nguồn sự thật (Single Source of Truth).
 >
 > 💡 **Hướng dẫn Tích hợp Frontend:** Xem toàn bộ luồng chọn loại kho, render sơ đồ trực quan và thêm SKU vào từng ngăn kệ tại [FE_INTEGRATION_FLOW.md](file:///c:/NgocTuyen/selfStorageManagementSystem/self-storage-system-be/docs/agent/customer-inventory/FE_INTEGRATION_FLOW.md).
-> 
+>
 > 💡 **Hướng dẫn Tích hợp Frontend:** Xem toàn bộ luồng chọn loại kho, render sơ đồ trực quan và thêm SKU vào từng ngăn kệ tại [FE_INTEGRATION_FLOW.md](file:///c:/NgocTuyen/selfStorageManagementSystem/self-storage-system-be/docs/agent/customer-inventory/FE_INTEGRATION_FLOW.md).
 
 ---
