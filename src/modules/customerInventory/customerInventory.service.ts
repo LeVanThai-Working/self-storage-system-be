@@ -18,15 +18,25 @@ import type { ContractRepository } from '../contract/contract.repository.ts';
 import type { CustomerSkuRepository } from '../customerSku/customerSku.repository.ts';
 import type { StorageRackRepository } from '../storageRack/storageRack.repository.ts';
 import type { RackTierRepository } from '../storageRack/rackTier.repository.ts';
+import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
 import type { ICustomerInventory } from './customerInventory.model.ts';
 import type { IInventoryMovement } from './inventoryMovement.model.ts';
 import {
   customerInventoryResponseSchema,
   paginatedCustomerInventoryResponseSchema,
   paginatedInventoryMovementResponseSchema,
+  storageUnitInventoryTreeResponseSchema,
+  skuLocationsResponseSchema,
+  customerInventorySummaryResponseSchema,
   type CustomerInventoryResponse,
   type PaginatedCustomerInventoryResponse,
   type PaginatedInventoryMovementResponse,
+  type StorageUnitInventoryTreeResponse,
+  type SkuLocationsResponse,
+  type CustomerInventorySummaryResponse,
+  type TreeTierItem,
+  type TreeRack,
+  type TreeTier,
 } from './schemas/customerInventory.response.schema.ts';
 import type {
   CustomerInventoryQuery,
@@ -40,6 +50,7 @@ import type {
 export interface CallerContext {
   id: string;
   role?: string;
+  assignedFacilityId?: string;
 }
 
 interface PopulatedRef {
@@ -129,6 +140,7 @@ export class CustomerInventoryService {
     private readonly skuRepository: CustomerSkuRepository,
     private readonly storageRackRepository: StorageRackRepository,
     private readonly rackTierRepository: RackTierRepository,
+    private readonly storageUnitRepository: StorageUnitRepository,
     private readonly auditLogService?: AuditLogService
   ) {}
 
@@ -858,6 +870,383 @@ export class CustomerInventoryService {
     return validateResponse(paginatedInventoryMovementResponseSchema, {
       items: result.items.map((m) => this.formatMovement(m)),
       pagination: result.pagination,
+    });
+  }
+
+  /**
+   * 8. Sơ đồ cây khoang chứa đa tầng (Storage Unit Inventory Tree)
+   * Unit -> Racks -> Tiers -> SKUs + Unracked Items + Summary
+   */
+  async getStorageUnitTree(
+    storageUnitId: string,
+    caller: CallerContext
+  ): Promise<StorageUnitInventoryTreeResponse> {
+    if (caller.role === RoleEnum.FACILITY_STAFF) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const unit = await this.storageUnitRepository.findById(storageUnitId);
+    if (!unit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+    const unitFacilityId = String(unit.facilityId?._id || unit.facilityId);
+
+    if (caller.role === RoleEnum.FACILITY_MANAGER) {
+      if (
+        !caller.assignedFacilityId ||
+        caller.assignedFacilityId !== unitFacilityId
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    const contract =
+      await this.contractRepository.findActiveByStorageUnitId(storageUnitId);
+
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      if (
+        !contract ||
+        String(contract.customerId?._id || contract.customerId) !== caller.id
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    const [racks, allTiers, items] = await Promise.all([
+      this.storageRackRepository.findByStorageUnitId(storageUnitId),
+      this.rackTierRepository.findByStorageUnitId(storageUnitId),
+      this.inventoryRepository.findItemsByStorageUnitId(storageUnitId),
+    ]);
+
+    const itemsByTierMap = new Map<string, TreeTierItem[]>();
+    const unrackedItems: TreeTierItem[] = [];
+
+    for (const item of items) {
+      const doc = item as unknown as FormattableInventory;
+      const sku = toPopulated(doc.skuId);
+      if (!sku) continue;
+
+      const formattedItem: TreeTierItem = {
+        inventoryId: String(doc._id),
+        quantity: doc.quantity,
+        lastMovementAt: new Date(doc.lastMovementAt).toISOString(),
+        notes: doc.notes || null,
+        sku: {
+          id: String(sku._id),
+          skuCode: sku.skuCode || '',
+          name: sku.name || '',
+          category: sku.category || null,
+          barcode: sku.barcode || null,
+          uom: sku.uom || '',
+          dimensions:
+            (
+              sku as {
+                dimensions?: { length: number; width: number; height: number };
+              }
+            ).dimensions || null,
+          volume: (sku as { volume?: number }).volume ?? null,
+          weightKg: (sku as { weightKg?: number }).weightKg ?? null,
+          imageUrl: sku.imageUrl || null,
+        },
+      };
+
+      if (doc.rackTierId) {
+        const tierId = toId(doc.rackTierId);
+        if (!itemsByTierMap.has(tierId)) {
+          itemsByTierMap.set(tierId, []);
+        }
+        itemsByTierMap.get(tierId)!.push(formattedItem);
+      } else {
+        unrackedItems.push(formattedItem);
+      }
+    }
+
+    const formattedRacks: TreeRack[] = racks.map((rack) => {
+      const rackId = String(rack._id);
+      const rackTiers = allTiers.filter(
+        (t) => String(t.storageRackId) === rackId
+      );
+
+      const formattedTiers: TreeTier[] = rackTiers.map((tier) => {
+        const tierId = String(tier._id);
+        const tierItems = itemsByTierMap.get(tierId) || [];
+        return {
+          id: tierId,
+          tierNumber: tier.tierNumber,
+          tierCode: tier.tierCode,
+          maxWeightKg: tier.maxWeightKg ?? null,
+          dimensions: tier.dimensions
+            ? {
+                length: tier.dimensions.length,
+                width: tier.dimensions.width,
+                height: tier.dimensions.height,
+              }
+            : null,
+          volume: tier.volume ?? null,
+          status: tier.status || null,
+          items: tierItems,
+        };
+      });
+
+      return {
+        id: rackId,
+        rackCode: rack.rackCode,
+        name: rack.name || null,
+        status: rack.status || null,
+        tierCount: rack.tierCount,
+        tiers: formattedTiers,
+      };
+    });
+
+    const totalRacks = racks.length;
+    const totalTiers = allTiers.length;
+    const occupiedTiers = allTiers.filter(
+      (t) =>
+        t.status === RackTierStatusEnum.OCCUPIED ||
+        (itemsByTierMap.get(String(t._id))?.length || 0) > 0
+    ).length;
+    const availableTiers = Math.max(0, totalTiers - occupiedTiers);
+    const distinctSkuIds = new Set(items.map((i) => toId(i.skuId)));
+    const totalSkus = distinctSkuIds.size;
+    const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
+
+    let contractSummary = null;
+    if (contract) {
+      const cust = toPopulated(contract.customerId);
+      contractSummary = {
+        id: String(contract._id),
+        contractCode: contract.contractCode,
+        status: contract.status,
+        startDate: contract.startDate
+          ? new Date(contract.startDate).toISOString()
+          : null,
+        endDate: contract.endDate
+          ? new Date(contract.endDate).toISOString()
+          : null,
+        customer: cust
+          ? {
+              id: String(cust._id),
+              name: cust.name || '',
+              email: cust.email || null,
+              phoneNumber: cust.phoneNumber || null,
+            }
+          : null,
+      };
+    }
+
+    const storageUnitSummary = {
+      id: String(unit._id),
+      unitNumber: unit.unitNumber,
+      floor: unit.floor ?? null,
+      zone: unit.zone || null,
+      status: unit.status || null,
+    };
+
+    return validateResponse(storageUnitInventoryTreeResponseSchema, {
+      storageUnit: storageUnitSummary,
+      contract: contractSummary,
+      summary: {
+        totalRacks,
+        totalTiers,
+        occupiedTiers,
+        availableTiers,
+        totalSkus,
+        totalQuantity,
+      },
+      racks: formattedRacks,
+      unrackedItems,
+    });
+  }
+
+  /**
+   * 9. Tra cứu vị trí SKU theo ID
+   */
+  async getSkuLocations(
+    skuId: string,
+    caller: CallerContext
+  ): Promise<SkuLocationsResponse> {
+    if (caller.role === RoleEnum.FACILITY_STAFF) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const sku = await this.skuRepository.findById(skuId);
+    if (!sku) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
+    }
+    const skuCustomerId = String(sku.customerId?._id || sku.customerId);
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer && skuCustomerId !== caller.id) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const items = await this.inventoryRepository.findLocationsBySkuId(skuId);
+
+    let filteredItems = items;
+    if (caller.role === RoleEnum.FACILITY_MANAGER) {
+      if (!caller.assignedFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      filteredItems = items.filter(
+        (i) => toId(i.facilityId) === caller.assignedFacilityId
+      );
+      if (filteredItems.length === 0 && items.length > 0) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    const locations = filteredItems.map((item) => {
+      const doc = item as unknown as FormattableInventory;
+      const fac = toPopulated(doc.facilityId);
+      const ctr = toPopulated(doc.contractId);
+      const unt = toPopulated(doc.storageUnitId);
+      const rck = toPopulated(doc.storageRackId);
+      const tier = toPopulated(doc.rackTierId);
+
+      return {
+        inventoryId: String(doc._id),
+        quantity: doc.quantity,
+        lastMovementAt: new Date(doc.lastMovementAt).toISOString(),
+        notes: doc.notes || null,
+        facility: fac
+          ? {
+              id: String(fac._id),
+              name: fac.name || '',
+              city: fac.city || null,
+              address: fac.address || null,
+            }
+          : null,
+        contract: ctr
+          ? {
+              id: String(ctr._id),
+              contractCode: ctr.contractCode || '',
+              status: ctr.status || '',
+              startDate: ctr.startDate
+                ? new Date(ctr.startDate).toISOString()
+                : null,
+              endDate: ctr.endDate ? new Date(ctr.endDate).toISOString() : null,
+            }
+          : null,
+        storageUnit: unt
+          ? {
+              id: String(unt._id),
+              unitNumber: unt.unitNumber || '',
+              floor: unt.floor ?? null,
+              zone: unt.zone || null,
+              status: unt.status || null,
+            }
+          : null,
+        storageRack: rck
+          ? {
+              id: String(rck._id),
+              rackCode: rck.rackCode || '',
+              name: rck.name || null,
+              status: rck.status || null,
+            }
+          : null,
+        rackTier: tier
+          ? {
+              id: String(tier._id),
+              tierCode: tier.tierCode || '',
+              tierNumber: tier.tierNumber ?? 0,
+              maxWeightKg: tier.maxWeightKg ?? null,
+              status: tier.status || null,
+            }
+          : null,
+      };
+    });
+
+    const totalQuantity = locations.reduce((sum, l) => sum + l.quantity, 0);
+
+    return validateResponse(skuLocationsResponseSchema, {
+      sku: {
+        id: String(sku._id),
+        skuCode: sku.skuCode,
+        name: sku.name,
+        category: sku.category || null,
+        barcode: sku.barcode || null,
+        uom: sku.uom,
+        imageUrl: sku.imageUrl || null,
+        totalQuantity,
+      },
+      locations,
+    });
+  }
+
+  /**
+   * 10. Tra cứu vị trí SKU qua Barcode
+   */
+  async getSkuLocationsByBarcode(
+    barcode: string,
+    caller: CallerContext
+  ): Promise<SkuLocationsResponse> {
+    if (caller.role === RoleEnum.FACILITY_STAFF) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    const sku = await this.skuRepository.findByBarcode(
+      isCustomer ? caller.id : undefined,
+      barcode
+    );
+    if (!sku) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
+    }
+
+    return this.getSkuLocations(String(sku._id), caller);
+  }
+
+  /**
+   * 11. Bảng điều khiển tổng hợp tồn kho cá nhân (Dashboard Summary)
+   */
+  async getCustomerSummary(
+    caller: CallerContext
+  ): Promise<CustomerInventorySummaryResponse> {
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const customerId = caller.id;
+
+    const [
+      totalSkus,
+      categoryBreakdown,
+      distinctUnits,
+      activeContracts,
+      recentMovementsData,
+    ] = await Promise.all([
+      this.skuRepository.countByCustomerId(customerId),
+      this.inventoryRepository.getDashboardCategoryBreakdown(customerId),
+      this.inventoryRepository.countDistinctStorageUnits(customerId),
+      this.contractRepository.countActiveByUserId(customerId),
+      this.movementRepository.findPaginated({
+        customerId,
+        page: 1,
+        limit: 5,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      }),
+    ]);
+
+    const totalQuantity = categoryBreakdown.reduce(
+      (sum, c) => sum + c.totalQuantity,
+      0
+    );
+
+    const formattedMovements = recentMovementsData.items.map((m) =>
+      this.formatMovement(m)
+    );
+
+    return validateResponse(customerInventorySummaryResponseSchema, {
+      totalSkus,
+      totalQuantity,
+      totalActiveContracts: activeContracts,
+      totalStorageUnits: distinctUnits,
+      categoryBreakdown,
+      recentMovements: formattedMovements,
     });
   }
 

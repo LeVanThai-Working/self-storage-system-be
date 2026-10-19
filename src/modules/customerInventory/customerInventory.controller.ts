@@ -30,6 +30,9 @@ import {
   customerInventoryQuerySchema,
   inventoryMovementQuerySchema,
   inventoryIdParamSchema,
+  storageUnitTreeParamSchema,
+  skuLocationsParamSchema,
+  barcodeParamSchema,
   type StockInRequest,
   type StockOutRequest,
   type StockMoveRequest,
@@ -40,6 +43,9 @@ import {
 import type {
   CustomerInventoryResponse,
   InventoryMovementResponse,
+  StorageUnitInventoryTreeResponse,
+  SkuLocationsResponse,
+  CustomerInventorySummaryResponse,
 } from './schemas/customerInventory.response.schema.ts';
 import type {
   ApiResponse,
@@ -63,16 +69,19 @@ function extractCaller(req: ExpressRequest): CallerContext {
     return {
       id: user._id.toString(),
       role: user.role,
+      assignedFacilityId: user.assignedFacilityId?.toString(),
     };
   }
 
   // Header x-user-id fallback cho testing / development
   const headerUserId = req.headers['x-user-id'] as string;
   const headerRole = req.headers['x-user-role'] as string;
+  const headerFacilityId = req.headers['x-facility-id'] as string;
   if (headerUserId) {
     return {
       id: headerUserId,
       role: headerRole,
+      assignedFacilityId: headerFacilityId,
     };
   }
 
@@ -296,6 +305,123 @@ export class CustomerInventoryController extends Controller {
       messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
       data: result,
+    };
+  }
+
+  /**
+   * 8. Sơ đồ cây khoang chứa đa tầng (Storage Unit Inventory Tree)
+   * Hiển thị cấu trúc cây: Unit -> Racks -> Tiers -> SKUs + hàng để sàn + summary
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Get('unit/{storageUnitId}/tree')
+  @Middlewares(validateRequest({ params: storageUnitTreeParamSchema }))
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Storage Unit not found')
+  public async getStorageUnitTree(
+    @Request() req: ExpressRequest,
+    @Path() storageUnitId: string
+  ): Promise<ApiResponse<StorageUnitInventoryTreeResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.customerInventoryService.getStorageUnitTree(
+      storageUnitId,
+      caller
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * 9. Tra cứu vị trí lưu trữ của SKU theo ID
+   * Danh sách tất cả các vị trí (cơ sở, phòng, kệ, tầng) mà SKU đang hiện diện
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Get('sku/{skuId}/locations')
+  @Middlewares(validateRequest({ params: skuLocationsParamSchema }))
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Customer SKU not found')
+  public async getSkuLocations(
+    @Request() req: ExpressRequest,
+    @Path() skuId: string
+  ): Promise<ApiResponse<SkuLocationsResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.customerInventoryService.getSkuLocations(
+      skuId,
+      caller
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * 10. Quét Barcode tra cứu vị trí tồn kho của SKU
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Get('barcode/{barcode}/locations')
+  @Middlewares(validateRequest({ params: barcodeParamSchema }))
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Customer SKU not found')
+  public async getSkuLocationsByBarcode(
+    @Request() req: ExpressRequest,
+    @Path() barcode: string
+  ): Promise<ApiResponse<SkuLocationsResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.customerInventoryService.getSkuLocationsByBarcode(
+      barcode,
+      caller
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * 11. Bảng điều khiển tổng hợp tồn kho cá nhân (Dashboard Summary)
+   * Thống kê tổng số SKU, sản phẩm, hợp đồng, phòng kho, phân loại ngành hàng và biến động gần nhất
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Get('summary')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  public async getCustomerSummary(
+    @Request() req: ExpressRequest
+  ): Promise<ApiResponse<CustomerInventorySummaryResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.customerInventoryService.getCustomerSummary(caller);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
     };
   }
 

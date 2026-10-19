@@ -14,6 +14,7 @@ export interface InventoryMovementQueryFilter {
   facilityId?: string;
   storageUnitId?: string;
   skuId?: string;
+  rackTierId?: string;
   type?: MovementTypeEnum;
   startDate?: string | Date;
   endDate?: string | Date;
@@ -91,6 +92,12 @@ export class InventoryMovementRepository {
     if (query.facilityId) filter.facilityId = query.facilityId;
     if (query.storageUnitId) filter.storageUnitId = query.storageUnitId;
     if (query.skuId) filter.skuId = query.skuId;
+    if (query.rackTierId) {
+      filter.$or = [
+        { fromRackTierId: query.rackTierId },
+        { toRackTierId: query.rackTierId },
+      ];
+    }
     if (query.type) filter.type = query.type;
 
     if (query.startDate || query.endDate) {

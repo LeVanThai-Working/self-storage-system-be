@@ -11,6 +11,7 @@ import {
   storageRackRepository,
   rackTierRepository,
 } from '../storageRack/storageRack.container.ts';
+import { storageUnitRepository } from '../storageUnit/storageUnit.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const customerSkuRepository = new CustomerSkuRepository(CustomerSku);
@@ -29,6 +30,7 @@ export const customerInventoryService = new CustomerInventoryService(
   customerSkuRepository,
   storageRackRepository,
   rackTierRepository,
+  storageUnitRepository,
   auditLogService
 );
 
