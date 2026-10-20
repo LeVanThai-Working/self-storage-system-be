@@ -85,7 +85,7 @@ Phân hệ `customer-inventory` chịu trách nhiệm toàn bộ vòng đời l�
 
 ---
 
-### Task BUGFIX-FE-01: Khắc phục Feedback Frontend & Bổ sung Mã Cơ sở — [READY 🚀]
+### Task BUGFIX-FE-01: Khắc phục Feedback Frontend & Bổ sung Mã Cơ sở — [DONE ✅]
 
 - **Vấn đề 1:** Khắc phục lỗi `MESSAGE_CODE_101` khi FE gửi `rackTierId: null` trong các API `in`, `out`, `move`, `adjust`. Định nghĩa explicit TypeScript interfaces cho body params để TSOA sinh đúng union `string | null`.
 - **Vấn đề 2:** Mở rộng `GET /customer-inventories/summary` nhận query param `customerId?: string` (alias `userId?: string`), cho phép Ops/Admin tra cứu dashboard tồn kho của khách hàng chỉ định trên Backoffice CMS.
