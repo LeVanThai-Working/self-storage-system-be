@@ -12,6 +12,7 @@ export interface IOperatingHours {
 
 export interface IFacility extends SoftDeleteDocument {
   name: string;
+  code?: string;
   address: string;
   city: string;
   phone?: string;
@@ -36,6 +37,13 @@ const operatingHoursSchema = new mongoose.Schema<IOperatingHours>(
 const facilitySchema = new mongoose.Schema<IFacility>(
   {
     name: { type: String, required: true, minlength: 2, maxlength: 100 },
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      minlength: 2,
+      maxlength: 20,
+    },
     address: { type: String, required: true, maxlength: 255 },
     city: { type: String, required: true, maxlength: 100 },
     phone: { type: String, minlength: 10, maxlength: 11 },
@@ -60,6 +68,18 @@ const facilitySchema = new mongoose.Schema<IFacility>(
   },
   {
     timestamps: true,
+  }
+);
+
+// Partial Unique Index: Mã cơ sở là duy nhất trên toàn hệ thống trong các bản ghi chưa xóa mềm
+facilitySchema.index(
+  { code: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      deleted: { $ne: true },
+      code: { $type: 'string' },
+    },
   }
 );
 

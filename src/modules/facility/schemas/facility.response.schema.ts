@@ -20,6 +20,7 @@ const operatingHoursResponseSchema = z.object({
 export const facilityResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
+  code: z.string().optional().nullable(),
   address: z.string(),
   city: z.string(),
   phone: z.string().optional().nullable(),

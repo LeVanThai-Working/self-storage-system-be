@@ -40,6 +40,7 @@ import {
 } from './schemas/customerInventory.response.schema.ts';
 import type {
   CustomerInventoryQuery,
+  CustomerInventorySummaryQuery,
   InventoryMovementQuery,
   StockAdjustRequest,
   StockInRequest,
@@ -56,6 +57,7 @@ export interface CallerContext {
 interface PopulatedRef {
   _id?: Types.ObjectId | string;
   name?: string;
+  code?: string;
   email?: string | null;
   phoneNumber?: string | null;
   contractCode?: string;
@@ -1043,7 +1045,20 @@ export class CustomerInventoryService {
       status: unit.status || null,
     };
 
+    const fac = toPopulated(unit.facilityId);
+    let facilitySummary = null;
+    if (fac) {
+      facilitySummary = {
+        id: String(fac._id),
+        name: fac.name || '',
+        code: fac.code || null,
+        city: fac.city || null,
+        address: fac.address || null,
+      };
+    }
+
     return validateResponse(storageUnitInventoryTreeResponseSchema, {
+      facility: facilitySummary,
       storageUnit: storageUnitSummary,
       contract: contractSummary,
       summary: {
@@ -1200,7 +1215,8 @@ export class CustomerInventoryService {
    * 11. Bảng điều khiển tổng hợp tồn kho cá nhân (Dashboard Summary)
    */
   async getCustomerSummary(
-    caller: CallerContext
+    caller: CallerContext,
+    query?: CustomerInventorySummaryQuery
   ): Promise<CustomerInventorySummaryResponse> {
     if (
       caller.role === RoleEnum.FACILITY_STAFF ||
@@ -1209,7 +1225,14 @@ export class CustomerInventoryService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
-    const customerId = caller.id;
+    let customerId = caller.id;
+    const isPrivileged =
+      caller.role === RoleEnum.BUSINESS_OPS_MANAGER ||
+      caller.role === RoleEnum.SYSTEM_ADMIN;
+
+    if (isPrivileged && (query?.customerId || query?.userId)) {
+      customerId = (query.customerId || query.userId)!;
+    }
 
     const [
       totalSkus,

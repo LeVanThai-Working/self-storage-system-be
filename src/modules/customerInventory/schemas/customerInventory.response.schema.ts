@@ -28,6 +28,7 @@ export const inventoryContractSummarySchema = z.object({
 export const inventoryFacilitySummarySchema = z.object({
   id: z.string(),
   name: z.string(),
+  code: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
 });
@@ -220,6 +221,7 @@ export const storageUnitInventoryTreeSummarySchema = z.object({
 });
 
 export const storageUnitInventoryTreeResponseSchema = z.object({
+  facility: inventoryFacilitySummarySchema.optional().nullable(),
   storageUnit: inventoryStorageUnitSummarySchema,
   contract: z
     .object({

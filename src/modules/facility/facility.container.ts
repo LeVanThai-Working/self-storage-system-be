@@ -27,7 +27,7 @@ const amenityOfferingRepository = new FacilityAmenityOfferingRepository(
   FacilityAmenityOffering
 );
 
-const facilityService = new FacilityService(
+export const facilityService = new FacilityService(
   facilityRepository,
   userRepository,
   offeringRepository,

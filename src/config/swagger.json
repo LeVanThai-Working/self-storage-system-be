@@ -5003,6 +5003,9 @@
 					"phone": {
 						"type": "string"
 					},
+					"code": {
+						"type": "string"
+					},
 					"images": {
 						"items": {
 							"type": "string"
@@ -6048,6 +6051,9 @@
 							"phone": {
 								"type": "string"
 							},
+							"code": {
+								"type": "string"
+							},
 							"images": {
 								"items": {
 									"type": "string"
@@ -6152,6 +6158,9 @@
 					"phone": {
 						"type": "string"
 					},
+					"code": {
+						"type": "string"
+					},
 					"city": {
 						"type": "string"
 					},
@@ -6211,6 +6220,9 @@
 						"type": "string"
 					},
 					"address": {
+						"type": "string"
+					},
+					"code": {
 						"type": "string"
 					},
 					"name": {
@@ -6735,6 +6747,9 @@
 							"city": {
 								"type": "string"
 							},
+							"code": {
+								"type": "string"
+							},
 							"name": {
 								"type": "string"
 							},
@@ -6872,140 +6887,137 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofstockInRequestSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"referenceCode": {
-						"type": "string"
-					},
-					"rackTierId": {
-						"type": "string"
-					},
-					"quantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"skuId": {
-						"type": "string"
-					},
-					"contractId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"quantity",
-					"skuId",
-					"contractId"
-				],
-				"type": "object"
-			},
 			"StockInRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockInRequestSchema_"
-			},
-			"infer_typeofstockOutRequestSchema_": {
 				"properties": {
-					"notes": {
+					"contractId": {
 						"type": "string"
 					},
-					"referenceCode": {
-						"type": "string"
-					},
-					"reason": {
+					"skuId": {
 						"type": "string"
 					},
 					"rackTierId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"quantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"referenceCode": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"quantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"quantity"
 				],
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"StockOutRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockOutRequestSchema_"
-			},
-			"infer_typeofstockMoveRequestSchema_": {
 				"properties": {
-					"notes": {
+					"contractId": {
 						"type": "string"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string",
+						"nullable": true
+					},
+					"quantity": {
+						"type": "number",
+						"format": "double"
 					},
 					"reason": {
 						"type": "string"
 					},
-					"toRackTierId": {
+					"referenceCode": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"contractId",
+					"skuId",
+					"quantity"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"StockMoveRequest": {
+				"properties": {
+					"contractId": {
+						"type": "string"
+					},
+					"skuId": {
 						"type": "string"
 					},
 					"fromRackTierId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
+					},
+					"toRackTierId": {
+						"type": "string",
+						"nullable": true
 					},
 					"quantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"reason": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"quantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"quantity"
 				],
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
-			"StockMoveRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockMoveRequestSchema_"
-			},
-			"infer_typeofstockAdjustRequestSchema_": {
+			"StockAdjustRequest": {
 				"properties": {
-					"notes": {
+					"contractId": {
+						"type": "string"
+					},
+					"skuId": {
 						"type": "string"
 					},
 					"rackTierId": {
-						"type": "string"
-					},
-					"reason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"newQuantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"reason": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"reason",
-					"newQuantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"newQuantity",
+					"reason"
 				],
-				"type": "object"
-			},
-			"StockAdjustRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockAdjustRequestSchema_"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"MovementTypeEnum": {
 				"enum": [
@@ -7162,6 +7174,9 @@
 								"type": "string"
 							},
 							"city": {
+								"type": "string"
+							},
+							"code": {
 								"type": "string"
 							},
 							"name": {
@@ -7572,6 +7587,30 @@
 						"required": [
 							"status",
 							"contractCode",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"code": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
 							"id"
 						],
 						"type": "object"
@@ -8053,6 +8092,9 @@
 										"city": {
 											"type": "string"
 										},
+										"code": {
+											"type": "string"
+										},
 										"name": {
 											"type": "string"
 										},
@@ -8315,6 +8357,9 @@
 										"city": {
 											"type": "string"
 										},
+										"code": {
+											"type": "string"
+										},
 										"name": {
 											"type": "string"
 										},
@@ -8530,6 +8575,18 @@
 					"message",
 					"data"
 				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CustomerInventorySummaryQuery": {
+				"properties": {
+					"customerId": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					}
+				},
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -18292,7 +18349,24 @@
 					"Customer Inventories"
 				],
 				"security": [],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "userId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/customer-inventories/{id}": {

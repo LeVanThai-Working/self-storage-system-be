@@ -120,6 +120,14 @@ export const inventoryMovementQuerySchema = paginationQuerySchema.extend({
   sortBy: z.enum(['createdAt', 'quantity', 'type']).default('createdAt'),
 });
 
+export const customerInventorySummaryQuerySchema = z.object({
+  customerId: z
+    .string()
+    .regex(objectIdRegex, 'Invalid customerId format')
+    .optional(),
+  userId: z.string().regex(objectIdRegex, 'Invalid userId format').optional(),
+});
+
 export const inventoryIdParamSchema = z.object({
   id: z.string().regex(objectIdRegex, 'Invalid inventory ID format'),
 });
@@ -138,10 +146,50 @@ export const barcodeParamSchema = z.object({
   barcode: z.string().trim().min(1, 'Barcode cannot be empty'),
 });
 
-export type StockInRequest = z.infer<typeof stockInRequestSchema>;
-export type StockOutRequest = z.infer<typeof stockOutRequestSchema>;
-export type StockMoveRequest = z.infer<typeof stockMoveRequestSchema>;
-export type StockAdjustRequest = z.infer<typeof stockAdjustRequestSchema>;
+// Explicit interfaces so TSOA generates union with null in parameter schemas
+export interface StockInRequest {
+  contractId: string;
+  skuId: string;
+  rackTierId?: string | null;
+  quantity: number;
+  referenceCode?: string;
+  notes?: string;
+}
+
+export interface StockOutRequest {
+  contractId: string;
+  skuId: string;
+  rackTierId?: string | null;
+  quantity: number;
+  reason?: string;
+  referenceCode?: string;
+  notes?: string;
+}
+
+export interface StockMoveRequest {
+  contractId: string;
+  skuId: string;
+  fromRackTierId?: string | null;
+  toRackTierId?: string | null;
+  quantity: number;
+  reason?: string;
+  notes?: string;
+}
+
+export interface StockAdjustRequest {
+  contractId: string;
+  skuId: string;
+  rackTierId?: string | null;
+  newQuantity: number;
+  reason: string;
+  notes?: string;
+}
+
+export interface CustomerInventorySummaryQuery {
+  customerId?: string;
+  userId?: string;
+}
+
 export type CustomerInventoryQuery = z.infer<
   typeof customerInventoryQuerySchema
 >;

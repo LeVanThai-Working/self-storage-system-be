@@ -113,6 +113,15 @@ export class FacilityService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_105, ['Facility']);
     }
 
+    if (data.code) {
+      const codeDuplicate = await this.facilityRepository.findByCode(data.code);
+      if (codeDuplicate) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_105, [
+          'Facility code',
+        ]);
+      }
+    }
+
     const newFacility = await this.facilityRepository.create({
       ...data,
       status: FacilityStatusEnum.ACTIVE,
@@ -141,6 +150,15 @@ export class FacilityService {
     const facility = await this.facilityRepository.findById(id);
     if (!facility) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Facility']);
+    }
+
+    if (data.code && data.code !== facility.code) {
+      const codeDuplicate = await this.facilityRepository.findByCode(data.code);
+      if (codeDuplicate && codeDuplicate._id.toString() !== id) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_105, [
+          'Facility code',
+        ]);
+      }
     }
 
     const updatedFacility = await this.facilityRepository.update(id, data);

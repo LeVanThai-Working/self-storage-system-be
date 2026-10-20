@@ -29,6 +29,7 @@ import {
   stockAdjustRequestSchema,
   customerInventoryQuerySchema,
   inventoryMovementQuerySchema,
+  customerInventorySummaryQuerySchema,
   inventoryIdParamSchema,
   storageUnitTreeParamSchema,
   skuLocationsParamSchema,
@@ -38,6 +39,7 @@ import {
   type StockMoveRequest,
   type StockAdjustRequest,
   type CustomerInventoryQuery,
+  type CustomerInventorySummaryQuery,
   type InventoryMovementQuery,
 } from './schemas/customerInventory.request.schema.ts';
 import type {
@@ -408,13 +410,18 @@ export class CustomerInventoryController extends Controller {
   // @Security('cookieAuth')
   // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('summary')
+  @Middlewares(validateRequest({ query: customerInventorySummaryQuerySchema }))
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')
   public async getCustomerSummary(
-    @Request() req: ExpressRequest
+    @Request() req: ExpressRequest,
+    @Queries() query?: CustomerInventorySummaryQuery
   ): Promise<ApiResponse<CustomerInventorySummaryResponse>> {
     const caller = extractCaller(req);
-    const data = await this.customerInventoryService.getCustomerSummary(caller);
+    const data = await this.customerInventoryService.getCustomerSummary(
+      caller,
+      query
+    );
 
     return {
       success: true,
