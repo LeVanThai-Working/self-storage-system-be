@@ -55,7 +55,12 @@ export class ContractRepository {
       .populate('addendums.approvedBy', 'name email role')
       .populate('addendums.assignedStaffId', 'name email role phoneNumber')
       .populate('addendums.rejectedBy', 'name email role')
-      .populate('addendums.cancelledBy', 'name email role');
+      .populate('addendums.cancelledBy', 'name email role')
+      .populate(
+        'addendums.previousStorageUnitId',
+        'unitNumber floor zone status'
+      )
+      .populate('addendums.newStorageUnitId', 'unitNumber floor zone status');
 
     if (session) {
       query.session(session);
@@ -176,6 +181,14 @@ export class ContractRepository {
         {
           path: 'addendums.assignedStaffId',
           select: 'name email role phoneNumber',
+        },
+        {
+          path: 'addendums.previousStorageUnitId',
+          select: 'unitNumber floor zone status',
+        },
+        {
+          path: 'addendums.newStorageUnitId',
+          select: 'unitNumber floor zone status',
         },
       ],
     });

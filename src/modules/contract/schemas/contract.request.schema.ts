@@ -154,13 +154,33 @@ export const renewContractSchema = z.object({
   note: z.string().max(1000).optional(),
 });
 
-export const createContractAddendumSchema = z.object({
-  type: z.nativeEnum(ContractAddendumTypeEnum),
-  amenities: z
-    .array(contractAmenityInputSchema)
-    .min(1, 'At least 1 amenity item is required'),
-  notes: z.string().max(1000).optional(),
-});
+export const createContractAddendumSchema = z
+  .object({
+    type: z.nativeEnum(ContractAddendumTypeEnum),
+    newEndDate: dateStringSchema.optional(),
+    newStorageUnitId: objectIdSchema.optional(),
+    notes: z.string().max(1000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === ContractAddendumTypeEnum.RENEW) {
+      if (!data.newEndDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'newEndDate is required when addendum type is RENEW',
+          path: ['newEndDate'],
+        });
+      }
+    } else if (data.type === ContractAddendumTypeEnum.UNIT_CHANGE) {
+      if (!data.newStorageUnitId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            'newStorageUnitId is required when addendum type is UNIT_CHANGE',
+          path: ['newStorageUnitId'],
+        });
+      }
+    }
+  });
 
 export const approveContractAddendumSchema = z.object({
   assignedStaffId: objectIdSchema.optional(),

@@ -7534,8 +7534,8 @@
 			},
 			"ContractAddendumTypeEnum": {
 				"enum": [
-					"add",
-					"remove"
+					"renew",
+					"unit_change"
 				],
 				"type": "string"
 			},
@@ -8068,6 +8068,72 @@
 									],
 									"type": "object"
 								},
+								"newStorageUnit": {
+									"properties": {
+										"zone": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"floor",
+										"unitNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"newStorageUnitId": {
+									"type": "string"
+								},
+								"previousStorageUnit": {
+									"properties": {
+										"zone": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"floor",
+										"unitNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"previousStorageUnitId": {
+									"type": "string"
+								},
+								"newEndDate": {
+									"type": "string"
+								},
+								"previousEndDate": {
+									"type": "string"
+								},
 								"staffSigned": {
 									"type": "boolean"
 								},
@@ -8570,31 +8636,17 @@
 					"notes": {
 						"type": "string"
 					},
-					"amenities": {
-						"items": {
-							"properties": {
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"facilityAmenityOfferingId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"quantity",
-								"facilityAmenityOfferingId"
-							],
-							"type": "object"
-						},
-						"type": "array"
+					"newStorageUnitId": {
+						"type": "string"
+					},
+					"newEndDate": {
+						"type": "string"
 					},
 					"type": {
 						"$ref": "#/components/schemas/ContractAddendumTypeEnum"
 					}
 				},
 				"required": [
-					"amenities",
 					"type"
 				],
 				"type": "object"
@@ -17798,6 +17850,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -17809,7 +17871,7 @@
 						}
 					}
 				},
-				"description": "Customer requests to add (install) or remove (uninstall) amenities for an ACTIVE contract (Creates Contract Addendum in PENDING_APPROVAL).",
+				"description": "Create a Contract Addendum (RENEW or UNIT_CHANGE).\n- RENEW: CUSTOMER creates in PENDING_APPROVAL; FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT.\n- UNIT_CHANGE: Only FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT and reserves the replacement unit.",
 				"tags": [
 					"Contracts"
 				],
@@ -17860,6 +17922,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -17871,7 +17943,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager approves amenity addendum request (ADD or REMOVE), creates DRAFT addendum, and assigns staff for physical handover/uninstall.",
+				"description": "Facility Manager approves a PENDING_APPROVAL addendum request and transitions it to DRAFT for customer signing.",
 				"tags": [
 					"Contracts"
 				],
@@ -17930,6 +18002,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -17941,7 +18023,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager rejects amenity addendum request and releases locked inventory (if ADD).",
+				"description": "Facility Manager rejects a PENDING_APPROVAL addendum request.",
 				"tags": [
 					"Contracts"
 				],
@@ -18000,6 +18082,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -18011,7 +18103,7 @@
 						}
 					}
 				},
-				"description": "Customer signs addendum on Mobile (Two-party signing: Customer side).\nWhen both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.",
+				"description": "Customer signs addendum (First signing step: Customer side).\nAddendum remains in DRAFT awaiting Facility Manager signature.",
 				"tags": [
 					"Contracts"
 				],
@@ -18070,6 +18162,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -18081,7 +18183,7 @@
 						}
 					}
 				},
-				"description": "Staff confirms physical handover/uninstall & signs addendum on Web (Two-party signing: Staff side).\nWhen both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.",
+				"description": "Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).\nTransitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.",
 				"tags": [
 					"Contracts"
 				],
@@ -18140,6 +18242,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -18151,7 +18263,7 @@
 						}
 					}
 				},
-				"description": "Cancel addendum (when PENDING_APPROVAL or DRAFT) and release locked amenity inventory (if ADD).",
+				"description": "Cancel addendum (when PENDING_APPROVAL or DRAFT) and release reserved replacement storage unit (if UNIT_CHANGE).",
 				"tags": [
 					"Contracts"
 				],

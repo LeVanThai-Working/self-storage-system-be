@@ -4,45 +4,45 @@
 
 ## Task
 
-| ID    | Tên                                                | Trạng thái | Phụ thuộc               | PR / commit | Cập nhật                                 |
-| ----- | -------------------------------------------------- | ---------- | ----------------------- | ----------- | ---------------------------------------- |
-| T0.1  | Siết phân quyền Contract                           | TODO       | —                       |             |                                          |
-| T0.2  | Kiểm tra và siết phân quyền Addendum               | TODO       | —                       |             |                                          |
-| T0.3  | Siết xác nhận thu và hoàn tiền                     | TODO       | —                       |             |                                          |
-| T0.4  | An toàn môi trường production                      | TODO       | —                       |             |                                          |
-| T0.5  | Bộ test phân quyền dùng chung                      | TODO       | —                       |             |                                          |
-| T0.6  | Dọn mâu thuẫn endpoint                             | TODO       | `[OPEN D13]`            |             |                                          |
-| T1.1  | Entity RefundRequest                               | TODO       | `[OPEN D5]`             |             |                                          |
-| T1.2  | Mọi nguồn tiền hoàn đều vào RefundRequest          | TODO       | T1.1                    |             |                                          |
-| T1.3  | Webhook SePay                                      | TODO       | T1.1, T1.8, `[OPEN D9]` |             |                                          |
-| T1.4  | Tài khoản nhận hoàn tiền                           | TODO       | T1.1, `[OPEN D5]`       |             |                                          |
-| T1.5  | Vòng đời cọc của Contract                          | TODO       | T1.1, `[OPEN D7]`       |             |                                          |
-| T1.6  | Thu tiền thuê kỳ đầu                               | TODO       | `[OPEN D6]`             |             |                                          |
-| T1.7  | Phí trễ hạn                                        | TODO       | `[OPEN D8]`             |             |                                          |
-| T1.8  | Gỡ thanh toán thiếu và cộng dồn                    | TODO       | T1.1                    |             |                                          |
-| T2.1  | Mốc hủy                                            | TODO       | T2.2, `[OPEN D1]`       |             |                                          |
-| T2.2  | Snapshot chính sách và đồng ý điều khoản           | TODO       | —                       |             |                                          |
-| T2.3  | Tách VOID và CANCEL cho hợp đồng DRAFT             | TODO       | T2.2                    |             |                                          |
-| T2.4  | Force Cancel do cơ sở không giao được kho          | TODO       | T1.1, `[OPEN D3]`       |             |                                          |
-| T2.5  | arrivedAt và hạn check-in                          | TODO       | —                       |             |                                          |
-| T2.6  | Thời gian tối thiểu khi đặt trong ngày             | TODO       | —                       |             |                                          |
-| T2.7  | Giới hạn startDate                                 | TODO       | `[OPEN D2]`             |             |                                          |
-| T2.8  | Cờ check-in sớm hoặc ngoài khung giờ               | TODO       | —                       |             |                                          |
-| T2.9  | Mở rộng reassign-unit                              | TODO       | `[OPEN D4]`             |             |                                          |
-| T2.10 | Chấm dứt và trả kho an toàn                        | TODO       | `[OPEN D14]`            |             |                                          |
-| T3.1  | process-overdue xử lý từng đơn riêng               | TODO       | —                       |             |                                          |
-| T3.2  | Side effect chỉ chạy sau commit                    | TODO       | —                       |             |                                          |
-| T3.3  | Job OVERDUE cho Contract và nhắc hạn               | TODO       | T3.2                    |             |                                          |
-| T3.4  | Notification cho Contract và nhắc lịch Reservation | TODO       | T3.2                    |             |                                          |
-| T3.5  | TTL và job đối soát                                | TODO       | —                       |             |                                          |
-| T3.6  | Ràng buộc DB và idempotency                        | TODO       | —                       |             |                                          |
-| T4.1  | LegalEntity, SigningAuthorization và snapshot      | TODO       | `[OPEN D12]`            |             |                                          |
-| T4.2  | Danh tính khách                                    | TODO       | `[OPEN D10]`            |             |                                          |
-| T4.3  | Bằng chứng ký và lịch sử chữ ký                    | TODO       | `[OPEN D11]`            |             |                                          |
-| T4.4  | Template hợp đồng và xuất PDF                      | TODO       | T4.1, T4.2, T4.3        |             |                                          |
-| T4.5  | Rule phụ lục                                       | TODO       | `[OPEN D4]`             |             |                                          |
-| T4.6  | Walk-in tại quầy                                   | TODO       | T4.2, `[OPEN D10]`      |             |                                          |
-| T4.7  | Đồ bỏ lại và nợ (chỉ thiết kế)                     | BLOCKED    | Chờ pháp chế duyệt      |             | Không lập trình trước khi pháp chế duyệt |
+| ID    | Tên                                                | Trạng thái | Phụ thuộc               | PR / commit | Cập nhật                                                                                           |
+| ----- | -------------------------------------------------- | ---------- | ----------------------- | ----------- | -------------------------------------------------------------------------------------------------- |
+| T0.1  | Siết phân quyền Contract                           | DONE       | —                       |             | 2026-10-18: Đã siết phân quyền 9 endpoints + 32 test assertions PASS                               |
+| T0.2  | Kiểm tra và siết phân quyền Addendum               | DONE       | —                       |             | 2026-10-21: Đổi sang `RENEW`/`UNIT_CHANGE` & siết phân quyền 6 endpoints + 34 test assertions PASS |
+| T0.3  | Siết xác nhận thu và hoàn tiền                     | TODO       | —                       |             |                                                                                                    |
+| T0.4  | An toàn môi trường production                      | TODO       | —                       |             |                                                                                                    |
+| T0.5  | Bộ test phân quyền dùng chung                      | TODO       | —                       |             |                                                                                                    |
+| T0.6  | Dọn mâu thuẫn endpoint                             | TODO       | `[OPEN D13]`            |             |                                                                                                    |
+| T1.1  | Entity RefundRequest                               | TODO       | `[OPEN D5]`             |             |                                                                                                    |
+| T1.2  | Mọi nguồn tiền hoàn đều vào RefundRequest          | TODO       | T1.1                    |             |                                                                                                    |
+| T1.3  | Webhook SePay                                      | TODO       | T1.1, T1.8, `[OPEN D9]` |             |                                                                                                    |
+| T1.4  | Tài khoản nhận hoàn tiền                           | TODO       | T1.1, `[OPEN D5]`       |             |                                                                                                    |
+| T1.5  | Vòng đời cọc của Contract                          | TODO       | T1.1, `[OPEN D7]`       |             |                                                                                                    |
+| T1.6  | Thu tiền thuê kỳ đầu                               | TODO       | `[OPEN D6]`             |             |                                                                                                    |
+| T1.7  | Phí trễ hạn                                        | TODO       | `[OPEN D8]`             |             |                                                                                                    |
+| T1.8  | Gỡ thanh toán thiếu và cộng dồn                    | TODO       | T1.1                    |             |                                                                                                    |
+| T2.1  | Mốc hủy                                            | TODO       | T2.2, `[OPEN D1]`       |             |                                                                                                    |
+| T2.2  | Snapshot chính sách và đồng ý điều khoản           | TODO       | —                       |             |                                                                                                    |
+| T2.3  | Tách VOID và CANCEL cho hợp đồng DRAFT             | TODO       | T2.2                    |             |                                                                                                    |
+| T2.4  | Force Cancel do cơ sở không giao được kho          | TODO       | T1.1, `[OPEN D3]`       |             |                                                                                                    |
+| T2.5  | arrivedAt và hạn check-in                          | TODO       | —                       |             |                                                                                                    |
+| T2.6  | Thời gian tối thiểu khi đặt trong ngày             | TODO       | —                       |             |                                                                                                    |
+| T2.7  | Giới hạn startDate                                 | TODO       | `[OPEN D2]`             |             |                                                                                                    |
+| T2.8  | Cờ check-in sớm hoặc ngoài khung giờ               | TODO       | —                       |             |                                                                                                    |
+| T2.9  | Mở rộng reassign-unit                              | TODO       | `[OPEN D4]`             |             |                                                                                                    |
+| T2.10 | Chấm dứt và trả kho an toàn                        | TODO       | `[OPEN D14]`            |             |                                                                                                    |
+| T3.1  | process-overdue xử lý từng đơn riêng               | TODO       | —                       |             |                                                                                                    |
+| T3.2  | Side effect chỉ chạy sau commit                    | TODO       | —                       |             |                                                                                                    |
+| T3.3  | Job OVERDUE cho Contract và nhắc hạn               | TODO       | T3.2                    |             |                                                                                                    |
+| T3.4  | Notification cho Contract và nhắc lịch Reservation | TODO       | T3.2                    |             |                                                                                                    |
+| T3.5  | TTL và job đối soát                                | TODO       | —                       |             |                                                                                                    |
+| T3.6  | Ràng buộc DB và idempotency                        | TODO       | —                       |             |                                                                                                    |
+| T4.1  | LegalEntity, SigningAuthorization và snapshot      | TODO       | `[OPEN D12]`            |             |                                                                                                    |
+| T4.2  | Danh tính khách                                    | TODO       | `[OPEN D10]`            |             |                                                                                                    |
+| T4.3  | Bằng chứng ký và lịch sử chữ ký                    | TODO       | `[OPEN D11]`            |             |                                                                                                    |
+| T4.4  | Template hợp đồng và xuất PDF                      | TODO       | T4.1, T4.2, T4.3        |             |                                                                                                    |
+| T4.5  | Rule phụ lục                                       | TODO       | `[OPEN D4]`             |             |                                                                                                    |
+| T4.6  | Walk-in tại quầy                                   | TODO       | T4.2, `[OPEN D10]`      |             |                                                                                                    |
+| T4.7  | Đồ bỏ lại và nợ (chỉ thiết kế)                     | BLOCKED    | Chờ pháp chế duyệt      |             | Không lập trình trước khi pháp chế duyệt                                                           |
 
 ## Quyết định `[OPEN]`
 
@@ -65,10 +65,13 @@
 
 ## Giả định đã dùng
 
-| Task | Giả định | Đặt ở đâu (config / flag) |
-| ---- | -------- | ------------------------- |
+| Task | Giả định                                                                                                               | Đặt ở đâu (config / flag)                                                          |
+| ---- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| T0.1 | Fallback nhận diện caller qua `x-user-id` chỉ bật ở dev/test khi cờ môi trường cho phép                                | `process.env.ALLOW_INSECURE_CALLER_FALLBACK === 'true'` (`contract.controller.ts`) |
+| T0.2 | `[OPEN D4]` Giữ nguyên `rentalPrice` khi kích hoạt phụ lục `RENEW`, chỉ cập nhật `endDate`, `renewalCount`, `renewals` | `ContractService.signAddendumInternal` (`contract.service.ts`)                     |
 
 ## Phát hiện thêm (ngoài phạm vi)
 
-| #   | Mô tả | Phát hiện ở task | Trạng thái |
-| --- | ----- | ---------------- | ---------- |
+| #   | Mô tả                                                                                                                                                                      | Phát hiện ở task | Trạng thái |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ---------- |
+| 1   | `POST /contracts/:id/renew` (`ContractService.renewContract`) vẫn tồn tại song song với Phụ lục `RENEW` và chưa kiểm tra `actorRole`/`assertFacilityAccess` (thuộc `T0.6`) | T0.1, T0.2       | OPEN       |

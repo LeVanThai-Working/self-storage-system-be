@@ -21,6 +21,6 @@ export enum ContractAddendumStatusEnum {
 }
 
 export enum ContractAddendumTypeEnum {
-  ADD = 'add',
-  REMOVE = 'remove',
+  RENEW = 'renew',
+  UNIT_CHANGE = 'unit_change',
 }

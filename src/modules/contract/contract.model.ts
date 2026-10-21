@@ -26,6 +26,10 @@ export interface IContractAddendum {
   _id?: Types.ObjectId;
   addendumCode: string;
   type: ContractAddendumTypeEnum;
+  previousEndDate?: Date | null;
+  newEndDate?: Date | null;
+  previousStorageUnitId?: Types.ObjectId | null;
+  newStorageUnitId?: Types.ObjectId | null;
   amenities: IContractAmenity[];
   totalPeriodicPrice: number;
   damageFee: number;
@@ -167,8 +171,26 @@ const contractAddendumSchema = new Schema<IContractAddendum>(
     type: {
       type: String,
       enum: Object.values(ContractAddendumTypeEnum),
-      default: ContractAddendumTypeEnum.ADD,
+      default: ContractAddendumTypeEnum.RENEW,
       required: true,
+    },
+    previousEndDate: {
+      type: Date,
+      default: null,
+    },
+    newEndDate: {
+      type: Date,
+      default: null,
+    },
+    previousStorageUnitId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StorageUnit',
+      default: null,
+    },
+    newStorageUnitId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StorageUnit',
+      default: null,
     },
     amenities: {
       type: [contractAmenitySchema],
@@ -176,7 +198,7 @@ const contractAddendumSchema = new Schema<IContractAddendum>(
     },
     totalPeriodicPrice: {
       type: Number,
-      required: true,
+      default: 0,
       min: 0,
     },
     damageFee: {

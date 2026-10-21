@@ -421,11 +421,13 @@ export class ContractController extends Controller {
   }
 
   /**
-   * Customer requests to add (install) or remove (uninstall) amenities for an ACTIVE contract (Creates Contract Addendum in PENDING_APPROVAL).
+   * Create a Contract Addendum (RENEW or UNIT_CHANGE).
+   * - RENEW: CUSTOMER creates in PENDING_APPROVAL; FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT.
+   * - UNIT_CHANGE: Only FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT and reserves the replacement unit.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
+  // TODO: Role authorization: CUSTOMER (RENEW only), FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/addendums')
   @Middlewares(
     validateRequest({
@@ -435,6 +437,7 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(201, 'Contract Addendum Created Successfully')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async createAddendum(
     @Request() req: ExpressRequest,
@@ -445,6 +448,7 @@ export class ContractController extends Controller {
     const contract = await this.contractService.createAddendum(
       id,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -461,11 +465,11 @@ export class ContractController extends Controller {
   }
 
   /**
-   * Facility Manager approves amenity addendum request (ADD or REMOVE), creates DRAFT addendum, and assigns staff for physical handover/uninstall.
+   * Facility Manager approves a PENDING_APPROVAL addendum request and transitions it to DRAFT for customer signing.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/addendums/{addendumId}/approve')
   @Middlewares(
     validateRequest({
@@ -475,6 +479,7 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async approveAddendum(
     @Request() req: ExpressRequest,
@@ -487,6 +492,7 @@ export class ContractController extends Controller {
       id,
       addendumId,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -502,11 +508,11 @@ export class ContractController extends Controller {
   }
 
   /**
-   * Facility Manager rejects amenity addendum request and releases locked inventory (if ADD).
+   * Facility Manager rejects a PENDING_APPROVAL addendum request.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/addendums/{addendumId}/reject')
   @Middlewares(
     validateRequest({
@@ -516,6 +522,7 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async rejectAddendum(
     @Request() req: ExpressRequest,
@@ -528,6 +535,7 @@ export class ContractController extends Controller {
       id,
       addendumId,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -543,8 +551,8 @@ export class ContractController extends Controller {
   }
 
   /**
-   * Customer signs addendum on Mobile (Two-party signing: Customer side).
-   * When both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.
+   * Customer signs addendum (First signing step: Customer side).
+   * Addendum remains in DRAFT awaiting Facility Manager signature.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -558,6 +566,7 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async customerSignAddendum(
     @Request() req: ExpressRequest,
@@ -570,6 +579,7 @@ export class ContractController extends Controller {
       id,
       addendumId,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -585,12 +595,12 @@ export class ContractController extends Controller {
   }
 
   /**
-   * Staff confirms physical handover/uninstall & signs addendum on Web (Two-party signing: Staff side).
-   * When both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.
+   * Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).
+   * Transitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/addendums/{addendumId}/staff-sign')
   @Middlewares(
     validateRequest({
@@ -600,6 +610,7 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async staffSignAddendum(
     @Request() req: ExpressRequest,
@@ -612,6 +623,7 @@ export class ContractController extends Controller {
       id,
       addendumId,
       caller.userId,
+      caller.role,
       body
     );
 
@@ -627,11 +639,11 @@ export class ContractController extends Controller {
   }
 
   /**
-   * Cancel addendum (when PENDING_APPROVAL or DRAFT) and release locked amenity inventory (if ADD).
+   * Cancel addendum (when PENDING_APPROVAL or DRAFT) and release reserved replacement storage unit (if UNIT_CHANGE).
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER
+  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/addendums/{addendumId}/cancel')
   @Middlewares(
     validateRequest({
@@ -641,6 +653,7 @@ export class ContractController extends Controller {
   )
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async cancelAddendum(
     @Request() req: ExpressRequest,
@@ -653,6 +666,7 @@ export class ContractController extends Controller {
       id,
       addendumId,
       caller.userId,
+      caller.role,
       body
     );
 

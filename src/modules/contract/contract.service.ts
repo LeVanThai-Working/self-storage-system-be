@@ -836,11 +836,12 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 5a. Customer requests to add or remove amenities (Creates Addendum in PENDING_APPROVAL)
+  // 5a. Request contract addendum (RENEW or UNIT_CHANGE)
   @Transactional()
   async createAddendum(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CreateContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -849,196 +850,182 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    const now = new Date();
+
+    if (data.type === ContractAddendumTypeEnum.RENEW) {
+      if (
+        actorRole !== RoleEnum.CUSTOMER &&
+        actorRole !== RoleEnum.FACILITY_MANAGER &&
+        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        actorRole !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+
+      if (actorRole === RoleEnum.CUSTOMER) {
+        const customerIdStr = this.extractIdStr(contract.customerId);
+        if (customerIdStr !== actorId) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        }
+      } else {
+        await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+      }
+
+      if (
+        contract.status !== ContractStatusEnum.ACTIVE &&
+        contract.status !== ContractStatusEnum.OVERDUE
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+      }
+
+      if (!data.newEndDate) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+          'newEndDate is required for RENEW addendum',
+        ]);
+      }
+
+      const newEndDate = new Date(data.newEndDate);
+      const currentEndDate = new Date(contract.endDate);
+      if (newEndDate <= currentEndDate) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_404);
+      }
+
+      const isCreatedByManagerOrAbove = actorRole !== RoleEnum.CUSTOMER;
+      const initialStatus = isCreatedByManagerOrAbove
+        ? ContractAddendumStatusEnum.DRAFT
+        : ContractAddendumStatusEnum.PENDING_APPROVAL;
+
+      const newAddendum: IContractAddendum = {
+        _id: new Types.ObjectId(),
+        addendumCode: this.generateAddendumCode(),
+        type: ContractAddendumTypeEnum.RENEW,
+        previousEndDate: currentEndDate,
+        newEndDate,
+        previousStorageUnitId: null,
+        newStorageUnitId: null,
+        amenities: [],
+        totalPeriodicPrice: 0,
+        damageFee: 0,
+        status: initialStatus,
+        requestedBy: new Types.ObjectId(actorId),
+        requestedAt: now,
+        approvedBy: isCreatedByManagerOrAbove
+          ? new Types.ObjectId(actorId)
+          : null,
+        approvedAt: isCreatedByManagerOrAbove ? now : null,
+        assignedStaffId: null,
+        customerSigned: false,
+        customerSignedAt: null,
+        staffSigned: false,
+        staffSignedAt: null,
+        completedAt: null,
+        rejectionReason: null,
+        rejectedBy: null,
+        rejectedAt: null,
+        cancellationReason: null,
+        cancelledBy: null,
+        cancelledAt: null,
+        notes: data.notes || null,
+      };
+
+      const updated = await this.contractRepository.update(
+        id,
+        {
+          addendums: [...(contract.addendums || []), newAddendum],
+        },
+        session
+      );
+
+      const populated = await this.contractRepository.findById(id, session);
+      const formatted = this.formatContract(populated || updated!);
+
+      this.auditLogService?.record({
+        action: AuditActionEnum.CREATE_ADDENDUM,
+        resourceType: AuditResourceEnum.CONTRACT,
+        resourceId: id,
+        before: this.formatContract(contract),
+        after: formatted,
+        metadata: {
+          addendumCode: newAddendum.addendumCode,
+          type: newAddendum.type,
+          status: newAddendum.status,
+        },
+      });
+
+      return validateResponse(contractResponseSchema, formatted);
+    }
+
+    // data.type === ContractAddendumTypeEnum.UNIT_CHANGE
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
     if (contract.status !== ContractStatusEnum.ACTIVE) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
-    const facilityId =
-      contract.facilityId && typeof contract.facilityId === 'object'
-        ? String((contract.facilityId as { _id: Types.ObjectId })._id)
-        : String(contract.facilityId);
-
-    const addendumAmenities: IContractAmenity[] = [];
-    const seenOfferingIds = new Set<string>();
-
-    for (const item of data.amenities) {
-      if (seenOfferingIds.has(item.facilityAmenityOfferingId)) {
-        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-          'Duplicate amenity offering in addendum request',
-        ]);
-      }
-      seenOfferingIds.add(item.facilityAmenityOfferingId);
-
-      if (data.type === ContractAddendumTypeEnum.ADD) {
-        const offering = await this.amenityOfferingRepository.findById(
-          item.facilityAmenityOfferingId,
-          session
-        );
-        if (!offering) {
-          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
-            'Facility Amenity Offering',
-          ]);
-        }
-
-        const offeringFacilityId =
-          offering.facilityId && typeof offering.facilityId === 'object'
-            ? String((offering.facilityId as { _id: Types.ObjectId })._id)
-            : String(offering.facilityId);
-
-        if (facilityId !== offeringFacilityId) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-            'Amenity offering does not belong to the contract facility',
-          ]);
-        }
-
-        const isService =
-          offering.amenityId &&
-          typeof offering.amenityId === 'object' &&
-          'type' in offering.amenityId &&
-          (offering.amenityId as { type?: string }).type === 'service';
-
-        if (!isService) {
-          const total = offering.totalQuantity ?? 0;
-          const available = total - offering.inUseQuantity;
-          if (total > 0 && available < item.quantity) {
-            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_408);
-          }
-
-          // Lock inventory
-          await this.amenityOfferingRepository.updateById(
-            String(offering._id),
-            { inUseQuantity: offering.inUseQuantity + item.quantity },
-            session
-          );
-        }
-
-        const amenityName =
-          offering.amenityId &&
-          typeof offering.amenityId === 'object' &&
-          'name' in offering.amenityId
-            ? String(offering.amenityId.name)
-            : 'Amenity';
-
-        const amenityId =
-          offering.amenityId &&
-          typeof offering.amenityId === 'object' &&
-          '_id' in offering.amenityId
-            ? (offering.amenityId as { _id: Types.ObjectId })._id
-            : (offering.amenityId as Types.ObjectId);
-
-        const totalPrice = item.quantity * offering.pricePerUnit;
-        addendumAmenities.push({
-          facilityAmenityOfferingId: offering._id,
-          amenityId,
-          name: amenityName,
-          quantity: item.quantity,
-          pricePerUnit: offering.pricePerUnit,
-          billingUnit: offering.billingUnit,
-          totalPrice,
-          addedAt: new Date(),
-        });
-      } else {
-        // data.type === ContractAddendumTypeEnum.REMOVE
-        const contractedItem = contract.amenities.find(
-          (ca) =>
-            String(
-              (
-                ca.facilityAmenityOfferingId as unknown as {
-                  _id: Types.ObjectId;
-                }
-              )._id || ca.facilityAmenityOfferingId
-            ) === item.facilityAmenityOfferingId
-        );
-
-        if (!contractedItem) {
-          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
-            'Amenity in contract',
-          ]);
-        }
-
-        // Calculate quantity already requested for removal in other pending/draft REMOVE addendums
-        const pendingRemoveQty = (contract.addendums || [])
-          .filter(
-            (ad) =>
-              ad.type === ContractAddendumTypeEnum.REMOVE &&
-              (ad.status === ContractAddendumStatusEnum.PENDING_APPROVAL ||
-                ad.status === ContractAddendumStatusEnum.DRAFT)
-          )
-          .reduce((sum, ad) => {
-            const matched = (ad.amenities || []).find(
-              (a) =>
-                String(
-                  (
-                    a.facilityAmenityOfferingId as unknown as {
-                      _id: Types.ObjectId;
-                    }
-                  )._id || a.facilityAmenityOfferingId
-                ) === item.facilityAmenityOfferingId
-            );
-            return sum + (matched ? matched.quantity : 0);
-          }, 0);
-
-        const removableQuantity = contractedItem.quantity - pendingRemoveQty;
-        if (item.quantity > removableQuantity) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_413);
-        }
-
-        const offeringIdObj =
-          contractedItem.facilityAmenityOfferingId &&
-          typeof contractedItem.facilityAmenityOfferingId === 'object' &&
-          '_id' in
-            (contractedItem.facilityAmenityOfferingId as unknown as Record<
-              string,
-              unknown
-            >)
-            ? (
-                contractedItem.facilityAmenityOfferingId as unknown as {
-                  _id: Types.ObjectId;
-                }
-              )._id
-            : (contractedItem.facilityAmenityOfferingId as Types.ObjectId);
-
-        const amenityIdObj =
-          contractedItem.amenityId &&
-          typeof contractedItem.amenityId === 'object' &&
-          '_id' in
-            (contractedItem.amenityId as unknown as Record<string, unknown>)
-            ? (contractedItem.amenityId as unknown as { _id: Types.ObjectId })
-                ._id
-            : (contractedItem.amenityId as Types.ObjectId);
-
-        const totalPrice = item.quantity * contractedItem.pricePerUnit;
-        addendumAmenities.push({
-          facilityAmenityOfferingId: offeringIdObj,
-          amenityId: amenityIdObj,
-          name: contractedItem.name,
-          quantity: item.quantity,
-          pricePerUnit: contractedItem.pricePerUnit,
-          billingUnit: contractedItem.billingUnit,
-          totalPrice,
-          addedAt: new Date(),
-        });
-      }
+    if (!data.newStorageUnitId) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+        'newStorageUnitId is required for UNIT_CHANGE addendum',
+      ]);
     }
 
-    const addendumTotalPeriodicPrice = addendumAmenities.reduce(
-      (sum, a) => sum + a.totalPrice,
-      0
+    const currentStorageUnitIdStr = this.extractIdStr(contract.storageUnitId);
+    if (data.newStorageUnitId === currentStorageUnitIdStr) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+        'New storage unit must be different from current storage unit',
+      ]);
+    }
+
+    const newUnit = await this.storageUnitRepository.findById(
+      data.newStorageUnitId,
+      session
     );
+    if (!newUnit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+
+    const newUnitFacilityIdStr = this.extractIdStr(newUnit.facilityId);
+    if (newUnitFacilityIdStr !== facilityIdStr) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
+    }
+
+    const reservedUnit =
+      await this.storageUnitRepository.findAndReserveUnitAtomic(
+        data.newStorageUnitId,
+        facilityIdStr,
+        session
+      );
+    if (!reservedUnit) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_402);
+    }
 
     const newAddendum: IContractAddendum = {
       _id: new Types.ObjectId(),
       addendumCode: this.generateAddendumCode(),
-      type: data.type,
-      amenities: addendumAmenities,
-      totalPeriodicPrice: addendumTotalPeriodicPrice,
+      type: ContractAddendumTypeEnum.UNIT_CHANGE,
+      previousEndDate: null,
+      newEndDate: null,
+      previousStorageUnitId: new Types.ObjectId(currentStorageUnitIdStr),
+      newStorageUnitId: new Types.ObjectId(data.newStorageUnitId),
+      amenities: [],
+      totalPeriodicPrice: 0,
       damageFee: 0,
-      status: ContractAddendumStatusEnum.PENDING_APPROVAL,
+      status: ContractAddendumStatusEnum.DRAFT,
       requestedBy: new Types.ObjectId(actorId),
-      requestedAt: new Date(),
-      approvedBy: null,
-      approvedAt: null,
-      assignedStaffId: null,
+      requestedAt: now,
+      approvedBy: new Types.ObjectId(actorId),
+      approvedAt: now,
+      assignedStaffId: new Types.ObjectId(actorId),
       customerSigned: false,
       customerSignedAt: null,
       staffSigned: false,
@@ -1073,18 +1060,21 @@ export class ContractService {
       metadata: {
         addendumCode: newAddendum.addendumCode,
         type: newAddendum.type,
+        previousStorageUnitId: currentStorageUnitIdStr,
+        newStorageUnitId: data.newStorageUnitId,
       },
     });
 
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 5b. Manager approves addendum request & assigns staff for handover (PENDING_APPROVAL -> DRAFT)
+  // 5b. Manager approves addendum request (PENDING_APPROVAL -> DRAFT)
   @Transactional()
   async approveAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: ApproveContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1093,7 +1083,23 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    if (contract.status !== ContractStatusEnum.ACTIVE) {
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
+    if (
+      contract.status !== ContractStatusEnum.ACTIVE &&
+      contract.status !== ContractStatusEnum.OVERDUE
+    ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
@@ -1108,6 +1114,20 @@ export class ContractService {
     const target = addendums[index];
     if (target.status !== ContractAddendumStatusEnum.PENDING_APPROVAL) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_410);
+    }
+
+    if (data.assignedStaffId) {
+      const staffUser = await this.userRepository.findById(
+        data.assignedStaffId
+      );
+      if (!staffUser) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Staff']);
+      }
+      await this.assertFacilityAccess(
+        data.assignedStaffId,
+        staffUser.role,
+        facilityIdStr
+      );
     }
 
     const defaultStaffId = contract.assignedStaffId
@@ -1155,12 +1175,13 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 5c. Manager rejects addendum request (PENDING_APPROVAL -> REJECTED) & releases locked inventory if ADD
+  // 5c. Manager rejects addendum request (PENDING_APPROVAL -> REJECTED)
   @Transactional()
   async rejectAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: RejectContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1168,6 +1189,19 @@ export class ContractService {
     if (!contract) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
+
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
 
     const addendums = [...(contract.addendums || [])];
     const index = addendums.findIndex(
@@ -1182,12 +1216,15 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_410);
     }
 
-    // Release locked amenity inventory only for ADD addendums
     if (
-      (target.type || ContractAddendumTypeEnum.ADD) ===
-      ContractAddendumTypeEnum.ADD
+      target.type === ContractAddendumTypeEnum.UNIT_CHANGE &&
+      target.newStorageUnitId
     ) {
-      await this.releaseAddendumAmenitiesInventory(target.amenities, session);
+      await this.storageUnitRepository.releaseReservedUnitAtomic(
+        this.extractIdStr(target.newStorageUnitId),
+        StorageUnitStatusEnum.AVAILABLE,
+        session
+      );
     }
 
     addendums[index] = {
@@ -1224,12 +1261,13 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 5d. Customer signs addendum on Mobile (Two-party signing: Customer side)
+  // 5d. Customer signs addendum on Mobile (First signing step: Customer side)
   @Transactional()
   async customerSignAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: SignContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1237,18 +1275,20 @@ export class ContractService {
       id,
       addendumId,
       actorId,
+      actorRole,
       'customer',
       data,
       session
     );
   }
 
-  // 5e. Staff signs addendum after physical handover/uninstall on Web (Two-party signing: Staff side)
+  // 5e. Facility Manager signs addendum & activates changes (Second signing step: Facility side)
   @Transactional()
   async staffSignAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: SignContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1256,24 +1296,45 @@ export class ContractService {
       id,
       addendumId,
       actorId,
+      actorRole,
       'staff',
       data,
       session
     );
   }
 
-  // 5f. Cancel addendum (PENDING_APPROVAL or DRAFT -> CANCELLED) & release locked inventory if ADD
+  // 5f. Cancel addendum (PENDING_APPROVAL or DRAFT -> CANCELLED) & release locked unit if UNIT_CHANGE
   @Transactional()
   async cancelAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: CancelContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
     const contract = await this.contractRepository.findById(id, session);
     if (!contract) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    if (
+      actorRole !== RoleEnum.CUSTOMER &&
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    if (actorRole === RoleEnum.CUSTOMER) {
+      const customerIdStr = this.extractIdStr(contract.customerId);
+      if (customerIdStr !== actorId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else {
+      await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
     }
 
     const addendums = [...(contract.addendums || [])];
@@ -1292,12 +1353,16 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_410);
     }
 
-    // Release locked amenity inventory only for ADD addendums
+    // Release reserved replacement storage unit for UNIT_CHANGE addendums
     if (
-      (target.type || ContractAddendumTypeEnum.ADD) ===
-      ContractAddendumTypeEnum.ADD
+      target.type === ContractAddendumTypeEnum.UNIT_CHANGE &&
+      target.newStorageUnitId
     ) {
-      await this.releaseAddendumAmenitiesInventory(target.amenities, session);
+      await this.storageUnitRepository.releaseReservedUnitAtomic(
+        this.extractIdStr(target.newStorageUnitId),
+        StorageUnitStatusEnum.AVAILABLE,
+        session
+      );
     }
 
     addendums[index] = {
@@ -1772,38 +1837,6 @@ export class ContractService {
     return `ADD-${dateStr}-${randomPart}`;
   }
 
-  private async releaseAddendumAmenitiesInventory(
-    amenities: IContractAmenity[],
-    session?: ClientSession
-  ): Promise<void> {
-    for (const a of amenities) {
-      const offeringId = String(
-        (a.facilityAmenityOfferingId as unknown as { _id: Types.ObjectId })
-          ._id || a.facilityAmenityOfferingId
-      );
-      const offering = await this.amenityOfferingRepository.findById(
-        offeringId,
-        session
-      );
-      if (offering) {
-        const isService =
-          offering.amenityId &&
-          typeof offering.amenityId === 'object' &&
-          'type' in offering.amenityId &&
-          (offering.amenityId as { type?: string }).type === 'service';
-
-        if (!isService) {
-          const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
-          await this.amenityOfferingRepository.updateById(
-            offeringId,
-            { inUseQuantity: newInUse },
-            session
-          );
-        }
-      }
-    }
-  }
-
   private async cancelOpenAddendumsOnContractEnd(
     addendums: IContractAddendum[],
     actorId: string,
@@ -1823,11 +1856,12 @@ export class ContractService {
         rawAd.status === ContractAddendumStatusEnum.DRAFT
       ) {
         if (
-          (rawAd.type || ContractAddendumTypeEnum.ADD) ===
-          ContractAddendumTypeEnum.ADD
+          rawAd.type === ContractAddendumTypeEnum.UNIT_CHANGE &&
+          rawAd.newStorageUnitId
         ) {
-          await this.releaseAddendumAmenitiesInventory(
-            rawAd.amenities,
+          await this.storageUnitRepository.releaseReservedUnitAtomic(
+            this.extractIdStr(rawAd.newStorageUnitId),
+            StorageUnitStatusEnum.AVAILABLE,
             session
           );
         }
@@ -1849,6 +1883,7 @@ export class ContractService {
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     party: 'customer' | 'staff',
     data: SignContractAddendumRequest,
     session?: ClientSession
@@ -1858,7 +1893,30 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    if (contract.status !== ContractStatusEnum.ACTIVE) {
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    const customerIdStr = this.extractIdStr(contract.customerId);
+
+    if (party === 'customer') {
+      if (actorRole !== RoleEnum.CUSTOMER || customerIdStr !== actorId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else {
+      if (
+        actorRole !== RoleEnum.FACILITY_MANAGER &&
+        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        actorRole !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+          RoleEnum.FACILITY_MANAGER,
+        ]);
+      }
+      await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+    }
+
+    if (
+      contract.status !== ContractStatusEnum.ACTIVE &&
+      contract.status !== ContractStatusEnum.OVERDUE
+    ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
@@ -1888,7 +1946,20 @@ export class ContractService {
           ).toObject()
         : { ...target };
 
-    const addendumType = rawTarget.type || ContractAddendumTypeEnum.ADD;
+    if (party === 'customer' && rawTarget.customerSigned) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_412);
+    }
+
+    if (party === 'staff') {
+      if (!rawTarget.customerSigned) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_415);
+      }
+      if (rawTarget.staffSigned) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_412);
+      }
+    }
+
+    const addendumType = rawTarget.type || ContractAddendumTypeEnum.RENEW;
 
     const customerSigned =
       party === 'customer' ? true : Boolean(rawTarget.customerSigned);
@@ -1899,19 +1970,11 @@ export class ContractService {
     const staffSignedAt =
       party === 'staff' ? now : rawTarget.staffSignedAt || null;
 
-    const addendumDamageFee =
-      party === 'staff' &&
-      addendumType === ContractAddendumTypeEnum.REMOVE &&
-      typeof data.damageFee === 'number'
-        ? data.damageFee
-        : Number(rawTarget.damageFee || 0);
-
     const bothSigned = customerSigned && staffSigned;
 
     addendums[index] = {
       ...rawTarget,
       type: addendumType,
-      damageFee: addendumDamageFee,
       customerSigned,
       customerSignedAt,
       staffSigned,
@@ -1927,134 +1990,55 @@ export class ContractService {
       notes: data.notes || rawTarget.notes || null,
     };
 
-    // If both customer and staff have signed, apply addendum changes to contract
-    const updatedAmenities = [...contract.amenities];
-    let updatedContractDamageFee = Number(contract.damageFee || 0);
+    const updatePayload: Partial<IContract> = {
+      addendums,
+    };
 
     if (bothSigned) {
-      if (addendumType === ContractAddendumTypeEnum.ADD) {
-        for (const addItem of rawTarget.amenities) {
-          const addOfferingIdStr = String(
-            (
-              addItem.facilityAmenityOfferingId as unknown as {
-                _id: Types.ObjectId;
-              }
-            )._id || addItem.facilityAmenityOfferingId
-          );
-          const existingIdx = updatedAmenities.findIndex(
-            (ca) =>
-              String(
-                (
-                  ca.facilityAmenityOfferingId as unknown as {
-                    _id: Types.ObjectId;
-                  }
-                )._id || ca.facilityAmenityOfferingId
-              ) === addOfferingIdStr
-          );
+      if (addendumType === ContractAddendumTypeEnum.RENEW) {
+        const nextEndDate = rawTarget.newEndDate
+          ? new Date(rawTarget.newEndDate)
+          : new Date(contract.endDate);
+        const prevEndDate = rawTarget.previousEndDate
+          ? new Date(rawTarget.previousEndDate)
+          : new Date(contract.endDate);
 
-          if (existingIdx >= 0) {
-            const existing = updatedAmenities[existingIdx];
-            const rawExisting =
-              typeof (existing as { toObject?: () => IContractAmenity })
-                .toObject === 'function'
-                ? (
-                    existing as unknown as { toObject: () => IContractAmenity }
-                  ).toObject()
-                : { ...existing };
-            const newQty = rawExisting.quantity + addItem.quantity;
-            updatedAmenities[existingIdx] = {
-              ...rawExisting,
-              quantity: newQty,
-              totalPrice: newQty * rawExisting.pricePerUnit,
-            };
-          } else {
-            updatedAmenities.push({
-              facilityAmenityOfferingId: addItem.facilityAmenityOfferingId,
-              amenityId: addItem.amenityId,
-              name: addItem.name,
-              quantity: addItem.quantity,
-              pricePerUnit: addItem.pricePerUnit,
-              billingUnit: addItem.billingUnit,
-              totalPrice: addItem.totalPrice,
-              addedAt: now,
-            });
-          }
-        }
-      } else {
-        // addendumType === ContractAddendumTypeEnum.REMOVE
-        for (const remItem of rawTarget.amenities) {
-          const remOfferingIdStr = String(
-            (
-              remItem.facilityAmenityOfferingId as unknown as {
-                _id: Types.ObjectId;
-              }
-            )._id || remItem.facilityAmenityOfferingId
-          );
-          const existingIdx = updatedAmenities.findIndex(
-            (ca) =>
-              String(
-                (
-                  ca.facilityAmenityOfferingId as unknown as {
-                    _id: Types.ObjectId;
-                  }
-                )._id || ca.facilityAmenityOfferingId
-              ) === remOfferingIdStr
-          );
+        const renewalEntry: IContractRenewal = {
+          previousEndDate: prevEndDate,
+          newEndDate: nextEndDate,
+          renewedAt: now,
+          renewedBy: new Types.ObjectId(actorId),
+          note: rawTarget.notes || null,
+        };
 
-          if (existingIdx === -1) {
-            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_413);
-          }
+        updatePayload.endDate = nextEndDate;
+        updatePayload.status = ContractStatusEnum.ACTIVE;
+        updatePayload.renewalCount = (contract.renewalCount || 0) + 1;
+        updatePayload.renewals = [...(contract.renewals || []), renewalEntry];
+      } else if (addendumType === ContractAddendumTypeEnum.UNIT_CHANGE) {
+        const oldUnitIdStr = rawTarget.previousStorageUnitId
+          ? this.extractIdStr(rawTarget.previousStorageUnitId)
+          : this.extractIdStr(contract.storageUnitId);
+        const newUnitIdStr = this.extractIdStr(rawTarget.newStorageUnitId);
 
-          const existing = updatedAmenities[existingIdx];
-          const rawExisting =
-            typeof (existing as { toObject?: () => IContractAmenity })
-              .toObject === 'function'
-              ? (
-                  existing as unknown as { toObject: () => IContractAmenity }
-                ).toObject()
-              : { ...existing };
-
-          if (rawExisting.quantity < remItem.quantity) {
-            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_413);
-          }
-
-          const newQty = rawExisting.quantity - remItem.quantity;
-          if (newQty === 0) {
-            updatedAmenities.splice(existingIdx, 1);
-          } else {
-            updatedAmenities[existingIdx] = {
-              ...rawExisting,
-              quantity: newQty,
-              totalPrice: newQty * rawExisting.pricePerUnit,
-            };
-          }
-        }
-
-        // Release facility inventory now that equipment has been physically uninstalled/returned
-        await this.releaseAddendumAmenitiesInventory(
-          rawTarget.amenities,
+        await this.storageUnitRepository.updateById(
+          oldUnitIdStr,
+          { status: StorageUnitStatusEnum.UNDER_MAINTENANCE },
+          session
+        );
+        await this.storageUnitRepository.updateById(
+          newUnitIdStr,
+          { status: StorageUnitStatusEnum.OCCUPIED },
           session
         );
 
-        // Accumulate any damage fee recorded during equipment uninstall inspection
-        updatedContractDamageFee += addendumDamageFee;
+        updatePayload.storageUnitId = new Types.ObjectId(newUnitIdStr);
       }
     }
 
-    const amenitiesTotal = updatedAmenities.reduce(
-      (sum, a) => sum + a.totalPrice,
-      0
-    );
-    const totalPeriodicPrice = contract.rentalPrice + amenitiesTotal;
-
     const updated = await this.contractRepository.update(
       id,
-      {
-        addendums,
-        amenities: updatedAmenities,
-        totalPeriodicPrice,
-        damageFee: updatedContractDamageFee,
-      },
+      updatePayload,
       session
     );
 
@@ -2072,7 +2056,6 @@ export class ContractService {
         type: addendumType,
         party,
         activated: bothSigned,
-        damageFee: addendumDamageFee,
       },
     });
 
@@ -2203,11 +2186,40 @@ export class ContractService {
           : String(ad.assignedStaffId)
         : null;
 
+      const prevUnitIdStr = ad.previousStorageUnitId
+        ? typeof ad.previousStorageUnitId === 'object' &&
+          '_id' in (ad.previousStorageUnitId as Record<string, unknown>)
+          ? String((ad.previousStorageUnitId as Record<string, unknown>)._id)
+          : String(ad.previousStorageUnitId)
+        : null;
+
+      const nextUnitIdStr = ad.newStorageUnitId
+        ? typeof ad.newStorageUnitId === 'object' &&
+          '_id' in (ad.newStorageUnitId as Record<string, unknown>)
+          ? String((ad.newStorageUnitId as Record<string, unknown>)._id)
+          : String(ad.newStorageUnitId)
+        : null;
+
       return {
         id: String(ad._id || ad.id),
         addendumCode: String(ad.addendumCode),
         type:
-          (ad.type as ContractAddendumTypeEnum) || ContractAddendumTypeEnum.ADD,
+          (ad.type as ContractAddendumTypeEnum) ||
+          ContractAddendumTypeEnum.RENEW,
+        previousEndDate: ad.previousEndDate
+          ? ad.previousEndDate instanceof Date
+            ? ad.previousEndDate.toISOString()
+            : new Date(String(ad.previousEndDate)).toISOString()
+          : null,
+        newEndDate: ad.newEndDate
+          ? ad.newEndDate instanceof Date
+            ? ad.newEndDate.toISOString()
+            : new Date(String(ad.newEndDate)).toISOString()
+          : null,
+        previousStorageUnitId: prevUnitIdStr,
+        previousStorageUnit: formatStorageUnitSnap(ad.previousStorageUnitId),
+        newStorageUnitId: nextUnitIdStr,
+        newStorageUnit: formatStorageUnitSnap(ad.newStorageUnitId),
         amenities: formatAmenityList(ad.amenities),
         totalPeriodicPrice: Number(ad.totalPeriodicPrice || 0),
         damageFee: Number(ad.damageFee || 0),
