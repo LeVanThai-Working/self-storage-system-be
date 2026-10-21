@@ -4015,13 +4015,13 @@
 			},
 			"infer_typeofconfirmManualPaymentSchema_": {
 				"properties": {
-					"proofImageUrl": {
-						"type": "string"
-					},
 					"referenceCode": {
 						"type": "string"
 					},
 					"note": {
+						"type": "string"
+					},
+					"proofImageUrl": {
 						"type": "string"
 					},
 					"method": {
@@ -4037,6 +4037,7 @@
 				},
 				"required": [
 					"note",
+					"proofImageUrl",
 					"method"
 				],
 				"type": "object"

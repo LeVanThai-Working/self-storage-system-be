@@ -6,6 +6,7 @@ import type { ContractRepository } from '../contract/contract.repository.ts';
 import type { ReservationService } from '../reservation/reservation.service.ts';
 import type { ContractService } from '../contract/contract.service.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { UserRepository } from '../user/user.repository.ts';
 import type { IPayment } from './payment.model.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
@@ -49,8 +50,38 @@ export class PaymentService {
     private readonly contractRepository: ContractRepository,
     private readonly reservationService: ReservationService,
     private readonly contractService: ContractService,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly userRepository?: UserRepository
   ) {}
+
+  private async assertFacilityAccess(
+    userId: string,
+    userRole: string,
+    facilityId: string
+  ): Promise<void> {
+    if (
+      userRole === RoleEnum.SYSTEM_ADMIN ||
+      userRole === RoleEnum.BUSINESS_OPS_MANAGER
+    ) {
+      return;
+    }
+
+    if (!this.userRepository) {
+      return;
+    }
+
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+    }
+
+    if (
+      !user.assignedFacilityId ||
+      String(user.assignedFacilityId) !== facilityId
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, ['Facility']);
+    }
+  }
 
   private formatPayment(doc: IPayment): PaymentResponse {
     const raw = (
@@ -529,12 +560,35 @@ export class PaymentService {
   async confirmManualPayment(
     id: string,
     staffId: string,
+    actorRole: string,
     data: ConfirmManualPaymentRequest,
     session?: ClientSession
   ): Promise<PaymentResponse> {
     const payment = await this.paymentRepository.findById(id, session);
     if (!payment) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_500);
+    }
+
+    const allowedRoles: string[] = [
+      RoleEnum.FACILITY_STAFF,
+      RoleEnum.FACILITY_MANAGER,
+      RoleEnum.BUSINESS_OPS_MANAGER,
+      RoleEnum.SYSTEM_ADMIN,
+    ];
+    if (!allowedRoles.includes(actorRole as RoleEnum)) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        'FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN',
+      ]);
+    }
+
+    const facilityIdStr = String(
+      (payment.facilityId as { _id?: Types.ObjectId })?._id ||
+        payment.facilityId
+    );
+    await this.assertFacilityAccess(staffId, actorRole, facilityIdStr);
+
+    if (!data.proofImageUrl) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_509);
     }
 
     if (

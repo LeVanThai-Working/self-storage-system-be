@@ -51,7 +51,10 @@ import {
   AuditActionEnum,
   AuditResourceEnum,
 } from '../../common/enums/auditLog.enum.ts';
-import { getReservationConfig } from '../../config/reservation.config.ts';
+import {
+  getReservationConfig,
+  isDemoRefundSimulationEnabled,
+} from '../../config/reservation.config.ts';
 import {
   addDays,
   endOfDayVN,
@@ -1599,6 +1602,21 @@ export class ReservationService {
     data: ConfirmRefundRequest,
     session?: ClientSession
   ): Promise<ReservationResponse> {
+    if (!isDemoRefundSimulationEnabled()) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_321);
+    }
+
+    const allowedRoles: string[] = [
+      RoleEnum.FACILITY_MANAGER,
+      RoleEnum.BUSINESS_OPS_MANAGER,
+      RoleEnum.SYSTEM_ADMIN,
+    ];
+    if (!allowedRoles.includes(actorRole as RoleEnum)) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        'FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN',
+      ]);
+    }
+
     const reservation = await this.reservationRepository.findById(id, session);
     if (!reservation) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
@@ -1609,6 +1627,23 @@ export class ReservationService {
         reservation.facilityId
     );
     await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
+    // Maker-Checker: Person confirming refund cannot be the person who confirmed manual payment
+    if (reservation.paymentId && this.paymentRepository) {
+      const payment = await this.paymentRepository.findById(
+        String(reservation.paymentId),
+        session
+      );
+      if (payment?.confirmedBy) {
+        const paymentConfirmedByStr = String(
+          (payment.confirmedBy as { _id?: Types.ObjectId })._id ||
+            payment.confirmedBy
+        );
+        if (paymentConfirmedByStr === actorId) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_320);
+        }
+      }
+    }
 
     if (
       (reservation.status !== ReservationStatusEnum.CANCELLED &&

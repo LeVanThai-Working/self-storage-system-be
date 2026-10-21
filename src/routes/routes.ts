@@ -1089,7 +1089,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofconfirmManualPaymentSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"proofImageUrl":{"dataType":"string"},"referenceCode":{"dataType":"string"},"note":{"dataType":"string","required":true},"method":{"dataType":"union","subSchemas":[{"ref":"PaymentMethodEnum.CASH"},{"ref":"PaymentMethodEnum.BANK_TRANSFER"}],"required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"referenceCode":{"dataType":"string"},"note":{"dataType":"string","required":true},"proofImageUrl":{"dataType":"string","required":true},"method":{"dataType":"union","subSchemas":[{"ref":"PaymentMethodEnum.CASH"},{"ref":"PaymentMethodEnum.BANK_TRANSFER"}],"required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ConfirmManualPaymentRequest": {

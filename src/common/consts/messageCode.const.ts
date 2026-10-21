@@ -108,6 +108,10 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_318: 'MESSAGE_CODE_318',
   // Check-in Date Has Already Passed
   MESSAGE_CODE_319: 'MESSAGE_CODE_319',
+  // Maker-Checker Violation
+  MESSAGE_CODE_320: 'MESSAGE_CODE_320',
+  // Demo Refund Simulation Disabled
+  MESSAGE_CODE_321: 'MESSAGE_CODE_321',
 
   // ==========================================
   // CONTRACT (400 - 408)
@@ -166,6 +170,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_507: 'MESSAGE_CODE_507',
   // Payment Account Mismatch
   MESSAGE_CODE_508: 'MESSAGE_CODE_508',
+  // Proof Image Required For Manual Payment
+  MESSAGE_CODE_509: 'MESSAGE_CODE_509',
 
   // ==========================================
   // STORAGE RACK & TIER (600 - 603)
@@ -272,6 +278,9 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_318: 'Reservation Has An Active Linked Contract',
   MESSAGE_CODE_319:
     'Check-in Date Has Already Passed, Cannot Confirm Reservation',
+  MESSAGE_CODE_320:
+    'Refund Confirmer Must Be Different From Payment Confirmer (Maker-Checker Violation)',
+  MESSAGE_CODE_321: 'Demo Refund Simulation Is Disabled In This Environment',
 
   // Contract
   MESSAGE_CODE_400: 'Contract Not Found',
@@ -303,6 +312,7 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_506: 'Contract Deposit Not Paid',
   MESSAGE_CODE_507: 'Payment Already Settled',
   MESSAGE_CODE_508: 'Payment Account Mismatch',
+  MESSAGE_CODE_509: 'Proof Image Is Required For Manual Payment Confirmation',
 
   // Storage Rack & Tier
   MESSAGE_CODE_600: 'Storage Rack Not Found',

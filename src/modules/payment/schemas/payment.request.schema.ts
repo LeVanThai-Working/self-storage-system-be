@@ -43,7 +43,9 @@ export const confirmManualPaymentSchema = z.object({
     .enum([PaymentMethodEnum.CASH, PaymentMethodEnum.BANK_TRANSFER])
     .default(PaymentMethodEnum.CASH),
   referenceCode: z.string().max(100).optional(),
-  proofImageUrl: z.string().url('Invalid image URL format').optional(),
+  proofImageUrl: z
+    .string()
+    .url('Proof image URL is required for manual payment verification'),
   note: z
     .string()
     .min(2, 'Note is required for manual payment verification')

@@ -28,3 +28,14 @@ export function getReservationConfig(): ReservationConfig {
     maxActivePerCustomer,
   };
 }
+
+/**
+ * Returns true if demo/simulated refund is enabled.
+ * Strictly hard-disabled when NODE_ENV is 'production'.
+ */
+export function isDemoRefundSimulationEnabled(): boolean {
+  if (process.env.NODE_ENV === 'production') {
+    return false;
+  }
+  return process.env.ENABLE_DEMO_REFUND_SIMULATION === 'true';
+}

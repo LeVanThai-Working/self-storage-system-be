@@ -325,6 +325,7 @@ export class PaymentController extends Controller {
     const result = await this.paymentService.confirmManualPayment(
       id,
       caller.userId,
+      caller.role,
       body
     );
 
