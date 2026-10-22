@@ -5003,6 +5003,9 @@
 					"phone": {
 						"type": "string"
 					},
+					"code": {
+						"type": "string"
+					},
 					"images": {
 						"items": {
 							"type": "string"
@@ -6048,6 +6051,9 @@
 							"phone": {
 								"type": "string"
 							},
+							"code": {
+								"type": "string"
+							},
 							"images": {
 								"items": {
 									"type": "string"
@@ -6152,6 +6158,9 @@
 					"phone": {
 						"type": "string"
 					},
+					"code": {
+						"type": "string"
+					},
 					"city": {
 						"type": "string"
 					},
@@ -6211,6 +6220,9 @@
 						"type": "string"
 					},
 					"address": {
+						"type": "string"
+					},
+					"code": {
 						"type": "string"
 					},
 					"name": {
@@ -6735,6 +6747,9 @@
 							"city": {
 								"type": "string"
 							},
+							"code": {
+								"type": "string"
+							},
 							"name": {
 								"type": "string"
 							},
@@ -6872,140 +6887,137 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofstockInRequestSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"referenceCode": {
-						"type": "string"
-					},
-					"rackTierId": {
-						"type": "string"
-					},
-					"quantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"skuId": {
-						"type": "string"
-					},
-					"contractId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"quantity",
-					"skuId",
-					"contractId"
-				],
-				"type": "object"
-			},
 			"StockInRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockInRequestSchema_"
-			},
-			"infer_typeofstockOutRequestSchema_": {
 				"properties": {
-					"notes": {
+					"contractId": {
 						"type": "string"
 					},
-					"referenceCode": {
-						"type": "string"
-					},
-					"reason": {
+					"skuId": {
 						"type": "string"
 					},
 					"rackTierId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"quantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"referenceCode": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"quantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"quantity"
 				],
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"StockOutRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockOutRequestSchema_"
-			},
-			"infer_typeofstockMoveRequestSchema_": {
 				"properties": {
-					"notes": {
+					"contractId": {
 						"type": "string"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string",
+						"nullable": true
+					},
+					"quantity": {
+						"type": "number",
+						"format": "double"
 					},
 					"reason": {
 						"type": "string"
 					},
-					"toRackTierId": {
+					"referenceCode": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"contractId",
+					"skuId",
+					"quantity"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"StockMoveRequest": {
+				"properties": {
+					"contractId": {
+						"type": "string"
+					},
+					"skuId": {
 						"type": "string"
 					},
 					"fromRackTierId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
+					},
+					"toRackTierId": {
+						"type": "string",
+						"nullable": true
 					},
 					"quantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"reason": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"quantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"quantity"
 				],
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
-			"StockMoveRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockMoveRequestSchema_"
-			},
-			"infer_typeofstockAdjustRequestSchema_": {
+			"StockAdjustRequest": {
 				"properties": {
-					"notes": {
+					"contractId": {
+						"type": "string"
+					},
+					"skuId": {
 						"type": "string"
 					},
 					"rackTierId": {
-						"type": "string"
-					},
-					"reason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"newQuantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"reason": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"reason",
-					"newQuantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"newQuantity",
+					"reason"
 				],
-				"type": "object"
-			},
-			"StockAdjustRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockAdjustRequestSchema_"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"MovementTypeEnum": {
 				"enum": [
@@ -7162,6 +7174,9 @@
 								"type": "string"
 							},
 							"city": {
+								"type": "string"
+							},
+							"code": {
 								"type": "string"
 							},
 							"name": {
@@ -7572,6 +7587,30 @@
 						"required": [
 							"status",
 							"contractCode",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"code": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
 							"id"
 						],
 						"type": "object"
@@ -8053,6 +8092,9 @@
 										"city": {
 											"type": "string"
 										},
+										"code": {
+											"type": "string"
+										},
 										"name": {
 											"type": "string"
 										},
@@ -8315,6 +8357,9 @@
 										"city": {
 											"type": "string"
 										},
+										"code": {
+											"type": "string"
+										},
 										"name": {
 											"type": "string"
 										},
@@ -8530,6 +8575,18 @@
 					"message",
 					"data"
 				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CustomerInventorySummaryQuery": {
+				"properties": {
+					"customerId": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					}
+				},
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -17522,7 +17579,7 @@
 						}
 					}
 				},
-				"description": "1. Nhập hàng vào kho/tầng kệ (Stock In)\nKhách hàng tự nhập thêm hàng vào khoang chứa hoặc tầng kệ của mình.",
+				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -17595,7 +17652,7 @@
 						}
 					}
 				},
-				"description": "2. Xuất hàng khỏi kho/tầng kệ (Stock Out)\nKhách hàng tự lấy bớt hàng ra khỏi khoang chứa hoặc tầng kệ.",
+				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -17668,7 +17725,7 @@
 						}
 					}
 				},
-				"description": "3. Chuyển vị trí hàng nội bộ giữa các tầng kệ (Stock Move)\nKhách hàng dời hàng giữa các vị trí trong khoang chứa của mình.",
+				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -17741,7 +17798,7 @@
 						}
 					}
 				},
-				"description": "4. Kiểm kê / Điều chỉnh số lượng tồn kho (Stock Adjust)\nKhách hàng tự đếm và cập nhật số lượng tồn thực tế kèm lý do bắt buộc.",
+				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -17784,7 +17841,7 @@
 						}
 					}
 				},
-				"description": "5. Tra cứu nhật ký biến động kho (Inventory Movement Ledger)\nLịch sử giao dịch sổ cái nhập/xuất/chuyển/kiểm kê.",
+				"description": "5. Inventory Movement Ledger\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -17941,7 +17998,7 @@
 						}
 					}
 				},
-				"description": "6. Tra cứu danh sách tồn kho hiện hành\nXem số lượng tồn hiện tại của các SKU tại các vị trí/tầng kệ.",
+				"description": "6. Query current inventory list\nView current stock quantities of SKUs across units and rack tiers.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -18111,7 +18168,7 @@
 						}
 					}
 				},
-				"description": "8. Sơ đồ cây khoang chứa đa tầng (Storage Unit Inventory Tree)\nHiển thị cấu trúc cây: Unit -> Racks -> Tiers -> SKUs + hàng để sàn + summary",
+				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -18173,7 +18230,7 @@
 						}
 					}
 				},
-				"description": "9. Tra cứu vị trí lưu trữ của SKU theo ID\nDanh sách tất cả các vị trí (cơ sở, phòng, kệ, tầng) mà SKU đang hiện diện",
+				"description": "9. Query SKU storage locations by SKU ID\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -18235,7 +18292,7 @@
 						}
 					}
 				},
-				"description": "10. Quét Barcode tra cứu vị trí tồn kho của SKU",
+				"description": "10. Scan barcode to look up SKU storage locations",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -18287,12 +18344,29 @@
 						}
 					}
 				},
-				"description": "11. Bảng điều khiển tổng hợp tồn kho cá nhân (Dashboard Summary)\nThống kê tổng số SKU, sản phẩm, hợp đồng, phòng kho, phân loại ngành hàng và biến động gần nhất",
+				"description": "11. Customer Personal Inventory Dashboard Summary\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
 				"tags": [
 					"Customer Inventories"
 				],
 				"security": [],
-				"parameters": []
+				"parameters": [
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "userId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/customer-inventories/{id}": {
@@ -18340,7 +18414,7 @@
 						}
 					}
 				},
-				"description": "7. Chi tiết 1 bản ghi tồn kho theo ID",
+				"description": "7. Retrieve single inventory record by ID",
 				"tags": [
 					"Customer Inventories"
 				],

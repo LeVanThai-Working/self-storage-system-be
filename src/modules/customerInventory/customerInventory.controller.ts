@@ -29,6 +29,7 @@ import {
   stockAdjustRequestSchema,
   customerInventoryQuerySchema,
   inventoryMovementQuerySchema,
+  customerInventorySummaryQuerySchema,
   inventoryIdParamSchema,
   storageUnitTreeParamSchema,
   skuLocationsParamSchema,
@@ -38,6 +39,7 @@ import {
   type StockMoveRequest,
   type StockAdjustRequest,
   type CustomerInventoryQuery,
+  type CustomerInventorySummaryQuery,
   type InventoryMovementQuery,
 } from './schemas/customerInventory.request.schema.ts';
 import type {
@@ -54,7 +56,7 @@ import type {
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 
 /**
- * Helper trích xuất danh tính caller linh hoạt trong giai đoạn phát triển (Rule 14)
+ * Helper to extract caller identity flexibly during development (Rule 14)
  */
 function extractCaller(req: ExpressRequest): CallerContext {
   const user = req.user as
@@ -73,7 +75,7 @@ function extractCaller(req: ExpressRequest): CallerContext {
     };
   }
 
-  // Header x-user-id fallback cho testing / development
+  // Header x-user-id fallback for testing / development
   const headerUserId = req.headers['x-user-id'] as string;
   const headerRole = req.headers['x-user-role'] as string;
   const headerFacilityId = req.headers['x-facility-id'] as string;
@@ -134,8 +136,8 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 1. Nhập hàng vào kho/tầng kệ (Stock In)
-   * Khách hàng tự nhập thêm hàng vào khoang chứa hoặc tầng kệ của mình.
+   * 1. Stock In (Stock In)
+   * Customer stores new items into their unit or rack tier.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -164,8 +166,8 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 2. Xuất hàng khỏi kho/tầng kệ (Stock Out)
-   * Khách hàng tự lấy bớt hàng ra khỏi khoang chứa hoặc tầng kệ.
+   * 2. Stock Out (Stock Out)
+   * Customer retrieves items from their unit or rack tier.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -193,8 +195,8 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 3. Chuyển vị trí hàng nội bộ giữa các tầng kệ (Stock Move)
-   * Khách hàng dời hàng giữa các vị trí trong khoang chứa của mình.
+   * 3. Internal Stock Move (Stock Move)
+   * Customer relocates items between locations in their unit.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -222,8 +224,8 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 4. Kiểm kê / Điều chỉnh số lượng tồn kho (Stock Adjust)
-   * Khách hàng tự đếm và cập nhật số lượng tồn thực tế kèm lý do bắt buộc.
+   * 4. Stock Adjust (Stock Adjust)
+   * Customer counts and updates physical inventory with mandatory reason.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -251,8 +253,8 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 5. Tra cứu nhật ký biến động kho (Inventory Movement Ledger)
-   * Lịch sử giao dịch sổ cái nhập/xuất/chuyển/kiểm kê.
+   * 5. Inventory Movement Ledger
+   * Ledger transaction history of IN, OUT, MOVE, and ADJUST actions.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -280,8 +282,8 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 6. Tra cứu danh sách tồn kho hiện hành
-   * Xem số lượng tồn hiện tại của các SKU tại các vị trí/tầng kệ.
+   * 6. Query current inventory list
+   * View current stock quantities of SKUs across units and rack tiers.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -309,8 +311,8 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 8. Sơ đồ cây khoang chứa đa tầng (Storage Unit Inventory Tree)
-   * Hiển thị cấu trúc cây: Unit -> Racks -> Tiers -> SKUs + hàng để sàn + summary
+   * 8. Storage Unit Inventory Tree
+   * Visual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -340,8 +342,8 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 9. Tra cứu vị trí lưu trữ của SKU theo ID
-   * Danh sách tất cả các vị trí (cơ sở, phòng, kệ, tầng) mà SKU đang hiện diện
+   * 9. Query SKU storage locations by SKU ID
+   * List of all locations (facility, unit, rack, tier) where the SKU is present.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -371,7 +373,7 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 10. Quét Barcode tra cứu vị trí tồn kho của SKU
+   * 10. Scan barcode to look up SKU storage locations
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -401,20 +403,25 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 11. Bảng điều khiển tổng hợp tồn kho cá nhân (Dashboard Summary)
-   * Thống kê tổng số SKU, sản phẩm, hợp đồng, phòng kho, phân loại ngành hàng và biến động gần nhất
+   * 11. Customer Personal Inventory Dashboard Summary
+   * Summary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('summary')
+  @Middlewares(validateRequest({ query: customerInventorySummaryQuerySchema }))
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')
   public async getCustomerSummary(
-    @Request() req: ExpressRequest
+    @Request() req: ExpressRequest,
+    @Queries() query?: CustomerInventorySummaryQuery
   ): Promise<ApiResponse<CustomerInventorySummaryResponse>> {
     const caller = extractCaller(req);
-    const data = await this.customerInventoryService.getCustomerSummary(caller);
+    const data = await this.customerInventoryService.getCustomerSummary(
+      caller,
+      query
+    );
 
     return {
       success: true,
@@ -426,7 +433,7 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 7. Chi tiết 1 bản ghi tồn kho theo ID
+   * 7. Retrieve single inventory record by ID
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')

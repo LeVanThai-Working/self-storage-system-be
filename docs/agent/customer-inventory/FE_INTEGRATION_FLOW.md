@@ -2,7 +2,7 @@
 
 > **Dành cho:** Frontend Agent (Web & Mobile App)  
 > **Phân hệ:** `customer-inventory` & `customer-sku` & `storage-rack`  
-> **Mục tiêu:** Hướng dẫn chi tiết luồng nghiệp vụ từ lúc Khách hàng chọn loại kho (có kệ vs không kệ), tạo danh mục hàng hóa (SKU), hiển thị sơ đồ trực quan các ngăn kệ, đến thao tác thêm/nhập/xuất/chuyển SKU vào từng ngăn của kệ.
+> **Mục tiêu:** Hướng dẫn chi tiết luồng nghiệp vụ từ lúc Khách hàng chọn loại kho (có kệ vs không kệ), tạo danh mục hàng hóa (SKU), hiển thị sơ đồ trực quan các ngăn kệ, đến thao tác thêm/nhập/xuất/chuyển SKU vào từng ngăn của kệ hoặc để dưới sàn.
 
 ---
 
@@ -11,12 +11,15 @@
 Để xây dựng giao diện chính xác, Frontend cần nắm rõ 4 cấp độ phân tầng vật lý của hệ thống Self-Storage:
 
 ```
-[ Cơ sở (Facility) ]
+[ Cơ sở: Facility.code ] (Ví dụ: HN01, SGN01)
        │
        ▼
-[ Phòng kho vật lý (StorageUnit) ] (Thuộc một Hợp đồng Contract ACTIVE)
+[ Phòng kho: StorageUnit.unitNumber ] (Ví dụ: A101) (Thuộc một Hợp đồng Contract ACTIVE)
        │
-       ├─── KHÔNG KỆ (LOCKER, SMALL, LARGE) ──► Toàn bộ hàng xếp dưới sàn: [ Unracked Items ]
+       ├─── KHÔNG KỆ (LOCKER, SMALL, LARGE) hoặc HÀNG ĐỂ SÀN (Unracked Items)
+       │       │
+       │       ▼
+       │    [ rackTierId: null ] ──► Nhãn vị trí: HN01-A101-FLOOR (hoặc HN01-A101)
        │
        └─── CÓ KỆ (WAREHOUSE_RACK)
                │
@@ -27,7 +30,7 @@
        [ Tầng / Ngăn kệ (RackTier): R01-T01, R01-T02... ]
                │
                ▼
-       [ Mặt hàng của Khách (CustomerSku) ] (Lưu trữ số lượng tồn quantity)
+       [ rackTierId: "..." ] ──► Nhãn vị trí chuẩn: HN01-A101-R2-T1
 ```
 
 ### 1. Phân loại 4 nhóm phòng kho thực tế (`UnitTypeCategoryEnum`)
@@ -35,9 +38,20 @@
 | Loại kho (`category`) | Kích thước & Thể tích                                     | Có hệ thống Kệ tầng không? | Cách hiển thị trên UI cho Khách                                            |
 | :-------------------- | :-------------------------------------------------------- | :------------------------: | :------------------------------------------------------------------------- |
 | `LOCKER`              | Tủ nhỏ ($S < 1.5\,\text{m}^2$, $V < 2\,\text{m}^3$)       |          ❌ Không          | Tủ cá nhân, để đồ trực tiếp                                                |
-| `SMALL`               | Phòng nhỏ ($1.5 - 6\,\text{m}^2$, $3.5 - 15\,\text{m}^3$) |          ❌ Không          | Phòng để đồ gia dụng/phòng trọ, xếp sàn                                    |
-| `LARGE`               | Phòng lớn ($6 - 15\,\text{m}^2$, $15 - 40\,\text{m}^3$)   |          ❌ Không          | Chuyển nhà, nội thất lớn, xếp sàn                                          |
+| `SMALL`               | Phòng nhỏ ($1.5 - 6\,\text{m}^2$, $3.5 - 15\,\text{m}^3$) |          ❌ Không          | Phòng để đồ gia dụng/phòng trọ, xếp sàn (`rackTierId: null`)               |
+| `LARGE`               | Phòng lớn ($6 - 15\,\text{m}^2$, $15 - 40\,\text{m}^3$)   |          ❌ Không          | Chuyển nhà, nội thất lớn, xếp sàn (`rackTierId: null`)                     |
 | `WAREHOUSE_RACK`      | Kho hàng ($\ge 15\,\text{m}^2$, $\ge 45\,\text{m}^3$)     |  ✅ **Có sẵn Kệ & Tầng**   | **Kho hàng chuyên nghiệp, hỗ trợ phân loại hàng theo từng Kệ & Tầng/Ngăn** |
+
+### 2. Quy tắc Ghép Nhãn Vị trí Phân cấp (Location Label)
+
+Frontend ghép nhãn hiển thị trực quan cho người dùng theo công thức:
+
+- **Nếu hàng nằm trên tầng kệ:**
+  `{facility.code}-{storageUnit.unitNumber}-{rack.rackCode}-{tier.tierCode}`  
+  _(Ví dụ: `HN01-A101-R2-T1`)_
+- **Nếu hàng để dưới sàn (không kệ):**
+  `{facility.code}-{storageUnit.unitNumber}-FLOOR`  
+  _(Ví dụ: `HN01-A101-FLOOR` hoặc ngắn gọn `HN01-A101`)_
 
 ---
 
@@ -150,9 +164,16 @@ GET /api/v1/customer-inventories/unit/{storageUnitId}/tree
 {
   "success": true,
   "data": {
+    "facility": {
+      "id": "663000000000000000000099",
+      "code": "HN01",
+      "name": "Cơ sở Cầu Giấy",
+      "city": "Hà Nội",
+      "address": "Số 12 Duy Tân, Cầu Giấy, Hà Nội"
+    },
     "storageUnit": {
       "id": "663000000000000000000001",
-      "unitNumber": "RACK-101",
+      "unitNumber": "A101",
       "floor": 1,
       "zone": "Khu A"
     },
@@ -167,14 +188,14 @@ GET /api/v1/customer-inventories/unit/{storageUnitId}/tree
     "racks": [
       {
         "id": "rack_01_id",
-        "rackCode": "R01",
+        "rackCode": "R1",
         "name": "Kệ số 1",
         "tierCount": 4,
         "tiers": [
           {
             "id": "tier_01_id",
             "tierNumber": 1,
-            "tierCode": "R01-T01",
+            "tierCode": "T1",
             "maxWeightKg": 150,
             "status": "occupied",
             "items": [
@@ -194,30 +215,44 @@ GET /api/v1/customer-inventories/unit/{storageUnitId}/tree
           {
             "id": "tier_02_id",
             "tierNumber": 2,
-            "tierCode": "R01-T02",
+            "tierCode": "T2",
             "status": "available",
             "items": []
           }
         ]
       }
     ],
-    "unrackedItems": []
+    "unrackedItems": [
+      {
+        "inventoryId": "inv_02_id",
+        "quantity": 5,
+        "sku": {
+          "id": "sku_02_id",
+          "skuCode": "PALLET-BOX-01",
+          "name": "Kiện hàng công nghiệp để sàn",
+          "uom": "kiện"
+        }
+      }
+    ]
   }
 }
 ```
 
 #### 3. Quy chuẩn Hiển thị Sơ đồ trên UI (UI/UX Best Practices):
 
-1. **Header Thống kê (Summary Bar):**
-   - Hiển thị badge: `Tổng số lượng hàng: 42 món` | `SKU khác nhau: 5 loại` | `Số tầng đã dùng: 4/12 (33% lấp đầy)`.
-2. **Tab / Khu vực chuyển đổi Kệ:**
-   - Nếu kho có 3 kệ (`R01`, `R02`, `R03`), FE có thể render dạng **Tab Bar** hoặc **Lưới 3D/2D trực quan**.
-3. **Màu sắc trạng thái từng Tầng / Ngăn Kệ:**
+1. **Hiển thị Nhãn Định danh Đầy đủ (Breadcrumb / Badge):**
+   - Tiêu đề màn hình: `[HN01] Cơ sở Cầu Giấy > Phòng A101`.
+   - Nhãn vị trí ngăn: `HN01-A101-R1-T1`.
+2. **Header Thống kê (Summary Bar):**
+   - Hiển thị badge: `Tổng số lượng hàng: 47 món` | `SKU khác nhau: 6 loại` | `Số tầng đã dùng: 4/12 (33% lấp đầy)`.
+3. **Tab / Khu vực chuyển đổi Kệ:**
+   - Nếu kho có 3 kệ (`R1`, `R2`, `R3`), FE render dạng **Tab Bar** hoặc **Lưới 3D/2D trực quan**.
+4. **Màu sắc trạng thái từng Tầng / Ngăn Kệ:**
    - 🟢 **Màu Xanh lá (`AVAILABLE`):** Tầng trống hoàn toàn (`items.length === 0`). Sẵn sàng nhận hàng mới.
    - 🟠 **Màu Cam / Xanh dương (`OCCUPIED`):** Tầng đang chứa hàng (`items.length > 0`). Hiển thị danh sách badge/thumbnail các sản phẩm đang nằm trong tầng này.
    - ⚪ **Màu Xám / Vàng (`MAINTENANCE` / `INACTIVE`):** Đang bảo trì, tạm khóa không cho click nhập hàng.
-4. **Khu vực Hàng Để Sàn (`unrackedItems`):**
-   - Đặt ở đáy màn hình: _"Khu vực để đồ dưới sàn (Không dùng kệ)"_. Dành cho các kiện hàng lớn, cồng kềnh hoặc pallet hàng.
+5. **Khu vực Hàng Để Sàn (`unrackedItems`):**
+   - Đặt ở đáy màn hình: _"Khu vực để đồ dưới sàn (Không dùng kệ) — Nhãn: HN01-A101-FLOOR"_. Dành cho các kiện hàng lớn, cồng kềnh, pallet hoặc phòng kho không kệ (`LARGE`, `SMALL`).
 
 ---
 
@@ -225,8 +260,9 @@ GET /api/v1/customer-inventories/unit/{storageUnitId}/tree
 
 #### 1. Luồng Người Dùng (User Action):
 
-1. Trên sơ đồ kệ, khách hàng chạm/click vào một **Tầng kệ cụ thể** (Ví dụ: Chạm vào ngăn `R01-T02` đang trống hoặc `R01-T01` muốn thêm).
-2. FE hiển thị Modal / Bottom Sheet: **"Nhập hàng vào ngăn: Kệ R01 - Tầng 2"**.
+1. Trên sơ đồ kệ, khách hàng chạm/click vào một **Tầng kệ cụ thể** (Ví dụ: Chạm vào ngăn `T2` đang trống hoặc `T1` muốn thêm).  
+   _(Nếu để hàng dưới sàn phòng hoặc kho không kệ: Bấm nút **"Nhập hàng để sàn"**)_.
+2. FE hiển thị Modal / Bottom Sheet: **"Nhập hàng vào ngăn: Kệ R1 - Tầng 2"** (hoặc **"Nhập hàng để sàn phòng A101"**).
 3. Khách hàng lựa chọn:
    - **Chọn SKU:** Chọn từ dropdown danh sách SKU đã tạo ở Bước 3, hoặc bấm nút **"Quét mã vạch"** để camera tự nhận diện SKU.
    - **Số lượng nhập (`quantity`):** Nhập số nguyên $\ge 1$ (Ví dụ: `15`).
@@ -250,24 +286,25 @@ Content-Type: application/json
 }
 ```
 
-_(Nếu là hàng để sàn, truyền `"rackTierId": null`)_.
+> [!TIP]
+> **Hàng để sàn hoặc phòng không có kệ:** Truyền `"rackTierId": null`. Backend hỗ trợ đầy đủ `null`, không còn bị lỗi `MESSAGE_CODE_101`.
 
 #### 3. Phản hồi & Cập nhật UI:
 
 - Backend thực thi trong Database Transaction:
-  1. Tăng tồn kho của SKU tại ngăn `R01-T02`.
+  1. Tăng tồn kho của SKU tại ngăn `T2` (hoặc sàn phòng kho).
   2. Ghi một dòng vào sổ cái bất biến `InventoryMovement` loại `IN`.
-  3. Tự động chuyển trạng thái ngăn `R01-T02` từ `AVAILABLE` sang `OCCUPIED`.
+  3. Nếu nhập vào tầng kệ: Tự động chuyển trạng thái ngăn `T2` từ `AVAILABLE` sang `OCCUPIED`. (Nếu để sàn: bỏ qua cập nhật trạng thái tầng).
 - FE làm mới dữ liệu (`invalidateQueries(['storage-unit-tree'])`):
-  - Ngăn `R01-T02` lập tức đổi màu sang **Cam (`OCCUPIED`)**.
+  - Ngăn `T2` lập tức đổi màu sang **Cam (`OCCUPIED`)**.
   - Hiển thị badge: `SKU-TEA-01 x 15 bộ`.
-  - Bắn Toast thông báo thành công: _"Đã nhập 15 bộ tách trà vào Kệ R01 - Tầng 2 thành công!"_.
+  - Bắn Toast thông báo thành công: _"Đã nhập 15 bộ tách trà vào Kệ R1 - Tầng 2 thành công!"_.
 
 ---
 
 ### BƯỚC 6: Các Thao Tác Vận Hành Khác Trên Ngăn Kệ
 
-Khi click vào một ngăn kệ đang có hàng (`OCCUPIED`), FE mở danh sách chi tiết các mặt hàng trong ngăn đó và cung cấp 3 nút hành động:
+Khi click vào một ngăn kệ đang có hàng (`OCCUPIED`) hoặc một món hàng dưới sàn, FE mở danh sách chi tiết các mặt hàng và cung cấp 3 nút hành động:
 
 #### 1. Xuất hàng khỏi ngăn (`Stock Out`):
 
@@ -286,14 +323,15 @@ Khi click vào một ngăn kệ đang có hàng (`OCCUPIED`), FE mở danh sách
     "reason": "Lấy về nhà sử dụng"
   }
   ```
+  _(Nếu xuất từ sàn phòng kho: gửi `"rackTierId": null`)_.
 - **Hệ quả State Machine:** Nếu khách xuất hết toàn bộ hàng trong ngăn (`quantity = 0`), Backend tự động chuyển tầng kệ về `AVAILABLE`. FE tự động đổi màu ngăn về Xanh lá.
 
-#### 2. Chuyển hàng giữa các ngăn kệ (`Stock Move`):
+#### 2. Chuyển hàng giữa các ngăn kệ hoặc chuyển giữa sàn và kệ (`Stock Move`):
 
-- Khách muốn sắp xếp lại kho, chuyển 5 thùng từ Tầng 1 sang Tầng 3.
+- Khách muốn sắp xếp lại kho, chuyển 5 thùng từ Tầng 1 sang Tầng 3 (hoặc chuyển từ sàn lên kệ).
 - FE cung cấp giao diện Kéo-thả (Drag & Drop) hoặc Form chọn:
-  - Ngăn nguồn: `R01-T01`.
-  - Ngăn đích: `R01-T03`.
+  - Vị trí nguồn (`fromRackTierId`): `tier_01_id` (hoặc `null` nếu lấy từ sàn).
+  - Vị trí đích (`toRackTierId`): `tier_03_id` (hoặc `null` nếu dời xuống sàn).
   - Số lượng chuyển: `5`.
 - Gọi API:
   ```http
@@ -308,7 +346,7 @@ Khi click vào một ngăn kệ đang có hàng (`OCCUPIED`), FE mở danh sách
     "reason": "Sắp xếp lại ngăn để trống tầng 1"
   }
   ```
-- Backend trừ tồn ngăn nguồn và cộng tồn ngăn đích nguyên tử. Cập nhật trạng thái cả hai tầng đồng thời.
+- Backend trừ tồn vị trí nguồn và cộng tồn vị trí đích nguyên tử. Cập nhật trạng thái các tầng liên quan đồng thời.
 
 #### 3. Kiểm kê / Cân bằng tồn kho thực tế (`Stock Adjust`):
 
@@ -326,6 +364,7 @@ Khi click vào một ngăn kệ đang có hàng (`OCCUPIED`), FE mở danh sách
     "reason": "Kiểm kê định kỳ phát hiện vỡ 2 bộ"
   }
   ```
+  _(Nếu kiểm kê hàng để sàn: gửi `"rackTierId": null`)_.
 
 ---
 
@@ -349,36 +388,51 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
     },
     "locations": [
       {
-        "storageUnit": { "unitNumber": "RACK-101" },
-        "storageRack": { "rackCode": "R01", "name": "Kệ số 1" },
-        "rackTier": { "tierCode": "R01-T01", "tierNumber": 1 },
+        "facility": { "code": "HN01", "name": "Cơ sở Cầu Giấy" },
+        "storageUnit": { "unitNumber": "A101" },
+        "storageRack": { "rackCode": "R1", "name": "Kệ số 1" },
+        "rackTier": { "tierCode": "T1", "tierNumber": 1 },
         "quantity": 10
       },
       {
-        "storageUnit": { "unitNumber": "RACK-101" },
-        "storageRack": { "rackCode": "R01", "name": "Kệ số 1" },
-        "rackTier": { "tierCode": "R01-T03", "tierNumber": 3 },
+        "facility": { "code": "HN01", "name": "Cơ sở Cầu Giấy" },
+        "storageUnit": { "unitNumber": "A101" },
+        "storageRack": { "rackCode": "R1", "name": "Kệ số 1" },
+        "rackTier": { "tierCode": "T3", "tierNumber": 3 },
         "quantity": 15
       }
     ]
   }
   ```
-- **Hành vi UI:** FE hiển thị thông báo: _"Mặt hàng này đang nằm ở Kệ R01 - Tầng 1 (10 bộ) và Kệ R01 - Tầng 3 (15 bộ)"_. Sơ đồ kệ tự động nhấp nháy (highlight) 2 ngăn này.
+- **Hành vi UI:** FE hiển thị thông báo: _"Mặt hàng này đang nằm ở [HN01-A101-R1-T1] (10 bộ) và [HN01-A101-R1-T3] (15 bộ)"_. Sơ đồ kệ tự động nhấp nháy (highlight) 2 ngăn này.
 
 ---
 
 ### BƯỚC 8: Bảng Điều Khiển Tổng Quan Tồn Kho (Personal Inventory Dashboard)
 
-Tại trang chủ Mobile App hoặc Customer Web Portal:
+#### 1. Dành cho Khách hàng (Mobile App / Customer Web Portal):
 
 - Gọi API:
   ```http
   GET /api/v1/customer-inventories/summary
   ```
-- Render các widget:
-  1. **Thống kê Card:** Tổng số SKU (`totalSkus`), Tổng số lượng hàng trong kho (`totalQuantity`), Số phòng kho đang thuê (`totalStorageUnits`).
-  2. **Biểu đồ tròn (Pie/Donut Chart) Ngành hàng:** Phân loại theo `categoryBreakdown` (Gia dụng: 40%, Hồ sơ: 30%, Thời trang: 30%...).
-  3. **Lịch sử hoạt động gần nhất:** Render 5 giao dịch `recentMovements` (Vừa nhập hàng, vừa xuất hàng lúc mấy giờ, kèm mã phiếu `movementCode`).
+- Backend tự động nhận diện token khách hàng và trả về số liệu tồn kho cá nhân của khách đó.
+
+#### 2. Dành cho Quản trị viên & Quản lý Vận hành (Admin / Ops CMS):
+
+- Khi Admin/Ops xem trang chi tiết một Khách hàng cụ thể trên Backoffice CMS:
+- Gọi API kèm query param:
+  ```http
+  GET /api/v1/customer-inventories/summary?customerId=6ad1a2bbb3fa5fa49d2d02d0
+  ```
+  _(Hoặc alias: `?userId=6ad1a2bbb3fa5fa49d2d02d0`)_
+- Backend trả về đúng bảng tổng quan tồn kho của khách hàng được chỉ định thay vì trả về rỗng.
+
+#### 3. Render các widget trên Dashboard:
+
+1. **Thống kê Card:** Tổng số SKU (`totalSkus`), Tổng số lượng hàng trong kho (`totalQuantity`), Số hợp đồng active (`totalActiveContracts`), Số phòng kho đang thuê (`totalStorageUnits`).
+2. **Biểu đồ tròn (Pie/Donut Chart) Ngành hàng:** Phân loại theo `categoryBreakdown` (Gia dụng: 40%, Hồ sơ: 30%, Thời trang: 30%...).
+3. **Lịch sử hoạt động gần nhất:** Render 5 giao dịch `recentMovements` (Vừa nhập hàng, vừa xuất hàng lúc mấy giờ, kèm mã phiếu `movementCode`).
 
 ---
 
@@ -400,17 +454,18 @@ Tại trang chủ Mobile App hoặc Customer Web Portal:
 
 ```
 📁 CustomerInventoryModule/
-├── 📄 InventoryDashboardView.tsx            (Bước 8: Tổng quan, pie chart ngành hàng, recent movements)
+├── 📄 InventoryDashboardView.tsx            (Bước 8: Tổng quan, pie chart ngành hàng, recent movements - hỗ trợ ?customerId cho Admin)
 ├── 📄 SkuManagementView.tsx                 (Bước 3: Quản lý danh mục mặt hàng SKU, nút scan barcode)
 │   ├── 🧩 CreateSkuModal.tsx                (Form thêm SKU mới kèm kích thước, barcode camera)
-│   └── 🧩 SkuDetailDrawer.tsx               (Xem thông tin & các vị trí đang cất SKU)
+│   └── 🧩 SkuDetailDrawer.tsx               (Xem thông tin & các vị trí đang cất SKU dạng HN01-A101-R2-T1)
 ├── 📄 StorageUnitVisualTreeView.tsx         (Bước 4: Sơ đồ trực quan phòng kho & các kệ tầng)
-│   ├── 🧩 RackTabs.tsx                      (Chuyển đổi giữa các kệ R01, R02, R03)
+│   ├── 🧩 LocationBreadcrumb.tsx            (Hiển thị [HN01] Cơ sở Cầu Giấy > Phòng A101)
+│   ├── 🧩 RackTabs.tsx                      (Chuyển đổi giữa các kệ R1, R2, R3)
 │   ├── 🧩 RackTierGrid.tsx                  (Lưới trực quan các tầng: Xanh/Cam kèm badge số lượng)
-│   ├── 🧩 UnrackedFloorSection.tsx          (Khu vực để đồ dưới sàn phòng)
-│   ├── 🧩 StockInModal.tsx                  (Bước 5: Thêm SKU vào ngăn kệ đã chọn)
-│   ├── 🧩 StockOutModal.tsx                 (Bước 6.1: Lấy hàng ra khỏi ngăn)
-│   ├── 🧩 StockMoveModal.tsx                (Bước 6.2: Dời hàng sang ngăn khác)
+│   ├── 🧩 UnrackedFloorSection.tsx          (Khu vực để đồ dưới sàn phòng: HN01-A101-FLOOR)
+│   ├── 🧩 StockInModal.tsx                  (Bước 5: Thêm SKU vào ngăn kệ đã chọn hoặc để sàn: rackTierId: null)
+│   ├── 🧩 StockOutModal.tsx                 (Bước 6.1: Lấy hàng ra khỏi ngăn hoặc sàn)
+│   ├── 🧩 StockMoveModal.tsx                (Bước 6.2: Dời hàng sang ngăn khác hoặc dời sàn/kệ)
 │   └── 🧩 StockAdjustModal.tsx              (Bước 6.3: Kiểm kê điều chỉnh số dư)
 └── 📄 BarcodeScannerModal.tsx               (Bước 7: Quét camera tra cứu ngăn kệ tức thì)
 ```

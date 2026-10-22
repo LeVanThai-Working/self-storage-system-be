@@ -3,8 +3,6 @@
 > Mô tả nghiệp vụ do hệ thống ghi nhận. Nếu có điểm khác biệt với code thực tế, code là nguồn sự thật (Single Source of Truth).
 >
 > 💡 **Hướng dẫn Tích hợp Frontend:** Xem toàn bộ luồng chọn loại kho, render sơ đồ trực quan và thêm SKU vào từng ngăn kệ tại [FE_INTEGRATION_FLOW.md](file:///c:/NgocTuyen/selfStorageManagementSystem/self-storage-system-be/docs/agent/customer-inventory/FE_INTEGRATION_FLOW.md).
->
-> 💡 **Hướng dẫn Tích hợp Frontend:** Xem toàn bộ luồng chọn loại kho, render sơ đồ trực quan và thêm SKU vào từng ngăn kệ tại [FE_INTEGRATION_FLOW.md](file:///c:/NgocTuyen/selfStorageManagementSystem/self-storage-system-be/docs/agent/customer-inventory/FE_INTEGRATION_FLOW.md).
 
 ---
 
@@ -38,7 +36,7 @@
 
 ---
 
-## II. Phân loại Phòng kho & Quy tắc Tự động sinh Kệ tầng
+## II. Phân loại Phòng kho, Cấu trúc Mã Định danh & Tự động sinh Kệ tầng
 
 ### 1. Quy chuẩn 4 loại phòng kho thực tế (`UnitTypeCategoryEnum`)
 
@@ -49,7 +47,25 @@ Hệ thống Self-Storage phân chia thành 4 nhóm kích thước phòng kho ch
 3. `LARGE`: Phòng kho lớn ($6.0\,\text{m}^2 \le S < 15\,\text{m}^2$, $15\,\text{m}^3 \le V < 40\,\text{m}^3$). Chứa nội thất căn hộ gia đình, đồ kích thước lớn, không kệ (`defaultRackConfig: null`).
 4. `WAREHOUSE_RACK`: Kho hàng hóa diện tích lớn ($S \ge 15.0\,\text{m}^2$, $V \ge 45.0\,\text{m}^3$). **Có sẵn hệ thống Kệ & Tầng** tiêu chuẩn (`defaultRackConfig` mặc định: 3 kệ $\times$ 4 tầng = 12 tầng), cho phép khách hàng tự quản lý danh mục SKU và theo dõi vị trí chính xác đến từng tầng kệ.
 
-### 2. Cơ chế Auto-provisioning Kệ & Tầng (Task 6A)
+### 2. Cấu trúc Mã Định danh Phân tầng & Nhãn Vị trí Chuẩn (`HN01-A101-R2-T1`)
+
+Hệ thống Self-Storage quản lý vị trí theo mô hình cây phân cấp 4 tầng:
+
+```
+[ Cơ sở: Facility.code ] ──► [ Phòng: StorageUnit.unitNumber ] ──► [ Kệ: StorageRack.rackCode ] ──► [ Tầng: RackTier.tierCode ]
+        HN01                             A101                                  R2                               T1
+```
+
+- **Quy chuẩn mã từng cấp:**
+  1. **Cấp 1 — Mã cơ sở (`Facility.code`):** Do Admin tự điền khi tạo/cập nhật cơ sở, in hoa, không trùng lặp toàn hệ thống (`unique: true`, ví dụ: `HN01`, `SGN01`, `HCM02`).
+  2. **Cấp 2 — Mã phòng kho (`StorageUnit.unitNumber`):** Do Admin định danh theo số phòng thực tế, unique trong phạm vi cơ sở (ví dụ: `A101`, `B204`).
+  3. **Cấp 3 — Mã kệ (`StorageRack.rackCode`):** Tự sinh hoặc do quản lý đặt, unique trong phạm vi phòng kho (ví dụ: `R1`, `R2`, `R01`).
+  4. **Cấp 4 — Mã tầng (`RackTier.tierCode`):** Tự sinh theo tầng, unique trong phạm vi kệ (ví dụ: `T1`, `T2`, `T01`).
+- **Nhãn vị trí hiển thị trên giao diện (Location Label):**
+  - **Hàng nằm trên tầng kệ:** `{FacilityCode}-{UnitNumber}-{RackCode}-{TierCode}` (Ví dụ: `HN01-A101-R2-T1`).
+  - **Hàng để sàn phòng kho hoặc kho không có kệ:** `{FacilityCode}-{UnitNumber}-FLOOR` (hoặc `{FacilityCode}-{UnitNumber}`, ví dụ: `HN01-A101-FLOOR`).
+
+### 3. Cơ chế Auto-provisioning Kệ & Tầng (Task 6A)
 
 - Khi Quản lý tạo mới một phòng kho (`StorageUnit`) thuộc loại `WAREHOUSE_RACK`:
   - Hệ thống tự động kích hoạt tiến trình sinh Kệ và Tầng trong cùng một Database Transaction `@Transactional()`.
@@ -83,7 +99,7 @@ Hệ thống Self-Storage phân chia thành 4 nhóm kích thước phòng kho ch
 
 ---
 
-## IV. Vận hành Nhập/Xuất/Chuyển/Kiểm kê (`CustomerInventory`) — Task 6C
+## IV. Vận hành Nhập/Xuất/Chuyển/Kiểm kê (`CustomerInventory`) — Task 6C & 6D
 
 ### 1. Ràng buộc Hợp đồng Thuê kho (Contract Status Guard — Rule 622)
 
@@ -114,20 +130,41 @@ Tất cả 4 thao tác đều chạy nguyên tử trong một `@Transactional()`
    - Bắt buộc phải có lý do điều chỉnh (`reason` tối thiểu 3 ký tự, ví dụ: "Hao hụt vận chuyển", "Đếm lại sau khi đóng thùng").
    - Tính toán lượng delta chênh lệch, cập nhật bản ghi tồn kho và ghi sổ cái loại `ADJUST`.
 
+### 3. Quy tắc Quản lý Hàng để sàn & Phòng kho không kệ (Unracked Items — `[D6.2]`)
+
+- **Bản chất nghiệp vụ:** Khách hàng thuê bất kỳ loại phòng kho nào (kể cả phòng lớn không kệ `LARGE`, phòng nhỏ `SMALL`, hoặc phòng có kệ `WAREHOUSE_RACK`) đều có thể tự quản lý danh mục SKU và xuất nhập tồn.
+- **Hàng để sàn (Unracked Floor Items):**
+  - Áp dụng cho:
+    1. Phòng kho không trang bị kệ tầng.
+    2. Các kiện hàng cồng kềnh, quá tải trọng, pallet lớn để trực tiếp dưới sàn phòng kho có kệ.
+  - Khi thao tác Nhập/Xuất/Chuyển/Kiểm kê: Request truyền `rackTierId: null` (với Move thì `fromRackTierId: null` hoặc `toRackTierId: null`).
+  - **Bỏ qua State Machine tầng kệ:** Vì không gắn với tầng kệ vật lý nào, hệ thống bỏ qua việc chuyển trạng thái `OCCUPIED` / `AVAILABLE`.
+  - **Hiển thị trên Sơ đồ Cây:** Các mặt hàng này được gom vào mảng `unrackedItems` của API `GET /customer-inventories/unit/{storageUnitId}/tree`.
+
+### 4. Quy tắc Bảng Điều khiển Tổng hợp Tồn kho (`GET /customer-inventories/summary`)
+
+- **Mục đích:** Cung cấp số liệu tổng quan về tồn kho cá nhân (tổng số SKU, tổng số lượng kiện hàng, số hợp đồng active, số phòng đang thuê, cơ cấu ngành hàng, và 5 biến động gần nhất).
+- **Phân quyền truy xuất theo Caller:**
+  - **Khách hàng (`CUSTOMER`):** Hệ thống luôn ép buộc lấy theo `caller.id`. Khách hàng chỉ xem được số liệu của chính mình, không thể xem của khách khác kể cả khi truyền query param.
+  - **Quản lý Vận hành / Quản trị viên (`BUSINESS_OPS_MANAGER`, `SYSTEM_ADMIN`):**
+    - Khi xem trang chi tiết khách hàng trên Backoffice CMS, cho phép truyền query param `?customerId=<id_khách>` (hoặc alias `?userId=<id_khách>`).
+    - Hệ thống sẽ trả về bảng tổng quan tồn kho của khách hàng được chỉ định để Admin/Ops hỗ trợ hoặc đối soát.
+
 ---
 
 ## V. Ma trận Phân quyền & Bảo mật Nghiệp vụ
 
-| Thao tác / Endpoint                                |      CUSTOMER (Chủ kho)       |  FACILITY_STAFF  |      FACILITY_MANAGER       | OPS_MANAGER / ADMIN |
-| :------------------------------------------------- | :---------------------------: | :--------------: | :-------------------------: | :-----------------: |
-| `POST /customer-skus` (Tạo SKU)                    |      ✅ Chỉ tạo của mình      | ❌ 403 Forbidden |      ❌ 403 Forbidden       |  ❌ Chỉ khách tạo   |
-| `GET /customer-skus` (Xem danh sách SKU)           |        ✅ Xem của mình        | ❌ 403 Forbidden |  👁️ Chỉ khách thuộc cơ sở   |    ✅ Toàn quyền    |
-| `PATCH / DELETE /customer-skus/:id`                |    ✅ Chỉ sửa/xóa của mình    | ❌ 403 Forbidden |      ❌ 403 Forbidden       |  ❌ 403 Forbidden   |
-| `POST /customer-inventories/in` (Nhập hàng)        | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |    ✅ Toàn quyền    |
-| `POST /customer-inventories/out` (Xuất hàng)       | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |    ✅ Toàn quyền    |
-| `POST /customer-inventories/move` (Chuyển kệ)      | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |    ✅ Toàn quyền    |
-| `POST /customer-inventories/adjust` (Kiểm kê)      | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |    ✅ Toàn quyền    |
-| `GET /customer-inventories` (Tra cứu tồn kho)      |    ✅ Tự động lọc của mình    | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |    ✅ Toàn quyền    |
-| `GET /customer-inventories/movements` (Sổ cái)     |    ✅ Tự động lọc của mình    | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |    ✅ Toàn quyền    |
-| `GET /customer-inventories/unit/:id/tree` (6D)     |   ✅ Xem kho mình đang thuê   | ❌ 403 Forbidden | 👁️ Xem kho thuộc cơ sở mình |    ✅ Toàn quyền    |
-| `GET /customer-inventories/sku/:id/locations` (6D) |  ✅ Xem vị trí SKU của mình   | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |    ✅ Toàn quyền    |
+| Thao tác / Endpoint                                |      CUSTOMER (Chủ kho)       |  FACILITY_STAFF  |      FACILITY_MANAGER       |   OPS_MANAGER / ADMIN    |
+| :------------------------------------------------- | :---------------------------: | :--------------: | :-------------------------: | :----------------------: |
+| `POST /customer-skus` (Tạo SKU)                    |      ✅ Chỉ tạo của mình      | ❌ 403 Forbidden |      ❌ 403 Forbidden       |     ❌ Chỉ khách tạo     |
+| `GET /customer-skus` (Xem danh sách SKU)           |        ✅ Xem của mình        | ❌ 403 Forbidden |  👁️ Chỉ khách thuộc cơ sở   |      ✅ Toàn quyền       |
+| `PATCH / DELETE /customer-skus/:id`                |    ✅ Chỉ sửa/xóa của mình    | ❌ 403 Forbidden |      ❌ 403 Forbidden       |     ❌ 403 Forbidden     |
+| `POST /customer-inventories/in` (Nhập hàng)        | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
+| `POST /customer-inventories/out` (Xuất hàng)       | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
+| `POST /customer-inventories/move` (Chuyển kệ)      | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
+| `POST /customer-inventories/adjust` (Kiểm kê)      | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
+| `GET /customer-inventories` (Tra cứu tồn kho)      |    ✅ Tự động lọc của mình    | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
+| `GET /customer-inventories/movements` (Sổ cái)     |    ✅ Tự động lọc của mình    | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
+| `GET /customer-inventories/unit/:id/tree` (6D)     |   ✅ Xem kho mình đang thuê   | ❌ 403 Forbidden | 👁️ Xem kho thuộc cơ sở mình |      ✅ Toàn quyền       |
+| `GET /customer-inventories/sku/:id/locations` (6D) |  ✅ Xem vị trí SKU của mình   | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
+| `GET /customer-inventories/summary` (6D)           |        ✅ Xem của mình        | ❌ 403 Forbidden |      ❌ 403 Forbidden       | ✅ Xem theo `customerId` |

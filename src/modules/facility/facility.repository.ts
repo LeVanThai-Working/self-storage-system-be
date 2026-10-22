@@ -51,6 +51,10 @@ export class FacilityRepository {
     return this.facility.findById(id);
   }
 
+  async findByCode(code: string) {
+    return this.facility.findOne({ code });
+  }
+
   async findByNameAndCity(name: string, city: string) {
     return this.facility.findOne({ name, city });
   }
