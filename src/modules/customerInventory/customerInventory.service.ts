@@ -147,10 +147,10 @@ export class CustomerInventoryService {
   ) {}
 
   /**
-   * Kiểm tra quyền truy cập:
+   * Access control verification:
    * - Mutations (IN, OUT, MOVE, ADJUST):
-   *   + Chặn tuyệt đối FACILITY_STAFF và FACILITY_MANAGER (ném 403)
-   *   + Chỉ cho phép CUSTOMER (sở hữu kho) hoặc Admin hệ thống
+   *   + Absolutely block FACILITY_STAFF and FACILITY_MANAGER (throw 403)
+   *   + Only allow CUSTOMER (inventory owner) or system admins
    */
   private validatePrivacy(caller: CallerContext, isMutation = false): void {
     if (isMutation) {
@@ -164,7 +164,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * Helper xác thực tính hợp lệ của Hợp đồng, SKU và Tầng kệ
+   * Helper to validate Contract, SKU, and RackTier entities
    */
   private async validateEntities(
     contractId: string,
@@ -173,7 +173,7 @@ export class CustomerInventoryService {
     caller: CallerContext,
     session?: ClientSession
   ) {
-    // 1. Kiểm tra Hợp đồng
+    // 1. Verify Contract
     const contract = await this.contractRepository.findById(
       contractId,
       session
@@ -182,12 +182,12 @@ export class CustomerInventoryService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    // Bắt buộc hợp đồng phải đang ACTIVE
+    // Contract must be ACTIVE
     if (contract.status !== ContractStatusEnum.ACTIVE) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_622);
     }
 
-    // Kiểm tra quyền sở hữu Hợp đồng nếu là CUSTOMER
+    // Check contract ownership if caller is CUSTOMER
     const contractCustomerId = String(
       contract.customerId?._id || contract.customerId
     );
@@ -196,25 +196,25 @@ export class CustomerInventoryService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
-    // 2. Kiểm tra SKU
+    // 2. Verify SKU
     const sku = await this.skuRepository.findById(skuId);
     if (!sku) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
     }
 
-    // SKU phải thuộc về khách hàng của hợp đồng
+    // SKU must belong to the customer of the contract
     const skuCustomerId = String(sku.customerId?._id || sku.customerId);
     if (skuCustomerId !== contractCustomerId) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_628);
     }
 
-    // 3. Trích xuất thông tin phòng và cơ sở
+    // 3. Extract storage unit and facility info
     const storageUnitId = String(
       contract.storageUnitId?._id || contract.storageUnitId
     );
     const facilityId = String(contract.facilityId?._id || contract.facilityId);
 
-    // 4. Kiểm tra Tầng kệ nếu có chỉ định
+    // 4. Verify RackTier if specified
     let storageRackId: string | null = null;
     if (rackTierId) {
       const tier = await this.rackTierRepository.findById(rackTierId);
@@ -222,12 +222,12 @@ export class CustomerInventoryService {
         throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_601);
       }
 
-      // Tầng kệ phải thuộc đúng phòng kho của hợp đồng
+      // RackTier must belong to the same storage unit as the contract
       if (toId(tier.storageUnitId) !== storageUnitId) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_624);
       }
 
-      // Tầng kệ không được ở trạng thái INACTIVE hoặc MAINTENANCE
+      // RackTier cannot be INACTIVE or in MAINTENANCE
       if (
         tier.status === RackTierStatusEnum.INACTIVE ||
         tier.status === RackTierStatusEnum.MAINTENANCE
@@ -249,7 +249,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 1. Nhập hàng vào kho/tầng kệ (IN)
+   * 1. Stock In (IN)
    */
   @Transactional()
   async stockIn(
@@ -268,7 +268,7 @@ export class CustomerInventoryService {
         session
       );
 
-    // 1. Tìm hoặc tạo bản ghi CustomerInventory tại vị trí
+    // 1. Find or create CustomerInventory record at location
     const existing = await this.inventoryRepository.findByPosition(
       data.contractId,
       data.skuId,
@@ -313,7 +313,7 @@ export class CustomerInventoryService {
       );
     }
 
-    // 2. Ghi nhận sổ cái InventoryMovement
+    // 2. Record in InventoryMovement ledger
     const movementCode =
       await this.movementRepository.generateMovementCode(session);
     await this.movementRepository.create(
@@ -340,7 +340,7 @@ export class CustomerInventoryService {
       session
     );
 
-    // 3. Cập nhật State Machine cho Tầng kệ -> OCCUPIED
+    // 3. Update RackTier State Machine -> OCCUPIED
     if (data.rackTierId) {
       await this.rackTierRepository.update(
         data.rackTierId,
@@ -349,7 +349,7 @@ export class CustomerInventoryService {
       );
     }
 
-    // 4. Ghi Audit Log
+    // 4. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.INVENTORY_IN,
       resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
@@ -374,7 +374,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 2. Xuất hàng khỏi kho/tầng kệ (OUT)
+   * 2. Stock Out (OUT)
    */
   @Transactional()
   async stockOut(
@@ -409,14 +409,17 @@ export class CustomerInventoryService {
     const previousQuantity = existing.quantity;
     const newQuantity = existing.quantity - data.quantity;
 
-    // 1. Giảm số lượng tồn kho
-    await this.inventoryRepository.incrementQuantity(
+    // 1. Decrement inventory quantity (Atomic Guard)
+    const updatedInventory = await this.inventoryRepository.incrementQuantity(
       inventoryId,
       -data.quantity,
       session
     );
+    if (!updatedInventory) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
+    }
 
-    // 2. Ghi nhận sổ cái InventoryMovement
+    // 2. Record in InventoryMovement ledger
     const movementCode =
       await this.movementRepository.generateMovementCode(session);
     await this.movementRepository.create(
@@ -444,14 +447,14 @@ export class CustomerInventoryService {
       session
     );
 
-    // 3. Cập nhật State Machine cho Tầng kệ -> Nếu hết hàng thì về AVAILABLE
+    // 3. Update RackTier State Machine -> If empty, transition to AVAILABLE
     if (data.rackTierId) {
-      const remainingOnTier =
-        await this.inventoryRepository.countTotalItemsOnTier(
+      const remainingActiveOnTier =
+        await this.inventoryRepository.countActiveItemsOnTier(
           data.rackTierId,
           session
         );
-      if (remainingOnTier <= 0) {
+      if (remainingActiveOnTier === 0) {
         await this.rackTierRepository.update(
           data.rackTierId,
           { status: RackTierStatusEnum.AVAILABLE },
@@ -460,7 +463,7 @@ export class CustomerInventoryService {
       }
     }
 
-    // 4. Ghi Audit Log
+    // 4. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.INVENTORY_OUT,
       resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
@@ -485,7 +488,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 3. Chuyển vị trí nội bộ giữa các tầng kệ (MOVE)
+   * 3. Internal Stock Move between rack tiers (MOVE)
    */
   @Transactional()
   async stockMove(
@@ -502,7 +505,7 @@ export class CustomerInventoryService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_627);
     }
 
-    // Xác thực tầng nguồn
+    // Validate source tier
     const { contractCustomerId, storageUnitId, facilityId } =
       await this.validateEntities(
         data.contractId,
@@ -512,7 +515,7 @@ export class CustomerInventoryService {
         session
       );
 
-    // Xác thực tầng đích nếu có chỉ định
+    // Validate destination tier if specified
     let toStorageRackId: string | null = null;
     if (toTierId) {
       const destTier = await this.rackTierRepository.findById(toTierId);
@@ -531,7 +534,7 @@ export class CustomerInventoryService {
       toStorageRackId = toId(destTier.storageRackId);
     }
 
-    // Kiểm tra số lượng tồn tại vị trí nguồn
+    // Check available stock at source location
     const sourceInventory = await this.inventoryRepository.findByPosition(
       data.contractId,
       data.skuId,
@@ -547,14 +550,17 @@ export class CustomerInventoryService {
     const fromPrev = sourceInventory.quantity;
     const fromNew = sourceInventory.quantity - data.quantity;
 
-    // 1. Trừ tồn tại vị trí nguồn
-    await this.inventoryRepository.incrementQuantity(
+    // 1. Deduct stock from source location (Atomic Guard)
+    const updatedSource = await this.inventoryRepository.incrementQuantity(
       String(sourceInventory._id),
       -data.quantity,
       session
     );
+    if (!updatedSource) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
+    }
 
-    // 2. Cộng tồn tại vị trí đích
+    // 2. Add stock to destination location
     const destInventory = await this.inventoryRepository.findByPosition(
       data.contractId,
       data.skuId,
@@ -592,7 +598,7 @@ export class CustomerInventoryService {
       );
     }
 
-    // 3. Ghi nhận sổ cái InventoryMovement
+    // 3. Record in InventoryMovement ledger
     const movementCode =
       await this.movementRepository.generateMovementCode(session);
     await this.movementRepository.create(
@@ -617,14 +623,14 @@ export class CustomerInventoryService {
       session
     );
 
-    // 4. Đồng bộ State Machine tầng kệ
+    // 4. Synchronize RackTier State Machine
     if (fromTierId) {
-      const remainingOnSource =
-        await this.inventoryRepository.countTotalItemsOnTier(
+      const remainingActiveOnSource =
+        await this.inventoryRepository.countActiveItemsOnTier(
           fromTierId,
           session
         );
-      if (remainingOnSource <= 0) {
+      if (remainingActiveOnSource === 0) {
         await this.rackTierRepository.update(
           fromTierId,
           { status: RackTierStatusEnum.AVAILABLE },
@@ -641,7 +647,7 @@ export class CustomerInventoryService {
       );
     }
 
-    // 5. Ghi Audit Log
+    // 5. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.INVENTORY_MOVE,
       resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
@@ -666,7 +672,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 4. Kiểm kê / Điều chỉnh tồn kho (ADJUST)
+   * 4. Stock Adjust (ADJUST)
    */
   @Transactional()
   async stockAdjust(
@@ -730,7 +736,7 @@ export class CustomerInventoryService {
 
     const deltaQuantity = Math.abs(newQuantity - previousQuantity);
 
-    // 2. Ghi nhận sổ cái InventoryMovement
+    // 2. Record in InventoryMovement ledger
     const movementCode =
       await this.movementRepository.generateMovementCode(session);
     await this.movementRepository.create(
@@ -759,14 +765,14 @@ export class CustomerInventoryService {
       session
     );
 
-    // 3. Cập nhật State Machine cho Tầng kệ
+    // 3. Update RackTier State Machine
     if (data.rackTierId) {
-      const remainingOnTier =
-        await this.inventoryRepository.countTotalItemsOnTier(
+      const activeItemsOnTier =
+        await this.inventoryRepository.countActiveItemsOnTier(
           data.rackTierId,
           session
         );
-      if (remainingOnTier <= 0) {
+      if (activeItemsOnTier === 0) {
         await this.rackTierRepository.update(
           data.rackTierId,
           { status: RackTierStatusEnum.AVAILABLE },
@@ -781,7 +787,7 @@ export class CustomerInventoryService {
       }
     }
 
-    // 4. Ghi Audit Log
+    // 4. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.INVENTORY_ADJUST,
       resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
@@ -806,7 +812,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 5. Tra cứu danh sách tồn kho hiện hành
+   * 5. Query active inventory list
    */
   async findAllInventories(
     query: CustomerInventoryQuery,
@@ -815,7 +821,7 @@ export class CustomerInventoryService {
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
     const enforcedQuery = { ...query };
 
-    // Khách hàng chỉ xem tồn kho của chính mình
+    // Customers can only view their own inventory
     if (isCustomer) {
       enforcedQuery.customerId = caller.id;
     }
@@ -829,7 +835,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 6. Chi tiết 1 bản ghi tồn kho
+   * 6. Retrieve single inventory record details
    */
   async findInventoryById(
     id: string,
@@ -853,7 +859,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 7. Tra cứu nhật ký sổ cái biến động kho (InventoryMovement)
+   * 7. Query inventory movement transaction ledger (InventoryMovement)
    */
   async findAllMovements(
     query: InventoryMovementQuery,
@@ -862,7 +868,7 @@ export class CustomerInventoryService {
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
     const enforcedQuery = { ...query };
 
-    // Khách hàng chỉ xem lịch sử của chính mình
+    // Customers can only view their own history
     if (isCustomer) {
       enforcedQuery.customerId = caller.id;
     }
@@ -876,7 +882,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 8. Sơ đồ cây khoang chứa đa tầng (Storage Unit Inventory Tree)
+   * 8. Multi-tier storage unit inventory tree (Storage Unit Inventory Tree)
    * Unit -> Racks -> Tiers -> SKUs + Unracked Items + Summary
    */
   async getStorageUnitTree(
@@ -1075,7 +1081,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 9. Tra cứu vị trí SKU theo ID
+   * 9. Query SKU storage locations by SKU ID
    */
   async getSkuLocations(
     skuId: string,
@@ -1189,7 +1195,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 10. Tra cứu vị trí SKU qua Barcode
+   * 10. Look up SKU storage locations by barcode
    */
   async getSkuLocationsByBarcode(
     barcode: string,
@@ -1212,7 +1218,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 11. Bảng điều khiển tổng hợp tồn kho cá nhân (Dashboard Summary)
+   * 11. Customer Personal Inventory Dashboard Summary
    */
   async getCustomerSummary(
     caller: CallerContext,

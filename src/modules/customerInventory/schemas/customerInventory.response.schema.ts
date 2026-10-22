@@ -153,7 +153,7 @@ export type PaginatedInventoryMovementResponse = z.infer<
   typeof paginatedInventoryMovementResponseSchema
 >;
 
-// --- Schemas cho Task 6D: Tree Layout, SKU Locations & Dashboard Summary ---
+// --- Schemas for Task 6D: Tree Layout, SKU Locations & Dashboard Summary ---
 
 export const treeTierItemSchema = z.object({
   inventoryId: z.string(),

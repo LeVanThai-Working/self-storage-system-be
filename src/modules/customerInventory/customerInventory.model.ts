@@ -87,16 +87,17 @@ const customerInventorySchema = new Schema<ICustomerInventory>(
   }
 );
 
-// Partial Unique Index: Mỗi SKU tại 1 vị trí (contract + storageUnit + rackTier) là duy nhất trong các record chưa xoá mềm
+// Partial Unique Index: Each SKU at a position (contract + storageUnit + rackTier) is unique among non-soft-deleted records
 customerInventorySchema.index(
   { contractId: 1, skuId: 1, storageUnitId: 1, rackTierId: 1 },
   { unique: true, partialFilterExpression: { deleted: { $ne: true } } }
 );
 
-// Compound indexes phục vụ query tra cứu & lọc nhanh
+// Compound indexes for fast lookup & filtering queries
 customerInventorySchema.index({ customerId: 1, contractId: 1 });
 customerInventorySchema.index({ storageUnitId: 1, rackTierId: 1 });
 customerInventorySchema.index({ skuId: 1, quantity: 1 });
+customerInventorySchema.index({ rackTierId: 1, quantity: 1 });
 
 customerInventorySchema.plugin(MongooseDelete, {
   overrideMethods: 'all',
