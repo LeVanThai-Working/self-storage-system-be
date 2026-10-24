@@ -5,11 +5,18 @@ import { FacilityUnitTypeOfferingStatusEnum } from '../../../common/enums/facili
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
+export const rackZonePricingSchema = z.object({
+  PRIME: z.number().min(0, 'Prime zone price must be >= 0'),
+  STANDARD: z.number().min(0, 'Standard zone price must be >= 0'),
+  ECONOMY: z.number().min(0, 'Economy zone price must be >= 0'),
+});
+
 export const createOfferingSchema = z.object({
   facilityId: z.string().regex(objectIdRegex, 'Invalid facility ID format'),
   unitTypeId: z.string().regex(objectIdRegex, 'Invalid unit type ID format'),
   billingUnit: z.enum(BillingUnitEnum).default(BillingUnitEnum.MONTH),
   pricePerUnit: z.number().min(0, 'Price must be >= 0'),
+  rackZonePricing: rackZonePricingSchema.optional(),
   depositMultiplier: z
     .number()
     .min(0, 'Deposit multiplier must be >= 0')
@@ -29,6 +36,7 @@ export const createOfferingSchema = z.object({
 export const updateOfferingSchema = z.object({
   billingUnit: z.enum(BillingUnitEnum).optional(),
   pricePerUnit: z.number().min(0, 'Price must be >= 0').optional(),
+  rackZonePricing: rackZonePricingSchema.optional(),
   depositMultiplier: z
     .number()
     .min(0, 'Deposit multiplier must be >= 0')

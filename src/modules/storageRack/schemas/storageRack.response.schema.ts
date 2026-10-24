@@ -2,6 +2,7 @@ import z from 'zod';
 import {
   RackStatusEnum,
   RackTierStatusEnum,
+  RackZoneEnum,
 } from '../../../common/enums/storageRack.enum.ts';
 
 const dimensionsResponseSchema = z.object({
@@ -37,6 +38,12 @@ export const storageRackResponseSchema = z.object({
   facilityId: z.string(),
   storageUnitId: z.string(),
   rackCode: z.string(),
+  aisle: z.string().optional().nullable(),
+  bay: z.number().optional().nullable(),
+  zone: z.enum(RackZoneEnum).optional().nullable(),
+  customPrice: z.number().optional().nullable(),
+  currentContractId: z.string().optional().nullable(),
+  currentCustomerId: z.string().optional().nullable(),
   name: z.string().optional().nullable(),
   tierCount: z.number(),
   status: z.enum(RackStatusEnum),

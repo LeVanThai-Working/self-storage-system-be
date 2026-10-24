@@ -3,6 +3,7 @@ import { paginationQuerySchema } from '../../../common/schemas/pagination.schema
 import {
   RackStatusEnum,
   RackTierStatusEnum,
+  RackZoneEnum,
 } from '../../../common/enums/storageRack.enum.ts';
 
 const dimensionsSchema = z.object({
@@ -20,6 +21,10 @@ export const createStorageRackSchema = z.object({
     .min(1, 'Rack code is required')
     .max(20, 'Rack code cannot exceed 20 characters')
     .trim(),
+  aisle: z.string().trim().toUpperCase().optional(),
+  bay: z.number().int().min(1).optional(),
+  zone: z.enum(RackZoneEnum).optional(),
+  customPrice: z.number().min(0).nullable().optional(),
   name: z.string().max(100).optional(),
   tierCount: z
     .number()
@@ -34,6 +39,10 @@ export const createStorageRackSchema = z.object({
 
 export const updateStorageRackSchema = z.object({
   name: z.string().max(100).optional(),
+  aisle: z.string().trim().toUpperCase().optional(),
+  bay: z.number().int().min(1).optional(),
+  zone: z.enum(RackZoneEnum).optional(),
+  customPrice: z.number().min(0).nullable().optional(),
   status: z.enum(RackStatusEnum).optional(),
   notes: z.string().max(1000).optional(),
 });
@@ -70,8 +79,10 @@ export const storageRackQuerySchema = paginationQuerySchema.extend({
     .optional(),
   status: z.enum(RackStatusEnum).optional(),
   rackCode: z.string().optional(),
+  aisle: z.string().optional(),
+  zone: z.enum(RackZoneEnum).optional(),
   sortBy: z
-    .enum(['rackCode', 'tierCount', 'createdAt', 'updatedAt'])
+    .enum(['rackCode', 'aisle', 'bay', 'tierCount', 'createdAt', 'updatedAt'])
     .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

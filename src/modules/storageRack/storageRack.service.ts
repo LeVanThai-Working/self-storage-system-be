@@ -13,6 +13,7 @@ import {
 import {
   RackStatusEnum,
   RackTierStatusEnum,
+  RackZoneEnum,
 } from '../../common/enums/storageRack.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 import type {
@@ -138,6 +139,13 @@ export class StorageRackService {
       obj.tiers = tiers.map((t) => this.formatRackTier(t));
     }
 
+    if (obj.currentContractId) {
+      obj.currentContractId = String(obj.currentContractId);
+    }
+    if (obj.currentCustomerId) {
+      obj.currentCustomerId = String(obj.currentCustomerId);
+    }
+
     return obj;
   }
 
@@ -217,9 +225,13 @@ export class StorageRackService {
         data.storageUnitId
       ) as unknown as IStorageRack['storageUnitId'],
       rackCode: normalizedRackCode,
+      aisle: data.aisle ?? 'A',
+      bay: data.bay ?? 1,
+      zone: data.zone ?? RackZoneEnum.STANDARD,
+      customPrice: data.customPrice ?? null,
       name: data.name,
       tierCount: data.tierCount,
-      status: data.status ?? RackStatusEnum.ACTIVE,
+      status: data.status ?? RackStatusEnum.AVAILABLE,
       notes: data.notes,
     });
 
@@ -282,8 +294,19 @@ export class StorageRackService {
         ? String((facilityId as { _id: unknown })._id)
         : String(facilityId);
 
+    const aisleLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
     for (let r = 1; r <= config.rackCount; r++) {
       const rackCode = `R${String(r).padStart(2, '0')}`;
+      const aisleIndex = Math.floor((r - 1) / 10);
+      const aisle = aisleLetters[aisleIndex] || 'A';
+      const bay = ((r - 1) % 10) + 1;
+      const zone =
+        aisleIndex === 0
+          ? RackZoneEnum.PRIME
+          : aisleIndex === 1
+            ? RackZoneEnum.STANDARD
+            : RackZoneEnum.ECONOMY;
 
       // Check if rack code already exists
       const existing =
@@ -302,9 +325,12 @@ export class StorageRackService {
             storageUnitId
           ) as unknown as IStorageRack['storageUnitId'],
           rackCode,
-          name: `Kệ tiêu chuẩn ${rackCode}`,
+          aisle,
+          bay,
+          zone,
+          name: `Standard Rack ${rackCode}`,
           tierCount: config.tiersPerRack,
-          status: RackStatusEnum.ACTIVE,
+          status: RackStatusEnum.AVAILABLE,
         },
         session
       );

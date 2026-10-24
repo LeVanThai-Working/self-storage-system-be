@@ -35,6 +35,7 @@ export interface IReservation extends SoftDeleteDocument {
   facilityId: Types.ObjectId;
   facilityUnitTypeOfferingId: Types.ObjectId;
   storageUnitId: Types.ObjectId;
+  rentedRackIds?: Types.ObjectId[];
   startDate: Date;
   checkInDate: Date;
   checkInTimeSlot: string;
@@ -172,6 +173,15 @@ const reservationSchema = new Schema<IReservation>(
       type: Schema.Types.ObjectId,
       ref: 'StorageUnit',
       required: true,
+    },
+    rentedRackIds: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'StorageRack',
+        },
+      ],
+      default: [],
     },
     startDate: {
       type: Date,

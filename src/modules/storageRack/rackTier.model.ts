@@ -89,7 +89,7 @@ const rackTierSchema = new mongoose.Schema<IRackTier>(
   }
 );
 
-// Partial Unique Index: Mỗi kệ chỉ có 1 tierNumber duy nhất trong các record chưa bị xóa mềm
+// Partial Unique Index: Each rack has a unique tierNumber among non-deleted records
 rackTierSchema.index(
   { storageRackId: 1, tierNumber: 1 },
   { unique: true, partialFilterExpression: { deleted: { $ne: true } } }

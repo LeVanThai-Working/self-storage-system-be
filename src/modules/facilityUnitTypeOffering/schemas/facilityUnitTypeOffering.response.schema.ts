@@ -29,12 +29,19 @@ const unitTypeSnapshotSchema = z.object({
   }),
 });
 
+export const rackZonePricingResponseSchema = z.object({
+  PRIME: z.number(),
+  STANDARD: z.number(),
+  ECONOMY: z.number(),
+});
+
 export const facilityUnitTypeOfferingResponseSchema = z.object({
   id: z.string(),
   facility: facilitySnapshotSchema,
   unitType: unitTypeSnapshotSchema,
   billingUnit: z.enum(BillingUnitEnum),
   pricePerUnit: z.number(),
+  rackZonePricing: rackZonePricingResponseSchema.optional().nullable(),
   depositMultiplier: z.number(),
   minRentalDays: z.number(),
   status: z.enum(FacilityUnitTypeOfferingStatusEnum),
