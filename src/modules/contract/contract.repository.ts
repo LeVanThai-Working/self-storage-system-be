@@ -341,4 +341,41 @@ export class ContractRepository {
 
     return doc;
   }
+
+  /**
+   * Check if a customer has any valid/active contract (DRAFT, ACTIVE, OVERDUE) at a specific facility.
+   * Used for resource scope verification (Rule 14) during staff delegation.
+   */
+  async hasActiveContractAtFacility(
+    customerId: string,
+    facilityId: string,
+    session?: ClientSession
+  ): Promise<boolean> {
+    if (
+      !Types.ObjectId.isValid(customerId) ||
+      !Types.ObjectId.isValid(facilityId)
+    ) {
+      return false;
+    }
+
+    const query = this.contract.countDocuments({
+      customerId: new Types.ObjectId(customerId),
+      facilityId: new Types.ObjectId(facilityId),
+      status: {
+        $in: [
+          ContractStatusEnum.DRAFT,
+          ContractStatusEnum.ACTIVE,
+          ContractStatusEnum.OVERDUE,
+        ],
+      },
+      deleted: false,
+    });
+
+    if (session) {
+      query.session(session);
+    }
+
+    const count = await query.exec();
+    return count > 0;
+  }
 }

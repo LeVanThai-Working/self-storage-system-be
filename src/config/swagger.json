@@ -6578,6 +6578,9 @@
 					"description": {
 						"type": "string"
 					},
+					"customerId": {
+						"type": "string"
+					},
 					"name": {
 						"type": "string"
 					},
@@ -6751,6 +6754,9 @@
 						"type": "string"
 					},
 					"skuCode": {
+						"type": "string"
+					},
+					"customerId": {
 						"type": "string"
 					}
 				},
@@ -17229,7 +17235,7 @@
 						}
 					}
 				},
-				"description": "Tạo mã hàng SKU mới\nChỉ dành riêng cho Customer tự khai báo danh mục hàng hóa của mình",
+				"description": "Create a new Customer SKU\nDedicated for Customer self-registration or staff delegation",
 				"tags": [
 					"Customer SKU"
 				],
@@ -17290,7 +17296,7 @@
 						}
 					}
 				},
-				"description": "Lấy danh sách SKU có phân trang và bộ lọc\nCustomer chỉ xem được của mình; FM xem theo customerId của khách thuê tại cơ sở; Staff bị chặn",
+				"description": "Get paginated SKU list with filters\nCustomer views only their own; FM/Staff views by customerId within assigned facility; Ops/Admin full scope",
 				"tags": [
 					"Customer SKU"
 				],
@@ -17416,7 +17422,7 @@
 						}
 					}
 				},
-				"description": "Tra cứu nhanh SKU qua mã vạch barcode",
+				"description": "Quick lookup SKU by barcode",
 				"tags": [
 					"Customer SKU"
 				],
@@ -17476,7 +17482,7 @@
 						}
 					}
 				},
-				"description": "Chi tiết một SKU theo ID",
+				"description": "Details of a single SKU by ID",
 				"tags": [
 					"Customer SKU"
 				],
@@ -17536,7 +17542,7 @@
 						}
 					}
 				},
-				"description": "Cập nhật thông tin SKU\nChỉ dành cho Customer sở hữu SKU đó",
+				"description": "Update SKU details\nFor owning Customer or staff under assigned facility",
 				"tags": [
 					"Customer SKU"
 				],
@@ -17606,7 +17612,7 @@
 						}
 					}
 				},
-				"description": "Xoá mềm SKU\nChặn xoá nếu SKU còn tồn kho",
+				"description": "Soft-delete SKU\nPrevent deletion if SKU has active inventory",
 				"tags": [
 					"Customer SKU"
 				],
@@ -17658,7 +17664,7 @@
 						}
 					}
 				},
-				"description": "Khôi phục SKU đã xoá mềm",
+				"description": "Restore soft-deleted SKU",
 				"tags": [
 					"Customer SKU"
 				],

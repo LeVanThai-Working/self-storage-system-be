@@ -43,7 +43,7 @@ import type {
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 
 /**
- * Helper trích xuất danh tính caller linh hoạt trong giai đoạn phát triển (Rule 14)
+ * Helper to extract caller context flexibly during development (Rule 14)
  */
 function extractCaller(req: ExpressRequest): CallerContext {
   const user = req.user as
@@ -62,13 +62,15 @@ function extractCaller(req: ExpressRequest): CallerContext {
     };
   }
 
-  // Header x-user-id fallback cho testing / development
+  // Header x-user-id fallback for testing / development
   const headerUserId = req.headers['x-user-id'] as string;
   const headerRole = req.headers['x-user-role'] as string;
+  const headerFacilityId = req.headers['x-facility-id'] as string;
   if (headerUserId) {
     return {
       id: headerUserId,
       role: headerRole,
+      assignedFacilityId: headerFacilityId,
     };
   }
 
@@ -123,12 +125,12 @@ export class CustomerSkuController extends Controller {
   }
 
   /**
-   * Tạo mã hàng SKU mới
-   * Chỉ dành riêng cho Customer tự khai báo danh mục hàng hóa của mình
+   * Create a new Customer SKU
+   * Dedicated for Customer self-registration or staff delegation
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('')
   @Middlewares(validateRequest({ body: createCustomerSkuSchema }))
   @Response<ApiErrorResponse>(
@@ -155,12 +157,12 @@ export class CustomerSkuController extends Controller {
   }
 
   /**
-   * Lấy danh sách SKU có phân trang và bộ lọc
-   * Customer chỉ xem được của mình; FM xem theo customerId của khách thuê tại cơ sở; Staff bị chặn
+   * Get paginated SKU list with filters
+   * Customer views only their own; FM/Staff views by customerId within assigned facility; Ops/Admin full scope
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('')
   @Middlewares(validateRequest({ query: customerSkuQuerySchema }))
   @Response<ApiErrorResponse>(400, 'Invalid query parameters')
@@ -186,11 +188,11 @@ export class CustomerSkuController extends Controller {
   }
 
   /**
-   * Tra cứu nhanh SKU qua mã vạch barcode
+   * Quick lookup SKU by barcode
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('barcode/{barcode}')
   @Middlewares(validateRequest({ params: barcodeParamSchema }))
   @Response<ApiErrorResponse>(404, 'Customer SKU not found')
@@ -216,11 +218,11 @@ export class CustomerSkuController extends Controller {
   }
 
   /**
-   * Chi tiết một SKU theo ID
+   * Details of a single SKU by ID
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('{id}')
   @Middlewares(validateRequest({ params: customerSkuIdParamSchema }))
   @Response<ApiErrorResponse>(404, 'Customer SKU not found')
@@ -242,12 +244,12 @@ export class CustomerSkuController extends Controller {
   }
 
   /**
-   * Cập nhật thông tin SKU
-   * Chỉ dành cho Customer sở hữu SKU đó
+   * Update SKU details
+   * For owning Customer or staff under assigned facility
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Patch('{id}')
   @Middlewares(
     validateRequest({
@@ -276,12 +278,12 @@ export class CustomerSkuController extends Controller {
   }
 
   /**
-   * Xoá mềm SKU
-   * Chặn xoá nếu SKU còn tồn kho
+   * Soft-delete SKU
+   * Prevent deletion if SKU has active inventory
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
+  // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Delete('{id}')
   @Middlewares(validateRequest({ params: customerSkuIdParamSchema }))
   @Response<ApiErrorResponse>(400, 'Cannot delete SKU with active inventory')
@@ -304,11 +306,11 @@ export class CustomerSkuController extends Controller {
   }
 
   /**
-   * Khôi phục SKU đã xoá mềm
+   * Restore soft-deleted SKU
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER
+  // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/restore')
   @Middlewares(validateRequest({ params: customerSkuIdParamSchema }))
   @Response<ApiErrorResponse>(400, 'SKU code conflict')
