@@ -44,6 +44,14 @@ export class StorageRackRepository {
       filter.rackCode = { $regex: query.rackCode, $options: 'i' };
     }
 
+    if (query.aisle) {
+      filter.aisle = query.aisle.toUpperCase();
+    }
+
+    if (query.zone) {
+      filter.zone = query.zone;
+    }
+
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder || 'desc';
 

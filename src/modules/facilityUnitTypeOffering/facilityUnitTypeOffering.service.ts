@@ -17,8 +17,12 @@ import type {
 } from './schemas/facilityUnitTypeOffering.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
-import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
+import {
+  UnitTypeCategoryEnum,
+  UnitTypeStatusEnum,
+} from '../../common/enums/unitType.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
+import { DEFAULT_RACK_ZONE_PRICING } from '../../config/pricing.config.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import {
@@ -165,6 +169,14 @@ export class FacilityUnitTypeOfferingService {
         data.unitTypeId
       );
 
+    let rackZonePricing = data.rackZonePricing;
+    if (
+      unitType.category === UnitTypeCategoryEnum.WAREHOUSE_RACK &&
+      !rackZonePricing
+    ) {
+      rackZonePricing = { ...DEFAULT_RACK_ZONE_PRICING };
+    }
+
     if (existing) {
       // If record is currently ACTIVE (not soft-deleted) -> Throw duplicate error
       if (!existing.deleted) {
@@ -179,6 +191,7 @@ export class FacilityUnitTypeOfferingService {
         String(existing._id),
         {
           ...data,
+          rackZonePricing,
           facilityId:
             data.facilityId as unknown as IFacilityUnitTypeOffering['facilityId'],
           unitTypeId:
@@ -206,6 +219,7 @@ export class FacilityUnitTypeOfferingService {
 
     const newOffering = await this.offeringRepository.create({
       ...data,
+      rackZonePricing,
       facilityId:
         data.facilityId as unknown as IFacilityUnitTypeOffering['facilityId'],
       unitTypeId:

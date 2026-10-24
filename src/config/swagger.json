@@ -2019,9 +2019,20 @@
 			},
 			"RackStatusEnum": {
 				"enum": [
+					"available",
+					"reserved",
+					"rented",
 					"active",
 					"maintenance",
 					"inactive"
+				],
+				"type": "string"
+			},
+			"RackZoneEnum": {
+				"enum": [
+					"PRIME",
+					"STANDARD",
+					"ECONOMY"
 				],
 				"type": "string"
 			},
@@ -2175,6 +2186,26 @@
 					"name": {
 						"type": "string"
 					},
+					"currentCustomerId": {
+						"type": "string"
+					},
+					"currentContractId": {
+						"type": "string"
+					},
+					"customPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"zone": {
+						"$ref": "#/components/schemas/RackZoneEnum"
+					},
+					"bay": {
+						"type": "number",
+						"format": "double"
+					},
+					"aisle": {
+						"type": "string"
+					},
 					"status": {
 						"$ref": "#/components/schemas/RackStatusEnum"
 					},
@@ -2258,6 +2289,12 @@
 			},
 			"infer_typeofstorageRackQuerySchema_": {
 				"properties": {
+					"zone": {
+						"$ref": "#/components/schemas/RackZoneEnum"
+					},
+					"aisle": {
+						"type": "string"
+					},
 					"rackCode": {
 						"type": "string"
 					},
@@ -2286,6 +2323,8 @@
 							"createdAt",
 							"updatedAt",
 							"rackCode",
+							"aisle",
+							"bay",
 							"tierCount"
 						]
 					},
@@ -2407,6 +2446,20 @@
 					"name": {
 						"type": "string"
 					},
+					"customPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"zone": {
+						"$ref": "#/components/schemas/RackZoneEnum"
+					},
+					"bay": {
+						"type": "number",
+						"format": "double"
+					},
+					"aisle": {
+						"type": "string"
+					},
 					"tierCount": {
 						"type": "number",
 						"format": "double"
@@ -2435,6 +2488,20 @@
 					},
 					"status": {
 						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"customPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"zone": {
+						"$ref": "#/components/schemas/RackZoneEnum"
+					},
+					"bay": {
+						"type": "number",
+						"format": "double"
+					},
+					"aisle": {
+						"type": "string"
 					},
 					"name": {
 						"type": "string"
@@ -4382,6 +4449,28 @@
 					"notes": {
 						"type": "string"
 					},
+					"rackZonePricing": {
+						"properties": {
+							"ECONOMY": {
+								"type": "number",
+								"format": "double"
+							},
+							"STANDARD": {
+								"type": "number",
+								"format": "double"
+							},
+							"PRIME": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"ECONOMY",
+							"STANDARD",
+							"PRIME"
+						],
+						"type": "object"
+					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
 					},
@@ -4647,6 +4736,28 @@
 					"status": {
 						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
 					},
+					"rackZonePricing": {
+						"properties": {
+							"ECONOMY": {
+								"type": "number",
+								"format": "double"
+							},
+							"STANDARD": {
+								"type": "number",
+								"format": "double"
+							},
+							"PRIME": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"ECONOMY",
+							"STANDARD",
+							"PRIME"
+						],
+						"type": "object"
+					},
 					"minRentalDays": {
 						"type": "number",
 						"format": "double"
@@ -4697,6 +4808,28 @@
 					"depositMultiplier": {
 						"type": "number",
 						"format": "double"
+					},
+					"rackZonePricing": {
+						"properties": {
+							"ECONOMY": {
+								"type": "number",
+								"format": "double"
+							},
+							"STANDARD": {
+								"type": "number",
+								"format": "double"
+							},
+							"PRIME": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"ECONOMY",
+							"STANDARD",
+							"PRIME"
+						],
+						"type": "object"
 					},
 					"pricePerUnit": {
 						"type": "number",
@@ -13046,6 +13179,22 @@
 				"parameters": [
 					{
 						"in": "query",
+						"name": "zone",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RackZoneEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aisle",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
 						"name": "rackCode",
 						"required": false,
 						"schema": {
@@ -13106,6 +13255,8 @@
 								"createdAt",
 								"updatedAt",
 								"rackCode",
+								"aisle",
+								"bay",
 								"tierCount"
 							]
 						}
