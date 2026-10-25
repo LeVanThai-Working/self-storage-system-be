@@ -167,6 +167,44 @@ export class CustomerInventoryRepository {
   }
 
   /**
+   * Count inventory rows that still hold goods (quantity > 0) for a contract.
+   * Used to block check-out / unit change while customer goods remain.
+   */
+  async countRemainingByContract(
+    contractId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const query = this.inventory.countDocuments({
+      contractId: new Types.ObjectId(contractId),
+      quantity: { $gt: 0 },
+      deleted: { $ne: true },
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Count inventory rows that still hold goods (quantity > 0) inside a storage unit.
+   * Used to block re-opening (AVAILABLE) a unit while customer goods remain.
+   */
+  async countRemainingByStorageUnit(
+    storageUnitId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const query = this.inventory.countDocuments({
+      storageUnitId: new Types.ObjectId(storageUnitId),
+      quantity: { $gt: 0 },
+      deleted: { $ne: true },
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
    * Count total item quantity (across all SKUs) located on a specific rack tier.
    * Supports RackTier State Machine transitions (AVAILABLE <-> OCCUPIED).
    */

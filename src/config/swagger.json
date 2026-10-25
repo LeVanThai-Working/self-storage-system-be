@@ -13940,7 +13940,7 @@
 						}
 					},
 					"400": {
-						"description": "Unit cannot be put into/taken out of maintenance in current status",
+						"description": "Unit cannot be put into/taken out of maintenance in current status, or still contains customer inventory (MESSAGE_CODE_629)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -13960,7 +13960,7 @@
 						}
 					}
 				},
-				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\n\n//",
+				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\nTurning maintenance off is rejected (MESSAGE_CODE_629) while customer goods remain inside the unit.\n\n//",
 				"tags": [
 					"Storage Units"
 				],

@@ -252,6 +252,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_627: 'MESSAGE_CODE_627',
   // SKU Does Not Belong To Customer
   MESSAGE_CODE_628: 'MESSAGE_CODE_628',
+  // Storage Unit Still Contains Customer Inventory
+  MESSAGE_CODE_629: 'MESSAGE_CODE_629',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -388,4 +390,5 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_626: 'Invalid Inventory Movement Quantity',
   MESSAGE_CODE_627: 'Destination Tier Must Be Different From Source Tier',
   MESSAGE_CODE_628: 'SKU Does Not Belong To Customer',
+  MESSAGE_CODE_629: 'Storage Unit Still Contains Customer Inventory',
 };
