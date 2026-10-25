@@ -43,6 +43,13 @@ export enum AuditActionEnum {
   EXPIRE = 'expire',
   MARK_OVERDUE = 'mark_overdue',
   REFUND = 'refund',
+  CREATE_INVENTORY_REQUEST = 'create_inventory_request',
+  VERIFY_PICKUP_CODE = 'verify_pickup_code',
+  COMPLETE_OUTBOUND_HANDOVER = 'complete_outbound_handover',
+  CONFIRM_INBOUND_REQUEST = 'confirm_inbound_request',
+  DISPUTE_INBOUND_REQUEST = 'dispute_inbound_request',
+  PUTAWAY_INBOUND_REQUEST = 'putaway_inbound_request',
+  CANCEL_INVENTORY_REQUEST = 'cancel_inventory_request',
 }
 
 export enum AuditResourceEnum {
@@ -65,6 +72,7 @@ export enum AuditResourceEnum {
   CUSTOMER_SKU = 'customer_sku',
   CUSTOMER_INVENTORY = 'customer_inventory',
   INVENTORY_MOVEMENT = 'inventory_movement',
+  INVENTORY_REQUEST = 'inventory_request',
 }
 
 export enum AuditStatusEnum {

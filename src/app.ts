@@ -22,6 +22,10 @@ import {
   initReservationWorker,
   closeReservationWorker,
 } from './modules/reservation/reservation.worker.ts';
+import {
+  initInventoryRequestWorker,
+  closeInventoryRequestWorker,
+} from './modules/customerInventory/inventoryRequest.worker.ts';
 
 const app: Express = express();
 const httpServer = http.createServer(app);
@@ -41,6 +45,7 @@ const initServices = async () => {
   await connect();
   await connectRedis();
   await initReservationWorker();
+  await initInventoryRequestWorker();
 };
 initServices();
 
@@ -125,6 +130,7 @@ httpServer.listen(port, '0.0.0.0', () => {
 const shutdown = async (signal: string) => {
   console.log(`\nReceived ${signal}. Gracefully shutting down...`);
   await closeReservationWorker();
+  await closeInventoryRequestWorker();
   process.exit(0);
 };
 

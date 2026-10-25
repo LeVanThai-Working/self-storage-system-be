@@ -210,6 +210,24 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_627: 'MESSAGE_CODE_627',
   // SKU Does Not Belong To Customer
   MESSAGE_CODE_628: 'MESSAGE_CODE_628',
+
+  // ==========================================
+  // INVENTORY REQUEST - DUAL HANDSHAKE (630 - 636)
+  // ==========================================
+  // Inventory Request Not Found
+  MESSAGE_CODE_630: 'MESSAGE_CODE_630',
+  // Invalid Or Expired Pickup Code Or OTP
+  MESSAGE_CODE_631: 'MESSAGE_CODE_631',
+  // Invalid Inventory Request Status Transition
+  MESSAGE_CODE_632: 'MESSAGE_CODE_632',
+  // Evidence Images Required For Handover Or Delivery
+  MESSAGE_CODE_633: 'MESSAGE_CODE_633',
+  // Cannot Cancel Inventory Request Being Processed Or Completed
+  MESSAGE_CODE_634: 'MESSAGE_CODE_634',
+  // Storage Rack And Rack Tier Are Required In Warehouse Rack
+  MESSAGE_CODE_635: 'MESSAGE_CODE_635',
+  // Rack Tier Does Not Belong To Storage Rack
+  MESSAGE_CODE_636: 'MESSAGE_CODE_636',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -323,4 +341,14 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_626: 'Invalid Inventory Movement Quantity',
   MESSAGE_CODE_627: 'Destination Tier Must Be Different From Source Tier',
   MESSAGE_CODE_628: 'SKU Does Not Belong To Customer',
+
+  // Inventory Request (Task 7D Dual Handshake)
+  MESSAGE_CODE_630: 'Inventory Request Not Found',
+  MESSAGE_CODE_631: 'Invalid Or Expired Pickup Code Or OTP',
+  MESSAGE_CODE_632: 'Invalid Inventory Request Status Transition',
+  MESSAGE_CODE_633: 'Evidence Images Required For Handover Or Delivery',
+  MESSAGE_CODE_634:
+    'Cannot Cancel Inventory Request Being Processed Or Completed',
+  MESSAGE_CODE_635: 'Storage Rack And Rack Tier Are Required In Warehouse Rack',
+  MESSAGE_CODE_636: 'Rack Tier Does Not Belong To Storage Rack',
 };

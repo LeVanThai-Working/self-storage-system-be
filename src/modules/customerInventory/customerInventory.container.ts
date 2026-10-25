@@ -1,9 +1,13 @@
 import { CustomerInventory } from './customerInventory.model.ts';
 import { InventoryMovement } from './inventoryMovement.model.ts';
+import { InventoryRequest } from './inventoryRequest.model.ts';
 import { CustomerInventoryRepository } from './customerInventory.repository.ts';
 import { InventoryMovementRepository } from './inventoryMovement.repository.ts';
+import { InventoryRequestRepository } from './inventoryRequest.repository.ts';
 import { CustomerInventoryService } from './customerInventory.service.ts';
 import { CustomerInventoryController } from './customerInventory.controller.ts';
+import { InventoryRequestService } from './inventoryRequest.service.ts';
+import { InventoryRequestController } from './inventoryRequest.controller.ts';
 import { contractRepository } from '../contract/contract.container.ts';
 import { CustomerSku } from '../customerSku/customerSku.model.ts';
 import { CustomerSkuRepository } from '../customerSku/customerSku.repository.ts';
@@ -12,6 +16,7 @@ import {
   rackTierRepository,
 } from '../storageRack/storageRack.container.ts';
 import { storageUnitRepository } from '../storageUnit/storageUnit.container.ts';
+import { userRepository } from '../user/user.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const customerSkuRepository = new CustomerSkuRepository(CustomerSku);
@@ -21,6 +26,9 @@ export const customerInventoryRepository = new CustomerInventoryRepository(
 );
 export const inventoryMovementRepository = new InventoryMovementRepository(
   InventoryMovement
+);
+export const inventoryRequestRepository = new InventoryRequestRepository(
+  InventoryRequest
 );
 
 export const customerInventoryService = new CustomerInventoryService(
@@ -34,6 +42,22 @@ export const customerInventoryService = new CustomerInventoryService(
   auditLogService
 );
 
+export const inventoryRequestService = new InventoryRequestService(
+  inventoryRequestRepository,
+  customerInventoryRepository,
+  inventoryMovementRepository,
+  contractRepository,
+  storageRackRepository,
+  rackTierRepository,
+  storageUnitRepository,
+  userRepository,
+  auditLogService
+);
+
 export const customerInventoryController = new CustomerInventoryController(
   customerInventoryService
+);
+
+export const inventoryRequestController = new InventoryRequestController(
+  inventoryRequestService
 );
