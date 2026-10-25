@@ -184,7 +184,9 @@ export class ReservationRepository {
     data: Partial<IReservation>,
     session?: ClientSession
   ) {
-    const query = this.reservation.findByIdAndUpdate(id, data, { new: true });
+    const query = this.reservation.findByIdAndUpdate(id, data, {
+      returnDocument: 'after',
+    });
     if (session) {
       query.session(session);
     }
@@ -209,7 +211,7 @@ export class ReservationRepository {
     };
 
     const query = this.reservation.findOneAndUpdate(filter, updateData, {
-      new: true,
+      returnDocument: 'after',
     });
     if (session) {
       query.session(session);
@@ -392,7 +394,7 @@ export class ReservationRepository {
         $inc: { refundAmount: additionalAmount },
         $set: { refundStatus: RefundStatusEnum.PENDING },
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (session) {
       query.session(session);

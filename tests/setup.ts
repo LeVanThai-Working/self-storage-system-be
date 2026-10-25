@@ -9,6 +9,8 @@ process.env.JWT_REFRESH_SECRET =
 process.env.COOKIE_SECRET =
   process.env.COOKIE_SECRET || 'test_cookie_secret_1234567890';
 process.env.ALLOW_INSECURE_CALLER_FALLBACK = 'true';
+process.env.ENABLE_DEMO_REFUND_SIMULATION =
+  process.env.ENABLE_DEMO_REFUND_SIMULATION || 'true';
 
 // SePay test configuration
 process.env.SEPAY_WEBHOOK_API_KEY =

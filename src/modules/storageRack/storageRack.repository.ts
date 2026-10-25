@@ -140,7 +140,7 @@ export class StorageRackRepository {
   ) {
     if (!Types.ObjectId.isValid(id)) return null;
     return this.storageRack
-      .findByIdAndUpdate(id, data, { new: true, session })
+      .findByIdAndUpdate(id, data, { returnDocument: 'after', session })
       .populate(POPULATE_FACILITY)
       .populate(POPULATE_STORAGE_UNIT);
   }

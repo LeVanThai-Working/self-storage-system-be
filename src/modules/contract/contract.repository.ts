@@ -195,7 +195,9 @@ export class ContractRepository {
   }
 
   async update(id: string, data: Partial<IContract>, session?: ClientSession) {
-    const query = this.contract.findByIdAndUpdate(id, data, { new: true });
+    const query = this.contract.findByIdAndUpdate(id, data, {
+      returnDocument: 'after',
+    });
     if (session) {
       query.session(session);
     }
@@ -216,7 +218,7 @@ export class ContractRepository {
     };
 
     const query = this.contract.findOneAndUpdate(filter, updateData, {
-      new: true,
+      returnDocument: 'after',
     });
     if (session) {
       query.session(session);

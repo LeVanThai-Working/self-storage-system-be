@@ -206,7 +206,9 @@ export class PaymentRepository {
   }
 
   async update(id: string, data: Partial<IPayment>, session?: ClientSession) {
-    const query = this.payment.findByIdAndUpdate(id, data, { new: true });
+    const query = this.payment.findByIdAndUpdate(id, data, {
+      returnDocument: 'after',
+    });
     if (session) {
       query.session(session);
     }
@@ -228,7 +230,7 @@ export class PaymentRepository {
     };
 
     const query = this.payment.findOneAndUpdate(filter, updateData, {
-      new: true,
+      returnDocument: 'after',
     });
     if (session) {
       query.session(session);
@@ -311,7 +313,7 @@ export class PaymentRepository {
     }
 
     const query = this.paymentTransaction.findByIdAndUpdate(id, updateData, {
-      new: true,
+      returnDocument: 'after',
     });
     if (session) {
       query.session(session);
@@ -373,7 +375,7 @@ export class PaymentRepository {
         : expectedResult,
     };
     const query = this.paymentTransaction.findOneAndUpdate(filter, updateData, {
-      new: true,
+      returnDocument: 'after',
     });
     if (session) {
       query.session(session);

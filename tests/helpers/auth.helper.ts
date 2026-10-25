@@ -115,7 +115,7 @@ export async function seedTestUsers(): Promise<void> {
           ? new mongoose.Types.ObjectId(user.assignedFacilityId)
           : undefined,
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     );
   }
 }

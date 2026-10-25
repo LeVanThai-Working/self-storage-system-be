@@ -1630,10 +1630,6 @@ export class ReservationService {
     data: ConfirmRefundRequest,
     session?: ClientSession
   ): Promise<ReservationResponse> {
-    if (!isDemoRefundSimulationEnabled()) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_321);
-    }
-
     const allowedRoles: string[] = [
       RoleEnum.FACILITY_MANAGER,
       RoleEnum.BUSINESS_OPS_MANAGER,
@@ -1655,6 +1651,10 @@ export class ReservationService {
         reservation.facilityId
     );
     await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
+    if (!isDemoRefundSimulationEnabled()) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_321);
+    }
 
     // Maker-Checker: Person confirming refund cannot be the person who confirmed manual payment
     if (reservation.paymentId && this.paymentRepository) {
