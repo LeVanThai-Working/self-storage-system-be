@@ -57,7 +57,7 @@ export class RackTierRepository {
   }
 
   async createMany(data: Partial<IRackTier>[], session?: ClientSession) {
-    return this.rackTier.create(data, { session });
+    return this.rackTier.create(data, { session, ordered: true });
   }
 
   async update(id: string, data: Partial<IRackTier>, session?: ClientSession) {

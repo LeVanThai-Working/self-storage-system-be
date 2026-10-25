@@ -134,7 +134,7 @@ const inventoryMovementSchema = new Schema<IInventoryMovement>(
   }
 );
 
-// Indexes cho sổ cái lịch sử giao dịch
+// Indexes for transaction history ledger
 inventoryMovementSchema.index({ customerId: 1, createdAt: -1 });
 inventoryMovementSchema.index({ contractId: 1, createdAt: -1 });
 inventoryMovementSchema.index({ skuId: 1, createdAt: -1 });

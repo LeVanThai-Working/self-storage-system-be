@@ -6,9 +6,9 @@ import { authRedisService } from '../auth/auth.container.ts';
 import { profileRepository } from '../profile/profile.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 
-const userRepository = new UserRepository(User);
+export const userRepository = new UserRepository(User);
 
-const userService = new UserService(
+export const userService = new UserService(
   userRepository,
   authRedisService,
   profileRepository,

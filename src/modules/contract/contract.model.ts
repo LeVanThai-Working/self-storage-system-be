@@ -70,6 +70,7 @@ export interface IContract extends SoftDeleteDocument {
   customerId: Types.ObjectId;
   facilityId: Types.ObjectId;
   storageUnitId: Types.ObjectId;
+  rentedRackIds?: Types.ObjectId[];
   facilityUnitTypeOfferingId: Types.ObjectId;
   assignedStaffId?: Types.ObjectId | null;
 
@@ -357,6 +358,15 @@ const contractSchema = new Schema<IContract>(
       type: Schema.Types.ObjectId,
       ref: 'StorageUnit',
       required: true,
+    },
+    rentedRackIds: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'StorageRack',
+        },
+      ],
+      default: [],
     },
     facilityUnitTypeOfferingId: {
       type: Schema.Types.ObjectId,
