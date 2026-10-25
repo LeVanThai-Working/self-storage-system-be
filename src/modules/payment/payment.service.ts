@@ -7,13 +7,17 @@ import type { ReservationService } from '../reservation/reservation.service.ts';
 import type { ContractService } from '../contract/contract.service.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import type { UserRepository } from '../user/user.repository.ts';
-import type { IPayment } from './payment.model.ts';
+import type { IPayment, IPaymentTransaction } from './payment.model.ts';
+import type { RefundRequestService } from '../refundRequest/refundRequest.service.ts';
+import { RefundReasonEnum } from '../../common/enums/refundRequest.enum.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
 import {
   paymentResponseSchema,
+  paymentTransactionResponseSchema,
   type PaymentResponse,
+  type PaymentTransactionResponse,
 } from './schemas/payment.response.schema.ts';
 import type {
   CancelPaymentRequest,
@@ -21,6 +25,7 @@ import type {
   CreatePaymentRequest,
   PaymentQuery,
   SepayWebhookPayload,
+  UnmatchedTransactionQuery,
 } from './schemas/payment.request.schema.ts';
 import {
   PaymentMethodEnum,
@@ -51,7 +56,8 @@ export class PaymentService {
     private readonly reservationService: ReservationService,
     private readonly contractService: ContractService,
     private readonly auditLogService?: AuditLogService,
-    private readonly userRepository?: UserRepository
+    private readonly userRepository?: UserRepository,
+    private readonly refundRequestService?: RefundRequestService
   ) {}
 
   private async assertFacilityAccess(
@@ -134,15 +140,10 @@ export class PaymentService {
         : String(raw.facilityId);
 
     const config = getSepayConfig();
-    const remainingAmount = Math.max(
-      0,
-      Number(raw.amount) - Number(raw.paidAmount || 0)
-    );
     const qrUrl =
-      raw.status === PaymentStatusEnum.PENDING ||
-      raw.status === PaymentStatusEnum.PARTIALLY_PAID
+      raw.status === PaymentStatusEnum.PENDING
         ? this.sepayService.buildQrUrl({
-            amount: remainingAmount,
+            amount: Number(raw.amount),
             paymentCode: String(raw.paymentCode),
           })
         : null;
@@ -209,6 +210,47 @@ export class PaymentService {
           ? raw.updatedAt.toISOString()
           : new Date(String(raw.updatedAt)).toISOString(),
     };
+  }
+
+  private formatTransaction(
+    raw: IPaymentTransaction
+  ): PaymentTransactionResponse {
+    return validateResponse(paymentTransactionResponseSchema, {
+      id: String(raw._id),
+      sepayId: raw.sepayId,
+      gateway: raw.gateway ?? null,
+      transactionDate: raw.transactionDate ?? null,
+      accountNumber: raw.accountNumber ?? null,
+      subAccount: raw.subAccount ?? null,
+      code: raw.code ?? null,
+      content: raw.content ?? null,
+      transferType: raw.transferType ?? null,
+      transferAmount:
+        raw.transferAmount !== undefined && raw.transferAmount !== null
+          ? Number(raw.transferAmount)
+          : null,
+      accumulated:
+        raw.accumulated !== undefined && raw.accumulated !== null
+          ? Number(raw.accumulated)
+          : null,
+      referenceCode: raw.referenceCode ?? null,
+      description: raw.description ?? null,
+      matchedPaymentId: raw.matchedPaymentId
+        ? String(
+            (raw.matchedPaymentId as { _id?: unknown })._id ||
+              raw.matchedPaymentId
+          )
+        : null,
+      result: raw.result,
+      createdAt:
+        raw.createdAt instanceof Date
+          ? raw.createdAt.toISOString()
+          : new Date(String(raw.createdAt)).toISOString(),
+      updatedAt:
+        raw.updatedAt instanceof Date
+          ? raw.updatedAt.toISOString()
+          : new Date(String(raw.updatedAt)).toISOString(),
+    });
   }
 
   private extractId(
@@ -326,7 +368,7 @@ export class PaymentService {
       expiresAt = reservation.expiresAt
         ? new Date(reservation.expiresAt)
         : null;
-    } else {
+    } else if (data.purpose === PaymentPurposeEnum.CONTRACT_DEPOSIT) {
       // CONTRACT_DEPOSIT flow
       if (!data.contractId) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
@@ -372,6 +414,7 @@ export class PaymentService {
 
       const existingPayment = await this.paymentRepository.findActiveByContract(
         data.contractId,
+        PaymentPurposeEnum.CONTRACT_DEPOSIT,
         session
       );
       if (existingPayment) {
@@ -391,6 +434,76 @@ export class PaymentService {
         this.extractId(contract.facilityId, contract, 'facilityId')
       );
       amount = contract.depositAmount;
+      expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours holding
+    } else {
+      // RENT_FIRST_PERIOD flow
+      if (!data.contractId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+          'contractId is required for RENT_FIRST_PERIOD',
+        ]);
+      }
+
+      const contract = await this.contractRepository.findById(
+        data.contractId,
+        session
+      );
+      if (!contract) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+      }
+
+      const isStaffOrAdmin = [
+        RoleEnum.SYSTEM_ADMIN,
+        RoleEnum.BUSINESS_OPS_MANAGER,
+        RoleEnum.FACILITY_MANAGER,
+        RoleEnum.FACILITY_STAFF,
+      ].includes(callerRole as RoleEnum);
+
+      const contractCustomerStr = this.extractId(
+        contract.customerId,
+        contract,
+        'customerId'
+      );
+
+      if (!isStaffOrAdmin && contractCustomerStr !== customerId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+
+      if (contract.status !== ContractStatusEnum.DRAFT) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+      }
+
+      // Must have deposit paid before paying first period rent
+      if (!contract.depositPaidAt) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_520);
+      }
+
+      // Check if first period rent already paid
+      if (contract.firstPeriodPaidAt) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_521);
+      }
+
+      const existingPayment = await this.paymentRepository.findActiveByContract(
+        data.contractId,
+        PaymentPurposeEnum.RENT_FIRST_PERIOD,
+        session
+      );
+      if (existingPayment) {
+        const populated = await this.paymentRepository.findById(
+          String(existingPayment._id),
+          session
+        );
+        return validateResponse(
+          paymentResponseSchema,
+          this.formatPayment(populated || existingPayment)
+        );
+      }
+
+      contractId = new Types.ObjectId(data.contractId);
+      targetCustomerId = new Types.ObjectId(contractCustomerStr);
+      targetFacilityId = new Types.ObjectId(
+        this.extractId(contract.facilityId, contract, 'facilityId')
+      );
+      amount = contract.totalPeriodicPrice;
       expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours holding
     }
 
@@ -527,10 +640,7 @@ export class PaymentService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
-    if (
-      payment.status !== PaymentStatusEnum.PENDING &&
-      payment.status !== PaymentStatusEnum.PARTIALLY_PAID
-    ) {
+    if (payment.status !== PaymentStatusEnum.PENDING) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_501);
     }
 
@@ -591,10 +701,7 @@ export class PaymentService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_509);
     }
 
-    if (
-      payment.status !== PaymentStatusEnum.PENDING &&
-      payment.status !== PaymentStatusEnum.PARTIALLY_PAID
-    ) {
+    if (payment.status !== PaymentStatusEnum.PENDING) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_501);
     }
 
@@ -635,6 +742,20 @@ export class PaymentService {
       payment.contractId
     ) {
       await this.contractService.markDepositPaid(
+        String(payment.contractId),
+        {
+          paymentId: id,
+          paidAmount: payment.amount,
+          paidAt: now,
+          referenceCode: data.referenceCode,
+        },
+        session
+      );
+    } else if (
+      payment.purpose === PaymentPurposeEnum.RENT_FIRST_PERIOD &&
+      payment.contractId
+    ) {
+      await this.contractService.markFirstPeriodRentPaid(
         String(payment.contractId),
         {
           paymentId: id,
@@ -694,6 +815,7 @@ export class PaymentService {
       existingTx &&
       [
         PaymentTransactionResultEnum.MATCHED,
+        PaymentTransactionResultEnum.AMOUNT_MISMATCH,
         PaymentTransactionResultEnum.IGNORED,
         PaymentTransactionResultEnum.LATE,
       ].includes(existingTx.result)
@@ -787,14 +909,48 @@ export class PaymentService {
       return { success: true, message: 'Account number mismatch' };
     }
 
-    // If already fully paid
+    const transferAmount = Number(payload.transferAmount || 0);
+    const expectedAmount = Number(payment.amount || 0);
+    const targetFacilityId = String(
+      (payment.facilityId as { _id?: Types.ObjectId })?._id ||
+        payment.facilityId
+    );
+    const targetCustomerId = String(
+      (payment.customerId as { _id?: Types.ObjectId })?._id ||
+        payment.customerId
+    );
+
+    // If already fully paid -> transfer is redundant -> AMOUNT_MISMATCH + refund
     if (payment.status === PaymentStatusEnum.PAID) {
       await this.paymentRepository.updateTransactionResult(
         String(txRecord._id),
-        PaymentTransactionResultEnum.MATCHED,
+        PaymentTransactionResultEnum.AMOUNT_MISMATCH,
         String(payment._id)
       );
-      return { success: true, message: 'Payment was already fully settled' };
+      if (this.refundRequestService) {
+        await this.refundRequestService.createRefundRequestInternal(
+          targetCustomerId,
+          {
+            reservationId: payment.reservationId
+              ? String(payment.reservationId)
+              : undefined,
+            contractId: payment.contractId
+              ? String(payment.contractId)
+              : undefined,
+            paymentId: String(payment._id),
+            facilityId: targetFacilityId,
+            customerId: targetCustomerId,
+            amount: transferAmount,
+            reason: RefundReasonEnum.AMOUNT_MISMATCH,
+            note: `Chuyển thừa vào đơn đã thanh toán xong (SePay txId: ${payload.id}, ref: ${payload.referenceCode || payload.code || ''})`,
+          }
+        );
+      }
+      return {
+        success: true,
+        message:
+          'Payment was already settled, refund request created for redundant transfer',
+      };
     }
 
     // If payment was cancelled or expired, record as LATE transfer
@@ -807,31 +963,122 @@ export class PaymentService {
         PaymentTransactionResultEnum.LATE,
         String(payment._id)
       );
-      if (
-        payment.purpose === PaymentPurposeEnum.RESERVATION_DEPOSIT &&
-        payment.reservationId
-      ) {
-        try {
-          await this.reservationService.flagOrphanedPayment(
-            String(payment.reservationId),
-            Number(payload.transferAmount),
-            String(payment._id),
-            payload.referenceCode || payload.code || null
-          );
-        } catch (flagErr) {
-          console.warn(
-            `[PaymentService] Could not flag orphaned reservation payment:`,
-            (flagErr as Error)?.message || flagErr
-          );
-        }
+      if (this.refundRequestService) {
+        await this.refundRequestService.createRefundRequestInternal(
+          targetCustomerId,
+          {
+            reservationId: payment.reservationId
+              ? String(payment.reservationId)
+              : undefined,
+            contractId: payment.contractId
+              ? String(payment.contractId)
+              : undefined,
+            paymentId: String(payment._id),
+            facilityId: targetFacilityId,
+            customerId: targetCustomerId,
+            amount: transferAmount,
+            reason: RefundReasonEnum.LATE_PAYMENT,
+            note: `Chuyển tiền sau khi đơn đã hủy hoặc hết hạn (SePay txId: ${payload.id}, ref: ${payload.referenceCode || payload.code || ''})`,
+          }
+        );
       }
       return {
         success: true,
-        message: 'Payment was expired or cancelled (recorded as LATE)',
+        message:
+          'Payment was expired or cancelled (recorded as LATE, refund request created)',
       };
     }
 
-    // E. Settle payment inside transactional boundary
+    // Check late timing based on transactionDate + lateGraceMinutes [OPEN D9]
+    let txDate: Date = new Date();
+    if (payload.transactionDate) {
+      const trimmed = payload.transactionDate.trim();
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(trimmed)) {
+        txDate = new Date(trimmed.replace(' ', 'T') + '+07:00');
+      } else {
+        const parsed = new Date(trimmed);
+        if (!Number.isNaN(parsed.getTime())) {
+          txDate = parsed;
+        }
+      }
+    }
+    const graceMinutes = config.lateGraceMinutes || 2;
+    const graceMs = graceMinutes * 60 * 1000;
+    const isLate =
+      payment.expiresAt &&
+      !isNaN(txDate.getTime()) &&
+      txDate.getTime() > new Date(payment.expiresAt).getTime() + graceMs;
+
+    if (isLate) {
+      await this.paymentRepository.updateTransactionResult(
+        String(txRecord._id),
+        PaymentTransactionResultEnum.LATE,
+        String(payment._id)
+      );
+      if (payment.status === PaymentStatusEnum.PENDING) {
+        await this.paymentRepository.update(String(payment._id), {
+          status: PaymentStatusEnum.EXPIRED,
+        });
+      }
+      if (this.refundRequestService) {
+        await this.refundRequestService.createRefundRequestInternal(
+          targetCustomerId,
+          {
+            reservationId: payment.reservationId
+              ? String(payment.reservationId)
+              : undefined,
+            contractId: payment.contractId
+              ? String(payment.contractId)
+              : undefined,
+            paymentId: String(payment._id),
+            facilityId: targetFacilityId,
+            customerId: targetCustomerId,
+            amount: transferAmount,
+            reason: RefundReasonEnum.LATE_PAYMENT,
+            note: `Thanh toán trễ quá hạn thanh toán kèm 2 phút đệm (SePay txId: ${payload.id})`,
+          }
+        );
+      }
+      return {
+        success: true,
+        message:
+          'Payment arrived late after expiration (recorded as LATE, refund request created)',
+      };
+    }
+
+    // Check amount match: T1.2 + T1.8 must be exact match
+    if (transferAmount !== expectedAmount) {
+      await this.paymentRepository.updateTransactionResult(
+        String(txRecord._id),
+        PaymentTransactionResultEnum.AMOUNT_MISMATCH,
+        String(payment._id)
+      );
+      if (this.refundRequestService) {
+        await this.refundRequestService.createRefundRequestInternal(
+          targetCustomerId,
+          {
+            reservationId: payment.reservationId
+              ? String(payment.reservationId)
+              : undefined,
+            contractId: payment.contractId
+              ? String(payment.contractId)
+              : undefined,
+            paymentId: String(payment._id),
+            facilityId: targetFacilityId,
+            customerId: targetCustomerId,
+            amount: transferAmount,
+            reason: RefundReasonEnum.AMOUNT_MISMATCH,
+            note: `Thanh toán không khớp số tiền cọc (Chuyển ${transferAmount}đ, yêu cầu ${expectedAmount}đ, SePay txId: ${payload.id})`,
+          }
+        );
+      }
+      return {
+        success: true,
+        message: `Amount mismatch: transferred ${transferAmount}, expected ${expectedAmount}. Refund request created.`,
+      };
+    }
+
+    // E. Settle payment inside transactional boundary (Exact match)
     await this.settlePaymentWithTransaction(
       payment,
       payload,
@@ -849,28 +1096,17 @@ export class PaymentService {
     session?: ClientSession
   ): Promise<void> {
     const paymentId = String(payment._id);
-    const currentPaid = Number(payment.paidAmount || 0);
-    const newPaidAmount = currentPaid + Number(payload.transferAmount);
-    const isFullyPaid = newPaidAmount >= payment.amount;
-    const overpaidAmount = isFullyPaid
-      ? Math.max(0, newPaidAmount - payment.amount)
-      : 0;
-    const newStatus = isFullyPaid
-      ? PaymentStatusEnum.PAID
-      : PaymentStatusEnum.PARTIALLY_PAID;
-
+    const expectedAmount = Number(payment.amount);
     const now = new Date();
+
     const updatePayload: Partial<IPayment> = {
-      paidAmount: newPaidAmount,
-      overpaidAmount,
-      status: newStatus,
+      paidAmount: expectedAmount,
+      overpaidAmount: 0,
+      status: PaymentStatusEnum.PAID,
+      paidAt: now,
       sepayTransactionId: payload.id,
       referenceCode: payload.referenceCode || payload.code || null,
     };
-
-    if (isFullyPaid) {
-      updatePayload.paidAt = now;
-    }
 
     const updatedPayment = await this.paymentRepository.atomicUpdatePayment(
       paymentId,
@@ -882,73 +1118,77 @@ export class PaymentService {
       return;
     }
 
-    // If fully paid, notify target domain (Reservation or Contract)
-    if (isFullyPaid) {
-      if (
-        payment.purpose === PaymentPurposeEnum.RESERVATION_DEPOSIT &&
-        payment.reservationId
-      ) {
-        try {
-          await this.reservationService.markDepositPaid(
-            String(payment.reservationId),
-            {
-              paymentId,
-              paidAmount: newPaidAmount,
-              paidAt: now,
-              referenceCode: payload.referenceCode || payload.code || null,
-            },
-            session
-          );
-        } catch (err) {
-          console.warn(
-            `[PaymentService] Reservation ${payment.reservationId} deposit could not be settled:`,
-            (err as Error)?.message || err
-          );
+    if (
+      payment.purpose === PaymentPurposeEnum.RESERVATION_DEPOSIT &&
+      payment.reservationId &&
+      this.reservationService
+    ) {
+      try {
+        await this.reservationService.markDepositPaid(
+          String(payment.reservationId),
+          {
+            paymentId,
+            paidAmount: expectedAmount,
+            paidAt: now,
+            referenceCode: payload.referenceCode || payload.code || null,
+          },
+          session
+        );
+      } catch (err) {
+        console.warn(
+          `[PaymentService] Reservation ${payment.reservationId} deposit could not be settled:`,
+          (err as Error)?.message || err
+        );
+        if (
+          err instanceof AppError &&
+          (err.messageCode === MESSAGE_CODE.MESSAGE_CODE_304 ||
+            err.messageCode === MESSAGE_CODE.MESSAGE_CODE_301)
+        ) {
           await this.paymentRepository.updateTransactionResult(
             transactionRecordId,
             PaymentTransactionResultEnum.LATE,
             paymentId,
             session
           );
-          try {
-            await this.reservationService.flagOrphanedPayment(
-              String(payment.reservationId),
-              newPaidAmount,
-              paymentId,
-              payload.referenceCode || payload.code || null,
-              session
-            );
-          } catch (flagErr) {
-            console.warn(
-              `[PaymentService] Could not flag orphaned reservation payment on markDepositPaid failure:`,
-              (flagErr as Error)?.message || flagErr
-            );
-          }
           return;
         }
-      } else if (
-        payment.purpose === PaymentPurposeEnum.CONTRACT_DEPOSIT &&
-        payment.contractId
-      ) {
-        await this.contractService.markDepositPaid(
-          String(payment.contractId),
-          {
-            paymentId,
-            paidAmount: newPaidAmount,
-            paidAt: now,
-            referenceCode: payload.referenceCode || payload.code || null,
-          },
-          session
-        );
+        throw err;
       }
+    } else if (
+      payment.purpose === PaymentPurposeEnum.CONTRACT_DEPOSIT &&
+      payment.contractId &&
+      this.contractService
+    ) {
+      await this.contractService.markDepositPaid(
+        String(payment.contractId),
+        {
+          paymentId,
+          paidAmount: expectedAmount,
+          paidAt: now,
+          referenceCode: payload.referenceCode || payload.code || null,
+        },
+        session
+      );
+    } else if (
+      payment.purpose === PaymentPurposeEnum.RENT_FIRST_PERIOD &&
+      payment.contractId &&
+      this.contractService
+    ) {
+      await this.contractService.markFirstPeriodRentPaid(
+        String(payment.contractId),
+        {
+          paymentId,
+          paidAmount: expectedAmount,
+          paidAt: now,
+          referenceCode: payload.referenceCode || payload.code || null,
+        },
+        session
+      );
     }
 
-    // Update transaction result
     await this.paymentRepository.updateTransactionResult(
       transactionRecordId,
-      isFullyPaid
-        ? PaymentTransactionResultEnum.MATCHED
-        : PaymentTransactionResultEnum.PARTIALLY_MATCHED,
+      PaymentTransactionResultEnum.MATCHED,
       paymentId,
       session
     );
@@ -965,8 +1205,194 @@ export class PaymentService {
       metadata: {
         sepayId: payload.id,
         transferAmount: payload.transferAmount,
-        isFullyPaid,
       },
     });
+  }
+
+  /**
+   * Tra cứu danh sách các giao dịch ngân hàng không khớp (UNMATCHED) có phân trang.
+   */
+  async getUnmatchedTransactions(
+    callerId: string,
+    callerRole: string,
+    query: UnmatchedTransactionQuery
+  ): Promise<PaginatedData<PaymentTransactionResponse>> {
+    const allowedRoles: string[] = [
+      RoleEnum.FACILITY_MANAGER,
+      RoleEnum.BUSINESS_OPS_MANAGER,
+      RoleEnum.SYSTEM_ADMIN,
+    ];
+    if (!allowedRoles.includes(callerRole as RoleEnum)) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121);
+    }
+
+    const result = await this.paymentRepository.findPaginatedTransactions({
+      page: query.page,
+      limit: query.limit,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+      result: query.result || PaymentTransactionResultEnum.UNMATCHED,
+      gateway: query.gateway,
+      accountNumber: query.accountNumber,
+      code: query.code,
+    });
+
+    return {
+      items: result.items.map((item) => this.formatTransaction(item)),
+      pagination: result.pagination,
+    };
+  }
+
+  /**
+   * Gán thủ công giao dịch không khớp (UNMATCHED) cho một mã thanh toán cụ thể.
+   */
+  @Transactional()
+  async assignUnmatchedTransaction(
+    transactionId: string,
+    paymentCode: string,
+    callerId: string,
+    callerRole: string,
+    session?: ClientSession
+  ): Promise<PaymentTransactionResponse> {
+    const allowedRoles: string[] = [
+      RoleEnum.FACILITY_MANAGER,
+      RoleEnum.BUSINESS_OPS_MANAGER,
+      RoleEnum.SYSTEM_ADMIN,
+    ];
+    if (!allowedRoles.includes(callerRole as RoleEnum)) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121);
+    }
+
+    const tx = await this.paymentRepository.findTransactionById(
+      transactionId,
+      session
+    );
+    if (!tx) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_510);
+    }
+
+    if (tx.result !== PaymentTransactionResultEnum.UNMATCHED) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_517);
+    }
+
+    const payment = await this.paymentRepository.findByCode(
+      paymentCode,
+      session
+    );
+    if (!payment) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_500);
+    }
+
+    const paymentFacilityId = String(
+      (payment.facilityId as { _id?: Types.ObjectId })?._id ||
+        payment.facilityId
+    );
+    await this.assertFacilityAccess(callerId, callerRole, paymentFacilityId);
+
+    const transferAmount = Number(tx.transferAmount || 0);
+    const expectedAmount = Number(payment.amount || 0);
+    const now = new Date();
+
+    if (payment.status === PaymentStatusEnum.PAID) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_507);
+    }
+
+    if (
+      payment.status === PaymentStatusEnum.CANCELLED ||
+      payment.status === PaymentStatusEnum.EXPIRED
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_502);
+    }
+
+    if (transferAmount !== expectedAmount) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_518, [
+        `Giao dịch ${transferAmount}đ không khớp với số tiền đơn ${expectedAmount}đ`,
+      ]);
+    }
+
+    // Exact match -> Settle payment & MATCHED
+    await this.paymentRepository.atomicUpdatePayment(
+      String(payment._id),
+      {
+        paidAmount: expectedAmount,
+        overpaidAmount: 0,
+        status: PaymentStatusEnum.PAID,
+        paidAt: now,
+        sepayTransactionId: tx.sepayId,
+        referenceCode: tx.referenceCode || tx.code || null,
+      },
+      session
+    );
+
+    const updatedTx = await this.paymentRepository.atomicUpdateTransaction(
+      transactionId,
+      PaymentTransactionResultEnum.UNMATCHED,
+      {
+        matchedPaymentId: payment._id,
+        result: PaymentTransactionResultEnum.MATCHED,
+      },
+      session
+    );
+
+    if (
+      payment.purpose === PaymentPurposeEnum.RESERVATION_DEPOSIT &&
+      payment.reservationId &&
+      this.reservationService
+    ) {
+      await this.reservationService.markDepositPaid(
+        String(payment.reservationId),
+        {
+          paymentId: String(payment._id),
+          paidAmount: expectedAmount,
+          paidAt: now,
+          referenceCode: tx.referenceCode || tx.code || null,
+        },
+        session
+      );
+    } else if (
+      payment.purpose === PaymentPurposeEnum.CONTRACT_DEPOSIT &&
+      payment.contractId &&
+      this.contractService
+    ) {
+      await this.contractService.markDepositPaid(
+        String(payment.contractId),
+        {
+          paymentId: String(payment._id),
+          paidAmount: expectedAmount,
+          paidAt: now,
+          referenceCode: tx.referenceCode || tx.code || null,
+        },
+        session
+      );
+    } else if (
+      payment.purpose === PaymentPurposeEnum.RENT_FIRST_PERIOD &&
+      payment.contractId &&
+      this.contractService
+    ) {
+      await this.contractService.markFirstPeriodRentPaid(
+        String(payment.contractId),
+        {
+          paymentId: String(payment._id),
+          paidAmount: expectedAmount,
+          paidAt: now,
+          referenceCode: tx.referenceCode || tx.code || null,
+        },
+        session
+      );
+    }
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.ASSIGN_TRANSACTION,
+      resourceType: AuditResourceEnum.PAYMENT,
+      resourceId: String(payment._id),
+      before: tx,
+      after: updatedTx,
+      metadata: {
+        manualAssignBy: callerId,
+        result: PaymentTransactionResultEnum.MATCHED,
+      },
+    });
+
+    return this.formatTransaction(updatedTx || tx);
   }
 }

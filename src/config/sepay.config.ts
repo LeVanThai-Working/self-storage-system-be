@@ -8,6 +8,7 @@ export interface SepayConfig {
   accountName: string;
   paymentCodePrefix: string;
   paymentCodeLength: number;
+  lateGraceMinutes: number;
 }
 
 const REQUIRED_ENV_KEYS = [
@@ -56,5 +57,6 @@ export function getSepayConfig(): SepayConfig {
       .SEPAY_PAYMENT_CODE_PREFIX!.trim()
       .toUpperCase(),
     paymentCodeLength,
+    lateGraceMinutes: Number(process.env.SEPAY_LATE_GRACE_MINUTES || 2),
   };
 }

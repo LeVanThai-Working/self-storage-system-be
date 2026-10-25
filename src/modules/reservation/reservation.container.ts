@@ -20,6 +20,7 @@ import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { notificationService } from '../notification/notification.container.ts';
 import { facilityTimeSlotRepository } from '../facilityTimeSlot/facilityTimeSlot.container.ts';
 import { reservationQueue } from './reservation.queue.ts';
+import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
 
 export const reservationRepository = new ReservationRepository(Reservation);
 const facilityRepository = new FacilityRepository(Facility);
@@ -46,7 +47,8 @@ export const reservationService = new ReservationService(
   auditLogService,
   notificationService,
   reservationQueue,
-  contractRepository
+  contractRepository,
+  refundRequestService
 );
 
 export const reservationController = new ReservationController(

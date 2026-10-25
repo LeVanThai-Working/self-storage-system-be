@@ -4,6 +4,7 @@ import {
   PaymentMethodEnum,
   PaymentPurposeEnum,
   PaymentStatusEnum,
+  PaymentTransactionResultEnum,
 } from '../../../common/enums/payment.enum.ts';
 
 export const paymentIdParamSchema = z.object({
@@ -27,14 +28,17 @@ export const createPaymentSchema = z
       if (data.purpose === PaymentPurposeEnum.RESERVATION_DEPOSIT) {
         return !!data.reservationId;
       }
-      if (data.purpose === PaymentPurposeEnum.CONTRACT_DEPOSIT) {
+      if (
+        data.purpose === PaymentPurposeEnum.CONTRACT_DEPOSIT ||
+        data.purpose === PaymentPurposeEnum.RENT_FIRST_PERIOD
+      ) {
         return !!data.contractId;
       }
       return false;
     },
     {
       message:
-        'Must provide reservationId for RESERVATION_DEPOSIT, or contractId for CONTRACT_DEPOSIT',
+        'Must provide reservationId for RESERVATION_DEPOSIT, or contractId for CONTRACT_DEPOSIT or RENT_FIRST_PERIOD',
     }
   );
 
@@ -120,3 +124,28 @@ export type ConfirmManualPaymentRequest = z.infer<
 export type CancelPaymentRequest = z.infer<typeof cancelPaymentSchema>;
 export type PaymentQuery = z.infer<typeof paymentQuerySchema>;
 export type PaymentIdParam = z.infer<typeof paymentIdParamSchema>;
+
+export const paymentTransactionIdParamSchema = z.object({
+  id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid transaction ID format'),
+});
+
+export const assignUnmatchedTransactionSchema = z.object({
+  paymentCode: z.string().min(3).max(50).trim(),
+});
+
+export const unmatchedTransactionQuerySchema = paginationQuerySchema.extend({
+  result: z.nativeEnum(PaymentTransactionResultEnum).optional(),
+  gateway: z.string().optional(),
+  accountNumber: z.string().optional(),
+  code: z.string().optional(),
+});
+
+export type PaymentTransactionIdParam = z.infer<
+  typeof paymentTransactionIdParamSchema
+>;
+export type AssignUnmatchedTransactionRequest = z.infer<
+  typeof assignUnmatchedTransactionSchema
+>;
+export type UnmatchedTransactionQuery = z.infer<
+  typeof unmatchedTransactionQuerySchema
+>;

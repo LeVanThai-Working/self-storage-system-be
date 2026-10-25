@@ -15,6 +15,7 @@ import { FacilityRepository } from '../facility/facility.repository.ts';
 import { User } from '../user/user.model.ts';
 import { UserRepository } from '../user/user.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
+import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
 
 export const contractRepository = new ContractRepository(Contract);
 const reservationRepository = new ReservationRepository(Reservation);
@@ -36,7 +37,8 @@ export const contractService = new ContractService(
   unitTypeOfferingRepository,
   facilityRepository,
   userRepository,
-  auditLogService
+  auditLogService,
+  refundRequestService
 );
 
 export const contractController = new ContractController(contractService);

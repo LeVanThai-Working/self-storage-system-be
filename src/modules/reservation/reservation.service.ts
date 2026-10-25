@@ -61,6 +61,8 @@ import {
   isSlotPassedTodayVN,
   startOfDayVN,
 } from '../../utils/date.util.ts';
+import type { RefundRequestService } from '../refundRequest/refundRequest.service.ts';
+import { RefundReasonEnum } from '../../common/enums/refundRequest.enum.ts';
 
 export class ReservationService {
   constructor(
@@ -75,7 +77,8 @@ export class ReservationService {
     private readonly auditLogService?: AuditLogService,
     private readonly notificationService?: NotificationService,
     private readonly reservationQueue?: ReservationQueue,
-    private readonly contractRepository?: ContractRepository
+    private readonly contractRepository?: ContractRepository,
+    private readonly refundRequestService?: RefundRequestService
   ) {}
 
   private async generateUniqueReservationCode(
@@ -387,7 +390,9 @@ export class ReservationService {
         billingUnit: a.billingUnit as BillingUnitEnum,
         totalPrice: Number(a.totalPrice),
       })),
-      totalAmount: Number(raw.totalAmount),
+      totalAmount: Number(
+        raw.totalAmount ?? raw.totalPeriodicPrice ?? raw.basePrice ?? 0
+      ),
       status: raw.status as ReservationStatusEnum,
       expiresAt: raw.expiresAt
         ? raw.expiresAt instanceof Date
@@ -1522,6 +1527,29 @@ export class ReservationService {
 
     if (!updated) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_303);
+    }
+
+    if (refundAmount > 0 && this.refundRequestService) {
+      await this.refundRequestService.createRefundRequestInternal(
+        actorId,
+        {
+          reservationId: id,
+          paymentId: reservation.paymentId
+            ? String(reservation.paymentId)
+            : undefined,
+          facilityId: facilityIdStr,
+          customerId: customerIdStr,
+          amount: refundAmount,
+          reason: isCustomer
+            ? RefundReasonEnum.CUSTOMER_CANCEL
+            : RefundReasonEnum.FACILITY_CANCEL,
+          note: data.cancellationReason,
+          refundBankName: data.refundBankName,
+          refundAccountNumber: data.refundAccountNumber,
+          refundAccountHolder: data.refundAccountHolder,
+        },
+        session
+      );
     }
 
     const populated = await this.reservationRepository.findById(id, session);

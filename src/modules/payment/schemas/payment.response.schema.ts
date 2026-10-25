@@ -3,6 +3,7 @@ import {
   PaymentMethodEnum,
   PaymentPurposeEnum,
   PaymentStatusEnum,
+  PaymentTransactionResultEnum,
 } from '../../../common/enums/payment.enum.ts';
 
 const userSnapshotSchema = z.object({
@@ -63,5 +64,28 @@ export const paymentResponseSchema = z.object({
 
 export const paymentListResponseSchema = z.array(paymentResponseSchema);
 
+export const paymentTransactionResponseSchema = z.object({
+  id: z.string(),
+  sepayId: z.number(),
+  gateway: z.string().optional().nullable(),
+  transactionDate: z.string().optional().nullable(),
+  accountNumber: z.string().optional().nullable(),
+  subAccount: z.string().optional().nullable(),
+  code: z.string().optional().nullable(),
+  content: z.string().optional().nullable(),
+  transferType: z.string().optional().nullable(),
+  transferAmount: z.number().optional().nullable(),
+  accumulated: z.number().optional().nullable(),
+  referenceCode: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  matchedPaymentId: z.string().optional().nullable(),
+  result: z.nativeEnum(PaymentTransactionResultEnum),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
 export type PaymentResponse = z.infer<typeof paymentResponseSchema>;
 export type PaymentListResponse = z.infer<typeof paymentListResponseSchema>;
+export type PaymentTransactionResponse = z.infer<
+  typeof paymentTransactionResponseSchema
+>;

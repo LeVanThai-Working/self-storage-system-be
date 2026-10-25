@@ -148,6 +148,14 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_414: 'MESSAGE_CODE_414',
   // Customer Must Sign Contract Addendum Before Staff Sign
   MESSAGE_CODE_415: 'MESSAGE_CODE_415',
+  // Direct Contract Renewal Is Deprecated
+  MESSAGE_CODE_416: 'MESSAGE_CODE_416',
+  // Contract Deposit Settlement Disputed
+  MESSAGE_CODE_417: 'MESSAGE_CODE_417',
+  // Contract Inspection Photos Required For Damage Assessment
+  MESSAGE_CODE_418: 'MESSAGE_CODE_418',
+  // Deposit Settlement Already Confirmed
+  MESSAGE_CODE_419: 'MESSAGE_CODE_419',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -172,6 +180,30 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_508: 'MESSAGE_CODE_508',
   // Proof Image Required For Manual Payment
   MESSAGE_CODE_509: 'MESSAGE_CODE_509',
+  // Payment Transaction Not Found
+  MESSAGE_CODE_510: 'MESSAGE_CODE_510',
+  // Refund Request Not Found
+  MESSAGE_CODE_511: 'MESSAGE_CODE_511',
+  // Invalid Refund Request Status Transition
+  MESSAGE_CODE_512: 'MESSAGE_CODE_512',
+  // Total Refund Amount Exceeds Net Settled Amount
+  MESSAGE_CODE_513: 'MESSAGE_CODE_513',
+  // Refund Approver Cannot Be Requester
+  MESSAGE_CODE_514: 'MESSAGE_CODE_514',
+  // Reference Code Required For Paid Refund
+  MESSAGE_CODE_515: 'MESSAGE_CODE_515',
+  // Paid Refund Cannot Be Modified
+  MESSAGE_CODE_516: 'MESSAGE_CODE_516',
+  // Payment Transaction Already Assigned
+  MESSAGE_CODE_517: 'MESSAGE_CODE_517',
+  // Payment Transaction Amount Mismatch
+  MESSAGE_CODE_518: 'MESSAGE_CODE_518',
+  // Contract First Period Rent Not Paid
+  MESSAGE_CODE_519: 'MESSAGE_CODE_519',
+  // Contract Deposit Must Be Paid Before First Period Rent
+  MESSAGE_CODE_520: 'MESSAGE_CODE_520',
+  // Contract First Period Rent Already Paid
+  MESSAGE_CODE_521: 'MESSAGE_CODE_521',
 
   // ==========================================
   // STORAGE RACK & TIER (600 - 603)
@@ -301,6 +333,11 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_413: 'Insufficient Contracted Amenity Quantity To Remove',
   MESSAGE_CODE_414: 'Customer Must Sign Contract Before Check-In',
   MESSAGE_CODE_415: 'Customer Must Sign Contract Addendum Before Staff Sign',
+  MESSAGE_CODE_416:
+    'Direct Contract Renewal Is Deprecated. Please Use Contract Addendum (RENEW) via POST /contracts/{id}/addendums',
+  MESSAGE_CODE_417: 'Contract Deposit Settlement Disputed',
+  MESSAGE_CODE_418: 'Contract Inspection Photos Required For Damage Assessment',
+  MESSAGE_CODE_419: 'Deposit Settlement Already Confirmed',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',
@@ -313,6 +350,18 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_507: 'Payment Already Settled',
   MESSAGE_CODE_508: 'Payment Account Mismatch',
   MESSAGE_CODE_509: 'Proof Image Is Required For Manual Payment Confirmation',
+  MESSAGE_CODE_510: 'Payment Transaction Not Found',
+  MESSAGE_CODE_511: 'Refund Request Not Found',
+  MESSAGE_CODE_512: 'Invalid Refund Request Status Transition',
+  MESSAGE_CODE_513: 'Total Refund Amount Exceeds Net Settled Amount',
+  MESSAGE_CODE_514: 'Refund Approver Cannot Be Requester',
+  MESSAGE_CODE_515: 'Reference Code Is Required For Paid Refund',
+  MESSAGE_CODE_516: 'Paid Refund Cannot Be Modified',
+  MESSAGE_CODE_517: 'Payment Transaction Already Assigned',
+  MESSAGE_CODE_518: 'Payment Transaction Amount Mismatch',
+  MESSAGE_CODE_519: 'Contract First Period Rent Not Paid',
+  MESSAGE_CODE_520: 'Contract Deposit Must Be Paid Before First Period Rent',
+  MESSAGE_CODE_521: 'Contract First Period Rent Already Paid',
 
   // Storage Rack & Tier
   MESSAGE_CODE_600: 'Storage Rack Not Found',

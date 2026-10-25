@@ -36,6 +36,7 @@ import {
   renewContractSchema,
   signContractAddendumSchema,
   terminateContractSchema,
+  disputeSettlementSchema,
   type ApproveContractAddendumRequest,
   type CancelContractAddendumRequest,
   type CancelContractRequest,
@@ -49,6 +50,7 @@ import {
   type RenewContractRequest,
   type SignContractAddendumRequest,
   type TerminateContractRequest,
+  type DisputeSettlementRequest,
 } from './schemas/contract.request.schema.ts';
 import type { ContractResponse } from './schemas/contract.response.schema.ts';
 import type {
@@ -385,10 +387,11 @@ export class ContractController extends Controller {
 
   /**
    * Renew contract by extending endDate.
+   * @deprecated Direct contract renewal is deprecated. Please use Contract Addendum (RENEW) via POST /contracts/{id}/addendums.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER
+  // TODO: Role authorization: DEPRECATED (Always returns 400 with MESSAGE_CODE_416)
   @Post('{id}/renew')
   @Middlewares(
     validateRequest({
@@ -760,6 +763,87 @@ export class ContractController extends Controller {
       statusCode: 200,
       messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Contract']),
+      data: contract,
+    };
+  }
+
+  /**
+   * Customer confirms contract deposit settlement agreement.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER
+  @Post('{id}/settlement/confirm')
+  @Middlewares(
+    validateRequest({
+      params: contractIdParamSchema,
+    })
+  )
+  @SuccessResponse(200, 'Success')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async confirmSettlement(
+    @Request() req: ExpressRequest,
+    @Path() id: string
+  ): Promise<ApiResponse<ContractResponse>> {
+    const caller = extractCaller(req);
+    const contract = await this.contractService.confirmSettlement(
+      id,
+      caller.userId,
+      caller.role
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, [
+        'Contract Settlement',
+      ]),
+      data: contract,
+    };
+  }
+
+  /**
+   * Customer disputes contract deposit settlement deductions / damage fee.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER
+  @Post('{id}/settlement/dispute')
+  @Middlewares(
+    validateRequest({
+      params: contractIdParamSchema,
+      body: disputeSettlementSchema,
+    })
+  )
+  @SuccessResponse(200, 'Success')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async disputeSettlement(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: DisputeSettlementRequest
+  ): Promise<ApiResponse<ContractResponse>> {
+    const caller = extractCaller(req);
+    const contract = await this.contractService.disputeSettlement(
+      id,
+      caller.userId,
+      caller.role,
+      body
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, [
+        'Contract Settlement',
+      ]),
       data: contract,
     };
   }

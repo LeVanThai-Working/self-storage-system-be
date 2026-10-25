@@ -22,6 +22,8 @@ import { StorageRackController } from './../modules/storageRack/storageRack.cont
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ReservationController } from './../modules/reservation/reservation.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { RefundRequestController } from './../modules/refundRequest/refundRequest.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { PaymentController } from './../modules/payment/payment.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { NotificationController } from './../modules/notification/notification.controller.js';
@@ -370,12 +372,12 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","expire","mark_overdue","refund"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","expire","mark_overdue","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
         "dataType": "refEnum",
-        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement"],
+        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","refund_request","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditStatusEnum": {
@@ -942,7 +944,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcancelReservationSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"refundAccountHolder":{"dataType":"string"},"refundAccountNumber":{"dataType":"string"},"refundBankName":{"dataType":"string"},"cancellationReason":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CancelReservationRequest": {
@@ -970,6 +972,119 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofconfirmRefundSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RefundRequestReasonEnum": {
+        "dataType": "refEnum",
+        "enums": ["customer_cancel","facility_cancel","system_cancel","late_payment","amount_mismatch","deposit_settlement","facility_fault"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RefundRequestStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["pending_approval","approved","paid","rejected","cancelled"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofrefundRequestResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"paidAt":{"dataType":"string"},"paidBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"rejectedAt":{"dataType":"string"},"rejectedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"approvedAt":{"dataType":"string"},"approvedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"requestedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"note":{"dataType":"string"},"cancellationReason":{"dataType":"string"},"rejectionReason":{"dataType":"string"},"proofImageUrl":{"dataType":"string"},"referenceCode":{"dataType":"string"},"refundAccountHolder":{"dataType":"string"},"refundAccountNumberMasked":{"dataType":"string"},"refundBankName":{"dataType":"string"},"customer":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"paymentId":{"dataType":"string"},"contractId":{"dataType":"string"},"reservationId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"requestedAt":{"dataType":"string","required":true},"status":{"ref":"RefundRequestStatusEnum","required":true},"reason":{"ref":"RefundRequestReasonEnum","required":true},"amount":{"dataType":"double","required":true},"refundCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RefundRequestResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofrefundRequestResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_RefundRequestResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"RefundRequestResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcreateRefundRequestSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"note":{"dataType":"string"},"refundAccountHolder":{"dataType":"string"},"refundAccountNumber":{"dataType":"string"},"refundBankName":{"dataType":"string"},"paymentId":{"dataType":"string"},"contractId":{"dataType":"string"},"reservationId":{"dataType":"string"},"reason":{"ref":"RefundRequestReasonEnum","required":true},"amount":{"dataType":"double","required":true},"customerId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateRefundRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcreateRefundRequestSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofapproveRefundRequestSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"note":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApproveRefundRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofapproveRefundRequestSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofrejectRefundRequestSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"rejectionReason":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RejectRefundRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofrejectRefundRequestSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofconfirmPaidRefundSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"note":{"dataType":"string"},"proofImageUrl":{"dataType":"string"},"referenceCode":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ConfirmPaidRefund": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofconfirmPaidRefundSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcancelRefundRequestSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CancelRefundRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcancelRefundRequestSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedData_RefundRequestResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "items": {"dataType":"array","array":{"dataType":"refAlias","ref":"RefundRequestResponse"},"required":true},
+            "pagination": {"ref":"PaginationMeta","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedData_RefundRequestResponse__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedData_RefundRequestResponse_","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofrefundRequestQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"ref":"RefundRequestReasonEnum"},"status":{"ref":"RefundRequestStatusEnum"},"contractId":{"dataType":"string"},"reservationId":{"dataType":"string"},"customerId":{"dataType":"string"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["amount"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RefundRequestQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofrefundRequestQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SepayWebhookPayload": {
         "dataType": "refObject",
         "properties": {
@@ -991,7 +1106,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "PaymentPurposeEnum": {
         "dataType": "refEnum",
-        "enums": ["reservation_deposit","contract_deposit"],
+        "enums": ["reservation_deposit","contract_deposit","rent_first_period"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "PaymentMethodEnum": {
@@ -1065,6 +1180,74 @@ const models: TsoaRoute.Models = {
     "PaymentQuery": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofpaymentQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaymentTransactionResultEnum": {
+        "dataType": "refEnum",
+        "enums": ["received","matched","partially_matched","unmatched","amount_mismatch","late","ignored"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofpaymentTransactionResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"matchedPaymentId":{"dataType":"string"},"description":{"dataType":"string"},"referenceCode":{"dataType":"string"},"accumulated":{"dataType":"double"},"transferAmount":{"dataType":"double"},"transferType":{"dataType":"string"},"content":{"dataType":"string"},"code":{"dataType":"string"},"subAccount":{"dataType":"string"},"accountNumber":{"dataType":"string"},"transactionDate":{"dataType":"string"},"gateway":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"result":{"ref":"PaymentTransactionResultEnum","required":true},"sepayId":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaymentTransactionResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofpaymentTransactionResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedData_PaymentTransactionResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "items": {"dataType":"array","array":{"dataType":"refAlias","ref":"PaymentTransactionResponse"},"required":true},
+            "pagination": {"ref":"PaginationMeta","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedData_PaymentTransactionResponse__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedData_PaymentTransactionResponse_","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofunmatchedTransactionQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"code":{"dataType":"string"},"accountNumber":{"dataType":"string"},"gateway":{"dataType":"string"},"result":{"ref":"PaymentTransactionResultEnum"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UnmatchedTransactionQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofunmatchedTransactionQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaymentTransactionResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaymentTransactionResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofassignUnmatchedTransactionSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"paymentCode":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AssignUnmatchedTransactionRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofassignUnmatchedTransactionSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcancelPaymentSchema_": {
@@ -1887,9 +2070,14 @@ const models: TsoaRoute.Models = {
         "enums": ["draft","active","overdue","completed","cancelled","terminated"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ContractDepositStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["held","applied","partially_refunded","refunded","forfeited","disputed"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcontractResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"offering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"email":{"dataType":"string"},"phone":{"dataType":"string"},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"staffSignedAt":{"dataType":"string"},"customerSignedAt":{"dataType":"string"},"terminatedAt":{"dataType":"string"},"terminatedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"terminationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"inspectionNotes":{"dataType":"string"},"inspectedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"depositPaymentId":{"dataType":"string"},"depositPaidAt":{"dataType":"string"},"actualCheckOutDate":{"dataType":"string"},"actualCheckInDate":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"reservationId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"staffSigned":{"dataType":"boolean","required":true},"customerSigned":{"dataType":"boolean","required":true},"termsAccepted":{"dataType":"boolean","required":true},"status":{"ref":"ContractStatusEnum","required":true},"additionalPaymentRequired":{"dataType":"double","required":true},"refundAmount":{"dataType":"double","required":true},"overdueFee":{"dataType":"double","required":true},"damageFee":{"dataType":"double","required":true},"renewalCount":{"dataType":"double","required":true},"renewals":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"note":{"dataType":"string"},"renewedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"renewedAt":{"dataType":"string","required":true},"newEndDate":{"dataType":"string","required":true},"previousEndDate":{"dataType":"string","required":true}}},"required":true},"addendums":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"rejectedAt":{"dataType":"string"},"rejectedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rejectionReason":{"dataType":"string"},"completedAt":{"dataType":"string"},"staffSignedAt":{"dataType":"string"},"customerSignedAt":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedStaffId":{"dataType":"string"},"approvedAt":{"dataType":"string"},"approvedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"requestedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnitId":{"dataType":"string"},"previousStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"previousStorageUnitId":{"dataType":"string"},"newEndDate":{"dataType":"string"},"previousEndDate":{"dataType":"string"},"staffSigned":{"dataType":"boolean","required":true},"customerSigned":{"dataType":"boolean","required":true},"requestedAt":{"dataType":"string","required":true},"status":{"ref":"ContractAddendumStatusEnum","required":true},"damageFee":{"dataType":"double","required":true},"totalPeriodicPrice":{"dataType":"double","required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"addedAt":{"dataType":"string","required":true},"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"type":{"ref":"ContractAddendumTypeEnum","required":true},"addendumCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"addedAt":{"dataType":"string","required":true},"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"totalPeriodicPrice":{"dataType":"double","required":true},"depositAmount":{"dataType":"double","required":true},"rentalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"endDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"source":{"ref":"ContractSourceEnum","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"offering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"email":{"dataType":"string"},"phone":{"dataType":"string"},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"staffSignedAt":{"dataType":"string"},"customerSignedAt":{"dataType":"string"},"terminatedAt":{"dataType":"string"},"terminatedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"terminationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"disputeReason":{"dataType":"string"},"disputedAt":{"dataType":"string"},"settlementConfirmedAt":{"dataType":"string"},"depositStatus":{"ref":"ContractDepositStatusEnum"},"inspectionNotes":{"dataType":"string"},"inspectedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"firstPeriodPaymentId":{"dataType":"string"},"firstPeriodPaidAt":{"dataType":"string"},"depositPaymentId":{"dataType":"string"},"depositPaidAt":{"dataType":"string"},"actualCheckOutDate":{"dataType":"string"},"actualCheckInDate":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"reservationId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"staffSigned":{"dataType":"boolean","required":true},"customerSigned":{"dataType":"boolean","required":true},"termsAccepted":{"dataType":"boolean","required":true},"status":{"ref":"ContractStatusEnum","required":true},"inspectionPhotos":{"dataType":"array","array":{"dataType":"string"},"required":true},"additionalPaymentRequired":{"dataType":"double","required":true},"refundAmount":{"dataType":"double","required":true},"overdueFee":{"dataType":"double","required":true},"damageFee":{"dataType":"double","required":true},"renewalCount":{"dataType":"double","required":true},"renewals":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"note":{"dataType":"string"},"renewedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"renewedAt":{"dataType":"string","required":true},"newEndDate":{"dataType":"string","required":true},"previousEndDate":{"dataType":"string","required":true}}},"required":true},"addendums":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"rejectedAt":{"dataType":"string"},"rejectedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rejectionReason":{"dataType":"string"},"completedAt":{"dataType":"string"},"staffSignedAt":{"dataType":"string"},"customerSignedAt":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedStaffId":{"dataType":"string"},"approvedAt":{"dataType":"string"},"approvedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"requestedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnitId":{"dataType":"string"},"previousStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"previousStorageUnitId":{"dataType":"string"},"newEndDate":{"dataType":"string"},"previousEndDate":{"dataType":"string"},"staffSigned":{"dataType":"boolean","required":true},"customerSigned":{"dataType":"boolean","required":true},"requestedAt":{"dataType":"string","required":true},"status":{"ref":"ContractAddendumStatusEnum","required":true},"damageFee":{"dataType":"double","required":true},"totalPeriodicPrice":{"dataType":"double","required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"addedAt":{"dataType":"string","required":true},"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"type":{"ref":"ContractAddendumTypeEnum","required":true},"addendumCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"addedAt":{"dataType":"string","required":true},"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"totalPeriodicPrice":{"dataType":"double","required":true},"depositAmount":{"dataType":"double","required":true},"rentalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"endDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"source":{"ref":"ContractSourceEnum","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ContractResponse": {
@@ -2042,7 +2230,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcheckOutContractSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"actualCheckOutDate":{"dataType":"string"},"inspectionNotes":{"dataType":"string"},"damageFee":{"dataType":"double","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"actualCheckOutDate":{"dataType":"string"},"inspectionPhotos":{"dataType":"array","array":{"dataType":"string"}},"inspectionNotes":{"dataType":"string"},"damageFee":{"dataType":"double","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CheckOutContractRequest": {
@@ -2058,6 +2246,16 @@ const models: TsoaRoute.Models = {
     "TerminateContractRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofterminateContractSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofdisputeSettlementSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"disputeReason":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DisputeSettlementRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofdisputeSettlementSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ApprovalRequestTargetTypeEnum": {
@@ -4317,6 +4515,262 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsRefundRequestController_createRefundRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"CreateRefundRequest"},
+        };
+        app.post('/refund-requests',
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController.prototype.createRefundRequest)),
+
+            async function RefundRequestController_createRefundRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsRefundRequestController_createRefundRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<RefundRequestController>(RefundRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createRefundRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 201,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsRefundRequestController_approveRefundRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"ApproveRefundRequest"},
+        };
+        app.post('/refund-requests/:id/approve',
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController.prototype.approveRefundRequest)),
+
+            async function RefundRequestController_approveRefundRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsRefundRequestController_approveRefundRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<RefundRequestController>(RefundRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'approveRefundRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsRefundRequestController_rejectRefundRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"RejectRefundRequest"},
+        };
+        app.post('/refund-requests/:id/reject',
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController.prototype.rejectRefundRequest)),
+
+            async function RefundRequestController_rejectRefundRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsRefundRequestController_rejectRefundRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<RefundRequestController>(RefundRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'rejectRefundRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsRefundRequestController_confirmPaidRefundRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"ConfirmPaidRefund"},
+        };
+        app.post('/refund-requests/:id/confirm-paid',
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController.prototype.confirmPaidRefundRequest)),
+
+            async function RefundRequestController_confirmPaidRefundRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsRefundRequestController_confirmPaidRefundRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<RefundRequestController>(RefundRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'confirmPaidRefundRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsRefundRequestController_cancelRefundRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"CancelRefundRequest"},
+        };
+        app.post('/refund-requests/:id/cancel',
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController.prototype.cancelRefundRequest)),
+
+            async function RefundRequestController_cancelRefundRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsRefundRequestController_cancelRefundRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<RefundRequestController>(RefundRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'cancelRefundRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsRefundRequestController_listRefundRequests: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"ref":"RefundRequestReasonEnum"},"status":{"ref":"RefundRequestStatusEnum"},"contractId":{"dataType":"string"},"reservationId":{"dataType":"string"},"customerId":{"dataType":"string"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["status"]},{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["amount"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/refund-requests',
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController.prototype.listRefundRequests)),
+
+            async function RefundRequestController_listRefundRequests(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsRefundRequestController_listRefundRequests, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<RefundRequestController>(RefundRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'listRefundRequests',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsRefundRequestController_getRefundRequestById: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.get('/refund-requests/:id',
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(RefundRequestController.prototype.getRefundRequestById)),
+
+            async function RefundRequestController_getRefundRequestById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsRefundRequestController_getRefundRequestById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<RefundRequestController>(RefundRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getRefundRequestById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsPaymentController_handleSepayWebhook: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 body: {"in":"body","name":"body","required":true,"ref":"SepayWebhookPayload"},
@@ -4448,6 +4902,79 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getPayments',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsPaymentController_getUnmatchedTransactions: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"code":{"dataType":"string"},"accountNumber":{"dataType":"string"},"gateway":{"dataType":"string"},"result":{"ref":"PaymentTransactionResultEnum"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/payments/transactions/unmatched',
+            ...(fetchMiddlewares<RequestHandler>(PaymentController)),
+            ...(fetchMiddlewares<RequestHandler>(PaymentController.prototype.getUnmatchedTransactions)),
+
+            async function PaymentController_getUnmatchedTransactions(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsPaymentController_getUnmatchedTransactions, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<PaymentController>(PaymentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getUnmatchedTransactions',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsPaymentController_assignUnmatchedTransaction: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"AssignUnmatchedTransactionRequest"},
+        };
+        app.post('/payments/transactions/:id/assign',
+            ...(fetchMiddlewares<RequestHandler>(PaymentController)),
+            ...(fetchMiddlewares<RequestHandler>(PaymentController.prototype.assignUnmatchedTransaction)),
+
+            async function PaymentController_assignUnmatchedTransaction(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsPaymentController_assignUnmatchedTransaction, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<PaymentController>(PaymentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'assignUnmatchedTransaction',
                 controller,
                 response,
                 next,
@@ -7002,6 +7529,79 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'terminateContract',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsContractController_confirmSettlement: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.post('/contracts/:id/settlement/confirm',
+            ...(fetchMiddlewares<RequestHandler>(ContractController)),
+            ...(fetchMiddlewares<RequestHandler>(ContractController.prototype.confirmSettlement)),
+
+            async function ContractController_confirmSettlement(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsContractController_confirmSettlement, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ContractController>(ContractController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'confirmSettlement',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsContractController_disputeSettlement: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"DisputeSettlementRequest"},
+        };
+        app.post('/contracts/:id/settlement/dispute',
+            ...(fetchMiddlewares<RequestHandler>(ContractController)),
+            ...(fetchMiddlewares<RequestHandler>(ContractController.prototype.disputeSettlement)),
+
+            async function ContractController_disputeSettlement(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsContractController_disputeSettlement, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ContractController>(ContractController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'disputeSettlement',
                 controller,
                 response,
                 next,

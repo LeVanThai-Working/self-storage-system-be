@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   ContractAddendumStatusEnum,
   ContractAddendumTypeEnum,
+  ContractDepositStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
 } from '../../../common/enums/contract.enum.ts';
@@ -115,6 +116,8 @@ export const contractResponseSchema = z.object({
   depositAmount: z.number(),
   depositPaidAt: z.string().optional().nullable(),
   depositPaymentId: z.string().optional().nullable(),
+  firstPeriodPaidAt: z.string().optional().nullable(),
+  firstPeriodPaymentId: z.string().optional().nullable(),
   totalPeriodicPrice: z.number(),
   amenities: z.array(contractAmenityResponseSchema),
   addendums: z.array(contractAddendumResponseSchema),
@@ -126,6 +129,11 @@ export const contractResponseSchema = z.object({
   refundAmount: z.number(),
   additionalPaymentRequired: z.number(),
   inspectionNotes: z.string().optional().nullable(),
+  inspectionPhotos: z.array(z.string()).default([]),
+  depositStatus: z.enum(ContractDepositStatusEnum).optional().nullable(),
+  settlementConfirmedAt: z.string().optional().nullable(),
+  disputedAt: z.string().optional().nullable(),
+  disputeReason: z.string().optional().nullable(),
   cancellationReason: z.string().optional().nullable(),
   cancelledBy: userSnapshotSchema.optional().nullable(),
   cancelledAt: z.string().optional().nullable(),

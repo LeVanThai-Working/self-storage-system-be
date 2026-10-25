@@ -2,12 +2,15 @@ import { Types, type ClientSession } from 'mongoose';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
+import { startOfDayVN } from '../../utils/date.util.ts';
+import { calculateContractOverdueFee } from '../../utils/contractFee.util.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 import { RoleEnum } from '../../common/enums/user.enum.ts';
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
 import {
   ContractAddendumStatusEnum,
   ContractAddendumTypeEnum,
+  ContractDepositStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
 } from '../../common/enums/contract.enum.ts';
@@ -17,11 +20,13 @@ import {
   ReservationCancelSourceEnum,
   ReservationStatusEnum,
 } from '../../common/enums/reservation.enum.ts';
+import { RefundReasonEnum } from '../../common/enums/refundRequest.enum.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
 } from '../../common/enums/auditLog.enum.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { RefundRequestService } from '../refundRequest/refundRequest.service.ts';
 import type { ContractRepository } from './contract.repository.ts';
 import type { ReservationRepository } from '../reservation/reservation.repository.ts';
 import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
@@ -53,6 +58,7 @@ import type {
   RenewContractRequest,
   SignContractAddendumRequest,
   TerminateContractRequest,
+  DisputeSettlementRequest,
 } from './schemas/contract.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 
@@ -65,7 +71,8 @@ export class ContractService {
     private readonly unitTypeOfferingRepository: FacilityUnitTypeOfferingRepository,
     private readonly facilityRepository: FacilityRepository,
     private readonly userRepository: UserRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly refundRequestService?: RefundRequestService
   ) {}
 
   // 1. Create contract (From RESERVATION or WALK_IN)
@@ -202,6 +209,7 @@ export class ContractService {
           totalPeriodicPrice,
           amenities: contractAmenities,
           status: ContractStatusEnum.DRAFT,
+          depositStatus: ContractDepositStatusEnum.HELD,
           termsAccepted: false,
           notes: data.notes || reservation.notes,
         },
@@ -545,10 +553,28 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_506);
     }
 
+    // Require first period rent to be paid before check-in
+    if (!contract.firstPeriodPaidAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_519);
+    }
+
     const now = new Date();
     const actualCheckInDate = data.actualCheckInDate
       ? new Date(data.actualCheckInDate)
       : now;
+
+    // Late check-in date adjustment [OPEN D6]
+    let finalStartDate = contract.startDate;
+    let finalEndDate = contract.endDate;
+    if (
+      startOfDayVN(actualCheckInDate).getTime() >
+      startOfDayVN(contract.startDate).getTime()
+    ) {
+      const leaseDurationMs =
+        contract.endDate.getTime() - contract.startDate.getTime();
+      finalStartDate = startOfDayVN(actualCheckInDate);
+      finalEndDate = new Date(finalStartDate.getTime() + leaseDurationMs);
+    }
     const bothSigned = Boolean(contract.customerSigned);
 
     if (bothSigned) {
@@ -583,6 +609,8 @@ export class ContractService {
         status: bothSigned
           ? ContractStatusEnum.ACTIVE
           : ContractStatusEnum.DRAFT,
+        startDate: finalStartDate,
+        endDate: finalEndDate,
         actualCheckInDate,
         termsAccepted: bothSigned ? true : contract.termsAccepted,
         notes: data.notes || contract.notes,
@@ -633,6 +661,7 @@ export class ContractService {
       {
         depositPaidAt: paymentInfo.paidAt,
         depositPaymentId: new Types.ObjectId(paymentInfo.paymentId),
+        depositStatus: ContractDepositStatusEnum.HELD,
       },
       session
     );
@@ -649,6 +678,60 @@ export class ContractService {
       metadata: {
         paymentId: paymentInfo.paymentId,
         paidAmount: paymentInfo.paidAmount,
+        referenceCode: paymentInfo.referenceCode ?? null,
+      },
+    });
+
+    return validateResponse(contractResponseSchema, formatted);
+  }
+
+  // Mark contract first period rent as paid (from Payment service or SePay Webhook)
+  @Transactional()
+  async markFirstPeriodRentPaid(
+    id: string,
+    paymentInfo: {
+      paymentId: string;
+      paidAmount: number;
+      paidAt: Date;
+      referenceCode?: string | null;
+    },
+    session?: ClientSession
+  ): Promise<ContractResponse> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    if (contract.status !== ContractStatusEnum.DRAFT) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (!contract.depositPaidAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_520);
+    }
+
+    const updated = await this.contractRepository.update(
+      id,
+      {
+        firstPeriodPaidAt: paymentInfo.paidAt,
+        firstPeriodPaymentId: new Types.ObjectId(paymentInfo.paymentId),
+      },
+      session
+    );
+
+    const populated = await this.contractRepository.findById(id, session);
+    const formatted = this.formatContract(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RECEIVE_PAYMENT,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: id,
+      before: this.formatContract(contract),
+      after: formatted,
+      metadata: {
+        paymentId: paymentInfo.paymentId,
+        paidAmount: paymentInfo.paidAmount,
+        purpose: 'RENT_FIRST_PERIOD',
         referenceCode: paymentInfo.referenceCode ?? null,
       },
     });
@@ -759,6 +842,7 @@ export class ContractService {
         cancelledBy: new Types.ObjectId(actorId),
         cancelledAt: new Date(),
         refundAmount: 0,
+        depositStatus: ContractDepositStatusEnum.FORFEITED,
       },
       session
     );
@@ -778,62 +862,18 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 4. Renew contract (Extend endDate on ACTIVE or OVERDUE)
-  @Transactional()
+  // 4. Renew contract (DEPRECATED & DISABLED - Replaced by Contract Addendum RENEW)
   async renewContract(
-    id: string,
-    actorId: string,
-    data: RenewContractRequest,
+    id?: string,
+    actorId?: string,
+    data?: RenewContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
-    const contract = await this.contractRepository.findById(id, session);
-    if (!contract) {
-      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
-    }
-
-    if (
-      contract.status !== ContractStatusEnum.ACTIVE &&
-      contract.status !== ContractStatusEnum.OVERDUE
-    ) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
-    }
-
-    const newEndDate = new Date(data.newEndDate);
-    if (newEndDate <= new Date(contract.endDate)) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_404);
-    }
-
-    const renewalEntry: IContractRenewal = {
-      previousEndDate: new Date(contract.endDate),
-      newEndDate,
-      renewedAt: new Date(),
-      renewedBy: new Types.ObjectId(actorId),
-      note: data.note || null,
-    };
-
-    const updated = await this.contractRepository.update(
-      id,
-      {
-        endDate: newEndDate,
-        status: ContractStatusEnum.ACTIVE,
-        renewalCount: contract.renewalCount + 1,
-        renewals: [...contract.renewals, renewalEntry],
-      },
-      session
-    );
-
-    const populated = await this.contractRepository.findById(id, session);
-    const formatted = this.formatContract(populated || updated!);
-
-    this.auditLogService?.record({
-      action: AuditActionEnum.RENEW,
-      resourceType: AuditResourceEnum.CONTRACT,
-      resourceId: id,
-      before: this.formatContract(contract),
-      after: formatted,
-    });
-
-    return validateResponse(contractResponseSchema, formatted);
+    void id;
+    void actorId;
+    void data;
+    void session;
+    throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_416);
   }
 
   // 5a. Request contract addendum (RENEW or UNIT_CHANGE)
@@ -1436,23 +1476,14 @@ export class ContractService {
       ? new Date(data.actualCheckOutDate)
       : new Date();
 
-    // Overdue fee calculation
-    let overdueFee = 0;
-    const endDate = new Date(contract.endDate);
-    if (actualCheckOutDate.getTime() > endDate.getTime()) {
-      const diffMs = actualCheckOutDate.getTime() - endDate.getTime();
-      const overdueDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-      // Calculate approximate daily rate
-      let dailyRate = contract.rentalPrice;
-      if (contract.billingUnit === BillingUnitEnum.MONTH) {
-        dailyRate = Math.round(contract.rentalPrice / 30);
-      }
-
-      // Penalty multiplier = 1.5x daily rate
-      const penaltyDailyRate = Math.round(dailyRate * 1.5);
-      overdueFee = overdueDays * penaltyDailyRate;
-    }
+    // Overdue fee calculation using pure function [OPEN D8]
+    const overdueResult = calculateContractOverdueFee({
+      endDate: contract.endDate,
+      actualCheckOutDate,
+      rentalPrice: contract.rentalPrice,
+      billingUnit: contract.billingUnit,
+    });
+    const overdueFee = overdueResult.overdueFee;
 
     const damageFee = (contract.damageFee || 0) + (data.damageFee || 0);
     const totalDeductions = damageFee + overdueFee;
@@ -1462,6 +1493,36 @@ export class ContractService {
       0,
       totalDeductions - contract.depositAmount
     );
+
+    let depositStatus: ContractDepositStatusEnum;
+    if (refundAmount === contract.depositAmount) {
+      depositStatus = ContractDepositStatusEnum.REFUNDED;
+    } else if (refundAmount > 0) {
+      depositStatus = ContractDepositStatusEnum.PARTIALLY_REFUNDED;
+    } else {
+      depositStatus = ContractDepositStatusEnum.APPLIED;
+    }
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+
+    // If there is deposit refund, automatically create a RefundRequest
+    let refundRequestId: string | undefined;
+    if (refundAmount > 0 && this.refundRequestService) {
+      const refundDoc =
+        await this.refundRequestService.createRefundRequestInternal(
+          actorId,
+          {
+            contractId: id,
+            facilityId: facilityIdStr,
+            customerId: customerIdStr,
+            amount: refundAmount,
+            reason: RefundReasonEnum.DEPOSIT_SETTLEMENT,
+            note: `Quyết toán tiền cọc hợp đồng ${contract.contractCode} khi trả kho`,
+          },
+          session
+        );
+      refundRequestId = refundDoc.id;
+    }
 
     const storageUnitId =
       contract.storageUnitId && typeof contract.storageUnitId === 'object'
@@ -1522,6 +1583,8 @@ export class ContractService {
         refundAmount,
         additionalPaymentRequired,
         inspectionNotes: data.inspectionNotes || null,
+        inspectionPhotos: data.inspectionPhotos || [],
+        depositStatus,
         addendums: cleanedAddendums,
       },
       session
@@ -1541,6 +1604,8 @@ export class ContractService {
         overdueFee,
         refundAmount,
         additionalPaymentRequired,
+        depositStatus,
+        refundRequestId: refundRequestId ?? null,
       },
     });
 
@@ -1637,6 +1702,8 @@ export class ContractService {
         terminatedBy: new Types.ObjectId(actorId),
         terminatedAt: new Date(),
         actualCheckOutDate: new Date(),
+        depositStatus: ContractDepositStatusEnum.FORFEITED,
+        refundAmount: 0,
         addendums: cleanedAddendums,
       },
       session
@@ -1651,6 +1718,108 @@ export class ContractService {
       resourceId: id,
       before: this.formatContract(contract),
       after: formatted,
+    });
+
+    return validateResponse(contractResponseSchema, formatted);
+  }
+
+  // 8a. Customer confirms settlement after check-out
+  @Transactional()
+  async confirmSettlement(
+    id: string,
+    actorId: string,
+    actorRole: string,
+    session?: ClientSession
+  ): Promise<ContractResponse> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+    if (actorRole !== RoleEnum.CUSTOMER || customerIdStr !== actorId) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    if (contract.status !== ContractStatusEnum.COMPLETED) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (contract.settlementConfirmedAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_419);
+    }
+
+    const updated = await this.contractRepository.update(
+      id,
+      {
+        settlementConfirmedAt: new Date(),
+      },
+      session
+    );
+
+    const populated = await this.contractRepository.findById(id, session);
+    const formatted = this.formatContract(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CONFIRM_SETTLEMENT,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: id,
+      before: this.formatContract(contract),
+      after: formatted,
+    });
+
+    return validateResponse(contractResponseSchema, formatted);
+  }
+
+  // 8b. Customer disputes settlement after check-out
+  @Transactional()
+  async disputeSettlement(
+    id: string,
+    actorId: string,
+    actorRole: string,
+    data: DisputeSettlementRequest,
+    session?: ClientSession
+  ): Promise<ContractResponse> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+    if (actorRole !== RoleEnum.CUSTOMER || customerIdStr !== actorId) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    if (contract.status !== ContractStatusEnum.COMPLETED) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (contract.settlementConfirmedAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_419);
+    }
+
+    const updated = await this.contractRepository.update(
+      id,
+      {
+        depositStatus: ContractDepositStatusEnum.DISPUTED,
+        disputedAt: new Date(),
+        disputeReason: data.disputeReason,
+      },
+      session
+    );
+
+    const populated = await this.contractRepository.findById(id, session);
+    const formatted = this.formatContract(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DISPUTE_SETTLEMENT,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: id,
+      before: this.formatContract(contract),
+      after: formatted,
+      metadata: {
+        disputeReason: data.disputeReason,
+      },
     });
 
     return validateResponse(contractResponseSchema, formatted);
@@ -2348,6 +2517,14 @@ export class ContractService {
       depositPaymentId: raw.depositPaymentId
         ? String(raw.depositPaymentId)
         : null,
+      firstPeriodPaidAt: raw.firstPeriodPaidAt
+        ? raw.firstPeriodPaidAt instanceof Date
+          ? raw.firstPeriodPaidAt.toISOString()
+          : new Date(String(raw.firstPeriodPaidAt)).toISOString()
+        : null,
+      firstPeriodPaymentId: raw.firstPeriodPaymentId
+        ? String(raw.firstPeriodPaymentId)
+        : null,
       totalPeriodicPrice: Number(raw.totalPeriodicPrice),
       amenities,
       addendums,
@@ -2359,6 +2536,19 @@ export class ContractService {
       refundAmount: Number(raw.refundAmount || 0),
       additionalPaymentRequired: Number(raw.additionalPaymentRequired || 0),
       inspectionNotes: (raw.inspectionNotes as string) ?? null,
+      inspectionPhotos: (raw.inspectionPhotos as string[]) || [],
+      depositStatus: (raw.depositStatus as ContractDepositStatusEnum) || null,
+      settlementConfirmedAt: raw.settlementConfirmedAt
+        ? raw.settlementConfirmedAt instanceof Date
+          ? raw.settlementConfirmedAt.toISOString()
+          : new Date(String(raw.settlementConfirmedAt)).toISOString()
+        : null,
+      disputedAt: raw.disputedAt
+        ? raw.disputedAt instanceof Date
+          ? raw.disputedAt.toISOString()
+          : new Date(String(raw.disputedAt)).toISOString()
+        : null,
+      disputeReason: (raw.disputeReason as string) ?? null,
       cancellationReason: (raw.cancellationReason as string) ?? null,
       cancelledBy,
       cancelledAt: raw.cancelledAt

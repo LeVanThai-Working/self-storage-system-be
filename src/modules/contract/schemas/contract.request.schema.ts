@@ -207,6 +207,7 @@ export const cancelContractAddendumSchema = z.object({
 export const checkOutContractSchema = z.object({
   damageFee: z.number().min(0).default(0),
   inspectionNotes: z.string().max(1000).optional(),
+  inspectionPhotos: z.array(z.string()).optional(),
   actualCheckOutDate: dateStringSchema.optional(),
 });
 
@@ -215,6 +216,10 @@ export const terminateContractSchema = z.object({
     .string()
     .min(1, 'Termination reason is required')
     .max(1000),
+});
+
+export const disputeSettlementSchema = z.object({
+  disputeReason: z.string().min(1, 'Dispute reason is required').max(1000),
 });
 
 export const contractQuerySchema = paginationQuerySchema.extend({
@@ -240,6 +245,7 @@ export const contractAddendumParamSchema = z.object({
   addendumId: objectIdSchema,
 });
 
+export type DisputeSettlementRequest = z.infer<typeof disputeSettlementSchema>;
 export type CreateContractRequest = z.infer<typeof createContractSchema>;
 export type CheckInContractRequest = z.infer<typeof checkInContractSchema>;
 export type CustomerSignContractRequest = z.infer<

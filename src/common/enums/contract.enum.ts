@@ -24,3 +24,12 @@ export enum ContractAddendumTypeEnum {
   RENEW = 'renew',
   UNIT_CHANGE = 'unit_change',
 }
+
+export enum ContractDepositStatusEnum {
+  HELD = 'held',
+  APPLIED = 'applied',
+  PARTIALLY_REFUNDED = 'partially_refunded',
+  REFUNDED = 'refunded',
+  FORFEITED = 'forfeited',
+  DISPUTED = 'disputed',
+}

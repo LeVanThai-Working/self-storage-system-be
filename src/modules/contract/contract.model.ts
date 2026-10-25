@@ -7,6 +7,7 @@ import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
 import {
   ContractAddendumStatusEnum,
   ContractAddendumTypeEnum,
+  ContractDepositStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
 } from '../../common/enums/contract.enum.ts';
@@ -82,6 +83,8 @@ export interface IContract extends SoftDeleteDocument {
   depositAmount: number;
   depositPaidAt?: Date | null;
   depositPaymentId?: Types.ObjectId | null;
+  firstPeriodPaidAt?: Date | null;
+  firstPeriodPaymentId?: Types.ObjectId | null;
   totalPeriodicPrice: number;
 
   amenities: IContractAmenity[];
@@ -95,6 +98,11 @@ export interface IContract extends SoftDeleteDocument {
   refundAmount: number;
   additionalPaymentRequired: number;
   inspectionNotes?: string | null;
+  inspectionPhotos?: string[];
+  depositStatus?: ContractDepositStatusEnum | null;
+  settlementConfirmedAt?: Date | null;
+  disputedAt?: Date | null;
+  disputeReason?: string | null;
 
   cancellationReason?: string | null;
   cancelledBy?: Types.ObjectId | null;
@@ -400,6 +408,15 @@ const contractSchema = new Schema<IContract>(
       ref: 'Payment',
       default: null,
     },
+    firstPeriodPaidAt: {
+      type: Date,
+      default: null,
+    },
+    firstPeriodPaymentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Payment',
+      default: null,
+    },
     totalPeriodicPrice: {
       type: Number,
       required: true,
@@ -448,6 +465,27 @@ const contractSchema = new Schema<IContract>(
       min: 0,
     },
     inspectionNotes: {
+      type: String,
+      default: null,
+    },
+    inspectionPhotos: {
+      type: [String],
+      default: [],
+    },
+    depositStatus: {
+      type: String,
+      enum: Object.values(ContractDepositStatusEnum),
+      default: null,
+    },
+    settlementConfirmedAt: {
+      type: Date,
+      default: null,
+    },
+    disputedAt: {
+      type: Date,
+      default: null,
+    },
+    disputeReason: {
       type: String,
       default: null,
     },

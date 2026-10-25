@@ -43,6 +43,12 @@ export enum AuditActionEnum {
   EXPIRE = 'expire',
   MARK_OVERDUE = 'mark_overdue',
   REFUND = 'refund',
+  APPROVE_REFUND = 'approve_refund',
+  REJECT_REFUND = 'reject_refund',
+  PAY_REFUND = 'pay_refund',
+  ASSIGN_TRANSACTION = 'assign_transaction',
+  CONFIRM_SETTLEMENT = 'confirm_settlement',
+  DISPUTE_SETTLEMENT = 'dispute_settlement',
 }
 
 export enum AuditResourceEnum {
@@ -59,6 +65,7 @@ export enum AuditResourceEnum {
   APPROVAL_REQUEST = 'approval_request',
   CONTRACT = 'contract',
   PAYMENT = 'payment',
+  REFUND_REQUEST = 'refund_request',
   NOTIFICATION = 'notification',
   STORAGE_RACK = 'storage_rack',
   RACK_TIER = 'rack_tier',

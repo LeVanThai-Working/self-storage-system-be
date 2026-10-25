@@ -877,7 +877,13 @@
 					"reassign_unit",
 					"expire",
 					"mark_overdue",
-					"refund"
+					"refund",
+					"approve_refund",
+					"reject_refund",
+					"pay_refund",
+					"assign_transaction",
+					"confirm_settlement",
+					"dispute_settlement"
 				],
 				"type": "string"
 			},
@@ -896,6 +902,7 @@
 					"approval_request",
 					"contract",
 					"payment",
+					"refund_request",
 					"notification",
 					"storage_rack",
 					"rack_tier",
@@ -3477,6 +3484,15 @@
 			},
 			"infer_typeofcancelReservationSchema_": {
 				"properties": {
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumber": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
 					"cancellationReason": {
 						"type": "string"
 					}
@@ -3519,6 +3535,547 @@
 			},
 			"ConfirmRefundRequest": {
 				"$ref": "#/components/schemas/infer_typeofconfirmRefundSchema_"
+			},
+			"RefundRequestReasonEnum": {
+				"enum": [
+					"customer_cancel",
+					"facility_cancel",
+					"system_cancel",
+					"late_payment",
+					"amount_mismatch",
+					"deposit_settlement",
+					"facility_fault"
+				],
+				"type": "string"
+			},
+			"RefundRequestStatusEnum": {
+				"enum": [
+					"pending_approval",
+					"approved",
+					"paid",
+					"rejected",
+					"cancelled"
+				],
+				"type": "string"
+			},
+			"infer_typeofrefundRequestResponseSchema_": {
+				"properties": {
+					"cancelledAt": {
+						"type": "string"
+					},
+					"cancelledBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"paidAt": {
+						"type": "string"
+					},
+					"paidBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"rejectedAt": {
+						"type": "string"
+					},
+					"rejectedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"approvedAt": {
+						"type": "string"
+					},
+					"approvedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"requestedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"note": {
+						"type": "string"
+					},
+					"cancellationReason": {
+						"type": "string"
+					},
+					"rejectionReason": {
+						"type": "string"
+					},
+					"proofImageUrl": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumberMasked": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
+					"customer": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"facility": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"paymentId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"requestedAt": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RefundRequestStatusEnum"
+					},
+					"reason": {
+						"$ref": "#/components/schemas/RefundRequestReasonEnum"
+					},
+					"amount": {
+						"type": "number",
+						"format": "double"
+					},
+					"refundCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"requestedAt",
+					"status",
+					"reason",
+					"amount",
+					"refundCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"RefundRequestResponse": {
+				"$ref": "#/components/schemas/infer_typeofrefundRequestResponseSchema_"
+			},
+			"ApiResponse_RefundRequestResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RefundRequestResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateRefundRequestSchema_": {
+				"properties": {
+					"note": {
+						"type": "string"
+					},
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumber": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
+					"paymentId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"reason": {
+						"$ref": "#/components/schemas/RefundRequestReasonEnum"
+					},
+					"amount": {
+						"type": "number",
+						"format": "double"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"reason",
+					"amount",
+					"customerId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateRefundRequestSchema_"
+			},
+			"infer_typeofapproveRefundRequestSchema_": {
+				"properties": {
+					"note": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ApproveRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofapproveRefundRequestSchema_"
+			},
+			"infer_typeofrejectRefundRequestSchema_": {
+				"properties": {
+					"rejectionReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"rejectionReason"
+				],
+				"type": "object"
+			},
+			"RejectRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofrejectRefundRequestSchema_"
+			},
+			"infer_typeofconfirmPaidRefundSchema_": {
+				"properties": {
+					"note": {
+						"type": "string"
+					},
+					"proofImageUrl": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"referenceCode"
+				],
+				"type": "object"
+			},
+			"ConfirmPaidRefund": {
+				"$ref": "#/components/schemas/infer_typeofconfirmPaidRefundSchema_"
+			},
+			"infer_typeofcancelRefundRequestSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelRefundRequestSchema_"
+			},
+			"PaginatedData_RefundRequestResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/RefundRequestResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_RefundRequestResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_RefundRequestResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofrefundRequestQuerySchema_": {
+				"properties": {
+					"reason": {
+						"$ref": "#/components/schemas/RefundRequestReasonEnum"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RefundRequestStatusEnum"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"amount"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"RefundRequestQuery": {
+				"$ref": "#/components/schemas/infer_typeofrefundRequestQuerySchema_"
 			},
 			"SepayWebhookPayload": {
 				"properties": {
@@ -3582,7 +4139,8 @@
 			"PaymentPurposeEnum": {
 				"enum": [
 					"reservation_deposit",
-					"contract_deposit"
+					"contract_deposit",
+					"rent_first_period"
 				],
 				"type": "string"
 			},
@@ -3986,6 +4544,226 @@
 			},
 			"PaymentQuery": {
 				"$ref": "#/components/schemas/infer_typeofpaymentQuerySchema_"
+			},
+			"PaymentTransactionResultEnum": {
+				"description": "Outcome of processing a single bank transaction received from SePay.\nRECEIVED is the initial state (stored before processing) and also marks\ntransactions whose processing was interrupted, so a retry can resume them.",
+				"enum": [
+					"received",
+					"matched",
+					"partially_matched",
+					"unmatched",
+					"amount_mismatch",
+					"late",
+					"ignored"
+				],
+				"type": "string"
+			},
+			"infer_typeofpaymentTransactionResponseSchema_": {
+				"properties": {
+					"matchedPaymentId": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"accumulated": {
+						"type": "number",
+						"format": "double"
+					},
+					"transferAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"transferType": {
+						"type": "string"
+					},
+					"content": {
+						"type": "string"
+					},
+					"code": {
+						"type": "string"
+					},
+					"subAccount": {
+						"type": "string"
+					},
+					"accountNumber": {
+						"type": "string"
+					},
+					"transactionDate": {
+						"type": "string"
+					},
+					"gateway": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"result": {
+						"$ref": "#/components/schemas/PaymentTransactionResultEnum"
+					},
+					"sepayId": {
+						"type": "number",
+						"format": "double"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"result",
+					"sepayId",
+					"id"
+				],
+				"type": "object"
+			},
+			"PaymentTransactionResponse": {
+				"$ref": "#/components/schemas/infer_typeofpaymentTransactionResponseSchema_"
+			},
+			"PaginatedData_PaymentTransactionResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/PaymentTransactionResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_PaymentTransactionResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_PaymentTransactionResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofunmatchedTransactionQuerySchema_": {
+				"properties": {
+					"code": {
+						"type": "string"
+					},
+					"accountNumber": {
+						"type": "string"
+					},
+					"gateway": {
+						"type": "string"
+					},
+					"result": {
+						"$ref": "#/components/schemas/PaymentTransactionResultEnum"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"UnmatchedTransactionQuery": {
+				"$ref": "#/components/schemas/infer_typeofunmatchedTransactionQuerySchema_"
+			},
+			"ApiResponse_PaymentTransactionResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaymentTransactionResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofassignUnmatchedTransactionSchema_": {
+				"properties": {
+					"paymentCode": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"paymentCode"
+				],
+				"type": "object"
+			},
+			"AssignUnmatchedTransactionRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignUnmatchedTransactionSchema_"
 			},
 			"infer_typeofcancelPaymentSchema_": {
 				"properties": {
@@ -7561,6 +8339,17 @@
 				],
 				"type": "string"
 			},
+			"ContractDepositStatusEnum": {
+				"enum": [
+					"held",
+					"applied",
+					"partially_refunded",
+					"refunded",
+					"forfeited",
+					"disputed"
+				],
+				"type": "string"
+			},
 			"infer_typeofcontractResponseSchema_": {
 				"properties": {
 					"assignedStaff": {
@@ -7777,6 +8566,18 @@
 					"cancellationReason": {
 						"type": "string"
 					},
+					"disputeReason": {
+						"type": "string"
+					},
+					"disputedAt": {
+						"type": "string"
+					},
+					"settlementConfirmedAt": {
+						"type": "string"
+					},
+					"depositStatus": {
+						"$ref": "#/components/schemas/ContractDepositStatusEnum"
+					},
 					"inspectionNotes": {
 						"type": "string"
 					},
@@ -7804,6 +8605,12 @@
 							"id"
 						],
 						"type": "object"
+					},
+					"firstPeriodPaymentId": {
+						"type": "string"
+					},
+					"firstPeriodPaidAt": {
+						"type": "string"
 					},
 					"depositPaymentId": {
 						"type": "string"
@@ -7840,6 +8647,12 @@
 					},
 					"status": {
 						"$ref": "#/components/schemas/ContractStatusEnum"
+					},
+					"inspectionPhotos": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"additionalPaymentRequired": {
 						"type": "number",
@@ -8321,6 +9134,7 @@
 					"customerSigned",
 					"termsAccepted",
 					"status",
+					"inspectionPhotos",
 					"additionalPaymentRequired",
 					"refundAmount",
 					"overdueFee",
@@ -8723,6 +9537,12 @@
 					"actualCheckOutDate": {
 						"type": "string"
 					},
+					"inspectionPhotos": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"inspectionNotes": {
 						"type": "string"
 					},
@@ -8752,6 +9572,20 @@
 			},
 			"TerminateContractRequest": {
 				"$ref": "#/components/schemas/infer_typeofterminateContractSchema_"
+			},
+			"infer_typeofdisputeSettlementSchema_": {
+				"properties": {
+					"disputeReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"disputeReason"
+				],
+				"type": "object"
+			},
+			"DisputeSettlementRequest": {
+				"$ref": "#/components/schemas/infer_typeofdisputeSettlementSchema_"
 			},
 			"ApprovalRequestTargetTypeEnum": {
 				"enum": [
@@ -13134,6 +13968,520 @@
 				}
 			}
 		},
+		"/refund-requests": {
+			"post": {
+				"operationId": "CreateRefundRequest",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tạo yêu cầu hoàn tiền mới (Manual hoặc System triggered).",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateRefundRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "ListRefundRequests",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_RefundRequestResponse__"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tra cứu danh sách yêu cầu hoàn tiền theo bộ lọc và phân trang.",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "reason",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RefundRequestReasonEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RefundRequestStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "reservationId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"amount"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/refund-requests/{id}/approve": {
+			"post": {
+				"operationId": "ApproveRefundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden / Maker-Checker violation / Exceed threshold",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Phê duyệt yêu cầu hoàn tiền (Maker-Checker và Ngưỡng OPS).",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ApproveRefundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests/{id}/reject": {
+			"post": {
+				"operationId": "RejectRefundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Từ chối yêu cầu hoàn tiền.",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RejectRefundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests/{id}/confirm-paid": {
+			"post": {
+				"operationId": "ConfirmPaidRefundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Xác nhận đã chuyển khoản/hoàn tiền thành công (Trạng thái PAID là bất biến).",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ConfirmPaidRefund"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests/{id}/cancel": {
+			"post": {
+				"operationId": "CancelRefundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Hủy yêu cầu hoàn tiền (bởi người yêu cầu trước khi phê duyệt).",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelRefundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests/{id}": {
+			"get": {
+				"operationId": "GetRefundRequestById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Chi tiết một yêu cầu hoàn tiền.",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/payments/sepay/webhook": {
 			"post": {
 				"operationId": "HandleSepayWebhook",
@@ -13442,6 +14790,210 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/payments/transactions/unmatched": {
+			"get": {
+				"operationId": "GetUnmatchedTransactions",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_PaymentTransactionResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "List unmatched transactions for reconciliation.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "code",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "accountNumber",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "gateway",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "result",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/PaymentTransactionResultEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/payments/transactions/{id}/assign": {
+			"post": {
+				"operationId": "AssignUnmatchedTransaction",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentTransactionResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Transaction or Payment not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Manually assign an unmatched transaction to a payment.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignUnmatchedTransactionRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/payments/{id}": {
@@ -17804,6 +19356,7 @@
 				"tags": [
 					"Contracts"
 				],
+				"deprecated": true,
 				"security": [],
 				"parameters": [
 					{
@@ -18457,6 +20010,160 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/TerminateContractRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/settlement/confirm": {
+			"post": {
+				"operationId": "ConfirmSettlement",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer confirms contract deposit settlement agreement.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/contracts/{id}/settlement/dispute": {
+			"post": {
+				"operationId": "DisputeSettlement",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer disputes contract deposit settlement deductions / damage fee.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DisputeSettlementRequest"
 							}
 						}
 					}

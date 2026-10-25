@@ -64,6 +64,12 @@ export const cancelReservationSchema = z.object({
     .string()
     .min(3, 'Cancellation reason must be at least 3 characters')
     .max(500),
+  refundBankName: z.string().min(2).max(100).optional(),
+  refundAccountNumber: z
+    .string()
+    .regex(/^[0-9A-Za-z]{6,30}$/, 'Invalid bank account number format')
+    .optional(),
+  refundAccountHolder: z.string().min(2).max(100).optional(),
 });
 
 export const assignReservationStaffSchema = z.object({

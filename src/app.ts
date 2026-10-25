@@ -52,9 +52,16 @@ app.use(requestContextMiddleware);
 
 // Connect to Database, Redis & BullMQ Workers
 const initServices = async () => {
-  await connect();
-  await connectRedis();
-  await initReservationWorker();
+  try {
+    await connect();
+    await connectRedis();
+    await initReservationWorker();
+  } catch (error) {
+    console.error('Fatal error initializing services:', error);
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+  }
 };
 initServices();
 
