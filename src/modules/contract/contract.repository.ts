@@ -1,4 +1,4 @@
-import type { ClientSession, FilterQuery } from 'mongoose';
+import { Types, type ClientSession, type FilterQuery } from 'mongoose';
 import type { SoftDeleteModel } from 'mongoose-delete';
 import type { IContract } from './contract.model.ts';
 import { paginate, type PaginateResult } from '../../utils/pagination.util.ts';
@@ -225,12 +225,32 @@ export class ContractRepository {
     return query.exec();
   }
 
+  async findActiveByStorageUnitId(
+    storageUnitId: string,
+    session?: ClientSession
+  ) {
+    const query = this.contract
+      .findOne({
+        storageUnitId: Types.ObjectId.isValid(storageUnitId)
+          ? new Types.ObjectId(storageUnitId)
+          : storageUnitId,
+        status: ContractStatusEnum.ACTIVE,
+      })
+      .populate('customerId', 'name email phoneNumber');
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
   async countActiveByStorageUnitId(
     storageUnitId: string,
     session?: ClientSession
   ) {
     const query = this.contract.countDocuments({
-      storageUnitId,
+      storageUnitId: Types.ObjectId.isValid(storageUnitId)
+        ? new Types.ObjectId(storageUnitId)
+        : storageUnitId,
       status: {
         $in: [
           ContractStatusEnum.DRAFT,
@@ -247,7 +267,9 @@ export class ContractRepository {
 
   async countActiveByFacilityId(facilityId: string, session?: ClientSession) {
     const query = this.contract.countDocuments({
-      facilityId,
+      facilityId: Types.ObjectId.isValid(facilityId)
+        ? new Types.ObjectId(facilityId)
+        : facilityId,
       status: {
         $in: [
           ContractStatusEnum.DRAFT,
@@ -264,7 +286,9 @@ export class ContractRepository {
 
   async countActiveByUserId(userId: string, session?: ClientSession) {
     const query = this.contract.countDocuments({
-      customerId: userId,
+      customerId: Types.ObjectId.isValid(userId)
+        ? new Types.ObjectId(userId)
+        : userId,
       status: {
         $in: [
           ContractStatusEnum.DRAFT,
@@ -316,5 +340,42 @@ export class ContractRepository {
     }
 
     return doc;
+  }
+
+  /**
+   * Check if a customer has any valid/active contract (DRAFT, ACTIVE, OVERDUE) at a specific facility.
+   * Used for resource scope verification (Rule 14) during staff delegation.
+   */
+  async hasActiveContractAtFacility(
+    customerId: string,
+    facilityId: string,
+    session?: ClientSession
+  ): Promise<boolean> {
+    if (
+      !Types.ObjectId.isValid(customerId) ||
+      !Types.ObjectId.isValid(facilityId)
+    ) {
+      return false;
+    }
+
+    const query = this.contract.countDocuments({
+      customerId: new Types.ObjectId(customerId),
+      facilityId: new Types.ObjectId(facilityId),
+      status: {
+        $in: [
+          ContractStatusEnum.DRAFT,
+          ContractStatusEnum.ACTIVE,
+          ContractStatusEnum.OVERDUE,
+        ],
+      },
+      deleted: false,
+    });
+
+    if (session) {
+      query.session(session);
+    }
+
+    const count = await query.exec();
+    return count > 0;
   }
 }

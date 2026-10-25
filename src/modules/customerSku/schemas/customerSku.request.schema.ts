@@ -16,6 +16,10 @@ export const dimensionsSchema = z.object({
  * Tùy chọn (Optional): category, barcode, uom, dimensions, weightKg, imageUrl, status, notes
  */
 export const createCustomerSkuSchema = z.object({
+  customerId: z
+    .string()
+    .regex(objectIdRegex, 'Invalid customer ID format')
+    .optional(),
   skuCode: z
     .string()
     .trim()
@@ -70,6 +74,10 @@ export const createCustomerSkuSchema = z.object({
 });
 
 export const updateCustomerSkuSchema = z.object({
+  customerId: z
+    .string()
+    .regex(objectIdRegex, 'Invalid customer ID format')
+    .optional(),
   skuCode: z
     .string()
     .trim()
@@ -144,8 +152,19 @@ export const barcodeParamSchema = z.object({
   barcode: z.string().trim().min(1, 'Barcode parameter is required'),
 });
 
+export const customerSkuBarcodeQuerySchema = z.object({
+  customerId: z
+    .string()
+    .regex(objectIdRegex, 'Invalid customer ID format')
+    .optional(),
+});
+
 export type CreateCustomerSkuRequest = z.infer<typeof createCustomerSkuSchema>;
 export type UpdateCustomerSkuRequest = z.infer<typeof updateCustomerSkuSchema>;
 export type CustomerSkuQuery = z.infer<typeof customerSkuQuerySchema>;
 export type CustomerSkuIdParam = z.infer<typeof customerSkuIdParamSchema>;
 export type BarcodeParam = z.infer<typeof barcodeParamSchema>;
+
+export type CustomerSkuBarcodeQuery = z.infer<
+  typeof customerSkuBarcodeQuerySchema
+>;

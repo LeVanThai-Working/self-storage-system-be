@@ -10,7 +10,7 @@ import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
 
 const POPULATE_FACILITY = {
   path: 'facilityId',
-  select: 'name city address status',
+  select: 'name code city address status',
 };
 
 const POPULATE_UNIT_TYPE = {

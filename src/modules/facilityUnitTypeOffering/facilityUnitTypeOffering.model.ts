@@ -6,11 +6,18 @@ import MongooseDelete, {
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
 
+export interface IRackZonePricing {
+  PRIME: number;
+  STANDARD: number;
+  ECONOMY: number;
+}
+
 export interface IFacilityUnitTypeOffering extends SoftDeleteDocument {
   facilityId: mongoose.Types.ObjectId;
   unitTypeId: mongoose.Types.ObjectId;
   billingUnit: BillingUnitEnum;
   pricePerUnit: number;
+  rackZonePricing?: IRackZonePricing;
   depositMultiplier: number;
   minRentalDays: number;
   status: FacilityUnitTypeOfferingStatusEnum;
@@ -42,6 +49,15 @@ const facilityUnitTypeOfferingSchema =
         type: Number,
         required: true,
         min: 0,
+      },
+      rackZonePricing: {
+        type: {
+          PRIME: { type: Number, min: 0, required: true },
+          STANDARD: { type: Number, min: 0, required: true },
+          ECONOMY: { type: Number, min: 0, required: true },
+        },
+        _id: false,
+        required: false,
       },
       depositMultiplier: {
         type: Number,

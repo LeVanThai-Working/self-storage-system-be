@@ -122,7 +122,7 @@ export class FacilityUnitTypeOfferingController extends Controller {
   @Post('')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER, FACILITY_MANAGER
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @SuccessResponse(201, 'Offering created successfully')
   @Middlewares(validateRequest({ body: createOfferingSchema }))
   @Response<ApiErrorResponse>(
@@ -153,7 +153,7 @@ export class FacilityUnitTypeOfferingController extends Controller {
   @Patch('{id}')
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER, FACILITY_MANAGER
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @Middlewares(
     validateRequest({
       params: offeringIdParamSchema,

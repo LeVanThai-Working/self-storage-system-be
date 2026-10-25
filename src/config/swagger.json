@@ -2019,9 +2019,20 @@
 			},
 			"RackStatusEnum": {
 				"enum": [
+					"available",
+					"reserved",
+					"rented",
 					"active",
 					"maintenance",
 					"inactive"
+				],
+				"type": "string"
+			},
+			"RackZoneEnum": {
+				"enum": [
+					"PRIME",
+					"STANDARD",
+					"ECONOMY"
 				],
 				"type": "string"
 			},
@@ -2175,6 +2186,26 @@
 					"name": {
 						"type": "string"
 					},
+					"currentCustomerId": {
+						"type": "string"
+					},
+					"currentContractId": {
+						"type": "string"
+					},
+					"customPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"zone": {
+						"$ref": "#/components/schemas/RackZoneEnum"
+					},
+					"bay": {
+						"type": "number",
+						"format": "double"
+					},
+					"aisle": {
+						"type": "string"
+					},
 					"status": {
 						"$ref": "#/components/schemas/RackStatusEnum"
 					},
@@ -2258,6 +2289,12 @@
 			},
 			"infer_typeofstorageRackQuerySchema_": {
 				"properties": {
+					"zone": {
+						"$ref": "#/components/schemas/RackZoneEnum"
+					},
+					"aisle": {
+						"type": "string"
+					},
 					"rackCode": {
 						"type": "string"
 					},
@@ -2286,6 +2323,8 @@
 							"createdAt",
 							"updatedAt",
 							"rackCode",
+							"aisle",
+							"bay",
 							"tierCount"
 						]
 					},
@@ -2407,6 +2446,20 @@
 					"name": {
 						"type": "string"
 					},
+					"customPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"zone": {
+						"$ref": "#/components/schemas/RackZoneEnum"
+					},
+					"bay": {
+						"type": "number",
+						"format": "double"
+					},
+					"aisle": {
+						"type": "string"
+					},
 					"tierCount": {
 						"type": "number",
 						"format": "double"
@@ -2435,6 +2488,20 @@
 					},
 					"status": {
 						"$ref": "#/components/schemas/RackStatusEnum"
+					},
+					"customPrice": {
+						"type": "number",
+						"format": "double"
+					},
+					"zone": {
+						"$ref": "#/components/schemas/RackZoneEnum"
+					},
+					"bay": {
+						"type": "number",
+						"format": "double"
+					},
+					"aisle": {
+						"type": "string"
 					},
 					"name": {
 						"type": "string"
@@ -4382,6 +4449,28 @@
 					"notes": {
 						"type": "string"
 					},
+					"rackZonePricing": {
+						"properties": {
+							"ECONOMY": {
+								"type": "number",
+								"format": "double"
+							},
+							"STANDARD": {
+								"type": "number",
+								"format": "double"
+							},
+							"PRIME": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"ECONOMY",
+							"STANDARD",
+							"PRIME"
+						],
+						"type": "object"
+					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
 					},
@@ -4647,6 +4736,28 @@
 					"status": {
 						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
 					},
+					"rackZonePricing": {
+						"properties": {
+							"ECONOMY": {
+								"type": "number",
+								"format": "double"
+							},
+							"STANDARD": {
+								"type": "number",
+								"format": "double"
+							},
+							"PRIME": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"ECONOMY",
+							"STANDARD",
+							"PRIME"
+						],
+						"type": "object"
+					},
 					"minRentalDays": {
 						"type": "number",
 						"format": "double"
@@ -4697,6 +4808,28 @@
 					"depositMultiplier": {
 						"type": "number",
 						"format": "double"
+					},
+					"rackZonePricing": {
+						"properties": {
+							"ECONOMY": {
+								"type": "number",
+								"format": "double"
+							},
+							"STANDARD": {
+								"type": "number",
+								"format": "double"
+							},
+							"PRIME": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"ECONOMY",
+							"STANDARD",
+							"PRIME"
+						],
+						"type": "object"
 					},
 					"pricePerUnit": {
 						"type": "number",
@@ -5001,6 +5134,9 @@
 						"type": "string"
 					},
 					"phone": {
+						"type": "string"
+					},
+					"code": {
 						"type": "string"
 					},
 					"images": {
@@ -6048,6 +6184,9 @@
 							"phone": {
 								"type": "string"
 							},
+							"code": {
+								"type": "string"
+							},
 							"images": {
 								"items": {
 									"type": "string"
@@ -6152,6 +6291,9 @@
 					"phone": {
 						"type": "string"
 					},
+					"code": {
+						"type": "string"
+					},
 					"city": {
 						"type": "string"
 					},
@@ -6211,6 +6353,9 @@
 						"type": "string"
 					},
 					"address": {
+						"type": "string"
+					},
+					"code": {
 						"type": "string"
 					},
 					"name": {
@@ -6433,6 +6578,9 @@
 					"description": {
 						"type": "string"
 					},
+					"customerId": {
+						"type": "string"
+					},
 					"name": {
 						"type": "string"
 					},
@@ -6607,6 +6755,9 @@
 					},
 					"skuCode": {
 						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
 					}
 				},
 				"type": "object"
@@ -6733,6 +6884,9 @@
 								"type": "string"
 							},
 							"city": {
+								"type": "string"
+							},
+							"code": {
 								"type": "string"
 							},
 							"name": {
@@ -6872,140 +7026,137 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofstockInRequestSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"referenceCode": {
-						"type": "string"
-					},
-					"rackTierId": {
-						"type": "string"
-					},
-					"quantity": {
-						"type": "number",
-						"format": "double"
-					},
-					"skuId": {
-						"type": "string"
-					},
-					"contractId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"quantity",
-					"skuId",
-					"contractId"
-				],
-				"type": "object"
-			},
 			"StockInRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockInRequestSchema_"
-			},
-			"infer_typeofstockOutRequestSchema_": {
 				"properties": {
-					"notes": {
+					"contractId": {
 						"type": "string"
 					},
-					"referenceCode": {
-						"type": "string"
-					},
-					"reason": {
+					"skuId": {
 						"type": "string"
 					},
 					"rackTierId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"quantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"referenceCode": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"quantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"quantity"
 				],
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"StockOutRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockOutRequestSchema_"
-			},
-			"infer_typeofstockMoveRequestSchema_": {
 				"properties": {
-					"notes": {
+					"contractId": {
 						"type": "string"
+					},
+					"skuId": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string",
+						"nullable": true
+					},
+					"quantity": {
+						"type": "number",
+						"format": "double"
 					},
 					"reason": {
 						"type": "string"
 					},
-					"toRackTierId": {
+					"referenceCode": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"contractId",
+					"skuId",
+					"quantity"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"StockMoveRequest": {
+				"properties": {
+					"contractId": {
+						"type": "string"
+					},
+					"skuId": {
 						"type": "string"
 					},
 					"fromRackTierId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
+					},
+					"toRackTierId": {
+						"type": "string",
+						"nullable": true
 					},
 					"quantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"reason": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"quantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"quantity"
 				],
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
-			"StockMoveRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockMoveRequestSchema_"
-			},
-			"infer_typeofstockAdjustRequestSchema_": {
+			"StockAdjustRequest": {
 				"properties": {
-					"notes": {
+					"contractId": {
+						"type": "string"
+					},
+					"skuId": {
 						"type": "string"
 					},
 					"rackTierId": {
-						"type": "string"
-					},
-					"reason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"newQuantity": {
 						"type": "number",
 						"format": "double"
 					},
-					"skuId": {
+					"reason": {
 						"type": "string"
 					},
-					"contractId": {
+					"notes": {
 						"type": "string"
 					}
 				},
 				"required": [
-					"reason",
-					"newQuantity",
+					"contractId",
 					"skuId",
-					"contractId"
+					"newQuantity",
+					"reason"
 				],
-				"type": "object"
-			},
-			"StockAdjustRequest": {
-				"$ref": "#/components/schemas/infer_typeofstockAdjustRequestSchema_"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"MovementTypeEnum": {
 				"enum": [
@@ -7162,6 +7313,9 @@
 								"type": "string"
 							},
 							"city": {
+								"type": "string"
+							},
+							"code": {
 								"type": "string"
 							},
 							"name": {
@@ -7362,6 +7516,9 @@
 					"customerId": {
 						"type": "string"
 					},
+					"rackTierId": {
+						"type": "string"
+					},
 					"skuId": {
 						"type": "string"
 					},
@@ -7524,6 +7681,1053 @@
 			},
 			"CustomerInventoryQuery": {
 				"$ref": "#/components/schemas/infer_typeofcustomerInventoryQuerySchema_"
+			},
+			"infer_typeofstorageUnitInventoryTreeResponseSchema_": {
+				"properties": {
+					"contract": {
+						"properties": {
+							"customer": {
+								"properties": {
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"name",
+									"id"
+								],
+								"type": "object"
+							},
+							"endDate": {
+								"type": "string"
+							},
+							"startDate": {
+								"type": "string"
+							},
+							"status": {
+								"type": "string"
+							},
+							"contractCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"contractCode",
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"properties": {
+							"address": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"code": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"unrackedItems": {
+						"items": {
+							"properties": {
+								"notes": {
+									"type": "string"
+								},
+								"lastMovementAt": {
+									"type": "string"
+								},
+								"sku": {
+									"properties": {
+										"imageUrl": {
+											"type": "string"
+										},
+										"weightKg": {
+											"type": "number",
+											"format": "double"
+										},
+										"volume": {
+											"type": "number",
+											"format": "double"
+										},
+										"dimensions": {
+											"properties": {
+												"height": {
+													"type": "number",
+													"format": "double"
+												},
+												"width": {
+													"type": "number",
+													"format": "double"
+												},
+												"length": {
+													"type": "number",
+													"format": "double"
+												}
+											},
+											"required": [
+												"height",
+												"width",
+												"length"
+											],
+											"type": "object"
+										},
+										"barcode": {
+											"type": "string"
+										},
+										"category": {
+											"type": "string"
+										},
+										"uom": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"skuCode": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"uom",
+										"name",
+										"skuCode",
+										"id"
+									],
+									"type": "object"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"inventoryId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"sku",
+								"quantity",
+								"inventoryId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"racks": {
+						"items": {
+							"properties": {
+								"status": {
+									"type": "string"
+								},
+								"name": {
+									"type": "string"
+								},
+								"tiers": {
+									"items": {
+										"properties": {
+											"status": {
+												"type": "string"
+											},
+											"volume": {
+												"type": "number",
+												"format": "double"
+											},
+											"dimensions": {
+												"properties": {
+													"height": {
+														"type": "number",
+														"format": "double"
+													},
+													"width": {
+														"type": "number",
+														"format": "double"
+													},
+													"length": {
+														"type": "number",
+														"format": "double"
+													}
+												},
+												"required": [
+													"height",
+													"width",
+													"length"
+												],
+												"type": "object"
+											},
+											"maxWeightKg": {
+												"type": "number",
+												"format": "double"
+											},
+											"items": {
+												"items": {
+													"properties": {
+														"notes": {
+															"type": "string"
+														},
+														"lastMovementAt": {
+															"type": "string"
+														},
+														"sku": {
+															"properties": {
+																"imageUrl": {
+																	"type": "string"
+																},
+																"weightKg": {
+																	"type": "number",
+																	"format": "double"
+																},
+																"volume": {
+																	"type": "number",
+																	"format": "double"
+																},
+																"dimensions": {
+																	"properties": {
+																		"height": {
+																			"type": "number",
+																			"format": "double"
+																		},
+																		"width": {
+																			"type": "number",
+																			"format": "double"
+																		},
+																		"length": {
+																			"type": "number",
+																			"format": "double"
+																		}
+																	},
+																	"required": [
+																		"height",
+																		"width",
+																		"length"
+																	],
+																	"type": "object"
+																},
+																"barcode": {
+																	"type": "string"
+																},
+																"category": {
+																	"type": "string"
+																},
+																"uom": {
+																	"type": "string"
+																},
+																"name": {
+																	"type": "string"
+																},
+																"skuCode": {
+																	"type": "string"
+																},
+																"id": {
+																	"type": "string"
+																}
+															},
+															"required": [
+																"uom",
+																"name",
+																"skuCode",
+																"id"
+															],
+															"type": "object"
+														},
+														"quantity": {
+															"type": "number",
+															"format": "double"
+														},
+														"inventoryId": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"sku",
+														"quantity",
+														"inventoryId"
+													],
+													"type": "object"
+												},
+												"type": "array"
+											},
+											"tierCode": {
+												"type": "string"
+											},
+											"tierNumber": {
+												"type": "number",
+												"format": "double"
+											},
+											"id": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"items",
+											"tierCode",
+											"tierNumber",
+											"id"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"tierCount": {
+									"type": "number",
+									"format": "double"
+								},
+								"rackCode": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"tiers",
+								"tierCount",
+								"rackCode",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"summary": {
+						"properties": {
+							"totalQuantity": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalSkus": {
+								"type": "number",
+								"format": "double"
+							},
+							"availableTiers": {
+								"type": "number",
+								"format": "double"
+							},
+							"occupiedTiers": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalTiers": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalRacks": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"totalQuantity",
+							"totalSkus",
+							"availableTiers",
+							"occupiedTiers",
+							"totalTiers",
+							"totalRacks"
+						],
+						"type": "object"
+					},
+					"storageUnit": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"zone": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"unitNumber",
+							"id"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"unrackedItems",
+					"racks",
+					"summary",
+					"storageUnit"
+				],
+				"type": "object"
+			},
+			"StorageUnitInventoryTreeResponse": {
+				"$ref": "#/components/schemas/infer_typeofstorageUnitInventoryTreeResponseSchema_"
+			},
+			"ApiResponse_StorageUnitInventoryTreeResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/StorageUnitInventoryTreeResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofskuLocationsResponseSchema_": {
+				"properties": {
+					"locations": {
+						"items": {
+							"properties": {
+								"rackTier": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"maxWeightKg": {
+											"type": "number",
+											"format": "double"
+										},
+										"tierCode": {
+											"type": "string"
+										},
+										"tierNumber": {
+											"type": "number",
+											"format": "double"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"tierCode",
+										"tierNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"storageRack": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"rackCode": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"rackCode",
+										"id"
+									],
+									"type": "object"
+								},
+								"storageUnit": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"zone": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"unitNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"contract": {
+									"properties": {
+										"endDate": {
+											"type": "string"
+										},
+										"startDate": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"contractCode": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"contractCode",
+										"id"
+									],
+									"type": "object"
+								},
+								"facility": {
+									"properties": {
+										"address": {
+											"type": "string"
+										},
+										"city": {
+											"type": "string"
+										},
+										"code": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"notes": {
+									"type": "string"
+								},
+								"lastMovementAt": {
+									"type": "string"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"inventoryId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"inventoryId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"sku": {
+						"properties": {
+							"imageUrl": {
+								"type": "string"
+							},
+							"barcode": {
+								"type": "string"
+							},
+							"category": {
+								"type": "string"
+							},
+							"totalQuantity": {
+								"type": "number",
+								"format": "double"
+							},
+							"uom": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"skuCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"totalQuantity",
+							"uom",
+							"name",
+							"skuCode",
+							"id"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"locations",
+					"sku"
+				],
+				"type": "object"
+			},
+			"SkuLocationsResponse": {
+				"$ref": "#/components/schemas/infer_typeofskuLocationsResponseSchema_"
+			},
+			"ApiResponse_SkuLocationsResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/SkuLocationsResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcustomerInventorySummaryResponseSchema_": {
+				"properties": {
+					"recentMovements": {
+						"items": {
+							"properties": {
+								"updatedAt": {
+									"type": "string"
+								},
+								"createdAt": {
+									"type": "string"
+								},
+								"performer": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"toRackTier": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"maxWeightKg": {
+											"type": "number",
+											"format": "double"
+										},
+										"tierCode": {
+											"type": "string"
+										},
+										"tierNumber": {
+											"type": "number",
+											"format": "double"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"tierCode",
+										"tierNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"fromRackTier": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"maxWeightKg": {
+											"type": "number",
+											"format": "double"
+										},
+										"tierCode": {
+											"type": "string"
+										},
+										"tierNumber": {
+											"type": "number",
+											"format": "double"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"tierCode",
+										"tierNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"sku": {
+									"properties": {
+										"imageUrl": {
+											"type": "string"
+										},
+										"barcode": {
+											"type": "string"
+										},
+										"category": {
+											"type": "string"
+										},
+										"uom": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"skuCode": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"uom",
+										"name",
+										"skuCode",
+										"id"
+									],
+									"type": "object"
+								},
+								"storageUnit": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"zone": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"unitNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"facility": {
+									"properties": {
+										"address": {
+											"type": "string"
+										},
+										"city": {
+											"type": "string"
+										},
+										"code": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"contract": {
+									"properties": {
+										"endDate": {
+											"type": "string"
+										},
+										"startDate": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"contractCode": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"contractCode",
+										"id"
+									],
+									"type": "object"
+								},
+								"customer": {
+									"properties": {
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"notes": {
+									"type": "string"
+								},
+								"referenceCode": {
+									"type": "string"
+								},
+								"reason": {
+									"type": "string"
+								},
+								"toRackTierId": {
+									"type": "string"
+								},
+								"fromRackTierId": {
+									"type": "string"
+								},
+								"customerInventoryId": {
+									"type": "string"
+								},
+								"performedBy": {
+									"type": "string"
+								},
+								"newQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"previousQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"skuId": {
+									"type": "string"
+								},
+								"storageUnitId": {
+									"type": "string"
+								},
+								"facilityId": {
+									"type": "string"
+								},
+								"contractId": {
+									"type": "string"
+								},
+								"customerId": {
+									"type": "string"
+								},
+								"type": {
+									"$ref": "#/components/schemas/MovementTypeEnum"
+								},
+								"movementCode": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"performedBy",
+								"newQuantity",
+								"previousQuantity",
+								"quantity",
+								"skuId",
+								"storageUnitId",
+								"facilityId",
+								"contractId",
+								"customerId",
+								"type",
+								"movementCode",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"categoryBreakdown": {
+						"items": {
+							"properties": {
+								"totalQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"skuCount": {
+									"type": "number",
+									"format": "double"
+								},
+								"category": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"totalQuantity",
+								"skuCount",
+								"category"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"totalStorageUnits": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalActiveContracts": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalSkus": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"recentMovements",
+					"categoryBreakdown",
+					"totalStorageUnits",
+					"totalActiveContracts",
+					"totalQuantity",
+					"totalSkus"
+				],
+				"type": "object"
+			},
+			"CustomerInventorySummaryResponse": {
+				"$ref": "#/components/schemas/infer_typeofcustomerInventorySummaryResponseSchema_"
+			},
+			"ApiResponse_CustomerInventorySummaryResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/CustomerInventorySummaryResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CustomerInventorySummaryQuery": {
+				"properties": {
+					"customerId": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"ContractSourceEnum": {
 				"enum": [
@@ -11981,6 +13185,22 @@
 				"parameters": [
 					{
 						"in": "query",
+						"name": "zone",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RackZoneEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "aisle",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
 						"name": "rackCode",
 						"required": false,
 						"schema": {
@@ -12041,6 +13261,8 @@
 								"createdAt",
 								"updatedAt",
 								"rackCode",
+								"aisle",
+								"bay",
 								"tierCount"
 							]
 						}
@@ -16013,7 +17235,7 @@
 						}
 					}
 				},
-				"description": "Tạo mã hàng SKU mới\nChỉ dành riêng cho Customer tự khai báo danh mục hàng hóa của mình",
+				"description": "Create a new Customer SKU\nDedicated for Customer self-registration or staff delegation",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16074,7 +17296,7 @@
 						}
 					}
 				},
-				"description": "Lấy danh sách SKU có phân trang và bộ lọc\nCustomer chỉ xem được của mình; FM xem theo customerId của khách thuê tại cơ sở; Staff bị chặn",
+				"description": "Get paginated SKU list with filters\nCustomer views only their own; FM/Staff views by customerId within assigned facility; Ops/Admin full scope",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16200,7 +17422,7 @@
 						}
 					}
 				},
-				"description": "Tra cứu nhanh SKU qua mã vạch barcode",
+				"description": "Quick lookup SKU by barcode",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16260,7 +17482,7 @@
 						}
 					}
 				},
-				"description": "Chi tiết một SKU theo ID",
+				"description": "Details of a single SKU by ID",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16320,7 +17542,7 @@
 						}
 					}
 				},
-				"description": "Cập nhật thông tin SKU\nChỉ dành cho Customer sở hữu SKU đó",
+				"description": "Update SKU details\nFor owning Customer or staff under assigned facility",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16390,7 +17612,7 @@
 						}
 					}
 				},
-				"description": "Xoá mềm SKU\nChặn xoá nếu SKU còn tồn kho",
+				"description": "Soft-delete SKU\nPrevent deletion if SKU has active inventory",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16442,7 +17664,7 @@
 						}
 					}
 				},
-				"description": "Khôi phục SKU đã xoá mềm",
+				"description": "Restore soft-deleted SKU",
 				"tags": [
 					"Customer SKU"
 				],
@@ -16514,7 +17736,7 @@
 						}
 					}
 				},
-				"description": "1. Nhập hàng vào kho/tầng kệ (Stock In)\nKhách hàng tự nhập thêm hàng vào khoang chứa hoặc tầng kệ của mình.",
+				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -16587,7 +17809,7 @@
 						}
 					}
 				},
-				"description": "2. Xuất hàng khỏi kho/tầng kệ (Stock Out)\nKhách hàng tự lấy bớt hàng ra khỏi khoang chứa hoặc tầng kệ.",
+				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -16660,7 +17882,7 @@
 						}
 					}
 				},
-				"description": "3. Chuyển vị trí hàng nội bộ giữa các tầng kệ (Stock Move)\nKhách hàng dời hàng giữa các vị trí trong khoang chứa của mình.",
+				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -16733,7 +17955,7 @@
 						}
 					}
 				},
-				"description": "4. Kiểm kê / Điều chỉnh số lượng tồn kho (Stock Adjust)\nKhách hàng tự đếm và cập nhật số lượng tồn thực tế kèm lý do bắt buộc.",
+				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -16776,7 +17998,7 @@
 						}
 					}
 				},
-				"description": "5. Tra cứu nhật ký biến động kho (Inventory Movement Ledger)\nLịch sử giao dịch sổ cái nhập/xuất/chuyển/kiểm kê.",
+				"description": "5. Inventory Movement Ledger\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -16809,6 +18031,14 @@
 					{
 						"in": "query",
 						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "rackTierId",
 						"required": false,
 						"schema": {
 							"type": "string"
@@ -16925,7 +18155,7 @@
 						}
 					}
 				},
-				"description": "6. Tra cứu danh sách tồn kho hiện hành\nXem số lượng tồn hiện tại của các SKU tại các vị trí/tầng kệ.",
+				"description": "6. Query current inventory list\nView current stock quantities of SKUs across units and rack tiers.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -17050,6 +18280,252 @@
 				]
 			}
 		},
+		"/customer-inventories/unit/{storageUnitId}/tree": {
+			"get": {
+				"operationId": "GetStorageUnitTree",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_StorageUnitInventoryTreeResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Storage Unit not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "storageUnitId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/customer-inventories/sku/{skuId}/locations": {
+			"get": {
+				"operationId": "GetSkuLocations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SkuLocationsResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Customer SKU not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "9. Query SKU storage locations by SKU ID\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "skuId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/customer-inventories/barcode/{barcode}/locations": {
+			"get": {
+				"operationId": "GetSkuLocationsByBarcode",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SkuLocationsResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Customer SKU not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "10. Scan barcode to look up SKU storage locations",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "barcode",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/customer-inventories/summary": {
+			"get": {
+				"operationId": "GetCustomerSummary",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_CustomerInventorySummaryResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "11. Customer Personal Inventory Dashboard Summary\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "userId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/customer-inventories/{id}": {
 			"get": {
 				"operationId": "FindInventoryById",
@@ -17095,7 +18571,7 @@
 						}
 					}
 				},
-				"description": "7. Chi tiết 1 bản ghi tồn kho theo ID",
+				"description": "7. Retrieve single inventory record by ID",
 				"tags": [
 					"Customer Inventories"
 				],

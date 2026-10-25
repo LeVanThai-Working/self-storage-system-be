@@ -8,6 +8,8 @@ import {
 } from '../../common/enums/auditLog.enum.ts';
 import type { CustomerSkuRepository } from './customerSku.repository.ts';
 import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
+import type { ContractRepository } from '../contract/contract.repository.ts';
+import type { UserRepository } from '../user/user.repository.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import type {
   CreateCustomerSkuRequest,
@@ -32,37 +34,135 @@ export class CustomerSkuService {
   constructor(
     private readonly customerSkuRepository: CustomerSkuRepository,
     private readonly auditLogService?: AuditLogService,
-    private readonly customerInventoryRepository?: CustomerInventoryRepository
+    private readonly customerInventoryRepository?: CustomerInventoryRepository,
+    private readonly contractRepository?: ContractRepository,
+    private readonly userRepository?: UserRepository
   ) {}
 
   /**
-   * Helper kiểm tra quyền truy cập của caller
+   * Helper to validate basic caller identity
    */
-  private validateRoleAccess(
-    caller: CallerContext,
-    requiresCustomerOnly = false
-  ) {
+  private validateRoleAccess(caller: CallerContext) {
     if (!caller.id) {
       throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
-    }
-
-    // Nhân viên phổ thông (FACILITY_STAFF) mặc định bị chặn để bảo vệ an toàn hàng hoá
-    if (caller.role === RoleEnum.FACILITY_STAFF) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-    }
-
-    // Nếu endpoint bắt buộc chỉ dành cho Customer (mutations: Create, Update, Delete, Restore)
-    if (
-      requiresCustomerOnly &&
-      caller.role &&
-      caller.role !== RoleEnum.CUSTOMER
-    ) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
   }
 
   /**
-   * Tính toán thể tích theo kích thước cm (ra cm3 hoặc m3 tương ứng)
+   * Helper to validate and automatically populate assignedFacilityId from database if missing in token
+   */
+  private async resolveCallerAssignedFacilityId(
+    caller: CallerContext
+  ): Promise<string | undefined> {
+    if (caller.assignedFacilityId) {
+      return caller.assignedFacilityId;
+    }
+    if (
+      (caller.role === RoleEnum.FACILITY_STAFF ||
+        caller.role === RoleEnum.FACILITY_MANAGER) &&
+      this.userRepository
+    ) {
+      const user = await this.userRepository.findById(caller.id);
+      if (user?.assignedFacilityId) {
+        caller.assignedFacilityId = String(user.assignedFacilityId);
+        return caller.assignedFacilityId;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Helper to resolve and assert the customerId owning the SKU (Rule 14 & Task 7C Delegation)
+   * - CUSTOMER: Always restricted to their own account (caller.id)
+   * - STAFF / FM / OPS / ADMIN: Must provide requestedCustomerId
+   * - STAFF / FM: The customer must have a contract (DRAFT, ACTIVE, OVERDUE) at the staff's assigned facility
+   */
+  private async resolveAndAssertCustomerId(
+    caller: CallerContext,
+    requestedCustomerId?: string
+  ): Promise<string> {
+    this.validateRoleAccess(caller);
+
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      return caller.id;
+    }
+
+    if (!requestedCustomerId || !requestedCustomerId.trim()) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_200, ['Customer ID']);
+    }
+
+    const targetCustomerId = requestedCustomerId.trim();
+
+    // Facility Staff or Facility Manager: verify resource scope in assigned facility
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const facilityId = await this.resolveCallerAssignedFacilityId(caller);
+      if (!facilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+
+      if (this.contractRepository) {
+        const hasContract =
+          await this.contractRepository.hasActiveContractAtFacility(
+            targetCustomerId,
+            facilityId
+          );
+        if (!hasContract) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        }
+      }
+    }
+
+    return targetCustomerId;
+  }
+
+  /**
+   * Helper to verify permission to view or manipulate a specific SKU (Rule 14)
+   */
+  private async assertCanAccessCustomerSku(
+    caller: CallerContext,
+    skuCustomerId: string
+  ): Promise<void> {
+    this.validateRoleAccess(caller);
+
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      if (skuCustomerId !== caller.id) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      return;
+    }
+
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const facilityId = await this.resolveCallerAssignedFacilityId(caller);
+      if (!facilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+
+      if (this.contractRepository) {
+        const hasContract =
+          await this.contractRepository.hasActiveContractAtFacility(
+            skuCustomerId,
+            facilityId
+          );
+        if (!hasContract) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        }
+      }
+      return;
+    }
+
+    // BUSINESS_OPS_MANAGER & SYSTEM_ADMIN: Allowed
+  }
+
+  /**
+   * Calculate volume in cubic centimeters based on dimensions in cm
    */
   private calculateVolume(dimensions?: {
     length: number;
@@ -76,19 +176,23 @@ export class CustomerSkuService {
   }
 
   /**
-   * Tạo mới mã hàng SKU
-   * Chỉ dành riêng cho Customer tự tạo cho tài khoản của mình
+   * Create a new SKU
+   * - Customer creates for their own account
+   * - Staff / FM / Ops / Admin creates on behalf of specified customer (Task 7C Staff Delegation)
    */
   async createSku(
     data: CreateCustomerSkuRequest,
     caller: CallerContext
   ): Promise<CustomerSkuResponse> {
-    this.validateRoleAccess(caller, true);
+    this.validateRoleAccess(caller);
 
-    const customerId = caller.id;
+    const customerId = await this.resolveAndAssertCustomerId(
+      caller,
+      data.customerId
+    );
     const formattedSkuCode = data.skuCode.trim().toUpperCase();
 
-    // 1. Kiểm tra trùng skuCode trong cùng tài khoản khách
+    // 1. Check for duplicate skuCode within the same customer
     const existingBySkuCode = await this.customerSkuRepository.findBySkuCode(
       customerId,
       formattedSkuCode
@@ -97,7 +201,7 @@ export class CustomerSkuService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_611);
     }
 
-    // 2. Kiểm tra trùng barcode nếu có khai báo
+    // 2. Check for duplicate barcode if provided
     if (data.barcode && data.barcode.trim()) {
       const existingByBarcode = await this.customerSkuRepository.findByBarcode(
         customerId,
@@ -108,10 +212,10 @@ export class CustomerSkuService {
       }
     }
 
-    // 3. Tính toán volume nếu có dimensions
+    // 3. Compute volume if dimensions are provided
     const volume = this.calculateVolume(data.dimensions);
 
-    // 4. Lưu vào database
+    // 4. Persist to database
     const createdDoc = await this.customerSkuRepository.create({
       customerId: customerId as unknown as ICustomerSku['customerId'],
       skuCode: formattedSkuCode,
@@ -119,7 +223,7 @@ export class CustomerSkuService {
       description: data.description?.trim(),
       category: data.category?.trim(),
       barcode: data.barcode?.trim(),
-      uom: data.uom?.trim() || 'cái',
+      uom: data.uom?.trim() || 'piece',
       dimensions: data.dimensions,
       volume,
       weightKg: data.weightKg,
@@ -128,7 +232,7 @@ export class CustomerSkuService {
       notes: data.notes?.trim(),
     });
 
-    // 5. Ghi Audit Log
+    // 5. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.CREATE,
       resourceType: AuditResourceEnum.CUSTOMER_SKU,
@@ -146,19 +250,34 @@ export class CustomerSkuService {
   }
 
   /**
-   * Lấy danh sách SKU có phân trang
-   * - Nếu là CUSTOMER: Chỉ xem SKU của chính mình
-   * - Nếu là FM/Admin: Xem theo customerId (hoặc tất cả nếu Admin)
+   * Get paginated SKU list
+   * - CUSTOMER: Only views their own SKUs
+   * - Staff / FM: Must specify a customerId under their assigned facility
+   * - Ops / Admin: Views by customerId or entire system
    */
   async findAll(
     query: CustomerSkuQuery,
     caller: CallerContext
   ): Promise<PaginatedCustomerSkuResponse> {
-    this.validateRoleAccess(caller, false);
+    this.validateRoleAccess(caller);
 
-    // Nếu caller là CUSTOMER, ép buộc lọc theo chính customerId đó
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
-    const enforcedCustomerId = isCustomer ? caller.id : query.customerId;
+    let enforcedCustomerId: string | undefined;
+
+    if (isCustomer) {
+      enforcedCustomerId = caller.id;
+    } else if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      if (!query.customerId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_200, ['Customer ID']);
+      }
+      await this.assertCanAccessCustomerSku(caller, query.customerId);
+      enforcedCustomerId = query.customerId;
+    } else {
+      enforcedCustomerId = query.customerId;
+    }
 
     const result = await this.customerSkuRepository.findAll(
       query,
@@ -174,47 +293,43 @@ export class CustomerSkuService {
   }
 
   /**
-   * Lấy chi tiết 1 SKU theo ID
+   * Get SKU details by ID
    */
   async findById(
     id: string,
     caller: CallerContext
   ): Promise<CustomerSkuResponse> {
-    this.validateRoleAccess(caller, false);
+    this.validateRoleAccess(caller);
 
     const sku = await this.customerSkuRepository.findById(id);
     if (!sku) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
     }
 
-    // Nếu là CUSTOMER, kiểm tra quyền sở hữu
-    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
-    if (
-      isCustomer &&
-      String(sku.customerId?._id || sku.customerId) !== caller.id
-    ) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-    }
+    const skuCustomerId = String(sku.customerId?._id || sku.customerId);
+    await this.assertCanAccessCustomerSku(caller, skuCustomerId);
 
     return validateResponse(customerSkuResponseSchema, this.formatSku(sku));
   }
 
   /**
-   * Tra cứu nhanh SKU qua mã barcode
+   * Quick lookup SKU by barcode
    */
   async findByBarcode(
     barcode: string,
     caller: CallerContext,
     targetCustomerId?: string
   ): Promise<CustomerSkuResponse> {
-    this.validateRoleAccess(caller, false);
+    this.validateRoleAccess(caller);
 
-    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
-    const customerId = isCustomer ? caller.id : targetCustomerId || caller.id;
+    const customerId = await this.resolveAndAssertCustomerId(
+      caller,
+      targetCustomerId
+    );
 
     const sku = await this.customerSkuRepository.findByBarcode(
       customerId,
-      barcode
+      barcode.trim()
     );
     if (!sku) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
@@ -224,30 +339,31 @@ export class CustomerSkuService {
   }
 
   /**
-   * Cập nhật thông tin SKU
-   * Chỉ dành cho Customer sở hữu SKU
+   * Update SKU details
+   * - Customer updates their own SKU
+   * - Staff / FM updates SKU on behalf of customer under their assigned facility
    */
   async updateSku(
     id: string,
     data: UpdateCustomerSkuRequest,
     caller: CallerContext
   ): Promise<CustomerSkuResponse> {
-    this.validateRoleAccess(caller, true);
+    this.validateRoleAccess(caller);
 
     const existing = await this.customerSkuRepository.findById(id);
     if (!existing) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
     }
 
-    // Kiểm tra quyền sở hữu
-    if (String(existing.customerId?._id || existing.customerId) !== caller.id) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-    }
+    const skuCustomerId = String(
+      existing.customerId?._id || existing.customerId
+    );
+    await this.assertCanAccessCustomerSku(caller, skuCustomerId);
 
-    const customerId = caller.id;
+    const customerId = skuCustomerId;
     const updateData: Partial<ICustomerSku> = {};
 
-    // 1. Kiểm tra trùng skuCode nếu thay đổi
+    // 1. Check duplicate skuCode if changed
     if (data.skuCode) {
       const formattedSkuCode = data.skuCode.trim().toUpperCase();
       if (formattedSkuCode !== existing.skuCode) {
@@ -262,7 +378,7 @@ export class CustomerSkuService {
       }
     }
 
-    // 2. Kiểm tra trùng barcode nếu thay đổi
+    // 2. Check duplicate barcode if changed
     if (data.barcode !== undefined) {
       const trimmedBarcode = data.barcode?.trim() || undefined;
       if (trimmedBarcode && trimmedBarcode !== existing.barcode) {
@@ -287,7 +403,7 @@ export class CustomerSkuService {
     if (data.status !== undefined) updateData.status = data.status;
     if (data.notes !== undefined) updateData.notes = data.notes.trim();
 
-    // 3. Cập nhật dimensions và tính lại volume
+    // 3. Update dimensions and recalculate volume
     if (data.dimensions) {
       updateData.dimensions = data.dimensions;
       updateData.volume = this.calculateVolume(data.dimensions);
@@ -298,7 +414,7 @@ export class CustomerSkuService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
     }
 
-    // 4. Ghi Audit Log
+    // 4. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.UPDATE,
       resourceType: AuditResourceEnum.CUSTOMER_SKU,
@@ -311,8 +427,8 @@ export class CustomerSkuService {
   }
 
   /**
-   * Hook kiểm tra số lượng tồn kho của SKU
-   * Liên kết với Task 6C (CustomerInventory)
+   * Hook to check active inventory quantity of SKU
+   * Linked with CustomerInventory (Task 6C)
    */
   async getActiveInventoryQuantity(skuId: string): Promise<number> {
     if (!this.customerInventoryRepository) return 0;
@@ -320,23 +436,34 @@ export class CustomerSkuService {
   }
 
   /**
-   * Xoá mềm SKU
-   * Bảo vệ không cho xoá khi SKU đang có tồn kho
+   * Soft-delete SKU
+   * Guard: Only owning Customer or Ops/Admin can delete; blocked if inventory exists
    */
   async deleteSku(id: string, caller: CallerContext): Promise<void> {
-    this.validateRoleAccess(caller, true);
+    this.validateRoleAccess(caller);
 
     const existing = await this.customerSkuRepository.findById(id);
     if (!existing) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
     }
 
-    // Kiểm tra quyền sở hữu
-    if (String(existing.customerId?._id || existing.customerId) !== caller.id) {
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    const isOpsOrAdmin =
+      caller.role === RoleEnum.BUSINESS_OPS_MANAGER ||
+      caller.role === RoleEnum.SYSTEM_ADMIN;
+
+    if (!isCustomer && !isOpsOrAdmin) {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
-    // Quy tắc bảo vệ: Không cho xoá nếu còn tồn kho
+    if (
+      isCustomer &&
+      String(existing.customerId?._id || existing.customerId) !== caller.id
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    // Guard rule: Block delete if active inventory exists
     const activeInventoryQty = await this.getActiveInventoryQuantity(id);
     if (activeInventoryQty > 0) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_613);
@@ -344,7 +471,7 @@ export class CustomerSkuService {
 
     await this.customerSkuRepository.softDelete(id, caller.id);
 
-    // Ghi Audit Log
+    // Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.DELETE,
       resourceType: AuditResourceEnum.CUSTOMER_SKU,
@@ -354,27 +481,38 @@ export class CustomerSkuService {
   }
 
   /**
-   * Khôi phục SKU đã xoá mềm
+   * Restore soft-deleted SKU
    */
   async restoreSku(
     id: string,
     caller: CallerContext
   ): Promise<CustomerSkuResponse> {
-    this.validateRoleAccess(caller, true);
+    this.validateRoleAccess(caller);
 
     const existing = await this.customerSkuRepository.findById(id, true);
     if (!existing) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
     }
 
-    // Kiểm tra quyền sở hữu
-    if (String(existing.customerId?._id || existing.customerId) !== caller.id) {
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    const isOpsOrAdmin =
+      caller.role === RoleEnum.BUSINESS_OPS_MANAGER ||
+      caller.role === RoleEnum.SYSTEM_ADMIN;
+
+    if (!isCustomer && !isOpsOrAdmin) {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
-    // Kiểm tra xem đã có SKU active nào cùng mã chưa
+    const skuCustomerId = String(
+      existing.customerId?._id || existing.customerId
+    );
+    if (isCustomer && skuCustomerId !== caller.id) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    // Check if an active SKU with same skuCode already exists
     const activeDuplicate = await this.customerSkuRepository.findBySkuCode(
-      caller.id,
+      skuCustomerId,
       existing.skuCode
     );
     if (activeDuplicate && String(activeDuplicate._id) !== id) {
@@ -386,7 +524,7 @@ export class CustomerSkuService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
     }
 
-    // Ghi Audit Log
+    // Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.RESTORE,
       resourceType: AuditResourceEnum.CUSTOMER_SKU,
@@ -402,7 +540,7 @@ export class CustomerSkuService {
   }
 
   /**
-   * Format Mongoose document thành Response Object
+   * Format Mongoose document to Response Object
    */
   private formatSku(doc: ICustomerSku) {
     const raw = doc.toObject ? doc.toObject() : doc;

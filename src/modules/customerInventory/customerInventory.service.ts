@@ -18,18 +18,29 @@ import type { ContractRepository } from '../contract/contract.repository.ts';
 import type { CustomerSkuRepository } from '../customerSku/customerSku.repository.ts';
 import type { StorageRackRepository } from '../storageRack/storageRack.repository.ts';
 import type { RackTierRepository } from '../storageRack/rackTier.repository.ts';
+import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
 import type { ICustomerInventory } from './customerInventory.model.ts';
 import type { IInventoryMovement } from './inventoryMovement.model.ts';
 import {
   customerInventoryResponseSchema,
   paginatedCustomerInventoryResponseSchema,
   paginatedInventoryMovementResponseSchema,
+  storageUnitInventoryTreeResponseSchema,
+  skuLocationsResponseSchema,
+  customerInventorySummaryResponseSchema,
   type CustomerInventoryResponse,
   type PaginatedCustomerInventoryResponse,
   type PaginatedInventoryMovementResponse,
+  type StorageUnitInventoryTreeResponse,
+  type SkuLocationsResponse,
+  type CustomerInventorySummaryResponse,
+  type TreeTierItem,
+  type TreeRack,
+  type TreeTier,
 } from './schemas/customerInventory.response.schema.ts';
 import type {
   CustomerInventoryQuery,
+  CustomerInventorySummaryQuery,
   InventoryMovementQuery,
   StockAdjustRequest,
   StockInRequest,
@@ -40,11 +51,13 @@ import type {
 export interface CallerContext {
   id: string;
   role?: string;
+  assignedFacilityId?: string;
 }
 
 interface PopulatedRef {
   _id?: Types.ObjectId | string;
   name?: string;
+  code?: string;
   email?: string | null;
   phoneNumber?: string | null;
   contractCode?: string;
@@ -129,14 +142,15 @@ export class CustomerInventoryService {
     private readonly skuRepository: CustomerSkuRepository,
     private readonly storageRackRepository: StorageRackRepository,
     private readonly rackTierRepository: RackTierRepository,
+    private readonly storageUnitRepository: StorageUnitRepository,
     private readonly auditLogService?: AuditLogService
   ) {}
 
   /**
-   * Kiểm tra quyền truy cập:
+   * Access control verification:
    * - Mutations (IN, OUT, MOVE, ADJUST):
-   *   + Chặn tuyệt đối FACILITY_STAFF và FACILITY_MANAGER (ném 403)
-   *   + Chỉ cho phép CUSTOMER (sở hữu kho) hoặc Admin hệ thống
+   *   + Absolutely block FACILITY_STAFF and FACILITY_MANAGER (throw 403)
+   *   + Only allow CUSTOMER (inventory owner) or system admins
    */
   private validatePrivacy(caller: CallerContext, isMutation = false): void {
     if (isMutation) {
@@ -150,7 +164,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * Helper xác thực tính hợp lệ của Hợp đồng, SKU và Tầng kệ
+   * Helper to validate Contract, SKU, and RackTier entities
    */
   private async validateEntities(
     contractId: string,
@@ -159,7 +173,7 @@ export class CustomerInventoryService {
     caller: CallerContext,
     session?: ClientSession
   ) {
-    // 1. Kiểm tra Hợp đồng
+    // 1. Verify Contract
     const contract = await this.contractRepository.findById(
       contractId,
       session
@@ -168,12 +182,12 @@ export class CustomerInventoryService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    // Bắt buộc hợp đồng phải đang ACTIVE
+    // Contract must be ACTIVE
     if (contract.status !== ContractStatusEnum.ACTIVE) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_622);
     }
 
-    // Kiểm tra quyền sở hữu Hợp đồng nếu là CUSTOMER
+    // Check contract ownership if caller is CUSTOMER
     const contractCustomerId = String(
       contract.customerId?._id || contract.customerId
     );
@@ -182,25 +196,25 @@ export class CustomerInventoryService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
-    // 2. Kiểm tra SKU
+    // 2. Verify SKU
     const sku = await this.skuRepository.findById(skuId);
     if (!sku) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
     }
 
-    // SKU phải thuộc về khách hàng của hợp đồng
+    // SKU must belong to the customer of the contract
     const skuCustomerId = String(sku.customerId?._id || sku.customerId);
     if (skuCustomerId !== contractCustomerId) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_628);
     }
 
-    // 3. Trích xuất thông tin phòng và cơ sở
+    // 3. Extract storage unit and facility info
     const storageUnitId = String(
       contract.storageUnitId?._id || contract.storageUnitId
     );
     const facilityId = String(contract.facilityId?._id || contract.facilityId);
 
-    // 4. Kiểm tra Tầng kệ nếu có chỉ định
+    // 4. Verify RackTier if specified
     let storageRackId: string | null = null;
     if (rackTierId) {
       const tier = await this.rackTierRepository.findById(rackTierId);
@@ -208,12 +222,12 @@ export class CustomerInventoryService {
         throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_601);
       }
 
-      // Tầng kệ phải thuộc đúng phòng kho của hợp đồng
+      // RackTier must belong to the same storage unit as the contract
       if (toId(tier.storageUnitId) !== storageUnitId) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_624);
       }
 
-      // Tầng kệ không được ở trạng thái INACTIVE hoặc MAINTENANCE
+      // RackTier cannot be INACTIVE or in MAINTENANCE
       if (
         tier.status === RackTierStatusEnum.INACTIVE ||
         tier.status === RackTierStatusEnum.MAINTENANCE
@@ -235,7 +249,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 1. Nhập hàng vào kho/tầng kệ (IN)
+   * 1. Stock In (IN)
    */
   @Transactional()
   async stockIn(
@@ -254,7 +268,7 @@ export class CustomerInventoryService {
         session
       );
 
-    // 1. Tìm hoặc tạo bản ghi CustomerInventory tại vị trí
+    // 1. Find or create CustomerInventory record at location
     const existing = await this.inventoryRepository.findByPosition(
       data.contractId,
       data.skuId,
@@ -299,7 +313,7 @@ export class CustomerInventoryService {
       );
     }
 
-    // 2. Ghi nhận sổ cái InventoryMovement
+    // 2. Record in InventoryMovement ledger
     const movementCode =
       await this.movementRepository.generateMovementCode(session);
     await this.movementRepository.create(
@@ -326,7 +340,7 @@ export class CustomerInventoryService {
       session
     );
 
-    // 3. Cập nhật State Machine cho Tầng kệ -> OCCUPIED
+    // 3. Update RackTier State Machine -> OCCUPIED
     if (data.rackTierId) {
       await this.rackTierRepository.update(
         data.rackTierId,
@@ -335,7 +349,7 @@ export class CustomerInventoryService {
       );
     }
 
-    // 4. Ghi Audit Log
+    // 4. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.INVENTORY_IN,
       resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
@@ -360,7 +374,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 2. Xuất hàng khỏi kho/tầng kệ (OUT)
+   * 2. Stock Out (OUT)
    */
   @Transactional()
   async stockOut(
@@ -395,14 +409,17 @@ export class CustomerInventoryService {
     const previousQuantity = existing.quantity;
     const newQuantity = existing.quantity - data.quantity;
 
-    // 1. Giảm số lượng tồn kho
-    await this.inventoryRepository.incrementQuantity(
+    // 1. Decrement inventory quantity (Atomic Guard)
+    const updatedInventory = await this.inventoryRepository.incrementQuantity(
       inventoryId,
       -data.quantity,
       session
     );
+    if (!updatedInventory) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
+    }
 
-    // 2. Ghi nhận sổ cái InventoryMovement
+    // 2. Record in InventoryMovement ledger
     const movementCode =
       await this.movementRepository.generateMovementCode(session);
     await this.movementRepository.create(
@@ -430,14 +447,14 @@ export class CustomerInventoryService {
       session
     );
 
-    // 3. Cập nhật State Machine cho Tầng kệ -> Nếu hết hàng thì về AVAILABLE
+    // 3. Update RackTier State Machine -> If empty, transition to AVAILABLE
     if (data.rackTierId) {
-      const remainingOnTier =
-        await this.inventoryRepository.countTotalItemsOnTier(
+      const remainingActiveOnTier =
+        await this.inventoryRepository.countActiveItemsOnTier(
           data.rackTierId,
           session
         );
-      if (remainingOnTier <= 0) {
+      if (remainingActiveOnTier === 0) {
         await this.rackTierRepository.update(
           data.rackTierId,
           { status: RackTierStatusEnum.AVAILABLE },
@@ -446,7 +463,7 @@ export class CustomerInventoryService {
       }
     }
 
-    // 4. Ghi Audit Log
+    // 4. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.INVENTORY_OUT,
       resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
@@ -471,7 +488,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 3. Chuyển vị trí nội bộ giữa các tầng kệ (MOVE)
+   * 3. Internal Stock Move between rack tiers (MOVE)
    */
   @Transactional()
   async stockMove(
@@ -488,7 +505,7 @@ export class CustomerInventoryService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_627);
     }
 
-    // Xác thực tầng nguồn
+    // Validate source tier
     const { contractCustomerId, storageUnitId, facilityId } =
       await this.validateEntities(
         data.contractId,
@@ -498,7 +515,7 @@ export class CustomerInventoryService {
         session
       );
 
-    // Xác thực tầng đích nếu có chỉ định
+    // Validate destination tier if specified
     let toStorageRackId: string | null = null;
     if (toTierId) {
       const destTier = await this.rackTierRepository.findById(toTierId);
@@ -517,7 +534,7 @@ export class CustomerInventoryService {
       toStorageRackId = toId(destTier.storageRackId);
     }
 
-    // Kiểm tra số lượng tồn tại vị trí nguồn
+    // Check available stock at source location
     const sourceInventory = await this.inventoryRepository.findByPosition(
       data.contractId,
       data.skuId,
@@ -533,14 +550,17 @@ export class CustomerInventoryService {
     const fromPrev = sourceInventory.quantity;
     const fromNew = sourceInventory.quantity - data.quantity;
 
-    // 1. Trừ tồn tại vị trí nguồn
-    await this.inventoryRepository.incrementQuantity(
+    // 1. Deduct stock from source location (Atomic Guard)
+    const updatedSource = await this.inventoryRepository.incrementQuantity(
       String(sourceInventory._id),
       -data.quantity,
       session
     );
+    if (!updatedSource) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
+    }
 
-    // 2. Cộng tồn tại vị trí đích
+    // 2. Add stock to destination location
     const destInventory = await this.inventoryRepository.findByPosition(
       data.contractId,
       data.skuId,
@@ -578,7 +598,7 @@ export class CustomerInventoryService {
       );
     }
 
-    // 3. Ghi nhận sổ cái InventoryMovement
+    // 3. Record in InventoryMovement ledger
     const movementCode =
       await this.movementRepository.generateMovementCode(session);
     await this.movementRepository.create(
@@ -603,14 +623,14 @@ export class CustomerInventoryService {
       session
     );
 
-    // 4. Đồng bộ State Machine tầng kệ
+    // 4. Synchronize RackTier State Machine
     if (fromTierId) {
-      const remainingOnSource =
-        await this.inventoryRepository.countTotalItemsOnTier(
+      const remainingActiveOnSource =
+        await this.inventoryRepository.countActiveItemsOnTier(
           fromTierId,
           session
         );
-      if (remainingOnSource <= 0) {
+      if (remainingActiveOnSource === 0) {
         await this.rackTierRepository.update(
           fromTierId,
           { status: RackTierStatusEnum.AVAILABLE },
@@ -627,7 +647,7 @@ export class CustomerInventoryService {
       );
     }
 
-    // 5. Ghi Audit Log
+    // 5. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.INVENTORY_MOVE,
       resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
@@ -652,7 +672,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 4. Kiểm kê / Điều chỉnh tồn kho (ADJUST)
+   * 4. Stock Adjust (ADJUST)
    */
   @Transactional()
   async stockAdjust(
@@ -716,7 +736,7 @@ export class CustomerInventoryService {
 
     const deltaQuantity = Math.abs(newQuantity - previousQuantity);
 
-    // 2. Ghi nhận sổ cái InventoryMovement
+    // 2. Record in InventoryMovement ledger
     const movementCode =
       await this.movementRepository.generateMovementCode(session);
     await this.movementRepository.create(
@@ -745,14 +765,14 @@ export class CustomerInventoryService {
       session
     );
 
-    // 3. Cập nhật State Machine cho Tầng kệ
+    // 3. Update RackTier State Machine
     if (data.rackTierId) {
-      const remainingOnTier =
-        await this.inventoryRepository.countTotalItemsOnTier(
+      const activeItemsOnTier =
+        await this.inventoryRepository.countActiveItemsOnTier(
           data.rackTierId,
           session
         );
-      if (remainingOnTier <= 0) {
+      if (activeItemsOnTier === 0) {
         await this.rackTierRepository.update(
           data.rackTierId,
           { status: RackTierStatusEnum.AVAILABLE },
@@ -767,7 +787,7 @@ export class CustomerInventoryService {
       }
     }
 
-    // 4. Ghi Audit Log
+    // 4. Record Audit Log
     this.auditLogService?.record({
       action: AuditActionEnum.INVENTORY_ADJUST,
       resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
@@ -792,7 +812,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 5. Tra cứu danh sách tồn kho hiện hành
+   * 5. Query active inventory list
    */
   async findAllInventories(
     query: CustomerInventoryQuery,
@@ -801,7 +821,7 @@ export class CustomerInventoryService {
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
     const enforcedQuery = { ...query };
 
-    // Khách hàng chỉ xem tồn kho của chính mình
+    // Customers can only view their own inventory
     if (isCustomer) {
       enforcedQuery.customerId = caller.id;
     }
@@ -815,7 +835,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 6. Chi tiết 1 bản ghi tồn kho
+   * 6. Retrieve single inventory record details
    */
   async findInventoryById(
     id: string,
@@ -839,7 +859,7 @@ export class CustomerInventoryService {
   }
 
   /**
-   * 7. Tra cứu nhật ký sổ cái biến động kho (InventoryMovement)
+   * 7. Query inventory movement transaction ledger (InventoryMovement)
    */
   async findAllMovements(
     query: InventoryMovementQuery,
@@ -848,7 +868,7 @@ export class CustomerInventoryService {
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
     const enforcedQuery = { ...query };
 
-    // Khách hàng chỉ xem lịch sử của chính mình
+    // Customers can only view their own history
     if (isCustomer) {
       enforcedQuery.customerId = caller.id;
     }
@@ -858,6 +878,404 @@ export class CustomerInventoryService {
     return validateResponse(paginatedInventoryMovementResponseSchema, {
       items: result.items.map((m) => this.formatMovement(m)),
       pagination: result.pagination,
+    });
+  }
+
+  /**
+   * 8. Multi-tier storage unit inventory tree (Storage Unit Inventory Tree)
+   * Unit -> Racks -> Tiers -> SKUs + Unracked Items + Summary
+   */
+  async getStorageUnitTree(
+    storageUnitId: string,
+    caller: CallerContext
+  ): Promise<StorageUnitInventoryTreeResponse> {
+    if (caller.role === RoleEnum.FACILITY_STAFF) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const unit = await this.storageUnitRepository.findById(storageUnitId);
+    if (!unit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+    const unitFacilityId = String(unit.facilityId?._id || unit.facilityId);
+
+    if (caller.role === RoleEnum.FACILITY_MANAGER) {
+      if (
+        !caller.assignedFacilityId ||
+        caller.assignedFacilityId !== unitFacilityId
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    const contract =
+      await this.contractRepository.findActiveByStorageUnitId(storageUnitId);
+
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      if (
+        !contract ||
+        String(contract.customerId?._id || contract.customerId) !== caller.id
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    const [racks, allTiers, items] = await Promise.all([
+      this.storageRackRepository.findByStorageUnitId(storageUnitId),
+      this.rackTierRepository.findByStorageUnitId(storageUnitId),
+      this.inventoryRepository.findItemsByStorageUnitId(storageUnitId),
+    ]);
+
+    const itemsByTierMap = new Map<string, TreeTierItem[]>();
+    const unrackedItems: TreeTierItem[] = [];
+
+    for (const item of items) {
+      const doc = item as unknown as FormattableInventory;
+      const sku = toPopulated(doc.skuId);
+      if (!sku) continue;
+
+      const formattedItem: TreeTierItem = {
+        inventoryId: String(doc._id),
+        quantity: doc.quantity,
+        lastMovementAt: new Date(doc.lastMovementAt).toISOString(),
+        notes: doc.notes || null,
+        sku: {
+          id: String(sku._id),
+          skuCode: sku.skuCode || '',
+          name: sku.name || '',
+          category: sku.category || null,
+          barcode: sku.barcode || null,
+          uom: sku.uom || '',
+          dimensions:
+            (
+              sku as {
+                dimensions?: { length: number; width: number; height: number };
+              }
+            ).dimensions || null,
+          volume: (sku as { volume?: number }).volume ?? null,
+          weightKg: (sku as { weightKg?: number }).weightKg ?? null,
+          imageUrl: sku.imageUrl || null,
+        },
+      };
+
+      if (doc.rackTierId) {
+        const tierId = toId(doc.rackTierId);
+        if (!itemsByTierMap.has(tierId)) {
+          itemsByTierMap.set(tierId, []);
+        }
+        itemsByTierMap.get(tierId)!.push(formattedItem);
+      } else {
+        unrackedItems.push(formattedItem);
+      }
+    }
+
+    const formattedRacks: TreeRack[] = racks.map((rack) => {
+      const rackId = String(rack._id);
+      const rackTiers = allTiers.filter(
+        (t) => String(t.storageRackId) === rackId
+      );
+
+      const formattedTiers: TreeTier[] = rackTiers.map((tier) => {
+        const tierId = String(tier._id);
+        const tierItems = itemsByTierMap.get(tierId) || [];
+        return {
+          id: tierId,
+          tierNumber: tier.tierNumber,
+          tierCode: tier.tierCode,
+          maxWeightKg: tier.maxWeightKg ?? null,
+          dimensions: tier.dimensions
+            ? {
+                length: tier.dimensions.length,
+                width: tier.dimensions.width,
+                height: tier.dimensions.height,
+              }
+            : null,
+          volume: tier.volume ?? null,
+          status: tier.status || null,
+          items: tierItems,
+        };
+      });
+
+      return {
+        id: rackId,
+        rackCode: rack.rackCode,
+        name: rack.name || null,
+        status: rack.status || null,
+        tierCount: rack.tierCount,
+        tiers: formattedTiers,
+      };
+    });
+
+    const totalRacks = racks.length;
+    const totalTiers = allTiers.length;
+    const occupiedTiers = allTiers.filter(
+      (t) =>
+        t.status === RackTierStatusEnum.OCCUPIED ||
+        (itemsByTierMap.get(String(t._id))?.length || 0) > 0
+    ).length;
+    const availableTiers = Math.max(0, totalTiers - occupiedTiers);
+    const distinctSkuIds = new Set(items.map((i) => toId(i.skuId)));
+    const totalSkus = distinctSkuIds.size;
+    const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
+
+    let contractSummary = null;
+    if (contract) {
+      const cust = toPopulated(contract.customerId);
+      contractSummary = {
+        id: String(contract._id),
+        contractCode: contract.contractCode,
+        status: contract.status,
+        startDate: contract.startDate
+          ? new Date(contract.startDate).toISOString()
+          : null,
+        endDate: contract.endDate
+          ? new Date(contract.endDate).toISOString()
+          : null,
+        customer: cust
+          ? {
+              id: String(cust._id),
+              name: cust.name || '',
+              email: cust.email || null,
+              phoneNumber: cust.phoneNumber || null,
+            }
+          : null,
+      };
+    }
+
+    const storageUnitSummary = {
+      id: String(unit._id),
+      unitNumber: unit.unitNumber,
+      floor: unit.floor ?? null,
+      zone: unit.zone || null,
+      status: unit.status || null,
+    };
+
+    const fac = toPopulated(unit.facilityId);
+    let facilitySummary = null;
+    if (fac) {
+      facilitySummary = {
+        id: String(fac._id),
+        name: fac.name || '',
+        code: fac.code || null,
+        city: fac.city || null,
+        address: fac.address || null,
+      };
+    }
+
+    return validateResponse(storageUnitInventoryTreeResponseSchema, {
+      facility: facilitySummary,
+      storageUnit: storageUnitSummary,
+      contract: contractSummary,
+      summary: {
+        totalRacks,
+        totalTiers,
+        occupiedTiers,
+        availableTiers,
+        totalSkus,
+        totalQuantity,
+      },
+      racks: formattedRacks,
+      unrackedItems,
+    });
+  }
+
+  /**
+   * 9. Query SKU storage locations by SKU ID
+   */
+  async getSkuLocations(
+    skuId: string,
+    caller: CallerContext
+  ): Promise<SkuLocationsResponse> {
+    if (caller.role === RoleEnum.FACILITY_STAFF) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const sku = await this.skuRepository.findById(skuId);
+    if (!sku) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
+    }
+    const skuCustomerId = String(sku.customerId?._id || sku.customerId);
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer && skuCustomerId !== caller.id) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const items = await this.inventoryRepository.findLocationsBySkuId(skuId);
+
+    let filteredItems = items;
+    if (caller.role === RoleEnum.FACILITY_MANAGER) {
+      if (!caller.assignedFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      filteredItems = items.filter(
+        (i) => toId(i.facilityId) === caller.assignedFacilityId
+      );
+      if (filteredItems.length === 0 && items.length > 0) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    const locations = filteredItems.map((item) => {
+      const doc = item as unknown as FormattableInventory;
+      const fac = toPopulated(doc.facilityId);
+      const ctr = toPopulated(doc.contractId);
+      const unt = toPopulated(doc.storageUnitId);
+      const rck = toPopulated(doc.storageRackId);
+      const tier = toPopulated(doc.rackTierId);
+
+      return {
+        inventoryId: String(doc._id),
+        quantity: doc.quantity,
+        lastMovementAt: new Date(doc.lastMovementAt).toISOString(),
+        notes: doc.notes || null,
+        facility: fac
+          ? {
+              id: String(fac._id),
+              name: fac.name || '',
+              city: fac.city || null,
+              address: fac.address || null,
+            }
+          : null,
+        contract: ctr
+          ? {
+              id: String(ctr._id),
+              contractCode: ctr.contractCode || '',
+              status: ctr.status || '',
+              startDate: ctr.startDate
+                ? new Date(ctr.startDate).toISOString()
+                : null,
+              endDate: ctr.endDate ? new Date(ctr.endDate).toISOString() : null,
+            }
+          : null,
+        storageUnit: unt
+          ? {
+              id: String(unt._id),
+              unitNumber: unt.unitNumber || '',
+              floor: unt.floor ?? null,
+              zone: unt.zone || null,
+              status: unt.status || null,
+            }
+          : null,
+        storageRack: rck
+          ? {
+              id: String(rck._id),
+              rackCode: rck.rackCode || '',
+              name: rck.name || null,
+              status: rck.status || null,
+            }
+          : null,
+        rackTier: tier
+          ? {
+              id: String(tier._id),
+              tierCode: tier.tierCode || '',
+              tierNumber: tier.tierNumber ?? 0,
+              maxWeightKg: tier.maxWeightKg ?? null,
+              status: tier.status || null,
+            }
+          : null,
+      };
+    });
+
+    const totalQuantity = locations.reduce((sum, l) => sum + l.quantity, 0);
+
+    return validateResponse(skuLocationsResponseSchema, {
+      sku: {
+        id: String(sku._id),
+        skuCode: sku.skuCode,
+        name: sku.name,
+        category: sku.category || null,
+        barcode: sku.barcode || null,
+        uom: sku.uom,
+        imageUrl: sku.imageUrl || null,
+        totalQuantity,
+      },
+      locations,
+    });
+  }
+
+  /**
+   * 10. Look up SKU storage locations by barcode
+   */
+  async getSkuLocationsByBarcode(
+    barcode: string,
+    caller: CallerContext
+  ): Promise<SkuLocationsResponse> {
+    if (caller.role === RoleEnum.FACILITY_STAFF) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    const sku = await this.skuRepository.findByBarcode(
+      isCustomer ? caller.id : undefined,
+      barcode
+    );
+    if (!sku) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
+    }
+
+    return this.getSkuLocations(String(sku._id), caller);
+  }
+
+  /**
+   * 11. Customer Personal Inventory Dashboard Summary
+   */
+  async getCustomerSummary(
+    caller: CallerContext,
+    query?: CustomerInventorySummaryQuery
+  ): Promise<CustomerInventorySummaryResponse> {
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    let customerId = caller.id;
+    const isPrivileged =
+      caller.role === RoleEnum.BUSINESS_OPS_MANAGER ||
+      caller.role === RoleEnum.SYSTEM_ADMIN;
+
+    if (isPrivileged && (query?.customerId || query?.userId)) {
+      customerId = (query.customerId || query.userId)!;
+    }
+
+    const [
+      totalSkus,
+      categoryBreakdown,
+      distinctUnits,
+      activeContracts,
+      recentMovementsData,
+    ] = await Promise.all([
+      this.skuRepository.countByCustomerId(customerId),
+      this.inventoryRepository.getDashboardCategoryBreakdown(customerId),
+      this.inventoryRepository.countDistinctStorageUnits(customerId),
+      this.contractRepository.countActiveByUserId(customerId),
+      this.movementRepository.findPaginated({
+        customerId,
+        page: 1,
+        limit: 5,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      }),
+    ]);
+
+    const totalQuantity = categoryBreakdown.reduce(
+      (sum, c) => sum + c.totalQuantity,
+      0
+    );
+
+    const formattedMovements = recentMovementsData.items.map((m) =>
+      this.formatMovement(m)
+    );
+
+    return validateResponse(customerInventorySummaryResponseSchema, {
+      totalSkus,
+      totalQuantity,
+      totalActiveContracts: activeContracts,
+      totalStorageUnits: distinctUnits,
+      categoryBreakdown,
+      recentMovements: formattedMovements,
     });
   }
 

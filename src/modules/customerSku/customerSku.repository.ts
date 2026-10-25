@@ -124,16 +124,17 @@ export class CustomerSkuRepository {
   }
 
   async findByBarcode(
-    customerId: string,
+    customerId: string | undefined,
     barcode: string,
     includeDeleted = false
   ) {
-    if (!Types.ObjectId.isValid(customerId)) return null;
-
-    const filter = {
-      customerId: new Types.ObjectId(customerId),
+    const filter: Record<string, unknown> = {
       barcode: barcode.trim(),
     };
+
+    if (customerId && Types.ObjectId.isValid(customerId)) {
+      filter.customerId = new Types.ObjectId(customerId);
+    }
 
     if (includeDeleted) {
       return (
@@ -184,5 +185,20 @@ export class CustomerSkuRepository {
     };
     await rawModel.restore({ _id: new Types.ObjectId(id) }, { session });
     return this.findById(id);
+  }
+
+  async countByCustomerId(
+    customerId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    if (!Types.ObjectId.isValid(customerId)) return 0;
+    const query = this.customerSku.countDocuments({
+      customerId: new Types.ObjectId(customerId),
+      deleted: { $ne: true },
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
   }
 }

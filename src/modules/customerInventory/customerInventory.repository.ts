@@ -89,9 +89,21 @@ export class CustomerInventoryRepository {
     return query.exec();
   }
 
+  /**
+   * Atomically increment or decrement inventory quantity.
+   * When delta < 0 (stock out / transfer), applies Atomic Guard { quantity: { $gte: Math.abs(delta) } }
+   * to prevent race conditions resulting in negative inventory. Returns null if stock is insufficient.
+   */
   async incrementQuantity(id: string, delta: number, session?: ClientSession) {
-    const query = this.inventory.findByIdAndUpdate(
-      id,
+    const filter: FilterQuery<ICustomerInventory> = {
+      _id: new Types.ObjectId(id),
+    };
+    if (delta < 0) {
+      filter.quantity = { $gte: Math.abs(delta) };
+    }
+
+    const query = this.inventory.findOneAndUpdate(
+      filter,
       {
         $inc: { quantity: delta },
         $set: { lastMovementAt: new Date() },
@@ -105,8 +117,8 @@ export class CustomerInventoryRepository {
   }
 
   /**
-   * Tính tổng tồn kho của SKU trên toàn hệ thống (hoặc theo filter)
-   * Phục vụ Rule 613: Chặn xóa SKU khi còn tồn kho
+   * Calculate total inventory quantity of an SKU across the system (or filtered by query).
+   * Supports Rule 613: Prevent deleting SKU when stock still exists.
    */
   async sumQuantityBySkuId(
     skuId: string,
@@ -135,8 +147,28 @@ export class CustomerInventoryRepository {
   }
 
   /**
-   * Đếm tổng số lượng hàng (tất cả các SKU) đang nằm trên một tầng kệ cụ thể
-   * Phục vụ State Machine của RackTier (AVAILABLE <-> OCCUPIED)
+   * Count the number of active inventory items (quantity > 0) on a specific rack tier.
+   * Prevents multi-SKU algebraic cancellation.
+   * A rack tier is truly empty (AVAILABLE) only when this count equals 0.
+   */
+  async countActiveItemsOnTier(
+    rackTierId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const query = this.inventory.countDocuments({
+      rackTierId: new Types.ObjectId(rackTierId),
+      quantity: { $gt: 0 },
+      deleted: { $ne: true },
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Count total item quantity (across all SKUs) located on a specific rack tier.
+   * Supports RackTier State Machine transitions (AVAILABLE <-> OCCUPIED).
    */
   async countTotalItemsOnTier(
     rackTierId: string,
@@ -183,6 +215,8 @@ export class CustomerInventoryRepository {
     if (query.skuId) filter.skuId = query.skuId;
     if (query.minQuantity !== undefined) {
       filter.quantity = { $gte: query.minQuantity };
+    } else {
+      filter.quantity = { $gt: 0 };
     }
 
     const sortBy = query.sortBy || 'lastMovementAt';
@@ -211,5 +245,146 @@ export class CustomerInventoryRepository {
         },
       ],
     });
+  }
+
+  /**
+   * Retrieve all items in a storage unit (for rendering storage unit hierarchy tree).
+   */
+  async findItemsByStorageUnitId(
+    storageUnitId: string,
+    session?: ClientSession
+  ) {
+    const query = this.inventory
+      .find({
+        storageUnitId: new Types.ObjectId(storageUnitId),
+        quantity: { $gt: 0 },
+        deleted: { $ne: true },
+      })
+      .populate(
+        'skuId',
+        'skuCode name category barcode uom dimensions volume weightKg imageUrl status'
+      )
+      .populate('rackTierId', 'tierNumber tierCode maxWeightKg status')
+      .populate('storageRackId', 'rackCode name status')
+      .populate('contractId', 'contractCode status customerId')
+      .populate('customerId', 'name email phoneNumber');
+
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Look up all storage locations of a specific SKU.
+   */
+  async findLocationsBySkuId(
+    skuId: string,
+    customerId?: string,
+    session?: ClientSession
+  ) {
+    const filter: FilterQuery<ICustomerInventory> = {
+      skuId: new Types.ObjectId(skuId),
+      quantity: { $gt: 0 },
+      deleted: { $ne: true },
+    };
+    if (customerId) {
+      filter.customerId = new Types.ObjectId(customerId);
+    }
+
+    const query = this.inventory
+      .find(filter)
+      .populate('facilityId', 'name city address')
+      .populate('contractId', 'contractCode status startDate endDate')
+      .populate('storageUnitId', 'unitNumber floor zone status')
+      .populate('storageRackId', 'rackCode name status')
+      .populate('rackTierId', 'tierNumber tierCode maxWeightKg status')
+      .sort({ lastMovementAt: -1 });
+
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Aggregate category breakdown statistics for the customer dashboard.
+   */
+  async getDashboardCategoryBreakdown(
+    customerId: string,
+    session?: ClientSession
+  ): Promise<
+    Array<{ category: string; skuCount: number; totalQuantity: number }>
+  > {
+    const pipeline = [
+      {
+        $match: {
+          customerId: new Types.ObjectId(customerId),
+          quantity: { $gt: 0 },
+          deleted: { $ne: true },
+        },
+      },
+      {
+        $lookup: {
+          from: 'customerskus',
+          localField: 'skuId',
+          foreignField: '_id',
+          as: 'sku',
+        },
+      },
+      { $unwind: '$sku' },
+      {
+        $group: {
+          _id: { $ifNull: ['$sku.category', 'Khác'] },
+          skuIds: { $addToSet: '$skuId' },
+          totalQuantity: { $sum: '$quantity' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          category: '$_id',
+          skuCount: { $size: '$skuIds' },
+          totalQuantity: 1,
+        },
+      },
+      { $sort: { totalQuantity: -1 as const } },
+    ];
+
+    return session
+      ? this.inventory.aggregate(pipeline).session(session)
+      : this.inventory.aggregate(pipeline);
+  }
+
+  /**
+   * Count the number of distinct storage units currently storing customer items.
+   */
+  async countDistinctStorageUnits(
+    customerId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const pipeline = [
+      {
+        $match: {
+          customerId: new Types.ObjectId(customerId),
+          quantity: { $gt: 0 },
+          deleted: { $ne: true },
+        },
+      },
+      {
+        $group: {
+          _id: '$storageUnitId',
+        },
+      },
+      {
+        $count: 'total',
+      },
+    ];
+
+    const result = session
+      ? await this.inventory.aggregate(pipeline).session(session)
+      : await this.inventory.aggregate(pipeline);
+
+    return result[0]?.total || 0;
   }
 }

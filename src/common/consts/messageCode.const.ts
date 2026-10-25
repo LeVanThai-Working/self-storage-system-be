@@ -306,6 +306,8 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_601: 'Rack Tier Not Found',
   MESSAGE_CODE_602: 'Invalid Storage Rack Status Transition',
   MESSAGE_CODE_603: 'Storage Rack Code Already Exists',
+  MESSAGE_CODE_604: 'Storage Unit Does Not Support Rack Layout',
+  MESSAGE_CODE_605: 'Invalid Rack Zone Pricing Configuration',
 
   // Customer SKU
   MESSAGE_CODE_610: 'Customer SKU Not Found',
