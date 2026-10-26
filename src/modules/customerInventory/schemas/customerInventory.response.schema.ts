@@ -295,3 +295,19 @@ export type CategoryBreakdown = z.infer<typeof categoryBreakdownSchema>;
 export type CustomerInventorySummaryResponse = z.infer<
   typeof customerInventorySummaryResponseSchema
 >;
+
+export const batchMigrateRackResponseSchema = z.object({
+  fromRackId: z.string(),
+  toRackId: z.string(),
+  fromRackCode: z.string(),
+  toRackCode: z.string(),
+  contractId: z.string(),
+  migratedItemsCount: z.number(),
+  totalQuantityMigrated: z.number(),
+  movementsGenerated: z.array(z.string()),
+  message: z.string(),
+});
+
+export type BatchMigrateRackResponse = z.infer<
+  typeof batchMigrateRackResponseSchema
+>;

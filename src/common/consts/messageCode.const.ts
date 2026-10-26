@@ -228,6 +228,18 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_635: 'MESSAGE_CODE_635',
   // Rack Tier Does Not Belong To Storage Rack
   MESSAGE_CODE_636: 'MESSAGE_CODE_636',
+  // Storage Rack Is Not Rented By Contract
+  MESSAGE_CODE_637: 'MESSAGE_CODE_637',
+  // Source Rack Has No Active Inventory To Migrate
+  MESSAGE_CODE_638: 'MESSAGE_CODE_638',
+  // Destination Rack Must Be Empty And Available
+  MESSAGE_CODE_639: 'MESSAGE_CODE_639',
+  // Storage Rack Facility Mismatch
+  MESSAGE_CODE_640: 'MESSAGE_CODE_640',
+  // Legal Basis Or Emergency Reason Required For Rack Migration
+  MESSAGE_CODE_641: 'MESSAGE_CODE_641',
+  // Batch Rack Migration Requires Identical Rack Tier Count
+  MESSAGE_CODE_642: 'MESSAGE_CODE_642',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -351,4 +363,11 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
     'Cannot Cancel Inventory Request Being Processed Or Completed',
   MESSAGE_CODE_635: 'Storage Rack And Rack Tier Are Required In Warehouse Rack',
   MESSAGE_CODE_636: 'Rack Tier Does Not Belong To Storage Rack',
+  MESSAGE_CODE_637: 'Storage Rack Is Not Rented By Contract',
+  MESSAGE_CODE_638: 'Source Rack Has No Active Inventory To Migrate',
+  MESSAGE_CODE_639: 'Destination Rack Must Be Empty And Available',
+  MESSAGE_CODE_640: 'Storage Rack Facility Mismatch',
+  MESSAGE_CODE_641:
+    'Legal Basis Or Emergency Reason Required For Rack Migration',
+  MESSAGE_CODE_642: 'Batch Rack Migration Requires Identical Rack Tier Count',
 };

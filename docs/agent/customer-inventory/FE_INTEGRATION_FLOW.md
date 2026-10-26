@@ -969,3 +969,133 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
 | `DISPUTED`                      | Đang khiếu nại         | Đỏ (Red)      | Khách khiếu nại hàng nhập sai/hỏng, giữ nguyên tại khu đệm chờ quản lý xử lý.   |
 | `CANCELLED`                     | Đã hủy                 | Xám (Gray)    | Khách chủ động hủy khi phiếu còn ở trạng thái `PENDING`.                        |
 | `EXPIRED`                       | Hết hạn lấy hàng       | Nâu/Đen       | Quá 24h kể từ lúc tạo mà không có người đến xuất trình mã QR/OTP lấy hàng.      |
+
+---
+
+## XI. QUY ĐỊNH DI DỜI HÀNG HÓA, KHÓA SỞ HỮU KỆ & CHUYỂN ĐỔI KỆ HÀNG LOẠT (DÀNH CHO UI FRONTEND)
+
+> **Mục tiêu:** Giúp Frontend Agent xây dựng giao diện chính xác, phân biệt rạch ròi giữa việc khách hàng **tự đảo vị trí hàng hóa nội bộ (`MOVE`)** và nhân viên **di dời toàn bộ hàng sang kệ mới theo văn bản pháp lý (`Batch Rack Migration`)**.
+
+---
+
+### 1. Phân Biệt 2 Luồng Giao Diện: "Đảo Vị Trí Nội Bộ" vs "Đổi Sang Kệ Mới"
+
+| Tiêu chí                     | 1. Màn hình Khách hàng — Đảo vị trí nội bộ (`MOVE`)                                                              | 2. Màn hình Nhân viên / Quản lý — Đổi Kệ Mới (`Rack Relocation`)                                                                                  |
+| :--------------------------- | :--------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Bản chất nghiệp vụ**       | Khách tự sắp xếp đồ giữa các tầng hoặc giữa các kệ **đã thuê sẵn trong Hợp đồng** (vd: từ Kệ A-01 sang Kệ A-02). | Di dời toàn bộ hàng từ Kệ cũ sang **Kệ MỚI chưa từng thuê** (vd: từ A-01 sang B-05).                                                              |
+| **Tài sản trên Hợp đồng**    | `contract.rentedRackIds` **giữ nguyên 100%**, không đổi một byte nào.                                            | `contract.rentedRackIds` **phải được thay thế** từ ID kệ cũ sang ID kệ mới.                                                                       |
+| **Yêu cầu Phụ lục Hợp đồng** | ❌ **Không cần Phụ lục.** Khách toàn quyền tự sắp xếp.                                                           | ⚖️ **Bắt buộc có Căn cứ Pháp lý:** Phải có **Phụ lục Hợp đồng 2 bên đã ký** (`addendumId`), HOẶC **Biên bản sự cố kỹ thuật** (`emergencyReason`). |
+| **Đối tượng thao tác**       | **Khách hàng (`CUSTOMER`)** trên App cá nhân.                                                                    | **Nhân viên / Quản lý kho (`STAFF`/`MANAGER`)** trên Web Backoffice / Mobile Staff.                                                               |
+| **API sử dụng**              | `POST /api/v1/customer-inventories/move`                                                                         | `POST /api/v1/customer-inventories/racks/batch-migrate`                                                                                           |
+
+---
+
+### 2. Thiết Kế UI Màn Hình Khách Hàng: Đảo Vị Trí Hàng Hóa (`MOVE`)
+
+#### A. Quy tắc hiển thị Dropdown / Modal chọn vị trí đích
+
+- Khi khách bấm nút **"Chuyển vị trí"** cho một món hàng trên App:
+  - Modal hiện danh sách vị trí đích khả dụng.
+  - **Chỉ hiển thị:**
+    1. Vị trí sàn kho (`rackTierId: null`).
+    2. Các tầng kệ thuộc **danh sách Kệ mà khách ĐÃ THUÊ** trong hợp đồng (`contract.rentedRackIds`).
+  - **Tuyệt đối ẩn hoặc làm mờ (disable)** toàn bộ các kệ thuộc quyền thuê của khách khác hoặc kệ chưa thuê trong kho.
+
+#### B. Khóa bảo vệ quyền sở hữu kệ (Rack Ownership Guard trên UI)
+
+- Nếu khách quét mã QR Tầng Kệ hoặc nhập tay mã vị trí:
+  - Hệ thống kiểm tra: Nếu mã tầng kệ quét được thuộc về một kệ **không nằm trong `contract.rentedRackIds`**:
+  - **Phản hồi UI:**
+    - Màn hình rung cảnh báo (Haptic feedback), viền đỏ nhấp nháy.
+    - Hiển thị thông báo Toast / Popup:
+      > ⛔ **LỖI TRUY CẬP KHOANG CHỨA**  
+      > Kệ **[Mã_Kệ]** không thuộc quyền sử dụng của hợp đồng này! Vui lòng chỉ xếp hàng lên các kệ bạn đã thuê: **[Danh_sách_kệ_đã_thuê]**.
+    - Mã lỗi Backend trả về: `400 MESSAGE_CODE_637 (Storage Rack Is Not Rented By Contract)`.
+
+---
+
+### 3. Thiết Kế UI Màn Hình Nhân Viên / Quản Lý: Chuyển Đổi Kệ Hàng Loạt (`Batch Rack Migration`)
+
+> **Quyền truy cập:** Chỉ hiển thị trên giao diện của `FACILITY_STAFF`, `FACILITY_MANAGER`, `BUSINESS_OPS_MANAGER`, `SYSTEM_ADMIN`.  
+> Khách hàng (`CUSTOMER`) hoàn toàn **không nhìn thấy** màn hình này (`403 MESSAGE_CODE_103`).
+
+#### A. Flow 2 Bước Bắt Buộc Khi Khách Muốn Đổi Kệ Mới
+
+```mermaid
+flowchart TD
+    Step1["BƯỚC 1: KÝ PHỤ LỤC HỢP ĐỒNG (Contract Addendum)<br/>• Quản lý tạo Phụ lục Đổi Kệ (ghi nhận Kệ cũ A-01, Kệ mới B-05)<br/>• Khách hàng ký điện tử trên App (customer-sign)<br/>• Quản lý ký xác nhận (staff-sign) ➔ Phụ lục ACTIVE"]
+
+    Step1 --> Step2["BƯỚC 2: DI DỜI VẬT LÝ & ĐỒNG BỘ DỮ LIỆU (Batch Migrate)<br/>• Nhân viên kho bốc chuyển hàng thực tế sang kệ mới<br/>• Mở màn hình 'Di dời kệ' ➔ Chọn Phụ lục đã ký<br/>• Bấm 'Xác nhận Di Dời Toàn Bộ Hàng' ➔ Hoàn tất"]
+```
+
+#### B. Giao Diện Form Di Dời Kệ Hàng Loạt (`Batch Rack Migration Form`)
+
+1. **Khối 1: Chọn Kệ Nguồn (Source Rack)**
+   - Chọn Kệ cần dời (ví dụ: `A-01`).
+   - Hệ thống hiển thị Card thông tin tóm tắt:
+     - Khách hàng thuê hiện tại: _Nguyễn Văn A_ (Hợp đồng: _HD-2026-001_).
+     - Tổng số SKU đang lưu trữ: _3 mặt hàng_.
+     - Tổng số kiện hàng: _45 kiện_ (phân bổ qua các tầng T1: 20, T2: 15, T3: 10).
+2. **Khối 2: Chọn Kệ Đích (Destination Rack)**
+   - Dropdown lọc danh sách các kệ **đang trống hoàn toàn (`AVAILABLE`)** trong cùng cơ sở và có cùng số lượng tầng.
+   - Các kệ đang có người thuê (`RENTED`) hoặc đang bảo trì (`MAINTENANCE`) bị disable kèm badge trạng thái.
+3. **Khối 3: Căn Cứ Pháp Lý & Lý Do Di Dời (Bắt buộc chọn 1 trong 2 Tab)**
+   - **Tab 1: "Theo Phụ lục Hợp đồng đã ký" (Khuyên dùng):**
+     - Dropdown hiển thị danh sách Phụ lục `ContractAddendum` đang ở trạng thái `ACTIVE` của hợp đồng đó.
+     - Sau khi chọn, hệ thống tự động điền `addendumId`.
+   - **Tab 2: "Sự cố kỹ thuật khẩn cấp / Bảo trì kho":**
+     - Ô nhập Textarea: `emergencyReason` (Bắt buộc $\ge 10$ ký tự, ví dụ: _"Kệ A-01 bị cong vênh thanh đỡ chịu lực sau va chạm, dời khẩn cấp sang A-03 để đảm bảo an toàn"_).
+     - Cảnh báo: _"Thao tác này sẽ ghi nhận vào Audit Log và tự động gửi thông báo đến Khách hàng."_
+4. **Nút Hành Động:**
+   - Nút `[ 🚚 Xác Nhận Di Dời Toàn Bộ Hàng ]`.
+   - Dialog xác nhận lần 2: _"Bạn có chắc chắn muốn dời 45 kiện hàng từ Kệ A-01 sang B-05? Thao tác này sẽ cập nhật hợp đồng và giải phóng kệ cũ."_
+
+#### C. Gọi API Backend Khi Bấm Xác Nhận:
+
+- **Endpoint:** `POST /api/v1/customer-inventories/racks/batch-migrate`
+- **Request Payload mẫu:**
+  ```json
+  {
+    "fromRackId": "6ad1a2bbb3fa5fa49d2d02a1",
+    "toRackId": "6ad1a2bbb3fa5fa49d2d02b5",
+    "contractId": "6ad1a2bbb3fa5fa49d2d02c1",
+    "addendumId": "6ad1a2bbb3fa5fa49d2d02d1",
+    "reason": "Di dời kệ theo Phụ lục Hợp đồng đổi vị trí đã ký ngày 26/10",
+    "notes": "Đã bốc xếp xong 45 kiện nguyên vẹn"
+  }
+  ```
+- **Response Payload nhận được:**
+  ```json
+  {
+    "success": true,
+    "statusCode": 200,
+    "messageCode": "MESSAGE_CODE_001",
+    "message": "Operation Successful",
+    "data": {
+      "fromRackId": "6ad1a2bbb3fa5fa49d2d02a1",
+      "toRackId": "6ad1a2bbb3fa5fa49d2d02b5",
+      "contractId": "6ad1a2bbb3fa5fa49d2d02c1",
+      "migratedItemsCount": 3,
+      "totalQuantityMigrated": 45,
+      "movementsGenerated": [
+        "MOV-20261026-0001",
+        "MOV-20261026-0002",
+        "MOV-20261026-0003"
+      ],
+      "message": "Di dời thành công 45 kiện hàng sang Kệ B-05. Kệ A-01 đã được giải phóng về trạng thái trống."
+    }
+  }
+  ```
+
+---
+
+### 4. Bảng Xử Lý Lỗi (Error Handling Matrix) Cho Frontend
+
+| Mã lỗi Backend trả về  | Trường hợp xảy ra                                                            | Cách Frontend xử lý & Hiển thị cho User                                                                           |
+| :--------------------- | :--------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------- |
+| `400 MESSAGE_CODE_637` | Khách/Nhân viên xếp hàng vào Kệ không thuộc hợp đồng.                        | Rung cảnh báo, báo lỗi: _"Kệ này không thuộc hợp đồng của bạn. Vui lòng chọn kệ đã thuê."_                        |
+| `400 MESSAGE_CODE_638` | Kệ nguồn trống, không có hàng tồn kho để dời.                                | Báo Toast lỗi: _"Kệ nguồn không có hàng hóa nào để thực hiện di dời."_                                            |
+| `400 MESSAGE_CODE_639` | Kệ đích đang chứa hàng của người khác hoặc đang bảo trì.                     | Báo Toast lỗi: _"Kệ đích không sẵn sàng hoặc đã có hàng. Vui lòng chọn kệ trống (AVAILABLE)."_                    |
+| `400 MESSAGE_CODE_640` | Kệ nguồn và kệ đích không cùng một cơ sở.                                    | Báo Toast lỗi: _"Chỉ được di dời giữa các kệ trong cùng một cơ sở kho."_                                          |
+| `400 MESSAGE_CODE_641` | Thiếu Phụ lục hoặc Biên bản lý do sự cố khẩn cấp.                            | Highlight đỏ ô nhập: _"Bắt buộc phải chọn Phụ lục Hợp đồng hoặc nhập lý do sự cố khẩn cấp (tối thiểu 10 ký tự)."_ |
+| `403 MESSAGE_CODE_103` | Nhân viên cố tình gọi API tự quản (`in`, `out`, `move`, `adjust`) của khách. | Chặn trên UI, hướng dẫn: _"Nhân viên chỉ hỗ trợ qua màn hình Phiếu Yêu Cầu (Inventory Request)."_                 |

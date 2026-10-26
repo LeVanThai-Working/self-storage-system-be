@@ -884,7 +884,8 @@
 					"confirm_inbound_request",
 					"dispute_inbound_request",
 					"putaway_inbound_request",
-					"cancel_inventory_request"
+					"cancel_inventory_request",
+					"batch_migrate_rack"
 				],
 				"type": "string"
 			},
@@ -9774,6 +9775,119 @@
 				},
 				"type": "object",
 				"additionalProperties": false
+			},
+			"infer_typeofbatchMigrateRackResponseSchema_": {
+				"properties": {
+					"message": {
+						"type": "string"
+					},
+					"movementsGenerated": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"totalQuantityMigrated": {
+						"type": "number",
+						"format": "double"
+					},
+					"migratedItemsCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"toRackCode": {
+						"type": "string"
+					},
+					"fromRackCode": {
+						"type": "string"
+					},
+					"toRackId": {
+						"type": "string"
+					},
+					"fromRackId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"message",
+					"movementsGenerated",
+					"totalQuantityMigrated",
+					"migratedItemsCount",
+					"contractId",
+					"toRackCode",
+					"fromRackCode",
+					"toRackId",
+					"fromRackId"
+				],
+				"type": "object"
+			},
+			"BatchMigrateRackResponse": {
+				"$ref": "#/components/schemas/infer_typeofbatchMigrateRackResponseSchema_"
+			},
+			"ApiResponse_BatchMigrateRackResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/BatchMigrateRackResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofbatchMigrateRackRequestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"emergencyReason": {
+						"type": "string"
+					},
+					"addendumId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"toRackId": {
+						"type": "string"
+					},
+					"fromRackId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"toRackId",
+					"fromRackId"
+				],
+				"type": "object"
+			},
+			"BatchMigrateRackRequest": {
+				"$ref": "#/components/schemas/infer_typeofbatchMigrateRackRequestSchema_"
 			},
 			"ContractSourceEnum": {
 				"enum": [
@@ -20282,6 +20396,79 @@
 						}
 					}
 				]
+			}
+		},
+		"/customer-inventories/racks/batch-migrate": {
+			"post": {
+				"operationId": "BatchMigrateRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_BatchMigrateRackResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "8. Batch Rack Migration\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/BatchMigrateRackRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/contracts": {

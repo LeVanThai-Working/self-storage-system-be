@@ -39,7 +39,8 @@ export const customerInventoryService = new CustomerInventoryService(
   storageRackRepository,
   rackTierRepository,
   storageUnitRepository,
-  auditLogService
+  auditLogService,
+  userRepository
 );
 
 export const inventoryRequestService = new InventoryRequestService(

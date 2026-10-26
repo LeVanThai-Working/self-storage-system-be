@@ -6,7 +6,10 @@ import { Transactional } from '../../common/decorators/transactional.decorator.t
 import { RoleEnum } from '../../common/enums/user.enum.ts';
 import { ContractStatusEnum } from '../../common/enums/contract.enum.ts';
 import { MovementTypeEnum } from '../../common/enums/customerInventory.enum.ts';
-import { RackTierStatusEnum } from '../../common/enums/storageRack.enum.ts';
+import {
+  RackStatusEnum,
+  RackTierStatusEnum,
+} from '../../common/enums/storageRack.enum.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -19,6 +22,7 @@ import type { CustomerSkuRepository } from '../customerSku/customerSku.repositor
 import type { StorageRackRepository } from '../storageRack/storageRack.repository.ts';
 import type { RackTierRepository } from '../storageRack/rackTier.repository.ts';
 import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
+import type { UserRepository } from '../user/user.repository.ts';
 import type { ICustomerInventory } from './customerInventory.model.ts';
 import type { IInventoryMovement } from './inventoryMovement.model.ts';
 import {
@@ -28,12 +32,14 @@ import {
   storageUnitInventoryTreeResponseSchema,
   skuLocationsResponseSchema,
   customerInventorySummaryResponseSchema,
+  batchMigrateRackResponseSchema,
   type CustomerInventoryResponse,
   type PaginatedCustomerInventoryResponse,
   type PaginatedInventoryMovementResponse,
   type StorageUnitInventoryTreeResponse,
   type SkuLocationsResponse,
   type CustomerInventorySummaryResponse,
+  type BatchMigrateRackResponse,
   type TreeTierItem,
   type TreeRack,
   type TreeTier,
@@ -46,6 +52,7 @@ import type {
   StockInRequest,
   StockMoveRequest,
   StockOutRequest,
+  BatchMigrateRackRequest,
 } from './schemas/customerInventory.request.schema.ts';
 
 export interface CallerContext {
@@ -143,7 +150,8 @@ export class CustomerInventoryService {
     private readonly storageRackRepository: StorageRackRepository,
     private readonly rackTierRepository: RackTierRepository,
     private readonly storageUnitRepository: StorageUnitRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly userRepository?: UserRepository
   ) {}
 
   /**
@@ -236,6 +244,28 @@ export class CustomerInventoryService {
       }
 
       storageRackId = toId(tier.storageRackId);
+
+      // 5. Rack Ownership Guard (Rule 637)
+      if (storageRackId) {
+        const rack = await this.storageRackRepository.findById(storageRackId);
+        if (rack) {
+          const rentedRackIds = (contract.rentedRackIds || []).map((id) =>
+            toId(id)
+          );
+          if (
+            rentedRackIds.length > 0 &&
+            !rentedRackIds.includes(storageRackId)
+          ) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_637);
+          }
+          if (
+            rack.currentContractId &&
+            toId(rack.currentContractId) !== toId(contract._id)
+          ) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_637);
+          }
+        }
+      }
     }
 
     return {
@@ -506,7 +536,7 @@ export class CustomerInventoryService {
     }
 
     // Validate source tier
-    const { contractCustomerId, storageUnitId, facilityId } =
+    const { contract, contractCustomerId, storageUnitId, facilityId } =
       await this.validateEntities(
         data.contractId,
         data.skuId,
@@ -532,6 +562,29 @@ export class CustomerInventoryService {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_625);
       }
       toStorageRackId = toId(destTier.storageRackId);
+
+      // Rack Ownership Guard for destination tier (Rule 637)
+      if (toStorageRackId) {
+        const destRack =
+          await this.storageRackRepository.findById(toStorageRackId);
+        if (destRack) {
+          const rentedRackIds = (contract.rentedRackIds || []).map((id) =>
+            toId(id)
+          );
+          if (
+            rentedRackIds.length > 0 &&
+            !rentedRackIds.includes(toStorageRackId)
+          ) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_637);
+          }
+          if (
+            destRack.currentContractId &&
+            toId(destRack.currentContractId) !== toId(contract._id)
+          ) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_637);
+          }
+        }
+      }
     }
 
     // Check available stock at source location
@@ -1483,5 +1536,259 @@ export class CustomerInventoryService {
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     };
+  }
+
+  /**
+   * Batch Rack Migration (Batch Rack Migration)
+   * Internal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory
+   * from source rack to an identical, vacant destination rack with valid legal basis.
+   */
+  @Transactional()
+  async batchMigrateRack(
+    data: BatchMigrateRackRequest,
+    caller: CallerContext,
+    session?: ClientSession
+  ): Promise<BatchMigrateRackResponse> {
+    // 1. Phân quyền: Chặn CUSTOMER (403)
+    if (caller.role === RoleEnum.CUSTOMER || !caller.role) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    // 2. Kiểm tra căn cứ pháp lý bắt buộc: addendumId HOẶC emergencyReason
+    if (!data.addendumId && !data.emergencyReason) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_641);
+    }
+
+    // 3. Load và kiểm tra Kệ nguồn & Kệ đích
+    const fromRack = await this.storageRackRepository.findById(data.fromRackId);
+    if (!fromRack || (fromRack as unknown as { deleted?: boolean }).deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
+    }
+
+    const toRack = await this.storageRackRepository.findById(data.toRackId);
+    if (!toRack || (toRack as unknown as { deleted?: boolean }).deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
+    }
+
+    // 4. Kiểm tra cùng cơ sở
+    const facilityId = toId(fromRack.facilityId);
+    if (toId(toRack.facilityId) !== facilityId) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_640);
+    }
+
+    // 5. Kiểm tra Staff / FM thuộc đúng cơ sở
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      let callerFacilityId = caller.assignedFacilityId;
+      if (!callerFacilityId && this.userRepository) {
+        const u = await this.userRepository.findById(caller.id);
+        if (u?.assignedFacilityId) {
+          callerFacilityId = String(u.assignedFacilityId);
+        }
+      }
+      if (!callerFacilityId || callerFacilityId !== facilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    // 6. Kệ đích phải trống hoàn toàn (status: AVAILABLE)
+    if (toRack.status !== RackStatusEnum.AVAILABLE) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_639);
+    }
+
+    // 7. Kệ đích phải Y CHANG VỀ SỐ TẦNG (tierCount)
+    if (toRack.tierCount !== fromRack.tierCount) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_642);
+    }
+
+    // 8. Tải các tầng của Kệ nguồn & Kệ đích
+    const fromTiers = await this.rackTierRepository.findByRackId(
+      data.fromRackId
+    );
+    const toTiers = await this.rackTierRepository.findByRackId(data.toRackId);
+
+    const toTierMap = new Map<number, (typeof toTiers)[0]>();
+    for (const t of toTiers) {
+      toTierMap.set(t.tierNumber, t);
+    }
+
+    // 9. Lấy danh sách tồn kho trên Kệ nguồn (quantity > 0)
+    const sourceInventories = await this.inventoryRepository.findActiveByRackId(
+      data.fromRackId,
+      session
+    );
+    if (!sourceInventories || sourceInventories.length === 0) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_638);
+    }
+
+    // 10. Contract resolution & validation
+    const resolvedContractId =
+      data.contractId ||
+      toId(fromRack.currentContractId) ||
+      toId(sourceInventories[0].contractId);
+    const contract = await this.contractRepository.findById(
+      resolvedContractId,
+      session
+    );
+    if (!contract || contract.status !== ContractStatusEnum.ACTIVE) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_622);
+    }
+
+    // 11. Migration loop: di dời tồn kho 1-1
+    const movementsGenerated: string[] = [];
+    let totalQuantityMigrated = 0;
+    const destTiersOccupied = new Set<string>();
+
+    for (const inv of sourceInventories) {
+      const fromTierId = toId(inv.rackTierId);
+      const fromTier = fromTiers.find((t) => toId(t._id) === fromTierId);
+      const tierNumber = fromTier?.tierNumber || 1;
+      const destTier = toTierMap.get(tierNumber);
+      if (!destTier) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_642);
+      }
+
+      const destTierId = toId(destTier._id);
+      destTiersOccupied.add(destTierId);
+
+      // Cập nhật vị trí CustomerInventory sang toRack & destTier
+      await this.inventoryRepository.update(
+        toId(inv._id),
+        {
+          storageRackId: new Types.ObjectId(data.toRackId),
+          rackTierId: new Types.ObjectId(destTierId),
+        },
+        session
+      );
+
+      // Ghi nhận sổ cái InventoryMovement (MOVE)
+      const movementCode =
+        await this.movementRepository.generateMovementCode(session);
+      movementsGenerated.push(movementCode);
+      totalQuantityMigrated += inv.quantity;
+
+      await this.movementRepository.create(
+        {
+          movementCode,
+          type: MovementTypeEnum.MOVE,
+          customerInventoryId: new Types.ObjectId(toId(inv._id)),
+          customerId: new Types.ObjectId(toId(contract.customerId)),
+          contractId: new Types.ObjectId(resolvedContractId),
+          facilityId: new Types.ObjectId(facilityId),
+          storageUnitId: new Types.ObjectId(toId(contract.storageUnitId)),
+          skuId: new Types.ObjectId(toId(inv.skuId)),
+          fromRackTierId: fromTierId ? new Types.ObjectId(fromTierId) : null,
+          toRackTierId: new Types.ObjectId(destTierId),
+          quantity: inv.quantity,
+          previousQuantity: inv.quantity,
+          newQuantity: inv.quantity,
+          performedBy: new Types.ObjectId(caller.id),
+          reason: data.reason || data.emergencyReason || 'Batch Rack Migration',
+          referenceCode: data.addendumId || data.emergencyReason || null,
+          notes: data.notes || null,
+        },
+        session
+      );
+    }
+
+    // 12. Cập nhật state machine các tầng kệ
+    for (const ft of fromTiers) {
+      await this.rackTierRepository.update(
+        toId(ft._id),
+        { status: RackTierStatusEnum.AVAILABLE },
+        session
+      );
+    }
+    for (const dtId of destTiersOccupied) {
+      await this.rackTierRepository.update(
+        dtId,
+        { status: RackTierStatusEnum.OCCUPIED },
+        session
+      );
+    }
+
+    // 13. Cập nhật trạng thái 2 kệ
+    await this.storageRackRepository.update(
+      data.fromRackId,
+      {
+        currentContractId: null,
+        currentCustomerId: null,
+        status: RackStatusEnum.AVAILABLE,
+      },
+      session
+    );
+
+    await this.storageRackRepository.update(
+      data.toRackId,
+      {
+        currentContractId: new Types.ObjectId(resolvedContractId),
+        currentCustomerId: new Types.ObjectId(toId(contract.customerId)),
+        status: RackStatusEnum.RENTED,
+      },
+      session
+    );
+
+    // 14. Cập nhật contract.rentedRackIds (thay thế fromRackId bằng toRackId)
+    const currentRentedRackIds = (contract.rentedRackIds || []).map((id) =>
+      toId(id)
+    );
+    let updatedRentedRackIds: Types.ObjectId[];
+    if (currentRentedRackIds.includes(data.fromRackId)) {
+      updatedRentedRackIds = currentRentedRackIds.map((id) =>
+        id === data.fromRackId
+          ? new Types.ObjectId(data.toRackId)
+          : new Types.ObjectId(id)
+      );
+    } else {
+      updatedRentedRackIds = [
+        ...currentRentedRackIds.map((id) => new Types.ObjectId(id)),
+        new Types.ObjectId(data.toRackId),
+      ];
+    }
+    await this.contractRepository.update(
+      resolvedContractId,
+      { rentedRackIds: updatedRentedRackIds },
+      session
+    );
+
+    // 15. Ghi Audit Log
+    this.auditLogService?.record({
+      action: AuditActionEnum.BATCH_MIGRATE_RACK,
+      resourceType: AuditResourceEnum.STORAGE_RACK,
+      resourceId: data.fromRackId,
+      before: {
+        rackCode: fromRack.rackCode,
+        status: fromRack.status,
+        contractId: resolvedContractId,
+      },
+      after: {
+        fromRackId: data.fromRackId,
+        toRackId: data.toRackId,
+        fromRackCode: fromRack.rackCode,
+        toRackCode: toRack.rackCode,
+        contractId: resolvedContractId,
+        migratedItemsCount: sourceInventories.length,
+        totalQuantityMigrated,
+        legalBasis: {
+          addendumId: data.addendumId || null,
+          emergencyReason: data.emergencyReason || null,
+        },
+      },
+    });
+
+    // 16. Return validated response
+    return validateResponse(batchMigrateRackResponseSchema, {
+      fromRackId: data.fromRackId,
+      toRackId: data.toRackId,
+      fromRackCode: fromRack.rackCode,
+      toRackCode: toRack.rackCode,
+      contractId: resolvedContractId,
+      migratedItemsCount: sourceInventories.length,
+      totalQuantityMigrated,
+      movementsGenerated,
+      message: `Batch migrated ${sourceInventories.length} items (${totalQuantityMigrated} total quantity) from rack ${fromRack.rackCode} to rack ${toRack.rackCode} successfully`,
+    });
   }
 }
