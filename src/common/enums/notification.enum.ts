@@ -6,6 +6,8 @@ export enum NotificationTypeEnum {
   RESERVATION = 'reservation',
   CONTRACT = 'contract',
   PAYMENT = 'payment',
+  INCIDENT = 'incident',
+  SUPPORT_TICKET = 'support_ticket',
 }
 
 export enum NotificationPriorityEnum {

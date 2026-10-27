@@ -168,3 +168,35 @@ Tất cả 4 thao tác đều chạy nguyên tử trong một `@Transactional()`
 | `GET /customer-inventories/unit/:id/tree` (6D)     |   ✅ Xem kho mình đang thuê   | ❌ 403 Forbidden | 👁️ Xem kho thuộc cơ sở mình |      ✅ Toàn quyền       |
 | `GET /customer-inventories/sku/:id/locations` (6D) |  ✅ Xem vị trí SKU của mình   | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
 | `GET /customer-inventories/summary` (6D)           |        ✅ Xem của mình        | ❌ 403 Forbidden |      ❌ 403 Forbidden       | ✅ Xem theo `customerId` |
+
+---
+
+## VI. Quy Tắc Di Dời Kệ Hàng Loạt & Khóa Sở Hữu Kệ (Task 7E)
+
+### 1. Khóa Bảo Vệ Quyền Sở Hữu Kệ (`Rack Ownership Guard` — Rule 637)
+
+- Mọi thao tác đưa hàng vào khoang chứa có kệ (`IN`, `OUT`, `MOVE`, `ADJUST` và `Putaway`), hệ thống bắt buộc đối soát `storageRackId` của tầng kệ với mảng `contract.rentedRackIds`:
+  - **Kệ phải nằm trong `rentedRackIds` của Hợp đồng.**
+  - Nếu khách hàng hoặc nhân viên thao tác trên kệ của người khác hoặc kệ chưa thuê $\rightarrow$ Chặn ngay với lỗi `400 MESSAGE_CODE_637 (Storage Rack Is Not Rented By Contract)`.
+  - Đối với thao tác `MOVE`: Áp dụng kiểm tra bảo vệ cho **cả vị trí nguồn lẫn vị trí đích**. Khách chỉ được đảo hàng giữa các kệ mình đã thuê.
+
+### 2. Phân Định Rạch Ròi Giữa `MOVE` Nội Bộ và Đổi Kệ Mới (`Rack Relocation`)
+
+- **`MOVE` nội bộ trong phạm vi kệ đã thuê:**
+  - Di chuyển giữa các tầng trong cùng 1 kệ, hoặc giữa các kệ mà hợp đồng đã thuê (`contract.rentedRackIds`).
+  - Hợp đồng giữ nguyên 100%, không cần phụ lục hợp đồng.
+- **Đổi sang Kệ MỚI chưa từng thuê (`Rack Relocation`):**
+  - **Bắt buộc có Phụ lục Hợp đồng (`ContractAddendum`) hoặc Biên bản sự cố kỹ thuật.**
+  - Hợp đồng không được tự ý sửa ngầm `rentedRackIds` nếu chưa có văn bản pháp lý 2 bên ký duyệt.
+
+### 3. Quy Trình Chuyển Đổi Kệ Hàng Loạt (`POST /customer-inventories/racks/batch-migrate`)
+
+- **Đối tượng gọi:** Dành riêng cho `FACILITY_STAFF`, `FACILITY_MANAGER` (thuộc cơ sở), `BUSINESS_OPS_MANAGER`, `SYSTEM_ADMIN`. Khách hàng bị chặn `403`.
+- **Căn cứ pháp lý bắt buộc:** Bắt buộc truyền `addendumId` (Phụ lục hợp đồng trạng thái `ACTIVE`) HOẶC `emergencyReason` (Biên bản lý do sự cố $\ge 10$ ký tự) (`400 MESSAGE_CODE_641`).
+- **Xử lý nguyên tử trong `@Transactional()`:**
+  1. Kiểm tra kệ đích phải cùng cơ sở, cùng số lượng tầng, đang trống hoàn toàn (`AVAILABLE`) (`400 MESSAGE_CODE_639`).
+  2. Kệ nguồn phải có hàng tồn kho (`400 MESSAGE_CODE_638`).
+  3. Di dời toàn bộ bản ghi tồn kho sang các tầng tương ứng của kệ đích.
+  4. Ghi nhận sổ cái `InventoryMovement` loại `MOVE` cho từng SKU với `referenceCode: addendumId || emergencyReason`.
+  5. Đồng bộ trạng thái: Kệ nguồn về `AVAILABLE`, Kệ đích sang `RENTED`. Tầng nguồn về `AVAILABLE`, tầng đích sang `OCCUPIED`.
+  6. Cập nhật `contract.rentedRackIds`: Thay thế ID kệ cũ bằng ID kệ mới.

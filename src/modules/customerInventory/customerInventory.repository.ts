@@ -89,6 +89,42 @@ export class CustomerInventoryRepository {
     return query.exec();
   }
 
+  async update(
+    id: string,
+    data: Partial<ICustomerInventory>,
+    session?: ClientSession
+  ) {
+    const query = this.inventory.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          ...data,
+          lastMovementAt: new Date(),
+        },
+      },
+      { returnDocument: 'after' }
+    );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  async findActiveByRackId(
+    storageRackId: string,
+    session?: ClientSession
+  ): Promise<ICustomerInventory[]> {
+    const query = this.inventory.find({
+      storageRackId: new Types.ObjectId(storageRackId),
+      quantity: { $gt: 0 },
+      deleted: { $ne: true },
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
   /**
    * Atomically increment or decrement inventory quantity.
    * When delta < 0 (stock out / transfer), applies Atomic Guard { quantity: { $gte: Math.abs(delta) } }

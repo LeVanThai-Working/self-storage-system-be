@@ -17,6 +17,7 @@ export interface IInventoryMovement {
   previousQuantity: number;
   newQuantity: number;
   performedBy: Types.ObjectId;
+  requestId?: Types.ObjectId | null;
   reason?: string | null;
   referenceCode?: string | null;
   notes?: string | null;
@@ -108,6 +109,13 @@ const inventoryMovementSchema = new Schema<IInventoryMovement>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
+    },
+    requestId: {
+      type: Schema.Types.ObjectId,
+      ref: 'InventoryRequest',
+      required: false,
+      default: null,
       index: true,
     },
     reason: {

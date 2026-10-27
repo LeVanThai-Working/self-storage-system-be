@@ -218,6 +218,10 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_602: 'MESSAGE_CODE_602',
   // Storage Rack Code Already Exists
   MESSAGE_CODE_603: 'MESSAGE_CODE_603',
+  // Storage Unit Does Not Support Rack Layout
+  MESSAGE_CODE_604: 'MESSAGE_CODE_604',
+  // Invalid Rack Zone Pricing Configuration
+  MESSAGE_CODE_605: 'MESSAGE_CODE_605',
 
   // ==========================================
   // CUSTOMER SKU (610 - 614)
@@ -234,7 +238,7 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_614: 'MESSAGE_CODE_614',
 
   // ==========================================
-  // CUSTOMER INVENTORY & MOVEMENT (620 - 628)
+  // CUSTOMER INVENTORY & MOVEMENT (620 - 629)
   // ==========================================
   // Inventory Record Not Found
   MESSAGE_CODE_620: 'MESSAGE_CODE_620',
@@ -256,8 +260,82 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_628: 'MESSAGE_CODE_628',
   // Storage Unit Still Contains Customer Inventory
   MESSAGE_CODE_629: 'MESSAGE_CODE_629',
-  // Contract Status Does Not Allow This Inventory Operation
+
+  // ==========================================
+  // INVENTORY REQUEST - DUAL HANDSHAKE (630 - 644)
+  // ==========================================
+  // Inventory Request Not Found
   MESSAGE_CODE_630: 'MESSAGE_CODE_630',
+  // Invalid Or Expired Pickup Code Or OTP
+  MESSAGE_CODE_631: 'MESSAGE_CODE_631',
+  // Invalid Inventory Request Status Transition
+  MESSAGE_CODE_632: 'MESSAGE_CODE_632',
+  // Evidence Images Required For Handover Or Delivery
+  MESSAGE_CODE_633: 'MESSAGE_CODE_633',
+  // Cannot Cancel Inventory Request Being Processed Or Completed
+  MESSAGE_CODE_634: 'MESSAGE_CODE_634',
+  // Storage Rack And Rack Tier Are Required In Warehouse Rack
+  MESSAGE_CODE_635: 'MESSAGE_CODE_635',
+  // Rack Tier Does Not Belong To Storage Rack
+  MESSAGE_CODE_636: 'MESSAGE_CODE_636',
+  // Storage Rack Is Not Rented By Contract
+  MESSAGE_CODE_637: 'MESSAGE_CODE_637',
+  // Source Rack Has No Active Inventory To Migrate
+  MESSAGE_CODE_638: 'MESSAGE_CODE_638',
+  // Destination Rack Must Be Empty And Available
+  MESSAGE_CODE_639: 'MESSAGE_CODE_639',
+  // Storage Rack Facility Mismatch
+  MESSAGE_CODE_640: 'MESSAGE_CODE_640',
+  // Legal Basis Or Emergency Reason Required For Rack Migration
+  MESSAGE_CODE_641: 'MESSAGE_CODE_641',
+  // Batch Rack Migration Requires Identical Rack Tier Count
+  MESSAGE_CODE_642: 'MESSAGE_CODE_642',
+  // Incident Not Eligible For Emergency Rack Migration
+  MESSAGE_CODE_643: 'MESSAGE_CODE_643',
+  // Contract Status Does Not Allow This Inventory Operation
+  MESSAGE_CODE_644: 'MESSAGE_CODE_644',
+
+  // ==========================================
+  // INCIDENT (700 - 709)
+  // ==========================================
+  // Incident Not Found
+  MESSAGE_CODE_700: 'MESSAGE_CODE_700',
+  // Invalid Incident Status Transition
+  MESSAGE_CODE_701: 'MESSAGE_CODE_701',
+  // Storage Unit Not Owned By Contract
+  MESSAGE_CODE_702: 'MESSAGE_CODE_702',
+  // Incident Has Already Been Assigned
+  MESSAGE_CODE_703: 'MESSAGE_CODE_703',
+  // Incident Must Be Assigned Before Investigation
+  MESSAGE_CODE_704: 'MESSAGE_CODE_704',
+  // Incident Resolution Details Required
+  MESSAGE_CODE_705: 'MESSAGE_CODE_705',
+  // Incident Cannot Be Cancelled In Current Status
+  MESSAGE_CODE_706: 'MESSAGE_CODE_706',
+  // Only Assignee Or Facility Manager Can Update Incident
+  MESSAGE_CODE_707: 'MESSAGE_CODE_707',
+  // Assigned Staff Does Not Belong To Facility
+  MESSAGE_CODE_708: 'MESSAGE_CODE_708',
+  // Storage Rack Or Tier Does Not Belong To Contract
+  MESSAGE_CODE_709: 'MESSAGE_CODE_709',
+
+  // ==========================================
+  // SUPPORT TICKET (720 - 726)
+  // ==========================================
+  // Support Ticket Not Found
+  MESSAGE_CODE_720: 'MESSAGE_CODE_720',
+  // Invalid Support Ticket Status Transition
+  MESSAGE_CODE_721: 'MESSAGE_CODE_721',
+  // Support Ticket Cannot Be Cancelled In Current Status
+  MESSAGE_CODE_722: 'MESSAGE_CODE_722',
+  // Support Ticket Response Details Required
+  MESSAGE_CODE_723: 'MESSAGE_CODE_723',
+  // Contract Does Not Belong To Customer
+  MESSAGE_CODE_724: 'MESSAGE_CODE_724',
+  // Support Ticket Facility Mismatch
+  MESSAGE_CODE_725: 'MESSAGE_CODE_725',
+  // Assigned Staff Does Not Belong To Facility
+  MESSAGE_CODE_726: 'MESSAGE_CODE_726',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -397,5 +475,44 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_627: 'Destination Tier Must Be Different From Source Tier',
   MESSAGE_CODE_628: 'SKU Does Not Belong To Customer',
   MESSAGE_CODE_629: 'Storage Unit Still Contains Customer Inventory',
-  MESSAGE_CODE_630: 'Contract Status Does Not Allow This Inventory Operation',
+
+  // Inventory Request (Task 7D Dual Handshake & Task 7E Batch Migration)
+  MESSAGE_CODE_630: 'Inventory Request Not Found',
+  MESSAGE_CODE_631: 'Invalid Or Expired Pickup Code Or OTP',
+  MESSAGE_CODE_632: 'Invalid Inventory Request Status Transition',
+  MESSAGE_CODE_633: 'Evidence Images Required For Handover Or Delivery',
+  MESSAGE_CODE_634:
+    'Cannot Cancel Inventory Request Being Processed Or Completed',
+  MESSAGE_CODE_635: 'Storage Rack And Rack Tier Are Required In Warehouse Rack',
+  MESSAGE_CODE_636: 'Rack Tier Does Not Belong To Storage Rack',
+  MESSAGE_CODE_637: 'Storage Rack Is Not Rented By Contract',
+  MESSAGE_CODE_638: 'Source Rack Has No Active Inventory To Migrate',
+  MESSAGE_CODE_639: 'Destination Rack Must Be Empty And Available',
+  MESSAGE_CODE_640: 'Storage Rack Facility Mismatch',
+  MESSAGE_CODE_641:
+    'Legal Basis, Incident Report Or Emergency Reason Required For Rack Migration',
+  MESSAGE_CODE_642: 'Batch Rack Migration Requires Identical Rack Tier Count',
+  MESSAGE_CODE_643: 'Incident Not Eligible For Emergency Rack Migration',
+  MESSAGE_CODE_644: 'Contract Status Does Not Allow This Inventory Operation',
+
+  // Incident
+  MESSAGE_CODE_700: 'Incident Not Found',
+  MESSAGE_CODE_701: 'Invalid Incident Status Transition',
+  MESSAGE_CODE_702: 'Storage Unit Not Owned By Contract',
+  MESSAGE_CODE_703: 'Incident Has Already Been Assigned',
+  MESSAGE_CODE_704: 'Incident Must Be Assigned Before Investigation',
+  MESSAGE_CODE_705: 'Incident Resolution Details Required',
+  MESSAGE_CODE_706: 'Incident Cannot Be Cancelled In Current Status',
+  MESSAGE_CODE_707: 'Only Assignee Or Facility Manager Can Update Incident',
+  MESSAGE_CODE_708: 'Assigned Staff Does Not Belong To Facility',
+  MESSAGE_CODE_709: 'Storage Rack Or Tier Does Not Belong To Contract',
+
+  // Support Ticket
+  MESSAGE_CODE_720: 'Support Ticket Not Found',
+  MESSAGE_CODE_721: 'Invalid Support Ticket Status Transition',
+  MESSAGE_CODE_722: 'Support Ticket Cannot Be Cancelled In Current Status',
+  MESSAGE_CODE_723: 'Support Ticket Response Details Required',
+  MESSAGE_CODE_724: 'Contract Does Not Belong To Customer',
+  MESSAGE_CODE_725: 'Support Ticket Facility Mismatch',
+  MESSAGE_CODE_726: 'Assigned Staff Does Not Belong To Facility',
 };

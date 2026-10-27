@@ -38,11 +38,19 @@ import { storageRackController } from './modules/storageRack/storageRack.contain
 import { CustomerSkuController } from './modules/customerSku/customerSku.controller.ts';
 import { customerSkuController } from './modules/customerSku/customerSku.container.ts';
 import { CustomerInventoryController } from './modules/customerInventory/customerInventory.controller.ts';
-import { customerInventoryController } from './modules/customerInventory/customerInventory.container.ts';
+import {
+  customerInventoryController,
+  inventoryRequestController,
+} from './modules/customerInventory/customerInventory.container.ts';
+import { InventoryRequestController } from './modules/customerInventory/inventoryRequest.controller.ts';
 import { UploadController } from './modules/upload/upload.controller.ts';
 import { uploadController } from './modules/upload/upload.container.ts';
 import { RefundRequestController } from './modules/refundRequest/refundRequest.controller.ts';
 import { refundRequestController } from './modules/refundRequest/refundRequest.container.ts';
+import { IncidentController } from './modules/incident/incident.controller.ts';
+import { incidentController } from './modules/incident/incident.container.ts';
+import { SupportTicketController } from './modules/support/supportTicket.controller.ts';
+import { supportTicketController } from './modules/support/supportTicket.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -106,11 +114,20 @@ export const iocContainer: IocContainer = {
     if (controller === CustomerInventoryController) {
       return customerInventoryController as unknown as T;
     }
+    if (controller === InventoryRequestController) {
+      return inventoryRequestController as unknown as T;
+    }
     if (controller === UploadController) {
       return uploadController as unknown as T;
     }
     if (controller === RefundRequestController) {
       return refundRequestController as unknown as T;
+    }
+    if (controller === IncidentController) {
+      return incidentController as unknown as T;
+    }
+    if (controller === SupportTicketController) {
+      return supportTicketController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`
