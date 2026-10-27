@@ -891,7 +891,11 @@
 					"investigate_incident",
 					"resolve_incident",
 					"close_incident",
-					"cancel_incident"
+					"cancel_incident",
+					"create_support_ticket",
+					"process_support_ticket",
+					"complete_support_ticket",
+					"cancel_support_ticket"
 				],
 				"type": "string"
 			},
@@ -917,7 +921,8 @@
 					"customer_inventory",
 					"inventory_movement",
 					"inventory_request",
-					"incident"
+					"incident",
+					"support_ticket"
 				],
 				"type": "string"
 			},
@@ -1563,6 +1568,747 @@
 			},
 			"UpdateUnitTypeRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateUnitTypeSchema_"
+			},
+			"SupportTicketCategoryEnum": {
+				"enum": [
+					"billing_inquiry",
+					"contract_inquiry",
+					"unit_change_request",
+					"access_pin_reset",
+					"service_complaint",
+					"procedural_assistance",
+					"general_inquiry"
+				],
+				"type": "string"
+			},
+			"SupportTicketPriorityEnum": {
+				"enum": [
+					"low",
+					"medium",
+					"high",
+					"urgent"
+				],
+				"type": "string"
+			},
+			"SupportTicketStatusEnum": {
+				"enum": [
+					"pending",
+					"processing",
+					"completed",
+					"cancelled"
+				],
+				"type": "string"
+			},
+			"infer_typeofsupportTicketResponseSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"completedAt": {
+						"type": "string"
+					},
+					"staffResponse": {
+						"properties": {
+							"respondedBy": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"properties": {
+											"role": {
+												"type": "string"
+											},
+											"phoneNumber": {
+												"type": "string"
+											},
+											"email": {
+												"type": "string"
+											},
+											"name": {
+												"type": "string"
+											},
+											"id": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"id"
+										],
+										"type": "object"
+									}
+								]
+							},
+							"respondedAt": {
+								"type": "string"
+							},
+							"attachments": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"responseMessage": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"respondedAt",
+							"attachments",
+							"responseMessage"
+						],
+						"type": "object"
+					},
+					"assignedStaff": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"contract": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"endDate": {
+										"type": "string"
+									},
+									"startDate": {
+										"type": "string"
+									},
+									"status": {
+										"type": "string"
+									},
+									"contractCode": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"facility": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"address": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"code": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"customer": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/SupportTicketStatusEnum"
+					},
+					"attachments": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"description": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"priority": {
+						"$ref": "#/components/schemas/SupportTicketPriorityEnum"
+					},
+					"category": {
+						"$ref": "#/components/schemas/SupportTicketCategoryEnum"
+					},
+					"ticketCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"status",
+					"attachments",
+					"description",
+					"title",
+					"priority",
+					"category",
+					"ticketCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"SupportTicketResponse": {
+				"$ref": "#/components/schemas/infer_typeofsupportTicketResponseSchema_"
+			},
+			"ApiResponse_SupportTicketResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/SupportTicketResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateSupportTicketSchema_": {
+				"properties": {
+					"contractId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"attachments": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"description": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"priority": {
+						"$ref": "#/components/schemas/SupportTicketPriorityEnum"
+					},
+					"category": {
+						"$ref": "#/components/schemas/SupportTicketCategoryEnum"
+					}
+				},
+				"required": [
+					"attachments",
+					"description",
+					"title",
+					"priority",
+					"category"
+				],
+				"type": "object"
+			},
+			"CreateSupportTicketRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateSupportTicketSchema_"
+			},
+			"infer_typeofpaginatedSupportTicketResponseSchema_": {
+				"properties": {
+					"pagination": {
+						"properties": {
+							"hasPrevPage": {
+								"type": "boolean"
+							},
+							"hasNextPage": {
+								"type": "boolean"
+							},
+							"totalPages": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalItems": {
+								"type": "number",
+								"format": "double"
+							},
+							"limit": {
+								"type": "number",
+								"format": "double"
+							},
+							"page": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"hasPrevPage",
+							"hasNextPage",
+							"totalPages",
+							"totalItems",
+							"limit",
+							"page"
+						],
+						"type": "object"
+					},
+					"items": {
+						"items": {
+							"properties": {
+								"cancellationReason": {
+									"type": "string"
+								},
+								"cancelledAt": {
+									"type": "string"
+								},
+								"completedAt": {
+									"type": "string"
+								},
+								"staffResponse": {
+									"properties": {
+										"respondedBy": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"properties": {
+														"role": {
+															"type": "string"
+														},
+														"phoneNumber": {
+															"type": "string"
+														},
+														"email": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"id": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"id"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"respondedAt": {
+											"type": "string"
+										},
+										"attachments": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"responseMessage": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"respondedAt",
+										"attachments",
+										"responseMessage"
+									],
+									"type": "object"
+								},
+								"assignedStaff": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"role": {
+													"type": "string"
+												},
+												"phoneNumber": {
+													"type": "string"
+												},
+												"email": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"contract": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"endDate": {
+													"type": "string"
+												},
+												"startDate": {
+													"type": "string"
+												},
+												"status": {
+													"type": "string"
+												},
+												"contractCode": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"facility": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"address": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"code": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"customer": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"role": {
+													"type": "string"
+												},
+												"phoneNumber": {
+													"type": "string"
+												},
+												"email": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"updatedAt": {
+									"type": "string"
+								},
+								"createdAt": {
+									"type": "string"
+								},
+								"status": {
+									"$ref": "#/components/schemas/SupportTicketStatusEnum"
+								},
+								"attachments": {
+									"items": {
+										"type": "string"
+									},
+									"type": "array"
+								},
+								"description": {
+									"type": "string"
+								},
+								"title": {
+									"type": "string"
+								},
+								"priority": {
+									"$ref": "#/components/schemas/SupportTicketPriorityEnum"
+								},
+								"category": {
+									"$ref": "#/components/schemas/SupportTicketCategoryEnum"
+								},
+								"ticketCode": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"updatedAt",
+								"createdAt",
+								"status",
+								"attachments",
+								"description",
+								"title",
+								"priority",
+								"category",
+								"ticketCode",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"pagination",
+					"items"
+				],
+				"type": "object"
+			},
+			"PaginatedSupportTicketResponse": {
+				"$ref": "#/components/schemas/infer_typeofpaginatedSupportTicketResponseSchema_"
+			},
+			"ApiResponse_PaginatedSupportTicketResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedSupportTicketResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofsupportTicketQuerySchema_": {
+				"properties": {
+					"endDate": {
+						"type": "string"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"priority": {
+						"$ref": "#/components/schemas/SupportTicketPriorityEnum"
+					},
+					"category": {
+						"$ref": "#/components/schemas/SupportTicketCategoryEnum"
+					},
+					"status": {
+						"$ref": "#/components/schemas/SupportTicketStatusEnum"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"SupportTicketQuery": {
+				"$ref": "#/components/schemas/infer_typeofsupportTicketQuerySchema_"
+			},
+			"infer_typeofprocessSupportTicketSchema_": {
+				"properties": {
+					"assignedStaffId": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ProcessSupportTicketRequest": {
+				"$ref": "#/components/schemas/infer_typeofprocessSupportTicketSchema_"
+			},
+			"infer_typeofcompleteSupportTicketSchema_": {
+				"properties": {
+					"attachments": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"responseMessage": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"attachments",
+					"responseMessage"
+				],
+				"type": "object"
+			},
+			"CompleteSupportTicketRequest": {
+				"$ref": "#/components/schemas/infer_typeofcompleteSupportTicketSchema_"
+			},
+			"infer_typeofcancelSupportTicketSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"CancelSupportTicketRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelSupportTicketSchema_"
 			},
 			"StorageUnitStatusEnum": {
 				"enum": [
@@ -4136,7 +4882,8 @@
 					"reservation",
 					"contract",
 					"payment",
-					"incident"
+					"incident",
+					"support_ticket"
 				],
 				"type": "string"
 			},
@@ -14730,6 +15477,527 @@
 						}
 					}
 				]
+			}
+		},
+		"/support-tickets": {
+			"post": {
+				"operationId": "CreateTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SupportTicketResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a new customer support ticket",
+				"tags": [
+					"Support Ticket"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateSupportTicketRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "FindTickets",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedSupportTicketResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Query support tickets with pagination, search, and filters",
+				"tags": [
+					"Support Ticket"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "endDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "priority",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/SupportTicketPriorityEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "category",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/SupportTicketCategoryEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/SupportTicketStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "assignedStaffId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/support-tickets/{id}": {
+			"get": {
+				"operationId": "GetTicketById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SupportTicketResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get support ticket details by ID",
+				"tags": [
+					"Support Ticket"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/support-tickets/{id}/process": {
+			"post": {
+				"operationId": "ProcessTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SupportTicketResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Accept or assign a support ticket to begin processing",
+				"tags": [
+					"Support Ticket"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ProcessSupportTicketRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/support-tickets/{id}/complete": {
+			"post": {
+				"operationId": "CompleteTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SupportTicketResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Complete a support ticket with resolution message and instructions",
+				"tags": [
+					"Support Ticket"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CompleteSupportTicketRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/support-tickets/{id}/cancel": {
+			"post": {
+				"operationId": "CancelTicket",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SupportTicketResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel a pending support ticket (Customer only)",
+				"tags": [
+					"Support Ticket"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelSupportTicketRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/storage-units": {
