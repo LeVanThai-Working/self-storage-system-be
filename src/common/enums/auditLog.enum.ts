@@ -57,6 +57,10 @@ export enum AuditActionEnum {
   RESOLVE_INCIDENT = 'resolve_incident',
   CLOSE_INCIDENT = 'close_incident',
   CANCEL_INCIDENT = 'cancel_incident',
+  CREATE_SUPPORT_TICKET = 'create_support_ticket',
+  PROCESS_SUPPORT_TICKET = 'process_support_ticket',
+  COMPLETE_SUPPORT_TICKET = 'complete_support_ticket',
+  CANCEL_SUPPORT_TICKET = 'cancel_support_ticket',
 }
 
 export enum AuditResourceEnum {
@@ -81,6 +85,7 @@ export enum AuditResourceEnum {
   INVENTORY_MOVEMENT = 'inventory_movement',
   INVENTORY_REQUEST = 'inventory_request',
   INCIDENT = 'incident',
+  SUPPORT_TICKET = 'support_ticket',
 }
 
 export enum AuditStatusEnum {

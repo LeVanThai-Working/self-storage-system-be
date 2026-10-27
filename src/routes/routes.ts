@@ -16,6 +16,8 @@ import { UploadController } from './../modules/upload/upload.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { UnitTypeController } from './../modules/unitType/unitType.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { SupportTicketController } from './../modules/support/supportTicket.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { StorageUnitController } from './../modules/storageUnit/storageUnit.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { StorageRackController } from './../modules/storageRack/storageRack.controller.js';
@@ -374,12 +376,12 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","expire","mark_overdue","refund","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","batch_migrate_rack","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","expire","mark_overdue","refund","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","batch_migrate_rack","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
         "dataType": "refEnum",
-        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement","inventory_request","incident"],
+        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement","inventory_request","incident","support_ticket"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditStatusEnum": {
@@ -558,6 +560,115 @@ const models: TsoaRoute.Models = {
     "UpdateUnitTypeRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofupdateUnitTypeSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SupportTicketCategoryEnum": {
+        "dataType": "refEnum",
+        "enums": ["billing_inquiry","contract_inquiry","unit_change_request","access_pin_reset","service_complaint","procedural_assistance","general_inquiry"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SupportTicketPriorityEnum": {
+        "dataType": "refEnum",
+        "enums": ["low","medium","high","urgent"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SupportTicketStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["pending","processing","completed","cancelled"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofsupportTicketResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"completedAt":{"dataType":"string"},"staffResponse":{"dataType":"nestedObjectLiteral","nestedProperties":{"respondedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"respondedAt":{"dataType":"string","required":true},"attachments":{"dataType":"array","array":{"dataType":"string"},"required":true},"responseMessage":{"dataType":"string","required":true}}},"assignedStaff":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"contract":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string"},"contractCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"name":{"dataType":"string"},"code":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"customer":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"status":{"ref":"SupportTicketStatusEnum","required":true},"attachments":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"priority":{"ref":"SupportTicketPriorityEnum","required":true},"category":{"ref":"SupportTicketCategoryEnum","required":true},"ticketCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SupportTicketResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofsupportTicketResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_SupportTicketResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"SupportTicketResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcreateSupportTicketSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"contractId":{"dataType":"string"},"facilityId":{"dataType":"string"},"attachments":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"priority":{"ref":"SupportTicketPriorityEnum","required":true},"category":{"ref":"SupportTicketCategoryEnum","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateSupportTicketRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcreateSupportTicketSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofpaginatedSupportTicketResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"pagination":{"dataType":"nestedObjectLiteral","nestedProperties":{"hasPrevPage":{"dataType":"boolean","required":true},"hasNextPage":{"dataType":"boolean","required":true},"totalPages":{"dataType":"double","required":true},"totalItems":{"dataType":"double","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"completedAt":{"dataType":"string"},"staffResponse":{"dataType":"nestedObjectLiteral","nestedProperties":{"respondedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"respondedAt":{"dataType":"string","required":true},"attachments":{"dataType":"array","array":{"dataType":"string"},"required":true},"responseMessage":{"dataType":"string","required":true}}},"assignedStaff":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"contract":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string"},"contractCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"name":{"dataType":"string"},"code":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"customer":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"status":{"ref":"SupportTicketStatusEnum","required":true},"attachments":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"priority":{"ref":"SupportTicketPriorityEnum","required":true},"category":{"ref":"SupportTicketCategoryEnum","required":true},"ticketCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedSupportTicketResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofpaginatedSupportTicketResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedSupportTicketResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedSupportTicketResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofsupportTicketQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"search":{"dataType":"string"},"priority":{"ref":"SupportTicketPriorityEnum"},"category":{"ref":"SupportTicketCategoryEnum"},"status":{"ref":"SupportTicketStatusEnum"},"assignedStaffId":{"dataType":"string"},"contractId":{"dataType":"string"},"facilityId":{"dataType":"string"},"customerId":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SupportTicketQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofsupportTicketQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofprocessSupportTicketSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignedStaffId":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ProcessSupportTicketRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofprocessSupportTicketSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcompleteSupportTicketSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"attachments":{"dataType":"array","array":{"dataType":"string"},"required":true},"responseMessage":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CompleteSupportTicketRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcompleteSupportTicketSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcancelSupportTicketSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CancelSupportTicketRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcancelSupportTicketSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "StorageUnitStatusEnum": {
@@ -1108,7 +1219,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationTypeEnum": {
         "dataType": "refEnum",
-        "enums": ["system","system_alert","approval_request","storage_unit","reservation","contract","payment","incident"],
+        "enums": ["system","system_alert","approval_request","storage_unit","reservation","contract","payment","incident","support_ticket"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationPriorityEnum": {
@@ -3739,6 +3850,225 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'restoreUnitType',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSupportTicketController_createTicket: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"CreateSupportTicketRequest"},
+        };
+        app.post('/support-tickets',
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController)),
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController.prototype.createTicket)),
+
+            async function SupportTicketController_createTicket(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSupportTicketController_createTicket, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SupportTicketController>(SupportTicketController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createTicket',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSupportTicketController_findTickets: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"search":{"dataType":"string"},"priority":{"ref":"SupportTicketPriorityEnum"},"category":{"ref":"SupportTicketCategoryEnum"},"status":{"ref":"SupportTicketStatusEnum"},"assignedStaffId":{"dataType":"string"},"contractId":{"dataType":"string"},"facilityId":{"dataType":"string"},"customerId":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/support-tickets',
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController)),
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController.prototype.findTickets)),
+
+            async function SupportTicketController_findTickets(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSupportTicketController_findTickets, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SupportTicketController>(SupportTicketController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'findTickets',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSupportTicketController_getTicketById: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/support-tickets/:id',
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController)),
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController.prototype.getTicketById)),
+
+            async function SupportTicketController_getTicketById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSupportTicketController_getTicketById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SupportTicketController>(SupportTicketController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getTicketById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSupportTicketController_processTicket: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"ProcessSupportTicketRequest"},
+        };
+        app.post('/support-tickets/:id/process',
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController)),
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController.prototype.processTicket)),
+
+            async function SupportTicketController_processTicket(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSupportTicketController_processTicket, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SupportTicketController>(SupportTicketController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'processTicket',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSupportTicketController_completeTicket: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"CompleteSupportTicketRequest"},
+        };
+        app.post('/support-tickets/:id/complete',
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController)),
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController.prototype.completeTicket)),
+
+            async function SupportTicketController_completeTicket(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSupportTicketController_completeTicket, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SupportTicketController>(SupportTicketController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'completeTicket',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSupportTicketController_cancelTicket: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"CancelSupportTicketRequest"},
+        };
+        app.post('/support-tickets/:id/cancel',
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController)),
+            ...(fetchMiddlewares<RequestHandler>(SupportTicketController.prototype.cancelTicket)),
+
+            async function SupportTicketController_cancelTicket(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSupportTicketController_cancelTicket, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SupportTicketController>(SupportTicketController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'cancelTicket',
                 controller,
                 response,
                 next,

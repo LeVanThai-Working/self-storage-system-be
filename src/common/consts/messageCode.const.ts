@@ -266,6 +266,24 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_708: 'MESSAGE_CODE_708',
   // Storage Rack Or Tier Does Not Belong To Contract
   MESSAGE_CODE_709: 'MESSAGE_CODE_709',
+
+  // ==========================================
+  // SUPPORT TICKET (720 - 726)
+  // ==========================================
+  // Support Ticket Not Found
+  MESSAGE_CODE_720: 'MESSAGE_CODE_720',
+  // Invalid Support Ticket Status Transition
+  MESSAGE_CODE_721: 'MESSAGE_CODE_721',
+  // Support Ticket Cannot Be Cancelled In Current Status
+  MESSAGE_CODE_722: 'MESSAGE_CODE_722',
+  // Support Ticket Response Details Required
+  MESSAGE_CODE_723: 'MESSAGE_CODE_723',
+  // Contract Does Not Belong To Customer
+  MESSAGE_CODE_724: 'MESSAGE_CODE_724',
+  // Support Ticket Facility Mismatch
+  MESSAGE_CODE_725: 'MESSAGE_CODE_725',
+  // Assigned Staff Does Not Belong To Facility
+  MESSAGE_CODE_726: 'MESSAGE_CODE_726',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -409,4 +427,13 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_707: 'Only Assignee Or Facility Manager Can Update Incident',
   MESSAGE_CODE_708: 'Assigned Staff Does Not Belong To Facility',
   MESSAGE_CODE_709: 'Storage Rack Or Tier Does Not Belong To Contract',
+
+  // Support Ticket
+  MESSAGE_CODE_720: 'Support Ticket Not Found',
+  MESSAGE_CODE_721: 'Invalid Support Ticket Status Transition',
+  MESSAGE_CODE_722: 'Support Ticket Cannot Be Cancelled In Current Status',
+  MESSAGE_CODE_723: 'Support Ticket Response Details Required',
+  MESSAGE_CODE_724: 'Contract Does Not Belong To Customer',
+  MESSAGE_CODE_725: 'Support Ticket Facility Mismatch',
+  MESSAGE_CODE_726: 'Assigned Staff Does Not Belong To Facility',
 };
