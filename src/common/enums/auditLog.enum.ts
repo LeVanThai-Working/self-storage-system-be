@@ -43,6 +43,24 @@ export enum AuditActionEnum {
   EXPIRE = 'expire',
   MARK_OVERDUE = 'mark_overdue',
   REFUND = 'refund',
+  CREATE_INVENTORY_REQUEST = 'create_inventory_request',
+  VERIFY_PICKUP_CODE = 'verify_pickup_code',
+  COMPLETE_OUTBOUND_HANDOVER = 'complete_outbound_handover',
+  CONFIRM_INBOUND_REQUEST = 'confirm_inbound_request',
+  DISPUTE_INBOUND_REQUEST = 'dispute_inbound_request',
+  PUTAWAY_INBOUND_REQUEST = 'putaway_inbound_request',
+  CANCEL_INVENTORY_REQUEST = 'cancel_inventory_request',
+  BATCH_MIGRATE_RACK = 'batch_migrate_rack',
+  REPORT_INCIDENT = 'report_incident',
+  ASSIGN_INCIDENT = 'assign_incident',
+  INVESTIGATE_INCIDENT = 'investigate_incident',
+  RESOLVE_INCIDENT = 'resolve_incident',
+  CLOSE_INCIDENT = 'close_incident',
+  CANCEL_INCIDENT = 'cancel_incident',
+  CREATE_SUPPORT_TICKET = 'create_support_ticket',
+  PROCESS_SUPPORT_TICKET = 'process_support_ticket',
+  COMPLETE_SUPPORT_TICKET = 'complete_support_ticket',
+  CANCEL_SUPPORT_TICKET = 'cancel_support_ticket',
 }
 
 export enum AuditResourceEnum {
@@ -65,6 +83,9 @@ export enum AuditResourceEnum {
   CUSTOMER_SKU = 'customer_sku',
   CUSTOMER_INVENTORY = 'customer_inventory',
   INVENTORY_MOVEMENT = 'inventory_movement',
+  INVENTORY_REQUEST = 'inventory_request',
+  INCIDENT = 'incident',
+  SUPPORT_TICKET = 'support_ticket',
 }
 
 export enum AuditStatusEnum {

@@ -34,6 +34,7 @@ import {
   storageUnitTreeParamSchema,
   skuLocationsParamSchema,
   barcodeParamSchema,
+  batchMigrateRackRequestSchema,
   type StockInRequest,
   type StockOutRequest,
   type StockMoveRequest,
@@ -41,6 +42,7 @@ import {
   type CustomerInventoryQuery,
   type CustomerInventorySummaryQuery,
   type InventoryMovementQuery,
+  type BatchMigrateRackRequest,
 } from './schemas/customerInventory.request.schema.ts';
 import type {
   CustomerInventoryResponse,
@@ -48,6 +50,7 @@ import type {
   StorageUnitInventoryTreeResponse,
   SkuLocationsResponse,
   CustomerInventorySummaryResponse,
+  BatchMigrateRackResponse,
 } from './schemas/customerInventory.response.schema.ts';
 import type {
   ApiResponse,
@@ -450,6 +453,39 @@ export class CustomerInventoryController extends Controller {
     const caller = extractCaller(req);
     const data = await this.customerInventoryService.findInventoryById(
       id,
+      caller
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * 8. Batch Rack Migration
+   * Internal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory
+   * from source rack to an identical, vacant destination rack with valid legal basis.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Post('racks/batch-migrate')
+  @Middlewares(validateRequest({ body: batchMigrateRackRequestSchema }))
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async batchMigrateRack(
+    @Request() req: ExpressRequest,
+    @Body() body: BatchMigrateRackRequest
+  ): Promise<ApiResponse<BatchMigrateRackResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.customerInventoryService.batchMigrateRack(
+      body,
       caller
     );
 
