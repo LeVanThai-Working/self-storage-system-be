@@ -18876,7 +18876,7 @@
 						}
 					}
 				},
-				"description": "1. Customer creates an Outbound (Stock Out) Request\nGenerates One-Time Pickup QR token and HMAC-SHA256 hashed OTP",
+				"description": "1. Customer creates an Outbound (Stock Out) Request\r\nGenerates One-Time Pickup QR token and HMAC-SHA256 hashed OTP",
 				"tags": [
 					"Customer Inventory Request (Dual Handshake)"
 				],
@@ -19431,7 +19431,7 @@
 						}
 					}
 				},
-				"description": "10. Process Auto-Accept for Inbound Requests older than 24h (Cron / Batch job)\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"description": "10. Process Auto-Accept for Inbound Requests older than 24h (Cron / Batch job)\r\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
 				"tags": [
 					"Customer Inventory Request (Dual Handshake)"
 				],
@@ -19546,7 +19546,7 @@
 						}
 					}
 				},
-				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.",
+				"description": "1. Stock In (Stock In)\r\nCustomer stores new items into their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19619,7 +19619,7 @@
 						}
 					}
 				},
-				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.",
+				"description": "2. Stock Out (Stock Out)\r\nCustomer retrieves items from their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19692,7 +19692,7 @@
 						}
 					}
 				},
-				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.",
+				"description": "3. Internal Stock Move (Stock Move)\r\nCustomer relocates items between locations in their unit.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19765,7 +19765,7 @@
 						}
 					}
 				},
-				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.",
+				"description": "4. Stock Adjust (Stock Adjust)\r\nCustomer counts and updates physical inventory with mandatory reason.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19808,7 +19808,7 @@
 						}
 					}
 				},
-				"description": "5. Inventory Movement Ledger\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
+				"description": "5. Inventory Movement Ledger\r\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19965,7 +19965,7 @@
 						}
 					}
 				},
-				"description": "6. Query current inventory list\nView current stock quantities of SKUs across units and rack tiers.",
+				"description": "6. Query current inventory list\r\nView current stock quantities of SKUs across units and rack tiers.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20135,7 +20135,7 @@
 						}
 					}
 				},
-				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
+				"description": "8. Storage Unit Inventory Tree\r\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20197,7 +20197,7 @@
 						}
 					}
 				},
-				"description": "9. Query SKU storage locations by SKU ID\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
+				"description": "9. Query SKU storage locations by SKU ID\r\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20311,7 +20311,7 @@
 						}
 					}
 				},
-				"description": "11. Customer Personal Inventory Dashboard Summary\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
+				"description": "11. Customer Personal Inventory Dashboard Summary\r\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20453,7 +20453,7 @@
 						}
 					}
 				},
-				"description": "8. Batch Rack Migration\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
+				"description": "8. Batch Rack Migration\r\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\r\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
 				"tags": [
 					"Customer Inventories"
 				],
