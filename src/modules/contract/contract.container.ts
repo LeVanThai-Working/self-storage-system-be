@@ -14,6 +14,8 @@ import { Facility } from '../facility/facility.model.ts';
 import { FacilityRepository } from '../facility/facility.repository.ts';
 import { User } from '../user/user.model.ts';
 import { UserRepository } from '../user/user.repository.ts';
+import { CustomerInventory } from '../customerInventory/customerInventory.model.ts';
+import { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
 
@@ -28,6 +30,9 @@ const unitTypeOfferingRepository = new FacilityUnitTypeOfferingRepository(
 );
 const facilityRepository = new FacilityRepository(Facility);
 const userRepository = new UserRepository(User);
+const customerInventoryRepository = new CustomerInventoryRepository(
+  CustomerInventory
+);
 
 export const contractService = new ContractService(
   contractRepository,
@@ -38,7 +43,8 @@ export const contractService = new ContractService(
   facilityRepository,
   userRepository,
   auditLogService,
-  refundRequestService
+  refundRequestService,
+  customerInventoryRepository
 );
 
 export const contractController = new ContractController(contractService);

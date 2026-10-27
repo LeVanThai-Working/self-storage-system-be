@@ -226,6 +226,35 @@ export class ContractRepository {
     return query.exec();
   }
 
+  /**
+   * Conditionally touch `lastInventoryActivityAt` when the contract is in one of
+   * `allowedStatuses`. Writes to the Contract document within the caller's session
+   * so any concurrent check-out / termination triggers a WiredTiger WriteConflict
+   * instead of allowing write-skew between inventory mutations and contract closure.
+   */
+  async touchIfStatusAtomic(
+    id: string,
+    allowedStatuses: readonly ContractStatusEnum[],
+    session?: ClientSession
+  ) {
+    const query = this.contract.findOneAndUpdate(
+      {
+        _id: id,
+        status: { $in: allowedStatuses },
+      },
+      {
+        $set: { lastInventoryActivityAt: new Date() },
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
   async findExpiredActiveContracts(
     now: Date = new Date(),
     session?: ClientSession
@@ -250,6 +279,31 @@ export class ContractRepository {
           ? new Types.ObjectId(storageUnitId)
           : storageUnitId,
         status: ContractStatusEnum.ACTIVE,
+      })
+      .populate('customerId', 'name email phoneNumber');
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Find the current operational contract (ACTIVE or OVERDUE) occupying a storage unit.
+   * Used by `getStorageUnitTree` so customers and facility managers can still inspect
+   * goods while a contract is OVERDUE.
+   */
+  async findCurrentByStorageUnitId(
+    storageUnitId: string,
+    session?: ClientSession
+  ) {
+    const query = this.contract
+      .findOne({
+        storageUnitId: Types.ObjectId.isValid(storageUnitId)
+          ? new Types.ObjectId(storageUnitId)
+          : storageUnitId,
+        status: {
+          $in: [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE],
+        },
       })
       .populate('customerId', 'name email phoneNumber');
     if (session) {

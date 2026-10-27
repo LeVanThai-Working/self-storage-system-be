@@ -7,6 +7,7 @@ Thư mục này được chia theo **phân hệ nghiệp vụ (`<scope>`)** đ�
 ```text
 docs/agent/
   README.md
+  BUSINESS_RULES_HANDBOOK.md      ← Sổ tay tổng hợp toàn bộ quy định nghiệp vụ hiện hành (Khách hàng & Cơ sở)
   booking/                        ← Phân hệ Đặt chỗ, Hợp đồng, Phụ lục, Thanh toán (Reservation, Contract, Payment)
     PLAN.md                       ← Kế hoạch task, quyết định [OPEN Dx], ma trận quyền
     PROGRESS.md                   ← Bảng theo dõi tiến độ theo task ID (cập nhật bởi /remember)

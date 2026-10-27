@@ -119,6 +119,7 @@ export interface IContract extends SoftDeleteDocument {
   customerSignedAt?: Date | null;
   staffSigned: boolean;
   staffSignedAt?: Date | null;
+  lastInventoryActivityAt?: Date | null;
   notes?: string | null;
 
   createdAt: Date;
@@ -548,6 +549,10 @@ const contractSchema = new Schema<IContract>(
       default: false,
     },
     staffSignedAt: {
+      type: Date,
+      default: null,
+    },
+    lastInventoryActivityAt: {
       type: Date,
       default: null,
     },

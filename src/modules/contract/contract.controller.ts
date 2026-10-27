@@ -600,6 +600,7 @@ export class ContractController extends Controller {
   /**
    * Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).
    * Transitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.
+   * For UNIT_CHANGE addendums, returns 400 MESSAGE_CODE_629 if the previous storage unit still contains customer inventory.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -612,7 +613,10 @@ export class ContractController extends Controller {
     })
   )
   @SuccessResponse(200, 'Success')
-  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(
+    400,
+    'Bad Request (MESSAGE_CODE_410/412/415 for signing state, MESSAGE_CODE_629 if old unit still contains inventory on UNIT_CHANGE)'
+  )
   @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
   public async staffSignAddendum(
@@ -688,6 +692,7 @@ export class ContractController extends Controller {
    * Check-out & Liquidate contract.
    * Changes status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,
    * vacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.
+   * Returns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -700,7 +705,10 @@ export class ContractController extends Controller {
     })
   )
   @SuccessResponse(200, 'Success')
-  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(
+    400,
+    'Bad Request (MESSAGE_CODE_401 if invalid contract status, MESSAGE_CODE_420 if customer inventory remains)'
+  )
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')

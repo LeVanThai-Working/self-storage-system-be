@@ -19301,7 +19301,7 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_630 if contract OVERDUE)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -19341,7 +19341,7 @@
 						}
 					}
 				},
-				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.",
+				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_630 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19414,7 +19414,7 @@
 						}
 					}
 				},
-				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.",
+				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.\nPermitted when contract status is ACTIVE or OVERDUE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19487,7 +19487,7 @@
 						}
 					}
 				},
-				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.",
+				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.\nPermitted when contract status is ACTIVE or OVERDUE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19520,7 +19520,7 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_630 if contract OVERDUE)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -19560,7 +19560,7 @@
 						}
 					}
 				},
-				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.",
+				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_630 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -21183,7 +21183,7 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "Bad Request (MESSAGE_CODE_410/412/415 for signing state, MESSAGE_CODE_629 if old unit still contains inventory on UNIT_CHANGE)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -21213,7 +21213,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).\nTransitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.",
+				"description": "Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).\nTransitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.\nFor UNIT_CHANGE addendums, returns 400 MESSAGE_CODE_629 if the previous storage unit still contains customer inventory.",
 				"tags": [
 					"Contracts"
 				],
@@ -21343,7 +21343,7 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "Bad Request (MESSAGE_CODE_401 if invalid contract status, MESSAGE_CODE_420 if customer inventory remains)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -21383,7 +21383,7 @@
 						}
 					}
 				},
-				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
+				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.\nReturns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract.",
 				"tags": [
 					"Contracts"
 				],

@@ -138,13 +138,17 @@ export class CustomerInventoryController extends Controller {
   /**
    * 1. Stock In (Stock In)
    * Customer stores new items into their unit or rack tier.
+   * Requires contract status to be ACTIVE (returns 400 MESSAGE_CODE_630 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: CUSTOMER, SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @Post('in')
   @Middlewares(validateRequest({ body: stockInRequestSchema }))
-  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(
+    400,
+    'Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_630 if contract OVERDUE)'
+  )
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')
@@ -168,6 +172,7 @@ export class CustomerInventoryController extends Controller {
   /**
    * 2. Stock Out (Stock Out)
    * Customer retrieves items from their unit or rack tier.
+   * Permitted when contract status is ACTIVE or OVERDUE.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -197,6 +202,7 @@ export class CustomerInventoryController extends Controller {
   /**
    * 3. Internal Stock Move (Stock Move)
    * Customer relocates items between locations in their unit.
+   * Permitted when contract status is ACTIVE or OVERDUE.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -226,13 +232,17 @@ export class CustomerInventoryController extends Controller {
   /**
    * 4. Stock Adjust (Stock Adjust)
    * Customer counts and updates physical inventory with mandatory reason.
+   * Requires contract status to be ACTIVE (returns 400 MESSAGE_CODE_630 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: CUSTOMER, SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @Post('adjust')
   @Middlewares(validateRequest({ body: stockAdjustRequestSchema }))
-  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(
+    400,
+    'Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_630 if contract OVERDUE)'
+  )
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Not Found')

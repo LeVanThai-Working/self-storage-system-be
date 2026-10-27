@@ -156,6 +156,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_418: 'MESSAGE_CODE_418',
   // Deposit Settlement Already Confirmed
   MESSAGE_CODE_419: 'MESSAGE_CODE_419',
+  // Cannot Check Out Contract While Customer Inventory Remains
+  MESSAGE_CODE_420: 'MESSAGE_CODE_420',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -254,6 +256,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_628: 'MESSAGE_CODE_628',
   // Storage Unit Still Contains Customer Inventory
   MESSAGE_CODE_629: 'MESSAGE_CODE_629',
+  // Contract Status Does Not Allow This Inventory Operation
+  MESSAGE_CODE_630: 'MESSAGE_CODE_630',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -340,6 +344,8 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_417: 'Contract Deposit Settlement Disputed',
   MESSAGE_CODE_418: 'Contract Inspection Photos Required For Damage Assessment',
   MESSAGE_CODE_419: 'Deposit Settlement Already Confirmed',
+  MESSAGE_CODE_420:
+    'Cannot Check Out Contract While Customer Inventory Remains',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',
@@ -391,4 +397,5 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_627: 'Destination Tier Must Be Different From Source Tier',
   MESSAGE_CODE_628: 'SKU Does Not Belong To Customer',
   MESSAGE_CODE_629: 'Storage Unit Still Contains Customer Inventory',
+  MESSAGE_CODE_630: 'Contract Status Does Not Allow This Inventory Operation',
 };

@@ -34,6 +34,7 @@ import type { FacilityAmenityOfferingRepository } from '../facilityAmenityOfferi
 import type { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.repository.ts';
 import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { UserRepository } from '../user/user.repository.ts';
+import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
 import type {
   IContract,
   IContractAddendum,
@@ -72,7 +73,8 @@ export class ContractService {
     private readonly facilityRepository: FacilityRepository,
     private readonly userRepository: UserRepository,
     private readonly auditLogService?: AuditLogService,
-    private readonly refundRequestService?: RefundRequestService
+    private readonly refundRequestService?: RefundRequestService,
+    private readonly customerInventoryRepository?: CustomerInventoryRepository
   ) {}
 
   // 1. Create contract (From RESERVATION or WALK_IN)
@@ -1472,6 +1474,18 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
+    // Block normal check-out if customer inventory still remains on this contract
+    if (this.customerInventoryRepository) {
+      const remainingItems =
+        await this.customerInventoryRepository.countRemainingByContract(
+          id,
+          session
+        );
+      if (remainingItems > 0) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_420);
+      }
+    }
+
     const actualCheckOutDate = data.actualCheckOutDate
       ? new Date(data.actualCheckOutDate)
       : new Date();
@@ -1651,7 +1665,18 @@ export class ContractService {
         ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
         : String(contract.storageUnitId);
 
+    const remainingInventoryItems = this.customerInventoryRepository
+      ? await this.customerInventoryRepository.countRemainingByContract(
+          id,
+          session
+        )
+      : 0;
+
     // Transition storage unit to UNDER_MAINTENANCE
+    // NOTE (linked to booking/T2.10): When PENDING_CLEARANCE is introduced in T2.10,
+    // units with remainingInventoryItems > 0 will transition to PENDING_CLEARANCE.
+    // Until then, UNDER_MAINTENANCE combined with StorageUnitService.toggleMaintenance's
+    // inventory guard (MESSAGE_CODE_629) prevents releasing the unit to AVAILABLE while goods remain.
     await this.storageUnitRepository.updateById(
       storageUnitId,
       { status: StorageUnitStatusEnum.UNDER_MAINTENANCE },
@@ -1718,6 +1743,9 @@ export class ContractService {
       resourceId: id,
       before: this.formatContract(contract),
       after: formatted,
+      metadata: {
+        remainingInventoryItems,
+      },
     });
 
     return validateResponse(contractResponseSchema, formatted);
@@ -2189,6 +2217,19 @@ export class ContractService {
           ? this.extractIdStr(rawTarget.previousStorageUnitId)
           : this.extractIdStr(contract.storageUnitId);
         const newUnitIdStr = this.extractIdStr(rawTarget.newStorageUnitId);
+
+        // Block UNIT_CHANGE activation if old storage unit still contains customer inventory
+        // (Auto-migration of inventory across units is deferred to customer-inventory/7E)
+        if (this.customerInventoryRepository) {
+          const remainingInOldUnit =
+            await this.customerInventoryRepository.countRemainingByStorageUnit(
+              oldUnitIdStr,
+              session
+            );
+          if (remainingInOldUnit > 0) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+          }
+        }
 
         await this.storageUnitRepository.updateById(
           oldUnitIdStr,

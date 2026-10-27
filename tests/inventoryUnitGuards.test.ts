@@ -18,6 +18,7 @@ import { FacilityUnitTypeOfferingRepository } from '../src/modules/facilityUnitT
 import { CustomerInventory } from '../src/modules/customerInventory/customerInventory.model.ts';
 import { CustomerInventoryRepository } from '../src/modules/customerInventory/customerInventory.repository.ts';
 import { StorageUnitStatusEnum } from '../src/common/enums/storageUnit.enum.ts';
+import { FacilityStatusEnum } from '../src/common/enums/facility.enum.ts';
 import { UnitTypeCategoryEnum } from '../src/common/enums/unitType.enum.ts';
 import { MESSAGE_CODE } from '../src/common/consts/messageCode.const.ts';
 import { AppError } from '../src/common/errors/appError.error.ts';
@@ -66,7 +67,7 @@ describe('X1: Storage unit guards when customer inventory remains', () => {
       name: 'Facility Alpha',
       address: '123 Test Street',
       city: 'Ho Chi Minh',
-      status: 'active',
+      status: FacilityStatusEnum.ACTIVE,
     });
 
     const unitType = await UnitType.create({
