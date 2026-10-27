@@ -26,6 +26,8 @@ import { PaymentController } from './../modules/payment/payment.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { NotificationController } from './../modules/notification/notification.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { IncidentController } from './../modules/incident/incident.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { FacilityUnitTypeOfferingController } from './../modules/facilityUnitTypeOffering/facilityUnitTypeOffering.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { FacilityTimeSlotController } from './../modules/facilityTimeSlot/facilityTimeSlot.controller.js';
@@ -372,12 +374,12 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","expire","mark_overdue","refund","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","batch_migrate_rack"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","expire","mark_overdue","refund","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","batch_migrate_rack","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
         "dataType": "refEnum",
-        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement","inventory_request"],
+        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement","inventory_request","incident"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditStatusEnum": {
@@ -1106,7 +1108,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationTypeEnum": {
         "dataType": "refEnum",
-        "enums": ["system","system_alert","approval_request","storage_unit","reservation","contract","payment"],
+        "enums": ["system","system_alert","approval_request","storage_unit","reservation","contract","payment","incident"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationPriorityEnum": {
@@ -1214,6 +1216,140 @@ const models: TsoaRoute.Models = {
             "data": {"dataType":"nestedObjectLiteral","nestedProperties":{"modifiedCount":{"dataType":"double","required":true}},"required":true},
         },
         "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IncidentCategoryEnum": {
+        "dataType": "refEnum",
+        "enums": ["structural","electrical","water_leak","security","cleanliness","other"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IncidentSeverityEnum": {
+        "dataType": "refEnum",
+        "enums": ["low","medium","high","critical"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IncidentStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["reported","assigned","investigating","in_progress","resolved","closed","cancelled"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IncidentLiablePartyEnum": {
+        "dataType": "refEnum",
+        "enums": ["customer","facility","third_party","force_majeure"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofincidentResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"closedAt":{"dataType":"string"},"resolution":{"dataType":"nestedObjectLiteral","nestedProperties":{"resolvedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"investigationNotes":{"dataType":"string"},"resolvedAt":{"dataType":"string","required":true},"damageFee":{"dataType":"double","required":true},"liableParty":{"ref":"IncidentLiablePartyEnum","required":true},"repairCost":{"dataType":"double","required":true},"resolutionNotes":{"dataType":"string","required":true},"staffEvidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true}}},"investigationNotes":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"reporter":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string"},"contractCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"tierNumber":{"dataType":"double"},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"name":{"dataType":"string"},"code":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"requiresRelocation":{"dataType":"boolean","required":true},"putUnitUnderMaintenance":{"dataType":"boolean","required":true},"status":{"ref":"IncidentStatusEnum","required":true},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"severity":{"ref":"IncidentSeverityEnum","required":true},"category":{"ref":"IncidentCategoryEnum","required":true},"reporterRole":{"ref":"RoleEnum","required":true},"incidentCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IncidentResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofincidentResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_IncidentResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"IncidentResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofreportIncidentSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"contractId":{"dataType":"string"},"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"storageUnitId":{"dataType":"string"},"requiresRelocation":{"dataType":"boolean","required":true},"putUnitUnderMaintenance":{"dataType":"boolean","required":true},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"severity":{"ref":"IncidentSeverityEnum","required":true},"category":{"ref":"IncidentCategoryEnum","required":true},"facilityId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ReportIncidentRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofreportIncidentSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofpaginatedIncidentResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"pagination":{"dataType":"nestedObjectLiteral","nestedProperties":{"hasPrevPage":{"dataType":"boolean","required":true},"hasNextPage":{"dataType":"boolean","required":true},"totalPages":{"dataType":"double","required":true},"totalItems":{"dataType":"double","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"closedAt":{"dataType":"string"},"resolution":{"dataType":"nestedObjectLiteral","nestedProperties":{"resolvedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"investigationNotes":{"dataType":"string"},"resolvedAt":{"dataType":"string","required":true},"damageFee":{"dataType":"double","required":true},"liableParty":{"ref":"IncidentLiablePartyEnum","required":true},"repairCost":{"dataType":"double","required":true},"resolutionNotes":{"dataType":"string","required":true},"staffEvidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true}}},"investigationNotes":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"reporter":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string"},"contractCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"tierNumber":{"dataType":"double"},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"name":{"dataType":"string"},"code":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"requiresRelocation":{"dataType":"boolean","required":true},"putUnitUnderMaintenance":{"dataType":"boolean","required":true},"status":{"ref":"IncidentStatusEnum","required":true},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"severity":{"ref":"IncidentSeverityEnum","required":true},"category":{"ref":"IncidentCategoryEnum","required":true},"reporterRole":{"ref":"RoleEnum","required":true},"incidentCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedIncidentResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofpaginatedIncidentResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedIncidentResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedIncidentResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofincidentQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"search":{"dataType":"string"},"severity":{"ref":"IncidentSeverityEnum"},"category":{"ref":"IncidentCategoryEnum"},"status":{"ref":"IncidentStatusEnum"},"assignedStaffId":{"dataType":"string"},"reporterId":{"dataType":"string"},"contractId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"storageUnitId":{"dataType":"string"},"facilityId":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "IncidentQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofincidentQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofassignIncidentSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignedStaffId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AssignIncidentRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofassignIncidentSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofinvestigateIncidentSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"requiresRelocation":{"dataType":"boolean"},"putUnitUnderMaintenance":{"dataType":"boolean"},"investigationNotes":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "InvestigateIncidentRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofinvestigateIncidentSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofresolveIncidentSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"damageFee":{"dataType":"double","required":true},"liableParty":{"ref":"IncidentLiablePartyEnum","required":true},"repairCost":{"dataType":"double","required":true},"staffEvidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true},"resolutionNotes":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ResolveIncidentRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofresolveIncidentSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcloseIncidentSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CloseIncidentRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcloseIncidentSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcancelIncidentSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CancelIncidentRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcancelIncidentSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "FacilityUnitTypeOfferingStatusEnum": {
@@ -5064,6 +5200,299 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'deleteNotification',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_reportIncident: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"ReportIncidentRequest"},
+        };
+        app.post('/incidents',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.reportIncident)),
+
+            async function IncidentController_reportIncident(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_reportIncident, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'reportIncident',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_getIncidents: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"search":{"dataType":"string"},"severity":{"ref":"IncidentSeverityEnum"},"category":{"ref":"IncidentCategoryEnum"},"status":{"ref":"IncidentStatusEnum"},"assignedStaffId":{"dataType":"string"},"reporterId":{"dataType":"string"},"contractId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"storageUnitId":{"dataType":"string"},"facilityId":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/incidents',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.getIncidents)),
+
+            async function IncidentController_getIncidents(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_getIncidents, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getIncidents',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_getIncidentById: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/incidents/:id',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.getIncidentById)),
+
+            async function IncidentController_getIncidentById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_getIncidentById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getIncidentById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_assignStaff: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"AssignIncidentRequest"},
+        };
+        app.post('/incidents/:id/assign',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.assignStaff)),
+
+            async function IncidentController_assignStaff(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_assignStaff, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'assignStaff',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_investigateIncident: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"InvestigateIncidentRequest"},
+        };
+        app.post('/incidents/:id/investigate',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.investigateIncident)),
+
+            async function IncidentController_investigateIncident(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_investigateIncident, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'investigateIncident',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_resolveIncident: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"ResolveIncidentRequest"},
+        };
+        app.post('/incidents/:id/resolve',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.resolveIncident)),
+
+            async function IncidentController_resolveIncident(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_resolveIncident, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'resolveIncident',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_closeIncident: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"CloseIncidentRequest"},
+        };
+        app.post('/incidents/:id/close',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.closeIncident)),
+
+            async function IncidentController_closeIncident(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_closeIncident, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'closeIncident',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_cancelIncident: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"CancelIncidentRequest"},
+        };
+        app.post('/incidents/:id/cancel',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.cancelIncident)),
+
+            async function IncidentController_cancelIncident(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_cancelIncident, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'cancelIncident',
                 controller,
                 response,
                 next,

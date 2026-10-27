@@ -885,7 +885,13 @@
 					"dispute_inbound_request",
 					"putaway_inbound_request",
 					"cancel_inventory_request",
-					"batch_migrate_rack"
+					"batch_migrate_rack",
+					"report_incident",
+					"assign_incident",
+					"investigate_incident",
+					"resolve_incident",
+					"close_incident",
+					"cancel_incident"
 				],
 				"type": "string"
 			},
@@ -910,7 +916,8 @@
 					"customer_sku",
 					"customer_inventory",
 					"inventory_movement",
-					"inventory_request"
+					"inventory_request",
+					"incident"
 				],
 				"type": "string"
 			},
@@ -4128,7 +4135,8 @@
 					"storage_unit",
 					"reservation",
 					"contract",
-					"payment"
+					"payment",
+					"incident"
 				],
 				"type": "string"
 			},
@@ -4439,6 +4447,1007 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"IncidentCategoryEnum": {
+				"enum": [
+					"structural",
+					"electrical",
+					"water_leak",
+					"security",
+					"cleanliness",
+					"other"
+				],
+				"type": "string"
+			},
+			"IncidentSeverityEnum": {
+				"enum": [
+					"low",
+					"medium",
+					"high",
+					"critical"
+				],
+				"type": "string"
+			},
+			"IncidentStatusEnum": {
+				"enum": [
+					"reported",
+					"assigned",
+					"investigating",
+					"in_progress",
+					"resolved",
+					"closed",
+					"cancelled"
+				],
+				"type": "string"
+			},
+			"IncidentLiablePartyEnum": {
+				"enum": [
+					"customer",
+					"facility",
+					"third_party",
+					"force_majeure"
+				],
+				"type": "string"
+			},
+			"infer_typeofincidentResponseSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"closedAt": {
+						"type": "string"
+					},
+					"resolution": {
+						"properties": {
+							"resolvedBy": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"properties": {
+											"role": {
+												"type": "string"
+											},
+											"phoneNumber": {
+												"type": "string"
+											},
+											"email": {
+												"type": "string"
+											},
+											"name": {
+												"type": "string"
+											},
+											"id": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"id"
+										],
+										"type": "object"
+									}
+								]
+							},
+							"investigationNotes": {
+								"type": "string"
+							},
+							"resolvedAt": {
+								"type": "string"
+							},
+							"damageFee": {
+								"type": "number",
+								"format": "double"
+							},
+							"liableParty": {
+								"$ref": "#/components/schemas/IncidentLiablePartyEnum"
+							},
+							"repairCost": {
+								"type": "number",
+								"format": "double"
+							},
+							"resolutionNotes": {
+								"type": "string"
+							},
+							"staffEvidenceImages": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"resolvedAt",
+							"damageFee",
+							"liableParty",
+							"repairCost",
+							"resolutionNotes",
+							"staffEvidenceImages"
+						],
+						"type": "object"
+					},
+					"investigationNotes": {
+						"type": "string"
+					},
+					"assignedStaff": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"id"
+						],
+						"type": "object"
+					},
+					"reporter": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"contract": {
+						"properties": {
+							"endDate": {
+								"type": "string"
+							},
+							"startDate": {
+								"type": "string"
+							},
+							"status": {
+								"type": "string"
+							},
+							"contractCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"id"
+						],
+						"type": "object"
+					},
+					"rackTier": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"tierNumber": {
+								"type": "number",
+								"format": "double"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"id"
+						],
+						"type": "object"
+					},
+					"storageRack": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"zone": {
+								"type": "string"
+							},
+							"bay": {
+								"type": "number",
+								"format": "double"
+							},
+							"aisle": {
+								"type": "string"
+							},
+							"rackCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"id"
+						],
+						"type": "object"
+					},
+					"storageUnit": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"zone": {
+								"type": "string"
+							},
+							"floor": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitNumber": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"id"
+						],
+						"type": "object"
+					},
+					"facility": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"address": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"code": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"requiresRelocation": {
+						"type": "boolean"
+					},
+					"putUnitUnderMaintenance": {
+						"type": "boolean"
+					},
+					"status": {
+						"$ref": "#/components/schemas/IncidentStatusEnum"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"description": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"severity": {
+						"$ref": "#/components/schemas/IncidentSeverityEnum"
+					},
+					"category": {
+						"$ref": "#/components/schemas/IncidentCategoryEnum"
+					},
+					"reporterRole": {
+						"$ref": "#/components/schemas/RoleEnum"
+					},
+					"incidentCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"requiresRelocation",
+					"putUnitUnderMaintenance",
+					"status",
+					"images",
+					"description",
+					"title",
+					"severity",
+					"category",
+					"reporterRole",
+					"incidentCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"IncidentResponse": {
+				"$ref": "#/components/schemas/infer_typeofincidentResponseSchema_"
+			},
+			"ApiResponse_IncidentResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/IncidentResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofreportIncidentSchema_": {
+				"properties": {
+					"contractId": {
+						"type": "string"
+					},
+					"rackTierId": {
+						"type": "string"
+					},
+					"storageRackId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"requiresRelocation": {
+						"type": "boolean"
+					},
+					"putUnitUnderMaintenance": {
+						"type": "boolean"
+					},
+					"images": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"description": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"severity": {
+						"$ref": "#/components/schemas/IncidentSeverityEnum"
+					},
+					"category": {
+						"$ref": "#/components/schemas/IncidentCategoryEnum"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"requiresRelocation",
+					"putUnitUnderMaintenance",
+					"images",
+					"description",
+					"title",
+					"severity",
+					"category",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"ReportIncidentRequest": {
+				"$ref": "#/components/schemas/infer_typeofreportIncidentSchema_"
+			},
+			"infer_typeofpaginatedIncidentResponseSchema_": {
+				"properties": {
+					"pagination": {
+						"properties": {
+							"hasPrevPage": {
+								"type": "boolean"
+							},
+							"hasNextPage": {
+								"type": "boolean"
+							},
+							"totalPages": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalItems": {
+								"type": "number",
+								"format": "double"
+							},
+							"limit": {
+								"type": "number",
+								"format": "double"
+							},
+							"page": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"hasPrevPage",
+							"hasNextPage",
+							"totalPages",
+							"totalItems",
+							"limit",
+							"page"
+						],
+						"type": "object"
+					},
+					"items": {
+						"items": {
+							"properties": {
+								"cancellationReason": {
+									"type": "string"
+								},
+								"cancelledAt": {
+									"type": "string"
+								},
+								"closedAt": {
+									"type": "string"
+								},
+								"resolution": {
+									"properties": {
+										"resolvedBy": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"properties": {
+														"role": {
+															"type": "string"
+														},
+														"phoneNumber": {
+															"type": "string"
+														},
+														"email": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"id": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"id"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"investigationNotes": {
+											"type": "string"
+										},
+										"resolvedAt": {
+											"type": "string"
+										},
+										"damageFee": {
+											"type": "number",
+											"format": "double"
+										},
+										"liableParty": {
+											"$ref": "#/components/schemas/IncidentLiablePartyEnum"
+										},
+										"repairCost": {
+											"type": "number",
+											"format": "double"
+										},
+										"resolutionNotes": {
+											"type": "string"
+										},
+										"staffEvidenceImages": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										}
+									},
+									"required": [
+										"resolvedAt",
+										"damageFee",
+										"liableParty",
+										"repairCost",
+										"resolutionNotes",
+										"staffEvidenceImages"
+									],
+									"type": "object"
+								},
+								"investigationNotes": {
+									"type": "string"
+								},
+								"assignedStaff": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"id"
+									],
+									"type": "object"
+								},
+								"reporter": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"role": {
+													"type": "string"
+												},
+												"phoneNumber": {
+													"type": "string"
+												},
+												"email": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"contract": {
+									"properties": {
+										"endDate": {
+											"type": "string"
+										},
+										"startDate": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"contractCode": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"id"
+									],
+									"type": "object"
+								},
+								"rackTier": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"tierNumber": {
+											"type": "number",
+											"format": "double"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"id"
+									],
+									"type": "object"
+								},
+								"storageRack": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"zone": {
+											"type": "string"
+										},
+										"bay": {
+											"type": "number",
+											"format": "double"
+										},
+										"aisle": {
+											"type": "string"
+										},
+										"rackCode": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"id"
+									],
+									"type": "object"
+								},
+								"storageUnit": {
+									"properties": {
+										"status": {
+											"type": "string"
+										},
+										"zone": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"id"
+									],
+									"type": "object"
+								},
+								"facility": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"address": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"code": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"updatedAt": {
+									"type": "string"
+								},
+								"createdAt": {
+									"type": "string"
+								},
+								"requiresRelocation": {
+									"type": "boolean"
+								},
+								"putUnitUnderMaintenance": {
+									"type": "boolean"
+								},
+								"status": {
+									"$ref": "#/components/schemas/IncidentStatusEnum"
+								},
+								"images": {
+									"items": {
+										"type": "string"
+									},
+									"type": "array"
+								},
+								"description": {
+									"type": "string"
+								},
+								"title": {
+									"type": "string"
+								},
+								"severity": {
+									"$ref": "#/components/schemas/IncidentSeverityEnum"
+								},
+								"category": {
+									"$ref": "#/components/schemas/IncidentCategoryEnum"
+								},
+								"reporterRole": {
+									"$ref": "#/components/schemas/RoleEnum"
+								},
+								"incidentCode": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"updatedAt",
+								"createdAt",
+								"requiresRelocation",
+								"putUnitUnderMaintenance",
+								"status",
+								"images",
+								"description",
+								"title",
+								"severity",
+								"category",
+								"reporterRole",
+								"incidentCode",
+								"id"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"pagination",
+					"items"
+				],
+				"type": "object"
+			},
+			"PaginatedIncidentResponse": {
+				"$ref": "#/components/schemas/infer_typeofpaginatedIncidentResponseSchema_"
+			},
+			"ApiResponse_PaginatedIncidentResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedIncidentResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofincidentQuerySchema_": {
+				"properties": {
+					"endDate": {
+						"type": "string"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"severity": {
+						"$ref": "#/components/schemas/IncidentSeverityEnum"
+					},
+					"category": {
+						"$ref": "#/components/schemas/IncidentCategoryEnum"
+					},
+					"status": {
+						"$ref": "#/components/schemas/IncidentStatusEnum"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					},
+					"reporterId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"storageRackId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"IncidentQuery": {
+				"$ref": "#/components/schemas/infer_typeofincidentQuerySchema_"
+			},
+			"infer_typeofassignIncidentSchema_": {
+				"properties": {
+					"assignedStaffId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"assignedStaffId"
+				],
+				"type": "object"
+			},
+			"AssignIncidentRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignIncidentSchema_"
+			},
+			"infer_typeofinvestigateIncidentSchema_": {
+				"properties": {
+					"requiresRelocation": {
+						"type": "boolean"
+					},
+					"putUnitUnderMaintenance": {
+						"type": "boolean"
+					},
+					"investigationNotes": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"investigationNotes"
+				],
+				"type": "object"
+			},
+			"InvestigateIncidentRequest": {
+				"$ref": "#/components/schemas/infer_typeofinvestigateIncidentSchema_"
+			},
+			"infer_typeofresolveIncidentSchema_": {
+				"properties": {
+					"damageFee": {
+						"type": "number",
+						"format": "double"
+					},
+					"liableParty": {
+						"$ref": "#/components/schemas/IncidentLiablePartyEnum"
+					},
+					"repairCost": {
+						"type": "number",
+						"format": "double"
+					},
+					"staffEvidenceImages": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"resolutionNotes": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"damageFee",
+					"liableParty",
+					"repairCost",
+					"staffEvidenceImages",
+					"resolutionNotes"
+				],
+				"type": "object"
+			},
+			"ResolveIncidentRequest": {
+				"$ref": "#/components/schemas/infer_typeofresolveIncidentSchema_"
+			},
+			"infer_typeofcloseIncidentSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"CloseIncidentRequest": {
+				"$ref": "#/components/schemas/infer_typeofcloseIncidentSchema_"
+			},
+			"infer_typeofcancelIncidentSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelIncidentRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelIncidentSchema_"
 			},
 			"FacilityUnitTypeOfferingStatusEnum": {
 				"enum": [
@@ -16324,6 +17333,707 @@
 				]
 			}
 		},
+		"/incidents": {
+			"post": {
+				"operationId": "ReportIncident",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Report a new incident (Customer, Facility Staff, or Facility Manager)",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ReportIncidentRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetIncidents",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedIncidentResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Query incidents list (paginated, with scoped filters)",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "endDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "severity",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/IncidentSeverityEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "category",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/IncidentCategoryEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/IncidentStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "assignedStaffId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "reporterId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageRackId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "storageUnitId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/incidents/{id}": {
+			"get": {
+				"operationId": "GetIncidentById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Get incident detail by ID",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/incidents/{id}/assign": {
+			"post": {
+				"operationId": "AssignStaff",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager assigns a staff member to handle the incident",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignIncidentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/incidents/{id}/investigate": {
+			"post": {
+				"operationId": "InvestigateIncident",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Assigned staff starts investigating the incident and notes findings",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/InvestigateIncidentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/incidents/{id}/resolve": {
+			"post": {
+				"operationId": "ResolveIncident",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Assigned staff resolves incident and submits resolution report",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ResolveIncidentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/incidents/{id}/close": {
+			"post": {
+				"operationId": "CloseIncident",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer or Facility Manager accepts and closes the resolved incident",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CloseIncidentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/incidents/{id}/cancel": {
+			"post": {
+				"operationId": "CancelIncident",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel incident report (by reporter when REPORTED or by FM)",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelIncidentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/facility-unit-type-offerings": {
 			"get": {
 				"operationId": "GetOfferings",
@@ -18876,7 +20586,7 @@
 						}
 					}
 				},
-				"description": "1. Customer creates an Outbound (Stock Out) Request\r\nGenerates One-Time Pickup QR token and HMAC-SHA256 hashed OTP",
+				"description": "1. Customer creates an Outbound (Stock Out) Request\nGenerates One-Time Pickup QR token and HMAC-SHA256 hashed OTP",
 				"tags": [
 					"Customer Inventory Request (Dual Handshake)"
 				],
@@ -19431,7 +21141,7 @@
 						}
 					}
 				},
-				"description": "10. Process Auto-Accept for Inbound Requests older than 24h (Cron / Batch job)\r\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"description": "10. Process Auto-Accept for Inbound Requests older than 24h (Cron / Batch job)\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
 				"tags": [
 					"Customer Inventory Request (Dual Handshake)"
 				],
@@ -19546,7 +21256,7 @@
 						}
 					}
 				},
-				"description": "1. Stock In (Stock In)\r\nCustomer stores new items into their unit or rack tier.",
+				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19619,7 +21329,7 @@
 						}
 					}
 				},
-				"description": "2. Stock Out (Stock Out)\r\nCustomer retrieves items from their unit or rack tier.",
+				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19692,7 +21402,7 @@
 						}
 					}
 				},
-				"description": "3. Internal Stock Move (Stock Move)\r\nCustomer relocates items between locations in their unit.",
+				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19765,7 +21475,7 @@
 						}
 					}
 				},
-				"description": "4. Stock Adjust (Stock Adjust)\r\nCustomer counts and updates physical inventory with mandatory reason.",
+				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19808,7 +21518,7 @@
 						}
 					}
 				},
-				"description": "5. Inventory Movement Ledger\r\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
+				"description": "5. Inventory Movement Ledger\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19965,7 +21675,7 @@
 						}
 					}
 				},
-				"description": "6. Query current inventory list\r\nView current stock quantities of SKUs across units and rack tiers.",
+				"description": "6. Query current inventory list\nView current stock quantities of SKUs across units and rack tiers.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20135,7 +21845,7 @@
 						}
 					}
 				},
-				"description": "8. Storage Unit Inventory Tree\r\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
+				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20197,7 +21907,7 @@
 						}
 					}
 				},
-				"description": "9. Query SKU storage locations by SKU ID\r\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
+				"description": "9. Query SKU storage locations by SKU ID\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20311,7 +22021,7 @@
 						}
 					}
 				},
-				"description": "11. Customer Personal Inventory Dashboard Summary\r\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
+				"description": "11. Customer Personal Inventory Dashboard Summary\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20453,7 +22163,7 @@
 						}
 					}
 				},
-				"description": "8. Batch Rack Migration\r\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\r\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
+				"description": "8. Batch Rack Migration\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
 				"tags": [
 					"Customer Inventories"
 				],

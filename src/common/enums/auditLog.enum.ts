@@ -51,6 +51,12 @@ export enum AuditActionEnum {
   PUTAWAY_INBOUND_REQUEST = 'putaway_inbound_request',
   CANCEL_INVENTORY_REQUEST = 'cancel_inventory_request',
   BATCH_MIGRATE_RACK = 'batch_migrate_rack',
+  REPORT_INCIDENT = 'report_incident',
+  ASSIGN_INCIDENT = 'assign_incident',
+  INVESTIGATE_INCIDENT = 'investigate_incident',
+  RESOLVE_INCIDENT = 'resolve_incident',
+  CLOSE_INCIDENT = 'close_incident',
+  CANCEL_INCIDENT = 'cancel_incident',
 }
 
 export enum AuditResourceEnum {
@@ -74,6 +80,7 @@ export enum AuditResourceEnum {
   CUSTOMER_INVENTORY = 'customer_inventory',
   INVENTORY_MOVEMENT = 'inventory_movement',
   INVENTORY_REQUEST = 'inventory_request',
+  INCIDENT = 'incident',
 }
 
 export enum AuditStatusEnum {
