@@ -2288,7 +2288,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofbatchMigrateRackRequestSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"reason":{"dataType":"string"},"emergencyReason":{"dataType":"string"},"addendumId":{"dataType":"string"},"contractId":{"dataType":"string"},"toRackId":{"dataType":"string","required":true},"fromRackId":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"reason":{"dataType":"string"},"emergencyReason":{"dataType":"string"},"incidentId":{"dataType":"string"},"addendumId":{"dataType":"string"},"contractId":{"dataType":"string"},"toRackId":{"dataType":"string","required":true},"fromRackId":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "BatchMigrateRackRequest": {

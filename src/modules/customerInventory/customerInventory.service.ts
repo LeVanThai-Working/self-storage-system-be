@@ -14,7 +14,12 @@ import {
   AuditActionEnum,
   AuditResourceEnum,
 } from '../../common/enums/auditLog.enum.ts';
+import {
+  IncidentSeverityEnum,
+  IncidentStatusEnum,
+} from '../../common/enums/incident.enum.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { IncidentRepository } from '../incident/incident.repository.ts';
 import type { CustomerInventoryRepository } from './customerInventory.repository.ts';
 import type { InventoryMovementRepository } from './inventoryMovement.repository.ts';
 import type { ContractRepository } from '../contract/contract.repository.ts';
@@ -128,6 +133,9 @@ interface FormattableMovement {
 }
 
 function toId(ref: unknown): string {
+  if (ref instanceof Types.ObjectId) {
+    return ref.toString();
+  }
   if (typeof ref === 'object' && ref !== null && '_id' in ref) {
     return String((ref as { _id: unknown })._id);
   }
@@ -151,7 +159,8 @@ export class CustomerInventoryService {
     private readonly rackTierRepository: RackTierRepository,
     private readonly storageUnitRepository: StorageUnitRepository,
     private readonly auditLogService?: AuditLogService,
-    private readonly userRepository?: UserRepository
+    private readonly userRepository?: UserRepository,
+    private readonly incidentRepository?: IncidentRepository
   ) {}
 
   /**
@@ -1554,9 +1563,47 @@ export class CustomerInventoryService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
-    // 2. Kiểm tra căn cứ pháp lý bắt buộc: addendumId HOẶC emergencyReason
-    if (!data.addendumId && !data.emergencyReason) {
+    // 2. Kiểm tra căn cứ pháp lý bắt buộc: addendumId HOẶC emergencyReason HOẶC incidentId
+    if (!data.addendumId && !data.emergencyReason && !data.incidentId) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_641);
+    }
+
+    // 3. Nếu có incidentId: xác thực tính hợp lệ của sự cố di dời khẩn cấp
+    if (data.incidentId) {
+      if (!this.incidentRepository) {
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106, [
+          'IncidentRepository is not configured',
+        ]);
+      }
+
+      const incident = await this.incidentRepository.findById(
+        data.incidentId,
+        session
+      );
+      if (!incident || incident.deleted) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_700);
+      }
+
+      // Không cho phép dùng sự cố đã đóng hoặc đã huỷ
+      if (
+        incident.status === IncidentStatusEnum.CLOSED ||
+        incident.status === IncidentStatusEnum.CANCELLED
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_643);
+      }
+
+      // Xác minh sự cố phải đủ điều kiện di dời khẩn cấp (requiresRelocation hoặc severity HIGH/CRITICAL)
+      const isSevere =
+        incident.severity === IncidentSeverityEnum.HIGH ||
+        incident.severity === IncidentSeverityEnum.CRITICAL;
+      if (!incident.requiresRelocation && !isSevere) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_643);
+      }
+
+      // Fallback emergencyReason nếu FE chưa truyền
+      if (!data.emergencyReason) {
+        data.emergencyReason = `Di dời khẩn cấp theo Sự cố [${incident.incidentCode}]: ${incident.title}`;
+      }
     }
 
     // 3. Load và kiểm tra Kệ nguồn & Kệ đích
@@ -1576,6 +1623,25 @@ export class CustomerInventoryService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_640);
     }
 
+    // 4.1. Nếu có incidentId: xác minh facility và rack tương thích với sự cố
+    if (data.incidentId) {
+      const incident = await this.incidentRepository!.findById(
+        data.incidentId,
+        session
+      );
+      if (incident) {
+        if (toId(incident.facilityId) !== facilityId) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_643);
+        }
+        if (
+          incident.storageRackId &&
+          toId(incident.storageRackId) !== data.fromRackId
+        ) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_643);
+        }
+      }
+    }
+
     // 5. Kiểm tra Staff / FM thuộc đúng cơ sở
     if (
       caller.role === RoleEnum.FACILITY_STAFF ||
@@ -1585,10 +1651,13 @@ export class CustomerInventoryService {
       if (!callerFacilityId && this.userRepository) {
         const u = await this.userRepository.findById(caller.id);
         if (u?.assignedFacilityId) {
-          callerFacilityId = String(u.assignedFacilityId);
+          callerFacilityId = toId(u.assignedFacilityId);
         }
       }
-      if (!callerFacilityId || callerFacilityId !== facilityId) {
+      if (
+        !callerFacilityId ||
+        String(callerFacilityId) !== String(facilityId)
+      ) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
     }
@@ -1710,12 +1779,21 @@ export class CustomerInventoryService {
     }
 
     // 13. Cập nhật trạng thái 2 kệ
+    // Rule: Nếu di dời do Sự cố khẩn cấp (có incidentId hoặc emergencyReason), Kệ cũ fromRack chuyển sang status: MAINTENANCE.
+    // Nếu di dời theo Thỏa thuận dân sự (addendumId) và không có sự cố, Kệ cũ chuyển sang status: AVAILABLE.
+    const isEmergencyOrIncident = Boolean(
+      data.incidentId || data.emergencyReason
+    );
+    const fromRackTargetStatus = isEmergencyOrIncident
+      ? RackStatusEnum.MAINTENANCE
+      : RackStatusEnum.AVAILABLE;
+
     await this.storageRackRepository.update(
       data.fromRackId,
       {
         currentContractId: null,
         currentCustomerId: null,
-        status: RackStatusEnum.AVAILABLE,
+        status: fromRackTargetStatus,
       },
       session
     );

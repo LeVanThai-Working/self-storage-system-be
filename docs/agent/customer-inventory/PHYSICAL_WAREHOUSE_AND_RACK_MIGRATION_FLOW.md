@@ -155,9 +155,12 @@ sequenceDiagram
    - Hàng hóa ở Tầng $k$ của Kệ cũ nằm đúng ở Tầng $k$ của Kệ mới.
 2. **Sổ cái biến động (`InventoryMovement`):**
    - Mỗi mặt hàng được sinh một mã biến động `IM-...` với loại giao dịch là `MOVE`.
-   - Lưu trữ rõ ràng `reason`: Tham chiếu đến mã phụ lục hợp đồng hoặc lý do sự cố khẩn cấp.
+   - Lưu trữ rõ ràng `reason`: Tham chiếu đến mã phụ lục hợp đồng hoặc lý do sự cố khẩn cấp (kèm `incidentId`).
 3. **Trạng thái tài sản Kệ kho (`StorageRack`):**
-   - **Kệ cũ (`fromRack`):** Trở về trạng thái `AVAILABLE`, `currentContractId: null`, `currentCustomerId: null` $\rightarrow$ Sẵn sàng cho khách hàng khác thuê lại sau khi khắc phục sự cố.
+   - **Kệ cũ (`fromRack`):**
+     - **Nếu di dời do Sự cố khẩn cấp (`incidentId` hoặc `emergencyReason`):** Chuyển sang trạng thái `MAINTENANCE` (được phong tỏa để sửa chữa, bảo trì, tuyệt đối không cho khách khác thuê).
+     - **Nếu di dời theo Thỏa thuận dân sự (`addendumId`):** Trở về trạng thái `AVAILABLE` $\rightarrow$ Sẵn sàng cho khách hàng khác thuê lại.
+     - Cả 2 trường hợp đều xóa gán hợp đồng: `currentContractId: null`, `currentCustomerId: null`.
    - **Kệ mới (`toRack`):** Chuyển sang trạng thái `RENTED`, gán `currentContractId` và `currentCustomerId` của khách.
 4. **Hợp đồng thuê (`Contract`):**
    - Mảng `contract.rentedRackIds` được cập nhật tự động: ID của Kệ cũ bị loại bỏ và thay thế bằng ID của Kệ mới.
@@ -170,26 +173,27 @@ sequenceDiagram
 
 ## V. Bảng So Sánh Hai Luồng Chuyển Hàng
 
-| Tiêu Chí So Sánh       | Đảo Hàng Tự Quản (`stockMove`)                                | Di Dời Kệ Hàng Loạt (`batchMigrateRack`)                                |
-| :--------------------- | :------------------------------------------------------------ | :---------------------------------------------------------------------- |
-| **Người thực hiện**    | Khách hàng (`CUSTOMER`)                                       | Nhân viên chi nhánh (`STAFF`, `FM`), Ops Manager, Admin                 |
-| **Phạm vi áp dụng**    | Chuyển lẻ từng món giữa các tầng kệ mà **khách hàng đã thuê** | Dời **toàn bộ tài sản và hàng hóa** từ Kệ cũ sang một Kệ hoàn toàn mới  |
-| **Ảnh hưởng Hợp đồng** | Không thay đổi hợp đồng, không cần phụ lục                    | Thay đổi tài sản thuê trên hợp đồng (`contract.rentedRackIds`)          |
-| **Căn cứ pháp lý**     | Không cần (khách tự sắp xếp tài sản cá nhân)                  | **Bắt buộc:** Phụ lục hợp đồng `ACTIVE` hoặc Lý do sự cố $\ge 10$ ký tự |
-| **Ràng buộc Kệ đích**  | Phải là kệ nằm trong hợp đồng của khách                       | Phải là kệ trống `AVAILABLE` và **Y CHANG SỐ TẦNG**                     |
-| **Sổ cái sinh ra**     | 1 bản ghi `MOVE` cho món hàng chuyển                          | $N$ bản ghi `MOVE` cho toàn bộ các mặt hàng trên kệ                     |
-| **Giải phóng Kệ**      | Không giải phóng kệ                                           | Giải phóng Kệ cũ về `AVAILABLE`, khóa Kệ mới sang `RENTED`              |
+| Tiêu Chí So Sánh       | Đảo Hàng Tự Quản (`stockMove`)                                | Di Dời Kệ Hàng Loạt (`batchMigrateRack`)                                                                       |
+| :--------------------- | :------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------- |
+| **Người thực hiện**    | Khách hàng (`CUSTOMER`)                                       | Nhân viên chi nhánh (`STAFF`, `FM`), Ops Manager, Admin                                                        |
+| **Phạm vi áp dụng**    | Chuyển lẻ từng món giữa các tầng kệ mà **khách hàng đã thuê** | Dời **toàn bộ tài sản và hàng hóa** từ Kệ cũ sang một Kệ hoàn toàn mới                                         |
+| **Ảnh hưởng Hợp đồng** | Không thay đổi hợp đồng, không cần phụ lục                    | Thay đổi tài sản thuê trên hợp đồng (`contract.rentedRackIds`)                                                 |
+| **Căn cứ pháp lý**     | Không cần (khách tự sắp xếp tài sản cá nhân)                  | **Bắt buộc:** Phụ lục hợp đồng `addendumId`, Báo cáo sự cố `incidentId`, hoặc Lý do khẩn cấp `emergencyReason` |
+| **Ràng buộc Kệ đích**  | Phải là kệ nằm trong hợp đồng của khách                       | Phải là kệ trống `AVAILABLE` và **Y CHANG SỐ TẦNG**                                                            |
+| **Sổ cái sinh ra**     | 1 bản ghi `MOVE` cho món hàng chuyển                          | $N$ bản ghi `MOVE` cho toàn bộ các mặt hàng trên kệ                                                            |
+| **Trạng thái Kệ cũ**   | Không đổi trạng thái                                          | `MAINTENANCE` (nếu do Sự cố / Khẩn cấp); `AVAILABLE` (nếu do Phụ lục hợp đồng)                                 |
 
 ---
 
 ## VI. Danh Mục Mã Lỗi Nghiệp Vụ Liên Quan (Error Codes)
 
-| Mã Lỗi             | HTTP Code | Ý Nghĩa Nghiệp Vụ                                                                                                                     |
-| :----------------- | :-------: | :------------------------------------------------------------------------------------------------------------------------------------ |
-| `MESSAGE_CODE_103` |   `403`   | Vi phạm quyền riêng tư Self-Storage (Staff gọi API tự quản) HOẶC Customer gọi API di dời kệ HOẶC Staff thao tác ngoài cơ sở phụ trách |
-| `MESSAGE_CODE_637` |   `400`   | Kệ thao tác không nằm trong danh sách thuê của hợp đồng (`contract.rentedRackIds`) hoặc đang thuộc hợp đồng khác                      |
-| `MESSAGE_CODE_638` |   `400`   | Kệ đích trùng với Kệ nguồn (không thể di dời sang chính nó)                                                                           |
-| `MESSAGE_CODE_639` |   `400`   | Kệ đích không ở trạng thái trống (`AVAILABLE`)                                                                                        |
-| `MESSAGE_CODE_640` |   `400`   | Kệ đích không cùng chi nhánh cơ sở với Kệ nguồn                                                                                       |
-| `MESSAGE_CODE_641` |   `400`   | Thiếu căn cứ pháp lý di dời (phải có `addendumId` hoặc `emergencyReason`)                                                             |
-| `MESSAGE_CODE_642` |   `400`   | Kệ đích không tương thích: Số lượng tầng của kệ đích phải giống hệt kệ nguồn (`toRack.tierCount === fromRack.tierCount`)              |
+| Mã Lỗi             | HTTP Code | Ý Nghĩa Nghiệp Vụ                                                                                                                               |
+| :----------------- | :-------: | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MESSAGE_CODE_103` |   `403`   | Vi phạm quyền riêng tư Self-Storage (Staff gọi API tự quản) HOẶC Customer gọi API di dời kệ HOẶC Staff thao tác ngoài cơ sở phụ trách           |
+| `MESSAGE_CODE_637` |   `400`   | Kệ thao tác không nằm trong danh sách thuê của hợp đồng (`contract.rentedRackIds`) hoặc đang thuộc hợp đồng khác                                |
+| `MESSAGE_CODE_638` |   `400`   | Kệ đích trùng với Kệ nguồn (không thể di dời sang chính nó)                                                                                     |
+| `MESSAGE_CODE_639` |   `400`   | Kệ đích không ở trạng thái trống (`AVAILABLE`)                                                                                                  |
+| `MESSAGE_CODE_640` |   `400`   | Kệ đích không cùng chi nhánh cơ sở với Kệ nguồn                                                                                                 |
+| `MESSAGE_CODE_641` |   `400`   | Thiếu căn cứ pháp lý di dời (phải có `addendumId`, `incidentId` hoặc `emergencyReason`)                                                         |
+| `MESSAGE_CODE_642` |   `400`   | Kệ đích không tương thích: Số lượng tầng của kệ đích phải giống hệt kệ nguồn (`toRack.tierCount === fromRack.tierCount`)                        |
+| `MESSAGE_CODE_643` |   `400`   | Báo cáo sự cố không đủ điều kiện di dời khẩn cấp (Sự cố đã đóng/hủy, sai cơ sở, sai kệ, hoặc mức độ nghiêm trọng không yêu cầu di dời khẩn cấp) |

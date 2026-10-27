@@ -240,6 +240,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_641: 'MESSAGE_CODE_641',
   // Batch Rack Migration Requires Identical Rack Tier Count
   MESSAGE_CODE_642: 'MESSAGE_CODE_642',
+  // Incident Not Eligible For Emergency Rack Migration
+  MESSAGE_CODE_643: 'MESSAGE_CODE_643',
 
   // ==========================================
   // INCIDENT (700 - 709)
@@ -392,8 +394,9 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_639: 'Destination Rack Must Be Empty And Available',
   MESSAGE_CODE_640: 'Storage Rack Facility Mismatch',
   MESSAGE_CODE_641:
-    'Legal Basis Or Emergency Reason Required For Rack Migration',
+    'Legal Basis, Incident Report Or Emergency Reason Required For Rack Migration',
   MESSAGE_CODE_642: 'Batch Rack Migration Requires Identical Rack Tier Count',
+  MESSAGE_CODE_643: 'Incident Not Eligible For Emergency Rack Migration',
 
   // Incident
   MESSAGE_CODE_700: 'Incident Not Found',

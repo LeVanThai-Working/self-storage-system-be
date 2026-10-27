@@ -10876,6 +10876,9 @@
 					"emergencyReason": {
 						"type": "string"
 					},
+					"incidentId": {
+						"type": "string"
+					},
 					"addendumId": {
 						"type": "string"
 					},

@@ -213,6 +213,10 @@ export const batchMigrateRackRequestSchema = z
       .string()
       .regex(objectIdRegex, 'Invalid addendumId format')
       .optional(),
+    incidentId: z
+      .string()
+      .regex(objectIdRegex, 'Invalid incidentId format')
+      .optional(),
     emergencyReason: z
       .string()
       .trim()
@@ -226,11 +230,15 @@ export const batchMigrateRackRequestSchema = z
     message: 'Destination rack must be different from source rack',
     path: ['toRackId'],
   })
-  .refine((data) => Boolean(data.addendumId || data.emergencyReason), {
-    message:
-      'Either addendumId (signed Addendum) or emergencyReason (at least 10 characters) is required',
-    path: ['emergencyReason'],
-  });
+  .refine(
+    (data) =>
+      Boolean(data.addendumId || data.emergencyReason || data.incidentId),
+    {
+      message:
+        'Either addendumId (signed Addendum), incidentId (Incident Report), or emergencyReason (at least 10 characters) is required',
+      path: ['emergencyReason'],
+    }
+  );
 
 export type BatchMigrateRackRequest = z.infer<
   typeof batchMigrateRackRequestSchema
