@@ -200,3 +200,38 @@ export type InventoryIdParam = z.infer<typeof inventoryIdParamSchema>;
 export type StorageUnitTreeParam = z.infer<typeof storageUnitTreeParamSchema>;
 export type SkuLocationsParam = z.infer<typeof skuLocationsParamSchema>;
 export type BarcodeParam = z.infer<typeof barcodeParamSchema>;
+
+export const batchMigrateRackRequestSchema = z
+  .object({
+    fromRackId: z.string().regex(objectIdRegex, 'Invalid fromRackId format'),
+    toRackId: z.string().regex(objectIdRegex, 'Invalid toRackId format'),
+    contractId: z
+      .string()
+      .regex(objectIdRegex, 'Invalid contractId format')
+      .optional(),
+    addendumId: z
+      .string()
+      .regex(objectIdRegex, 'Invalid addendumId format')
+      .optional(),
+    emergencyReason: z
+      .string()
+      .trim()
+      .min(10, 'Emergency reason must be at least 10 characters')
+      .max(1000)
+      .optional(),
+    reason: z.string().trim().max(1000).optional(),
+    notes: z.string().trim().max(1000).optional(),
+  })
+  .refine((data) => data.fromRackId !== data.toRackId, {
+    message: 'Destination rack must be different from source rack',
+    path: ['toRackId'],
+  })
+  .refine((data) => Boolean(data.addendumId || data.emergencyReason), {
+    message:
+      'Either addendumId (signed Addendum) or emergencyReason (at least 10 characters) is required',
+    path: ['emergencyReason'],
+  });
+
+export type BatchMigrateRackRequest = z.infer<
+  typeof batchMigrateRackRequestSchema
+>;

@@ -884,7 +884,8 @@
 					"confirm_inbound_request",
 					"dispute_inbound_request",
 					"putaway_inbound_request",
-					"cancel_inventory_request"
+					"cancel_inventory_request",
+					"batch_migrate_rack"
 				],
 				"type": "string"
 			},
@@ -9774,6 +9775,119 @@
 				},
 				"type": "object",
 				"additionalProperties": false
+			},
+			"infer_typeofbatchMigrateRackResponseSchema_": {
+				"properties": {
+					"message": {
+						"type": "string"
+					},
+					"movementsGenerated": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"totalQuantityMigrated": {
+						"type": "number",
+						"format": "double"
+					},
+					"migratedItemsCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"toRackCode": {
+						"type": "string"
+					},
+					"fromRackCode": {
+						"type": "string"
+					},
+					"toRackId": {
+						"type": "string"
+					},
+					"fromRackId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"message",
+					"movementsGenerated",
+					"totalQuantityMigrated",
+					"migratedItemsCount",
+					"contractId",
+					"toRackCode",
+					"fromRackCode",
+					"toRackId",
+					"fromRackId"
+				],
+				"type": "object"
+			},
+			"BatchMigrateRackResponse": {
+				"$ref": "#/components/schemas/infer_typeofbatchMigrateRackResponseSchema_"
+			},
+			"ApiResponse_BatchMigrateRackResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/BatchMigrateRackResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofbatchMigrateRackRequestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"emergencyReason": {
+						"type": "string"
+					},
+					"addendumId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"toRackId": {
+						"type": "string"
+					},
+					"fromRackId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"toRackId",
+					"fromRackId"
+				],
+				"type": "object"
+			},
+			"BatchMigrateRackRequest": {
+				"$ref": "#/components/schemas/infer_typeofbatchMigrateRackRequestSchema_"
 			},
 			"ContractSourceEnum": {
 				"enum": [
@@ -18762,7 +18876,7 @@
 						}
 					}
 				},
-				"description": "1. Customer creates an Outbound (Stock Out) Request\nGenerates One-Time Pickup QR token and HMAC-SHA256 hashed OTP",
+				"description": "1. Customer creates an Outbound (Stock Out) Request\r\nGenerates One-Time Pickup QR token and HMAC-SHA256 hashed OTP",
 				"tags": [
 					"Customer Inventory Request (Dual Handshake)"
 				],
@@ -19317,7 +19431,7 @@
 						}
 					}
 				},
-				"description": "10. Process Auto-Accept for Inbound Requests older than 24h (Cron / Batch job)\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"description": "10. Process Auto-Accept for Inbound Requests older than 24h (Cron / Batch job)\r\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
 				"tags": [
 					"Customer Inventory Request (Dual Handshake)"
 				],
@@ -19432,7 +19546,7 @@
 						}
 					}
 				},
-				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.",
+				"description": "1. Stock In (Stock In)\r\nCustomer stores new items into their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19505,7 +19619,7 @@
 						}
 					}
 				},
-				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.",
+				"description": "2. Stock Out (Stock Out)\r\nCustomer retrieves items from their unit or rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19578,7 +19692,7 @@
 						}
 					}
 				},
-				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.",
+				"description": "3. Internal Stock Move (Stock Move)\r\nCustomer relocates items between locations in their unit.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19651,7 +19765,7 @@
 						}
 					}
 				},
-				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.",
+				"description": "4. Stock Adjust (Stock Adjust)\r\nCustomer counts and updates physical inventory with mandatory reason.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19694,7 +19808,7 @@
 						}
 					}
 				},
-				"description": "5. Inventory Movement Ledger\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
+				"description": "5. Inventory Movement Ledger\r\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -19851,7 +19965,7 @@
 						}
 					}
 				},
-				"description": "6. Query current inventory list\nView current stock quantities of SKUs across units and rack tiers.",
+				"description": "6. Query current inventory list\r\nView current stock quantities of SKUs across units and rack tiers.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20021,7 +20135,7 @@
 						}
 					}
 				},
-				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
+				"description": "8. Storage Unit Inventory Tree\r\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20083,7 +20197,7 @@
 						}
 					}
 				},
-				"description": "9. Query SKU storage locations by SKU ID\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
+				"description": "9. Query SKU storage locations by SKU ID\r\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20197,7 +20311,7 @@
 						}
 					}
 				},
-				"description": "11. Customer Personal Inventory Dashboard Summary\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
+				"description": "11. Customer Personal Inventory Dashboard Summary\r\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -20282,6 +20396,79 @@
 						}
 					}
 				]
+			}
+		},
+		"/customer-inventories/racks/batch-migrate": {
+			"post": {
+				"operationId": "BatchMigrateRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_BatchMigrateRackResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "8. Batch Rack Migration\r\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\r\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/BatchMigrateRackRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/contracts": {

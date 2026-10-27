@@ -49,6 +49,13 @@ export interface CallerContext {
   assignedFacilityId?: string;
 }
 
+function toId(ref: unknown): string {
+  if (typeof ref === 'object' && ref !== null && '_id' in ref) {
+    return String((ref as { _id: unknown })._id);
+  }
+  return String(ref || '');
+}
+
 export class InventoryRequestService {
   constructor(
     private readonly inventoryRequestRepository: InventoryRequestRepository,
@@ -844,6 +851,31 @@ export class InventoryRequestService {
         String(request.storageUnitId?._id || request.storageUnitId)
       ) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_624);
+      }
+
+      // Rack Ownership Guard (Rule 637)
+      const storageRackId = toId(tier.storageRackId);
+      const contract = await this.contractRepository.findById(
+        toId(request.contractId),
+        session
+      );
+      if (contract) {
+        const rentedRackIds = (contract.rentedRackIds || []).map((id) =>
+          toId(id)
+        );
+        if (
+          rentedRackIds.length > 0 &&
+          !rentedRackIds.includes(storageRackId)
+        ) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_637);
+        }
+        const rack = await this.storageRackRepository.findById(storageRackId);
+        if (
+          rack?.currentContractId &&
+          toId(rack.currentContractId) !== toId(contract._id)
+        ) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_637);
+        }
       }
 
       const existingInv = await this.customerInventoryRepository.findByPosition(

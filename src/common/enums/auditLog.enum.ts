@@ -50,6 +50,7 @@ export enum AuditActionEnum {
   DISPUTE_INBOUND_REQUEST = 'dispute_inbound_request',
   PUTAWAY_INBOUND_REQUEST = 'putaway_inbound_request',
   CANCEL_INVENTORY_REQUEST = 'cancel_inventory_request',
+  BATCH_MIGRATE_RACK = 'batch_migrate_rack',
 }
 
 export enum AuditResourceEnum {
