@@ -45,6 +45,8 @@ import {
 import { InventoryRequestController } from './modules/customerInventory/inventoryRequest.controller.ts';
 import { UploadController } from './modules/upload/upload.controller.ts';
 import { uploadController } from './modules/upload/upload.container.ts';
+import { IncidentController } from './modules/incident/incident.controller.ts';
+import { incidentController } from './modules/incident/incident.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -113,6 +115,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === UploadController) {
       return uploadController as unknown as T;
+    }
+    if (controller === IncidentController) {
+      return incidentController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

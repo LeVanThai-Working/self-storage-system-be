@@ -240,6 +240,32 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_641: 'MESSAGE_CODE_641',
   // Batch Rack Migration Requires Identical Rack Tier Count
   MESSAGE_CODE_642: 'MESSAGE_CODE_642',
+  // Incident Not Eligible For Emergency Rack Migration
+  MESSAGE_CODE_643: 'MESSAGE_CODE_643',
+
+  // ==========================================
+  // INCIDENT (700 - 709)
+  // ==========================================
+  // Incident Not Found
+  MESSAGE_CODE_700: 'MESSAGE_CODE_700',
+  // Invalid Incident Status Transition
+  MESSAGE_CODE_701: 'MESSAGE_CODE_701',
+  // Storage Unit Not Owned By Contract
+  MESSAGE_CODE_702: 'MESSAGE_CODE_702',
+  // Incident Has Already Been Assigned
+  MESSAGE_CODE_703: 'MESSAGE_CODE_703',
+  // Incident Must Be Assigned Before Investigation
+  MESSAGE_CODE_704: 'MESSAGE_CODE_704',
+  // Incident Resolution Details Required
+  MESSAGE_CODE_705: 'MESSAGE_CODE_705',
+  // Incident Cannot Be Cancelled In Current Status
+  MESSAGE_CODE_706: 'MESSAGE_CODE_706',
+  // Only Assignee Or Facility Manager Can Update Incident
+  MESSAGE_CODE_707: 'MESSAGE_CODE_707',
+  // Assigned Staff Does Not Belong To Facility
+  MESSAGE_CODE_708: 'MESSAGE_CODE_708',
+  // Storage Rack Or Tier Does Not Belong To Contract
+  MESSAGE_CODE_709: 'MESSAGE_CODE_709',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -368,6 +394,19 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_639: 'Destination Rack Must Be Empty And Available',
   MESSAGE_CODE_640: 'Storage Rack Facility Mismatch',
   MESSAGE_CODE_641:
-    'Legal Basis Or Emergency Reason Required For Rack Migration',
+    'Legal Basis, Incident Report Or Emergency Reason Required For Rack Migration',
   MESSAGE_CODE_642: 'Batch Rack Migration Requires Identical Rack Tier Count',
+  MESSAGE_CODE_643: 'Incident Not Eligible For Emergency Rack Migration',
+
+  // Incident
+  MESSAGE_CODE_700: 'Incident Not Found',
+  MESSAGE_CODE_701: 'Invalid Incident Status Transition',
+  MESSAGE_CODE_702: 'Storage Unit Not Owned By Contract',
+  MESSAGE_CODE_703: 'Incident Has Already Been Assigned',
+  MESSAGE_CODE_704: 'Incident Must Be Assigned Before Investigation',
+  MESSAGE_CODE_705: 'Incident Resolution Details Required',
+  MESSAGE_CODE_706: 'Incident Cannot Be Cancelled In Current Status',
+  MESSAGE_CODE_707: 'Only Assignee Or Facility Manager Can Update Incident',
+  MESSAGE_CODE_708: 'Assigned Staff Does Not Belong To Facility',
+  MESSAGE_CODE_709: 'Storage Rack Or Tier Does Not Belong To Contract',
 };
