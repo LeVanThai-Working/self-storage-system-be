@@ -1188,17 +1188,20 @@ export class CustomerInventoryService {
       }
     }
 
-    const contract =
-      await this.contractRepository.findCurrentByStorageUnitId(storageUnitId);
-
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    let contract;
     if (isCustomer) {
-      if (
-        !contract ||
-        String(contract.customerId?._id || contract.customerId) !== caller.id
-      ) {
+      contract =
+        await this.contractRepository.findCurrentByStorageUnitAndCustomerId(
+          storageUnitId,
+          caller.id
+        );
+      if (!contract) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
+    } else {
+      contract =
+        await this.contractRepository.findCurrentByStorageUnitId(storageUnitId);
     }
 
     const [racks, allTiers, items] = await Promise.all([
@@ -1251,7 +1254,10 @@ export class CustomerInventoryService {
         }
         itemsByTierMap.get(tierId)!.push(formattedItem);
       } else {
-        unrackedItems.push(formattedItem);
+        // G6: If customer, only show unracked items belonging to them
+        if (!isCustomer || toId(doc.customerId) === caller.id) {
+          unrackedItems.push(formattedItem);
+        }
       }
     }
 
@@ -1261,9 +1267,16 @@ export class CustomerInventoryService {
         (t) => String(t.storageRackId) === rackId
       );
 
+      const isMine =
+        caller?.id && rack.currentCustomerId
+          ? String(rack.currentCustomerId) === caller.id
+          : false;
+
       const formattedTiers: TreeTier[] = rackTiers.map((tier) => {
         const tierId = String(tier._id);
-        const tierItems = itemsByTierMap.get(tierId) || [];
+        // G6: If caller is CUSTOMER and this rack does not belong to them, mask SKUs
+        const tierItems =
+          isCustomer && !isMine ? [] : itemsByTierMap.get(tierId) || [];
         return {
           id: tierId,
           tierNumber: tier.tierNumber,
@@ -1282,11 +1295,6 @@ export class CustomerInventoryService {
         };
       });
 
-      const isMine =
-        caller?.id && rack.currentCustomerId
-          ? String(rack.currentCustomerId) === caller.id
-          : false;
-
       return {
         id: rackId,
         rackCode: rack.rackCode,
@@ -1297,9 +1305,12 @@ export class CustomerInventoryService {
         bay: rack.bay ?? null,
         zone: rack.zone || null,
         customPrice: rack.customPrice ?? null,
-        currentContractId: rack.currentContractId
-          ? String(rack.currentContractId)
-          : null,
+        currentContractId:
+          isCustomer && !isMine
+            ? null
+            : rack.currentContractId
+              ? String(rack.currentContractId)
+              : null,
         isMine,
         tiers: formattedTiers,
       };
@@ -1313,9 +1324,18 @@ export class CustomerInventoryService {
         (itemsByTierMap.get(String(t._id))?.length || 0) > 0
     ).length;
     const availableTiers = Math.max(0, totalTiers - occupiedTiers);
-    const distinctSkuIds = new Set(items.map((i) => toId(i.skuId)));
+
+    // G6: If customer, SKU & quantity summary only counts caller's inventory to avoid leaking other customers' stock volume
+    const relevantItems = isCustomer
+      ? items.filter(
+          (i) =>
+            toId((i as unknown as FormattableInventory).customerId) ===
+            caller.id
+        )
+      : items;
+    const distinctSkuIds = new Set(relevantItems.map((i) => toId(i.skuId)));
     const totalSkus = distinctSkuIds.size;
-    const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
+    const totalQuantity = relevantItems.reduce((sum, i) => sum + i.quantity, 0);
 
     let contractSummary = null;
     if (contract) {

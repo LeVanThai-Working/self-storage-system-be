@@ -1590,6 +1590,7 @@
 					"billing_inquiry",
 					"contract_inquiry",
 					"unit_change_request",
+					"inventory_move_request",
 					"access_pin_reset",
 					"service_complaint",
 					"procedural_assistance",

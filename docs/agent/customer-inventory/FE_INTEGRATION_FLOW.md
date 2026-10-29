@@ -534,7 +534,7 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
 
 #### Bước 1: Khách hàng tạo phiếu xuất kho trên App
 
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/outbound`
+- **Endpoint:** `POST /api/v1/customer-inventories/outbound-requests`
 - **Request Body:**
   ```json
   {
@@ -563,7 +563,7 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
 
 #### Bước 2: Nhân viên kho đối soát tại quầy (Camera QR Scanner hoặc Nhập tay OTP)
 
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/verify-code`
+- **Endpoint:** `POST /api/v1/customer-inventories/verify-pickup-code`
 - **Request Body (Khi dùng camera quét mã QR):**
   ```json
   {
@@ -586,12 +586,12 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
 
 - Khi phiếu ở trạng thái `PROCESSING`:
   - **Khách hàng KHÔNG thể hủy phiếu.** Ẩn hoặc disable nút "Hủy phiếu".
-  - Nếu khách cố tình gọi `POST /api/v1/customer-inventories/requests/{id}/cancel-outbound`, backend sẽ trả lỗi `400` với mã `MESSAGE_CODE_634`.
+  - Nếu khách cố tình gọi `POST /api/v1/customer-inventories/outbound-requests/{id}/cancel`, backend sẽ trả lỗi `400` với mã `MESSAGE_CODE_634`.
   - Hiển thị banner cam trên App khách: _"Đơn xuất kho đang được nhân viên bốc hàng tại quầy. Để đảm bảo tính toàn vẹn hàng hóa, bạn không thể hủy đơn vào lúc này."_
 
 #### Bước 4: Bàn giao vật lý & Bằng chứng tại quầy (Proof of Handover)
 
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/{id}/complete-outbound`
+- **Endpoint:** `POST /api/v1/customer-inventories/outbound-requests/{id}/complete`
 - **Trường hợp A: Bàn giao đủ 100% số lượng:**
   ```json
   {
@@ -625,7 +625,7 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
 #### Bước 1: Tiếp nhận hàng bất ngờ tại kho (Staff-Assisted Inbound)
 
 - Khi tài xế chở hàng đến kho mà khách hàng chưa kịp tạo phiếu trước trên App, Staff được quyền tạo phiếu tiếp nhận hộ nhưng **BẮT BUỘC tuân thủ cơ chế bảo vệ 3 lớp**:
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/inbound`
+- **Endpoint:** `POST /api/v1/customer-inventories/inbound-requests`
 - **Request Body:**
   ```json
   {
@@ -670,10 +670,10 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
 #### Bước 3: Khách hàng xử lý tại Staging Area
 
 - **Lựa chọn 1: Khách bấm "Xác nhận nhận hàng" (Confirm):**
-  - **Endpoint:** `POST /api/v1/customer-inventories/requests/{id}/confirm-inbound`
+  - **Endpoint:** `POST /api/v1/customer-inventories/inbound-requests/{id}/confirm`
   - Phiếu chuyển sang `READY_TO_PUTAWAY` (hoặc `COMPLETED` nếu đã có sẵn kệ tầng chỉ định).
 - **Lựa chọn 2: Khách bấm "Khiếu nại số lượng / tình trạng" (Dispute):**
-  - **Endpoint:** `POST /api/v1/customer-inventories/requests/{id}/dispute-inbound`
+  - **Endpoint:** `POST /api/v1/customer-inventories/inbound-requests/{id}/dispute`
   - **Request Body:**
     ```json
     {
@@ -685,245 +685,7 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
 #### Bước 4: Nhân viên xếp hàng lên kệ tầng (Putaway Workflow)
 
 - Khi phiếu ở trạng thái `READY_TO_PUTAWAY`, trên màn hình Staff hiển thị nút **"Tiến hành xếp lên kệ (Putaway)"**.
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/{id}/putaway`
-- **Request Body:**
-  ```json
-  {
-    "placements": [
-      {
-        "skuId": "6ad1a2bbb3fa5fa49d2d02d1",
-        "quantity": 20,
-        "storageRackId": "6ad1a2bbb3fa5fa49d2d02d2",
-        "rackTierId": "6ad1a2bbb3fa5fa49d2d02d3"
-      }
-    ]
-  }
-  ```
-- **Xử lý UI:**
-  - Tồn kho khả dụng chính thức tăng lên.
-  - Trạng thái tầng kệ chuyển sang `OCCUPIED`.
-  - Phiếu chuyển sang `COMPLETED`.
-
----
-
-### 3. Tra Cứu & Lọc Danh Sách Phiếu Yêu Cầu
-
-- **Endpoint:** `GET /api/v1/customer-inventories/requests`
-- **Query Params hỗ trợ:**
-  - `type`: `inbound` | `outbound`
-  - `status`: `pending` | `pending_customer_confirmation` | `processing` | `ready_to_putaway` | `completed` | `disputed` | `cancelled`
-  - `contractId`, `facilityId`, `customerId`
-  - `search`: Tìm kiếm theo mã phiếu `requestCode` (vd: `REQ-OUT-20261025-0001`) hoặc tên/SĐT tài xế
-  - `page`, `limit`, `sortBy`, `sortOrder`
-- **Chi tiết 1 phiếu:** `GET /api/v1/customer-inventories/requests/{id}`
-
----
-
-### 4. Bảng Quy Định Trạng Thái & Màu Sắc Badge Trên UI
-
-| Trạng thái (`status`)           | Tên hiển thị trên UI   | Màu Badge     | Ý nghĩa nghiệp vụ                                                               |
-| :------------------------------ | :--------------------- | :------------ | :------------------------------------------------------------------------------ |
-| `PENDING`                       | Chờ lấy hàng           | Vàng (Yellow) | Khách đã tạo lệnh xuất, đang chờ Shipper đến kho xuất trình QR/OTP.             |
-| `PENDING_CUSTOMER_CONFIRMATION` | Chờ khách xác nhận     | Cam (Orange)  | Hàng nhập hộ đang nằm tại khu đệm (Staging), chưa cộng vào tồn kho khả dụng.    |
-| `PROCESSING`                    | Đang bốc hàng tại quầy | Xanh dương    | Staff đã quét QR/OTP hợp lệ, khóa nút hủy của khách, đang lấy hàng ra bàn giao. |
-| `READY_TO_PUTAWAY`              | Sẵn sàng xếp lên kệ    | Tím (Purple)  | Khách đã xác nhận hàng nhập, chờ nhân viên đem hàng xếp vào tầng kệ.            |
-| `COMPLETED`                     | Hoàn tất               | Xanh lá       | Đã bàn giao xong cho Shipper (Xuất) hoặc đã xếp ngay ngắn lên kệ tầng (Nhập).   |
-| `DISPUTED`                      | Đang khiếu nại         | Đỏ (Red)      | Khách khiếu nại hàng nhập sai/hỏng, giữ nguyên tại khu đệm chờ quản lý xử lý.   |
-| `CANCELLED`                     | Đã hủy                 | Xám (Gray)    | Khách chủ động hủy khi phiếu còn ở trạng thái `PENDING`.                        |
-| `EXPIRED`                       | Hết hạn lấy hàng       | Nâu/Đen       | Quá 24h kể từ lúc tạo mà không có người đến xuất trình mã QR/OTP lấy hàng.      |
-
----
-
-## V. HƯỚNG DẪN CHI TIẾT TÍCH HỢP UI: TASK 7D — PHIẾU YÊU CẦU NHẬP/XUẤT KHO & CƠ CHẾ BẮT TAY KÉP (DUAL HANDSHAKE)
-
-> Phân hệ này áp dụng đặc thù cho mô hình **Kho kệ dùng chung có nhân viên phục vụ (`WAREHOUSE_RACK`)**. Khách hàng giám sát từ xa trên App/Web, ủy quyền cho Shipper/Tài xế đến lấy/giao hàng, và Nhân viên kho (`FACILITY_STAFF`) chịu trách nhiệm bốc xếp, kiểm đếm tại quầy.
-
-```
-                    ┌──────────────────────────────────────────────┐
-                    │            BẮT TAY KÉP 2 CHIỀU               │
-                    │         (DUAL HANDSHAKE WORKFLOW)            │
-                    └──────────────────────────────────────────────┘
-
-  [ CUSTOMER APP ]                                               [ STAFF COUNTER / PDA ]
-         │                                                                  │
-  1. Tạo phiếu Xuất Kho ──► Sinh QR Code + OTP 6 số (HMAC)                  │
-         │                  (Gửi cho Shipper/Tài xế)                        │
-         │                             │                                    │
-         │                             ▼                                    │
-         │                   Shipper đến kho quầy                           │
-         │                             │                                    │
-         │                             └──────────► 2. Quét QR / Gõ OTP ────┤
-         │                                          (Hệ thống tự động:      │
-         ▼                                           - Huỷ QR & OTP tức thì │
-  Khóa nút HỦY trên App ◄─────────────────────────── - Chuyển PROCESSING)   │
-  (Chống hủy khi đang bốc)                                                  │
-                                                                            ▼
-                                                                3. Bốc hàng theo vị trí Kệ/Tầng
-                                                                4. Chụp ảnh kiện hàng + người nhận
-                                                                5. Tài xế ký xác nhận trên màn hình
-                                                                            │
-  6. Nhận Push Notification & Ảnh bằng chứng ◄────────────────── 6. Bấm "Hoàn tất bàn giao"
-     (Tồn kho khả dụng giảm ngay lập tức)                          (Hệ thống chạy @Transactional)
-```
-
----
-
-### 1. Luồng Xuất Kho An Toàn (Stock Out / Outbound Request)
-
-#### Bước 1: Khách hàng tạo phiếu xuất kho trên App
-
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/outbound`
-- **Request Body:**
-  ```json
-  {
-    "contractId": "6ad1a2bbb3fa5fa49d2d02d0",
-    "items": [
-      {
-        "skuId": "6ad1a2bbb3fa5fa49d2d02d1",
-        "quantity": 10,
-        "storageRackId": "6ad1a2bbb3fa5fa49d2d02d2",
-        "rackTierId": "6ad1a2bbb3fa5fa49d2d02d3"
-      }
-    ],
-    "transporterInfo": {
-      "name": "Nguyễn Văn Shipper",
-      "phoneNumber": "0901234567",
-      "vehiclePlate": "59A-123.45",
-      "deliveryCompany": "Lalamove"
-    },
-    "notes": "Hàng dễ vỡ, xin bốc cẩn thận"
-  }
-  ```
-- **Xử lý UI:**
-  - Backend trả về `pickupQrPayload` (dạng `PICKUP:REQ-OUT-20261025-0001:uuid-token`) và `rawOtpCode` (mã số 6 chữ số, ví dụ `482915`).
-  - **LƯU Ý BẢO MẬT:** `rawOtpCode` **chỉ được trả về 1 lần duy nhất** tại response tạo phiếu này (DB chỉ lưu hash HMAC-SHA256).
-  - Frontend hiển thị modal/drawer bảo mật: Render mã QR từ chuỗi `pickupQrPayload`, hiển thị 6 số OTP nổi bật kèm thời gian hết hạn (`expiresAt` - 24 giờ) và nút bấm **"Chia sẻ mã cho tài xế"** (Native Share sheet hoặc Copy).
-
-#### Bước 2: Nhân viên kho đối soát tại quầy (Camera QR Scanner hoặc Nhập tay OTP)
-
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/verify-code`
-- **Request Body (Khi dùng camera quét mã QR):**
-  ```json
-  {
-    "pickupCode": "PICKUP:REQ-OUT-20261025-0001:7b6058e0-1c09-4ee7-b864-4bf819a8a306"
-  }
-  ```
-- **Request Body (Khi tài xế đọc mã OTP 6 số gõ tay):**
-  ```json
-  {
-    "pickupCode": "482915",
-    "requestCode": "REQ-OUT-20261025-0001"
-  }
-  ```
-- **Xử lý UI Staff:**
-  - Hệ thống tự động chuyển trạng thái phiếu sang `PROCESSING`, xóa bỏ ngay mã OTP/QR trong database.
-  - Trả về chi tiết phiếu kèm `transporterInfo` để Staff đối chiếu mặt tài xế + biển số xe.
-  - Hiển thị danh sách ngăn kệ chi tiết cần bốc: Kệ `rackCode`, dãy `aisle`, khoang `bay`, tầng `tierNumber`.
-
-#### Bước 3: Khóa chặt nút Hủy trên giao diện Khách hàng (Chống Race Condition)
-
-- Khi phiếu ở trạng thái `PROCESSING`:
-  - **Khách hàng KHÔNG thể hủy phiếu.** Ẩn hoặc disable nút "Hủy phiếu".
-  - Nếu khách cố tình gọi `POST /api/v1/customer-inventories/requests/{id}/cancel-outbound`, backend sẽ trả lỗi `400` với mã `MESSAGE_CODE_634`.
-  - Hiển thị banner cam trên App khách: _"Đơn xuất kho đang được nhân viên bốc hàng tại quầy. Để đảm bảo tính toàn vẹn hàng hóa, bạn không thể hủy đơn vào lúc này."_
-
-#### Bước 4: Bàn giao vật lý & Bằng chứng tại quầy (Proof of Handover)
-
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/{id}/complete-outbound`
-- **Trường hợp A: Bàn giao đủ 100% số lượng:**
-  ```json
-  {
-    "evidenceImages": ["https://cdn.example.com/handover-box.jpg"],
-    "signatureUrl": "https://cdn.example.com/driver-signature.png",
-    "staffNotes": "Đã giao đủ 10 thùng nguyên đai nguyên kiện"
-  }
-  ```
-- **Trường hợp B: Xuất một phần do hàng trên kệ thực tế bị móp/thiếu (`PARTIAL_OUTBOUND`):**
-  - Staff chỉnh ô số lượng thực xuất `actualQuantity` nhỏ hơn số lượng khách đặt (ví dụ khách đặt 10 nhưng kệ chỉ còn 8 kiện nguyên vẹn):
-  ```json
-  {
-    "actualItems": [
-      {
-        "skuId": "6ad1a2bbb3fa5fa49d2d02d1",
-        "actualQuantity": 8
-      }
-    ],
-    "discrepancyReason": "2 thùng ở góc tầng bị móp rách bao bì, giữ lại đối soát",
-    "discrepancyImages": ["https://cdn.example.com/shelf-damaged-boxes.jpg"],
-    "evidenceImages": ["https://cdn.example.com/handover-8-boxes.jpg"],
-    "signatureUrl": "https://cdn.example.com/driver-sign.png"
-  }
-  ```
-- **Xử lý UI:** Hệ thống chỉ trừ đúng 8 kiện trong tồn kho, ghi sổ cái `InventoryMovement` type `OUT` kèm lý do chênh lệch.
-
----
-
-### 2. Luồng Nhập Kho & Tấm Khiên Bảo Vệ Nhân Viên (Stock In & Staff Assistance)
-
-#### Bước 1: Tiếp nhận hàng bất ngờ tại kho (Staff-Assisted Inbound)
-
-- Khi tài xế chở hàng đến kho mà khách hàng chưa kịp tạo phiếu trước trên App, Staff được quyền tạo phiếu tiếp nhận hộ nhưng **BẮT BUỘC tuân thủ cơ chế bảo vệ 3 lớp**:
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/inbound`
-- **Request Body:**
-  ```json
-  {
-    "contractId": "6ad1a2bbb3fa5fa49d2d02d0",
-    "items": [
-      {
-        "skuId": "6ad1a2bbb3fa5fa49d2d02d1",
-        "quantity": 20
-      }
-    ],
-    "transporterInfo": {
-      "name": "Bác Tài Xe Tải 50H-999.88",
-      "phoneNumber": "0918889999",
-      "vehiclePlate": "50H-999.88",
-      "deliveryCompany": "Chành xe Phương Trang"
-    },
-    "evidenceImages": [
-      "https://cdn.example.com/delivery-truck.jpg",
-      "https://cdn.example.com/unloaded-pallets.jpg",
-      "https://cdn.example.com/signed-waybill-receipt.jpg"
-    ],
-    "signatureUrl": "https://cdn.example.com/driver-signed.png",
-    "staffNotes": "Tiếp nhận 20 kiện từ tài xế lúc 14h30, để tại khu Staging"
-  }
-  ```
-- **YÊU CẦU UI STAFF:**
-  - Form nhập hộ bắt buộc phải upload **tối thiểu 3 ảnh**:
-    1. Ảnh 1: Toàn cảnh xe giao hàng và kiện hàng dỡ trước cửa kho.
-    2. Ảnh 2: Cận cảnh tình trạng kiện hàng (rách/móp/ướt nếu có).
-    3. Ảnh 3: Phiếu giao hàng giấy (Waybill) có chữ ký xác nhận số lượng của tài xế.
-  - Khung Canvas chữ ký cảm ứng để tài xế ký tay trực tiếp xác nhận số lượng bàn giao.
-
-#### Bước 2: Cách ly tại Khu vực Đệm (Inbound Staging Area)
-
-- Sau khi Staff tạo phiếu, trạng thái là `PENDING_CUSTOMER_CONFIRMATION`.
-- **QUY TẮC HIỂN THỊ TRÊN UI KHÁCH HÀNG:**
-  - Số hàng này **TUYỆT ĐỐI CHƯA ĐƯỢC CỘNG VÀO TỒN KHO KHẢ DỤNG (`CustomerInventory`)**.
-  - Khách hàng không thể tạo lệnh xuất kho cho số hàng này.
-  - Trên màn hình danh sách tồn kho, hiển thị tab/banner riêng: _"Có 20 kiện hàng mới được nhân viên tiếp nhận tại quầy. Mời bạn kiểm tra hình ảnh và xác nhận."_
-  - Hiển thị đồng hồ đếm ngược **24 giờ (Auto-Acceptance Policy)**: _"Nếu bạn không có phản hồi trong vòng 24h, phiếu sẽ tự động được phê duyệt theo điều khoản hợp đồng."_
-
-#### Bước 3: Khách hàng xử lý tại Staging Area
-
-- **Lựa chọn 1: Khách bấm "Xác nhận nhận hàng" (Confirm):**
-  - **Endpoint:** `POST /api/v1/customer-inventories/requests/{id}/confirm-inbound`
-  - Phiếu chuyển sang `READY_TO_PUTAWAY` (hoặc `COMPLETED` nếu đã có sẵn kệ tầng chỉ định).
-- **Lựa chọn 2: Khách bấm "Khiếu nại số lượng / tình trạng" (Dispute):**
-  - **Endpoint:** `POST /api/v1/customer-inventories/requests/{id}/dispute-inbound`
-  - **Request Body:**
-    ```json
-    {
-      "notes": "Tôi gửi 25 kiện nhưng biên bản ghi 20 kiện. Yêu cầu kiểm tra lại camera xe tải."
-    }
-    ```
-  - Phiếu chuyển sang `DISPUTED`. Hàng giữ nguyên tại khu vực đệm cách ly, chuyển cho Quản lý cơ sở (`FACILITY_MANAGER`) làm việc 3 bên (Khách - Nhà xe - Kho).
-
-#### Bước 4: Nhân viên xếp hàng lên kệ tầng (Putaway Workflow)
-
-- Khi phiếu ở trạng thái `READY_TO_PUTAWAY`, trên màn hình Staff hiển thị nút **"Tiến hành xếp lên kệ (Putaway)"**.
-- **Endpoint:** `POST /api/v1/customer-inventories/requests/{id}/putaway`
+- **Endpoint:** `POST /api/v1/customer-inventories/inbound-requests/{id}/putaway`
 - **Request Body:**
   ```json
   {

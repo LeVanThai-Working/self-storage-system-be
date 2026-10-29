@@ -376,6 +376,34 @@ export class ContractRepository {
     return query.exec();
   }
 
+  /**
+   * Find the current operational contract (ACTIVE or OVERDUE) occupying a storage unit for a specific customer.
+   * Supports multi-tenant shared warehouse units (e.g. WAREHOUSE_RACK) where multiple customers rent racks in the same room.
+   */
+  async findCurrentByStorageUnitAndCustomerId(
+    storageUnitId: string,
+    customerId: string,
+    session?: ClientSession
+  ) {
+    const query = this.contract
+      .findOne({
+        storageUnitId: Types.ObjectId.isValid(storageUnitId)
+          ? new Types.ObjectId(storageUnitId)
+          : storageUnitId,
+        customerId: Types.ObjectId.isValid(customerId)
+          ? new Types.ObjectId(customerId)
+          : customerId,
+        status: {
+          $in: [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE],
+        },
+      })
+      .populate('customerId', 'name email phoneNumber');
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
   async countActiveByStorageUnitId(
     storageUnitId: string,
     session?: ClientSession

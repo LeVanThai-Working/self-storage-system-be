@@ -48,6 +48,7 @@ import { CustomerSkuStatusEnum } from '../src/common/enums/customerSku.enum.ts';
 import { InventoryItemStatusEnum } from '../src/common/enums/customerInventory.enum.ts';
 import { MESSAGE_CODE } from '../src/common/consts/messageCode.const.ts';
 import { CloudinaryFolderEnum } from '../src/common/enums/upload.enum.ts';
+import { SupportTicketCategoryEnum } from '../src/common/enums/supportTicket.enum.ts';
 
 describe('Pha 1: FE Feedback Tests (G1, G3, G4, G7, G8, G12, G13)', () => {
   let inventoryService: CustomerInventoryService;
@@ -64,6 +65,10 @@ describe('Pha 1: FE Feedback Tests (G1, G3, G4, G7, G8, G12, G13)', () => {
 
   const customer1Caller: CallerContext = {
     id: TEST_USERS.customer1.id,
+    role: RoleEnum.CUSTOMER,
+  };
+  const customer2Caller: CallerContext = {
+    id: TEST_USERS.customer2.id,
     role: RoleEnum.CUSTOMER,
   };
   const staffACaller: CallerContext = {
@@ -528,6 +533,161 @@ describe('Pha 1: FE Feedback Tests (G1, G3, G4, G7, G8, G12, G13)', () => {
         customer1Caller
       );
       expect(created.uom).toBe('cái');
+    });
+  });
+
+  describe('G6: Multi-tenant shared warehouse privacy scoping in getStorageUnitTree', () => {
+    it('masks other customers items and hides contract ID in shared warehouse unit for customer caller', async () => {
+      // Setup Customer 1 inventory
+      await CustomerInventory.create({
+        customerId: new Types.ObjectId(TEST_USERS.customer1.id),
+        contractId: new Types.ObjectId(contractAId),
+        facilityId: new Types.ObjectId(TEST_FACILITY_A_ID),
+        storageUnitId: new Types.ObjectId(facilityAUnitId),
+        storageRackId: new Types.ObjectId(rackAId),
+        rackTierId: new Types.ObjectId(tierA1Id),
+        skuId: new Types.ObjectId(skuAId),
+        quantity: 10,
+        status: InventoryItemStatusEnum.NORMAL,
+        lastMovementAt: new Date(),
+      });
+
+      // Setup: Create 2nd rack in facilityAUnitId rented by customer 2 with contract 2
+      const rack2 = await StorageRack.create({
+        facilityId: new Types.ObjectId(TEST_FACILITY_A_ID),
+        storageUnitId: new Types.ObjectId(facilityAUnitId),
+        rackCode: 'R02',
+        name: 'Rack 02',
+        tierCount: 1,
+        status: RackStatusEnum.RENTED,
+        currentContractId: new Types.ObjectId(),
+        currentCustomerId: new Types.ObjectId(TEST_USERS.customer2.id),
+      });
+
+      const contract2 = await Contract.create({
+        contractCode: 'CTR-G6-CUST2',
+        source: ContractSourceEnum.RESERVATION,
+        customerId: new Types.ObjectId(TEST_USERS.customer2.id),
+        facilityId: new Types.ObjectId(TEST_FACILITY_A_ID),
+        storageUnitId: new Types.ObjectId(facilityAUnitId),
+        facilityUnitTypeOfferingId: new Types.ObjectId(),
+        rentedRackIds: [rack2._id],
+        status: ContractStatusEnum.ACTIVE,
+        startDate: new Date('2026-10-01'),
+        endDate: new Date('2026-11-01'),
+        billingUnit: 'month',
+        rentalPrice: 1500000,
+        totalPeriodicPrice: 1500000,
+        depositAmount: 1000000,
+        customerSigned: true,
+        staffSigned: true,
+      });
+
+      await StorageRack.findByIdAndUpdate(rack2._id, {
+        currentContractId: contract2._id,
+      });
+
+      const tier2 = await RackTier.create({
+        facilityId: new Types.ObjectId(TEST_FACILITY_A_ID),
+        storageUnitId: new Types.ObjectId(facilityAUnitId),
+        storageRackId: rack2._id,
+        tierNumber: 1,
+        tierCode: 'T1',
+        status: RackTierStatusEnum.OCCUPIED,
+      });
+
+      const sku2 = await CustomerSku.create({
+        customerId: new Types.ObjectId(TEST_USERS.customer2.id),
+        skuCode: 'SKU-CUST2-SECRET',
+        name: 'Bí mật kinh doanh của Khách 2',
+        uom: 'hộp',
+        status: CustomerSkuStatusEnum.ACTIVE,
+      });
+
+      await CustomerInventory.create({
+        customerId: new Types.ObjectId(TEST_USERS.customer2.id),
+        contractId: contract2._id,
+        facilityId: new Types.ObjectId(TEST_FACILITY_A_ID),
+        storageUnitId: new Types.ObjectId(facilityAUnitId),
+        storageRackId: rack2._id,
+        rackTierId: tier2._id,
+        skuId: sku2._id,
+        quantity: 50,
+        status: InventoryItemStatusEnum.NORMAL,
+        lastMovementAt: new Date(),
+      });
+
+      // Customer 1 calls tree
+      const cust1Tree = await inventoryService.getStorageUnitTree(
+        facilityAUnitId,
+        customer1Caller
+      );
+
+      // Customer 1 sees their contract
+      expect(cust1Tree.contract?.contractCode).toBe('CTR-P1-001');
+
+      // Rack 1 is Customer 1's rack -> items visible
+      const cust1Rack1 = cust1Tree.racks.find((r) => r.rackCode === 'RA1');
+      expect(cust1Rack1?.isMine).toBe(true);
+      expect(cust1Rack1?.tiers[0].items.length).toBeGreaterThan(0);
+
+      // Rack 2 belongs to Customer 2 -> items masked (empty array), contractId null, isMine false
+      const cust1Rack2 = cust1Tree.racks.find((r) => r.rackCode === 'R02');
+      expect(cust1Rack2?.isMine).toBe(false);
+      expect(cust1Rack2?.currentContractId).toBeNull();
+      expect(cust1Rack2?.tiers[0].items).toEqual([]);
+
+      // Customer 1 summary only counts their own SKUs/quantity, not Customer 2's 50 items
+      expect(cust1Tree.summary.totalQuantity).toBe(10);
+      expect(cust1Tree.summary.totalSkus).toBe(1);
+
+      // Customer 2 calls tree -> sees their own rack items, rack 1 masked
+      const cust2Tree = await inventoryService.getStorageUnitTree(
+        facilityAUnitId,
+        customer2Caller
+      );
+      expect(cust2Tree.contract?.contractCode).toBe('CTR-G6-CUST2');
+      const cust2Rack1 = cust2Tree.racks.find((r) => r.rackCode === 'RA1');
+      expect(cust2Rack1?.isMine).toBe(false);
+      expect(cust2Rack1?.tiers[0].items).toEqual([]);
+      const cust2Rack2 = cust2Tree.racks.find((r) => r.rackCode === 'R02');
+      expect(cust2Rack2?.isMine).toBe(true);
+      expect(cust2Rack2?.tiers[0].items.length).toBe(1);
+      expect(cust2Rack2?.tiers[0].items[0].sku.skuCode).toBe(
+        'SKU-CUST2-SECRET'
+      );
+      expect(cust2Tree.summary.totalQuantity).toBe(50);
+
+      // Staff calls tree -> sees all racks and all items
+      const staffTree = await inventoryService.getStorageUnitTree(
+        facilityAUnitId,
+        staffACaller
+      );
+      const staffRack1 = staffTree.racks.find((r) => r.rackCode === 'RA1');
+      const staffRack2 = staffTree.racks.find((r) => r.rackCode === 'R02');
+      expect(staffRack1?.tiers[0].items.length).toBeGreaterThan(0);
+      expect(staffRack2?.tiers[0].items.length).toBe(1);
+      expect(staffTree.summary.totalQuantity).toBe(60); // 10 (cust1) + 50 (cust2)
+    });
+
+    it('blocks a customer who has no active or overdue contract in the storage unit with 403', async () => {
+      // Customer 2 tries to access facilityBUnitId where only customer 1 has a contract
+      await expect(
+        inventoryService.getStorageUnitTree(facilityBUnitId, customer2Caller)
+      ).rejects.toThrowError(
+        expect.objectContaining({
+          statusCode: 403,
+          messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
+        })
+      );
+    });
+  });
+
+  describe('G10: SupportTicketCategoryEnum includes INVENTORY_MOVE_REQUEST', () => {
+    it('defines INVENTORY_MOVE_REQUEST category enum member correctly', () => {
+      expect(SupportTicketCategoryEnum.INVENTORY_MOVE_REQUEST).toBe(
+        'inventory_move_request'
+      );
     });
   });
 });

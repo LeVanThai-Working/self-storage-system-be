@@ -566,7 +566,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SupportTicketCategoryEnum": {
         "dataType": "refEnum",
-        "enums": ["billing_inquiry","contract_inquiry","unit_change_request","access_pin_reset","service_complaint","procedural_assistance","general_inquiry"],
+        "enums": ["billing_inquiry","contract_inquiry","unit_change_request","inventory_move_request","access_pin_reset","service_complaint","procedural_assistance","general_inquiry"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SupportTicketPriorityEnum": {
