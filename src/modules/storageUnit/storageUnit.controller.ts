@@ -89,6 +89,21 @@ function extractCaller(req: ExpressRequest): CallerInfo {
     }
   }
 
+  const cookieToken = req.cookies?.accessToken;
+  if (cookieToken) {
+    try {
+      const payload = jwtUtil.verifyAccessToken(cookieToken) as TokenPayload;
+      if (payload?.userId) {
+        return {
+          userId: payload.userId,
+          role: payload.role || 'customer',
+        };
+      }
+    } catch {
+      // Ignored
+    }
+  }
+
   return {
     userId: 'anonymous',
     role: 'customer',
