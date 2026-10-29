@@ -3,8 +3,11 @@ import { paginationQuerySchema } from '../../../common/schemas/pagination.schema
 import { BillingUnitEnum } from '../../../common/enums/billing.enum.ts';
 import {
   ContractAddendumTypeEnum,
+  ContractCancellationTypeEnum,
   ContractSourceEnum,
   ContractStatusEnum,
+  ContractTerminationTypeEnum,
+  ViolationCategoryEnum,
 } from '../../../common/enums/contract.enum.ts';
 
 export const objectIdSchema = z
@@ -142,25 +145,69 @@ export const customerSignContractSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
-export const cancelContractSchema = z.object({
-  cancellationReason: z
-    .string()
-    .min(1, 'Cancellation reason is required')
-    .max(1000),
-});
+export const cancelContractSchema = z
+  .object({
+    cancellationType: z
+      .enum(ContractCancellationTypeEnum)
+      .default(ContractCancellationTypeEnum.CANCEL),
+    cancellationReason: z
+      .string()
+      .min(1, 'Cancellation reason is required')
+      .max(1000),
+    refundBankName: z.string().min(2).max(100).optional(),
+    refundAccountNumber: z
+      .string()
+      .regex(/^[0-9A-Za-z]{6,30}$/, 'Invalid bank account number format')
+      .optional(),
+    refundAccountHolder: z.string().min(2).max(100).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.cancellationType === ContractCancellationTypeEnum.VOID) {
+      if (
+        !data.cancellationReason ||
+        data.cancellationReason.trim().length < 3
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Cancellation reason for VOID must be at least 3 characters',
+          path: ['cancellationReason'],
+        });
+      }
+    }
+  });
 
 export const renewContractSchema = z.object({
   newEndDate: dateStringSchema,
   note: z.string().max(1000).optional(),
 });
 
-export const createContractAddendumSchema = z.object({
-  type: z.nativeEnum(ContractAddendumTypeEnum),
-  amenities: z
-    .array(contractAmenityInputSchema)
-    .min(1, 'At least 1 amenity item is required'),
-  notes: z.string().max(1000).optional(),
-});
+export const createContractAddendumSchema = z
+  .object({
+    type: z.nativeEnum(ContractAddendumTypeEnum),
+    newEndDate: dateStringSchema.optional(),
+    newStorageUnitId: objectIdSchema.optional(),
+    notes: z.string().max(1000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === ContractAddendumTypeEnum.RENEW) {
+      if (!data.newEndDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'newEndDate is required when addendum type is RENEW',
+          path: ['newEndDate'],
+        });
+      }
+    } else if (data.type === ContractAddendumTypeEnum.UNIT_CHANGE) {
+      if (!data.newStorageUnitId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            'newStorageUnitId is required when addendum type is UNIT_CHANGE',
+          path: ['newStorageUnitId'],
+        });
+      }
+    }
+  });
 
 export const approveContractAddendumSchema = z.object({
   assignedStaffId: objectIdSchema.optional(),
@@ -187,14 +234,57 @@ export const cancelContractAddendumSchema = z.object({
 export const checkOutContractSchema = z.object({
   damageFee: z.number().min(0).default(0),
   inspectionNotes: z.string().max(1000).optional(),
+  inspectionPhotos: z.array(z.string()).optional(),
   actualCheckOutDate: dateStringSchema.optional(),
 });
 
-export const terminateContractSchema = z.object({
-  terminationReason: z
-    .string()
-    .min(1, 'Termination reason is required')
-    .max(1000),
+export const terminateContractSchema = z
+  .object({
+    terminationType: z.nativeEnum(ContractTerminationTypeEnum),
+    violationCategory: z
+      .nativeEnum(ViolationCategoryEnum)
+      .optional()
+      .nullable(),
+    reason: z
+      .string()
+      .min(1, 'Termination reason is required')
+      .max(2000)
+      .optional(),
+    terminationReason: z
+      .string()
+      .min(1, 'Termination reason is required')
+      .max(2000)
+      .optional(),
+    reportFileUrls: z
+      .array(z.string().url('Invalid report file URL'))
+      .min(1, 'At least one report file is required'),
+    evidenceFileUrls: z
+      .array(z.string().url('Invalid evidence photo URL'))
+      .min(1, 'At least one evidence photo is required'),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.reason && !data.terminationReason) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Termination reason is required',
+        path: ['reason'],
+      });
+    }
+    if (
+      data.terminationType === ContractTerminationTypeEnum.VIOLATION &&
+      !data.violationCategory
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'Violation category is required when termination type is VIOLATION',
+        path: ['violationCategory'],
+      });
+    }
+  });
+
+export const disputeSettlementSchema = z.object({
+  disputeReason: z.string().min(1, 'Dispute reason is required').max(1000),
 });
 
 export const contractQuerySchema = paginationQuerySchema.extend({
@@ -220,6 +310,7 @@ export const contractAddendumParamSchema = z.object({
   addendumId: objectIdSchema,
 });
 
+export type DisputeSettlementRequest = z.infer<typeof disputeSettlementSchema>;
 export type CreateContractRequest = z.infer<typeof createContractSchema>;
 export type CheckInContractRequest = z.infer<typeof checkInContractSchema>;
 export type CustomerSignContractRequest = z.infer<

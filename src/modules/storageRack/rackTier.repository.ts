@@ -63,7 +63,7 @@ export class RackTierRepository {
   async update(id: string, data: Partial<IRackTier>, session?: ClientSession) {
     if (!Types.ObjectId.isValid(id)) return null;
     return this.rackTier
-      .findByIdAndUpdate(id, data, { new: true, session })
+      .findByIdAndUpdate(id, data, { returnDocument: 'after', session })
       .populate(POPULATE_STORAGE_RACK);
   }
 

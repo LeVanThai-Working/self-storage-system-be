@@ -3,6 +3,7 @@ import type { StorageUnitRepository } from './storageUnit.repository.ts';
 import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { UnitTypeRepository } from '../unitType/unitType.repository.ts';
 import type { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.repository.ts';
+import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
 import type { IStorageUnit } from './storageUnit.model.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
@@ -37,6 +38,7 @@ export class StorageUnitService {
     private readonly facilityRepository: FacilityRepository,
     private readonly unitTypeRepository: UnitTypeRepository,
     private readonly offeringRepository: FacilityUnitTypeOfferingRepository,
+    private readonly customerInventoryRepository: CustomerInventoryRepository,
     private readonly auditLogService?: AuditLogService
   ) {}
 
@@ -313,43 +315,74 @@ export class StorageUnitService {
   @Transactional()
   async toggleMaintenance(
     id: string,
-    data: ToggleMaintenanceRequest
+    data: ToggleMaintenanceRequest,
+    session?: ClientSession
   ): Promise<StorageUnitResponse> {
-    const unit = await this.storageUnitRepository.findById(id);
+    const unit = await this.storageUnitRepository.findById(id, session);
     if (!unit) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
     }
 
     const beforeStatus = unit.status;
     const beforeNotes = unit.notes;
+    const extra = data.notes !== undefined ? { notes: data.notes } : {};
 
+    let updated;
     if (data.isUnderMaintenance) {
-      // Put under maintenance: Block if currently RESERVED or OCCUPIED
-      if (
-        unit.status === StorageUnitStatusEnum.RESERVED ||
-        unit.status === StorageUnitStatusEnum.OCCUPIED
-      ) {
-        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+      // If currently PENDING_CLEARANCE, ensure customer goods have been cleared before maintenance begins
+      if (unit.status === StorageUnitStatusEnum.PENDING_CLEARANCE) {
+        const remainingItems =
+          await this.customerInventoryRepository.countRemainingByStorageUnit(
+            id,
+            session
+          );
+        if (remainingItems > 0) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+        }
       }
-      unit.status = StorageUnitStatusEnum.UNDER_MAINTENANCE;
+
+      // Put under maintenance: Block if currently RESERVED or OCCUPIED
+      const allowedFrom = Object.values(StorageUnitStatusEnum).filter(
+        (s) =>
+          s !== StorageUnitStatusEnum.RESERVED &&
+          s !== StorageUnitStatusEnum.OCCUPIED
+      );
+      updated = await this.storageUnitRepository.transitionStatusAtomic(
+        id,
+        allowedFrom,
+        StorageUnitStatusEnum.UNDER_MAINTENANCE,
+        session,
+        extra
+      );
     } else {
       // Turn off maintenance -> transition to AVAILABLE
       if (unit.status !== StorageUnitStatusEnum.UNDER_MAINTENANCE) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
       }
-      unit.status = StorageUnitStatusEnum.AVAILABLE;
+
+      // Never re-open a unit while customer goods still remain inside
+      const remainingItems =
+        await this.customerInventoryRepository.countRemainingByStorageUnit(
+          id,
+          session
+        );
+      if (remainingItems > 0) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+      }
+
+      updated = await this.storageUnitRepository.transitionStatusAtomic(
+        id,
+        [StorageUnitStatusEnum.UNDER_MAINTENANCE],
+        StorageUnitStatusEnum.AVAILABLE,
+        session,
+        extra
+      );
     }
 
-    if (data.notes !== undefined) {
-      unit.notes = data.notes;
+    // Conditional update lost the race: status changed concurrently
+    if (!updated) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
     }
-
-    await this.storageUnitRepository.updateById(id, {
-      status: unit.status,
-      notes: unit.notes,
-    });
-
-    const updated = await this.storageUnitRepository.findById(id);
 
     this.auditLogService?.record({
       action: AuditActionEnum.TOGGLE_MAINTENANCE,
@@ -360,8 +393,8 @@ export class StorageUnitService {
         notes: beforeNotes,
       },
       after: {
-        status: unit.status,
-        notes: unit.notes,
+        status: updated.status,
+        notes: updated.notes,
       },
       metadata: { isUnderMaintenance: data.isUnderMaintenance },
     });

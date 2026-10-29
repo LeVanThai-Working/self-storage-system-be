@@ -7,9 +7,14 @@ import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
 import {
   ContractAddendumStatusEnum,
   ContractAddendumTypeEnum,
+  ContractCancellationTypeEnum,
+  ContractDepositStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
+  ContractTerminationTypeEnum,
+  ViolationCategoryEnum,
 } from '../../common/enums/contract.enum.ts';
+import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
 
 export interface IContractAmenity {
   facilityAmenityOfferingId: Types.ObjectId;
@@ -26,6 +31,10 @@ export interface IContractAddendum {
   _id?: Types.ObjectId;
   addendumCode: string;
   type: ContractAddendumTypeEnum;
+  previousEndDate?: Date | null;
+  newEndDate?: Date | null;
+  previousStorageUnitId?: Types.ObjectId | null;
+  newStorageUnitId?: Types.ObjectId | null;
   amenities: IContractAmenity[];
   totalPeriodicPrice: number;
   damageFee: number;
@@ -57,6 +66,34 @@ export interface IContractRenewal {
   note?: string | null;
 }
 
+export interface IContractSignatureHistory {
+  party: 'customer' | 'staff';
+  signedAt: Date;
+  previousStartDate: Date;
+  previousEndDate: Date;
+  resetAt: Date;
+  resetReason: string;
+}
+
+export interface IContractTerminationFile {
+  url: string;
+  fileHash?: string;
+  uploadedAt: Date;
+}
+
+export interface IContractTerminationHistory {
+  terminationType: ContractTerminationTypeEnum;
+  violationCategory?: ViolationCategoryEnum | null;
+  reason: string;
+  reportFiles: IContractTerminationFile[];
+  evidenceFiles: IContractTerminationFile[];
+  terminatedBy: Types.ObjectId;
+  terminatedAt: Date;
+  storageUnitStatus: StorageUnitStatusEnum;
+  depositStatus: ContractDepositStatusEnum;
+  forfeitedAmount: number;
+}
+
 export interface IContract extends SoftDeleteDocument {
   _id: Types.ObjectId;
   contractCode: string;
@@ -79,6 +116,8 @@ export interface IContract extends SoftDeleteDocument {
   depositAmount: number;
   depositPaidAt?: Date | null;
   depositPaymentId?: Types.ObjectId | null;
+  firstPeriodPaidAt?: Date | null;
+  firstPeriodPaymentId?: Types.ObjectId | null;
   totalPeriodicPrice: number;
 
   amenities: IContractAmenity[];
@@ -90,16 +129,28 @@ export interface IContract extends SoftDeleteDocument {
   damageFee: number;
   overdueFee: number;
   refundAmount: number;
+  forfeitedAmount?: number;
   additionalPaymentRequired: number;
   inspectionNotes?: string | null;
+  inspectionPhotos?: string[];
+  depositStatus?: ContractDepositStatusEnum | null;
+  settlementConfirmedAt?: Date | null;
+  disputedAt?: Date | null;
+  disputeReason?: string | null;
 
+  cancellationType?: ContractCancellationTypeEnum | null;
   cancellationReason?: string | null;
   cancelledBy?: Types.ObjectId | null;
   cancelledAt?: Date | null;
 
+  terminationType?: ContractTerminationTypeEnum | null;
+  violationCategory?: ViolationCategoryEnum | null;
   terminationReason?: string | null;
   terminatedBy?: Types.ObjectId | null;
   terminatedAt?: Date | null;
+  reportFiles?: IContractTerminationFile[];
+  evidenceFiles?: IContractTerminationFile[];
+  terminationHistory?: IContractTerminationHistory[];
 
   status: ContractStatusEnum;
   termsAccepted: boolean;
@@ -107,6 +158,10 @@ export interface IContract extends SoftDeleteDocument {
   customerSignedAt?: Date | null;
   staffSigned: boolean;
   staffSignedAt?: Date | null;
+  signatureHistory: IContractSignatureHistory[];
+  earlyCheckIn?: boolean | null;
+  outOfSlot?: boolean | null;
+  lastInventoryActivityAt?: Date | null;
   notes?: string | null;
 
   createdAt: Date;
@@ -168,8 +223,26 @@ const contractAddendumSchema = new Schema<IContractAddendum>(
     type: {
       type: String,
       enum: Object.values(ContractAddendumTypeEnum),
-      default: ContractAddendumTypeEnum.ADD,
+      default: ContractAddendumTypeEnum.RENEW,
       required: true,
+    },
+    previousEndDate: {
+      type: Date,
+      default: null,
+    },
+    newEndDate: {
+      type: Date,
+      default: null,
+    },
+    previousStorageUnitId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StorageUnit',
+      default: null,
+    },
+    newStorageUnitId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StorageUnit',
+      default: null,
     },
     amenities: {
       type: [contractAmenitySchema],
@@ -177,7 +250,7 @@ const contractAddendumSchema = new Schema<IContractAddendum>(
     },
     totalPeriodicPrice: {
       type: Number,
-      required: true,
+      default: 0,
       min: 0,
     },
     damageFee: {
@@ -295,6 +368,116 @@ const contractRenewalSchema = new Schema<IContractRenewal>(
   { _id: false }
 );
 
+const contractSignatureHistorySchema = new Schema<IContractSignatureHistory>(
+  {
+    party: {
+      type: String,
+      enum: ['customer', 'staff'],
+      required: true,
+    },
+    signedAt: {
+      type: Date,
+      required: true,
+    },
+    previousStartDate: {
+      type: Date,
+      required: true,
+    },
+    previousEndDate: {
+      type: Date,
+      required: true,
+    },
+    resetAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+    resetReason: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
+  { _id: false }
+);
+
+const contractTerminationFileSchema = new Schema<IContractTerminationFile>(
+  {
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    fileHash: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    uploadedAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
+const contractTerminationHistorySchema =
+  new Schema<IContractTerminationHistory>(
+    {
+      terminationType: {
+        type: String,
+        enum: Object.values(ContractTerminationTypeEnum),
+        required: true,
+      },
+      violationCategory: {
+        type: String,
+        enum: Object.values(ViolationCategoryEnum),
+        default: null,
+      },
+      reason: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      reportFiles: {
+        type: [contractTerminationFileSchema],
+        default: [],
+      },
+      evidenceFiles: {
+        type: [contractTerminationFileSchema],
+        default: [],
+      },
+      terminatedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      terminatedAt: {
+        type: Date,
+        required: true,
+        default: Date.now,
+      },
+      storageUnitStatus: {
+        type: String,
+        enum: Object.values(StorageUnitStatusEnum),
+        required: true,
+      },
+      depositStatus: {
+        type: String,
+        enum: Object.values(ContractDepositStatusEnum),
+        required: true,
+      },
+      forfeitedAmount: {
+        type: Number,
+        required: true,
+        default: 0,
+        min: 0,
+      },
+    },
+    { _id: true }
+  );
+
 const contractSchema = new Schema<IContract>(
   {
     contractCode: {
@@ -388,6 +571,15 @@ const contractSchema = new Schema<IContract>(
       ref: 'Payment',
       default: null,
     },
+    firstPeriodPaidAt: {
+      type: Date,
+      default: null,
+    },
+    firstPeriodPaymentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Payment',
+      default: null,
+    },
     totalPeriodicPrice: {
       type: Number,
       required: true,
@@ -430,6 +622,11 @@ const contractSchema = new Schema<IContract>(
       default: 0,
       min: 0,
     },
+    forfeitedAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     additionalPaymentRequired: {
       type: Number,
       default: 0,
@@ -437,6 +634,32 @@ const contractSchema = new Schema<IContract>(
     },
     inspectionNotes: {
       type: String,
+      default: null,
+    },
+    inspectionPhotos: {
+      type: [String],
+      default: [],
+    },
+    depositStatus: {
+      type: String,
+      enum: Object.values(ContractDepositStatusEnum),
+      default: null,
+    },
+    settlementConfirmedAt: {
+      type: Date,
+      default: null,
+    },
+    disputedAt: {
+      type: Date,
+      default: null,
+    },
+    disputeReason: {
+      type: String,
+      default: null,
+    },
+    cancellationType: {
+      type: String,
+      enum: Object.values(ContractCancellationTypeEnum),
       default: null,
     },
     cancellationReason: {
@@ -452,6 +675,16 @@ const contractSchema = new Schema<IContract>(
       type: Date,
       default: null,
     },
+    terminationType: {
+      type: String,
+      enum: Object.values(ContractTerminationTypeEnum),
+      default: null,
+    },
+    violationCategory: {
+      type: String,
+      enum: Object.values(ViolationCategoryEnum),
+      default: null,
+    },
     terminationReason: {
       type: String,
       default: null,
@@ -464,6 +697,18 @@ const contractSchema = new Schema<IContract>(
     terminatedAt: {
       type: Date,
       default: null,
+    },
+    reportFiles: {
+      type: [contractTerminationFileSchema],
+      default: [],
+    },
+    evidenceFiles: {
+      type: [contractTerminationFileSchema],
+      default: [],
+    },
+    terminationHistory: {
+      type: [contractTerminationHistorySchema],
+      default: [],
     },
     status: {
       type: String,
@@ -488,6 +733,22 @@ const contractSchema = new Schema<IContract>(
       default: false,
     },
     staffSignedAt: {
+      type: Date,
+      default: null,
+    },
+    signatureHistory: {
+      type: [contractSignatureHistorySchema],
+      default: [],
+    },
+    earlyCheckIn: {
+      type: Boolean,
+      default: null,
+    },
+    outOfSlot: {
+      type: Boolean,
+      default: null,
+    },
+    lastInventoryActivityAt: {
       type: Date,
       default: null,
     },

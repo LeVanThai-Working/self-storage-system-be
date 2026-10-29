@@ -51,9 +51,23 @@ export class ReservationRepository {
       .populate('assignedStaffId', 'name email phoneNumber role')
       .populate('cancelledBy', 'name email role')
       .populate('refundedBy', 'name email role')
+      .populate('forceCancelledBy', 'name email role')
+      .populate('arrivedBy', 'name email role')
+      .populate('graceExtendedBy', 'name email role')
       .populate('unitChangeHistory.fromUnitId', 'unitNumber floor zone status')
       .populate('unitChangeHistory.toUnitId', 'unitNumber floor zone status')
-      .populate('unitChangeHistory.changedBy', 'name email role');
+      .populate('unitChangeHistory.changedBy', 'name email role')
+      .populate('unitChangeHistory.proposedBy', 'name email role')
+      .populate('unitChangeHistory.decisionBy', 'name email role')
+      .populate(
+        'pendingUnitChange.newStorageUnitId',
+        'unitNumber floor zone status'
+      )
+      .populate(
+        'pendingUnitChange.newFacilityUnitTypeOfferingId',
+        'unitTypeId billingUnit pricePerUnit depositMultiplier minRentalDays status'
+      )
+      .populate('pendingUnitChange.proposedBy', 'name email role');
 
     if (session) {
       query.session(session);
@@ -74,7 +88,10 @@ export class ReservationRepository {
       .populate('confirmedBy', 'name email role')
       .populate('assignedStaffId', 'name email phoneNumber role')
       .populate('cancelledBy', 'name email role')
-      .populate('refundedBy', 'name email role');
+      .populate('refundedBy', 'name email role')
+      .populate('forceCancelledBy', 'name email role')
+      .populate('arrivedBy', 'name email role')
+      .populate('graceExtendedBy', 'name email role');
 
     if (session) {
       query.session(session);
@@ -137,20 +154,20 @@ export class ReservationRepository {
     if (query.startDateFrom || query.startDateTo) {
       filter.startDate = {};
       if (query.startDateFrom) {
-        filter.startDate.$gte = new Date(query.startDateFrom);
+        filter.startDate.$gte = startOfDayVN(query.startDateFrom);
       }
       if (query.startDateTo) {
-        filter.startDate.$lte = new Date(query.startDateTo);
+        filter.startDate.$lte = endOfDayVN(query.startDateTo);
       }
     }
 
     if (query.checkInDateFrom || query.checkInDateTo) {
       filter.checkInDate = {};
       if (query.checkInDateFrom) {
-        filter.checkInDate.$gte = new Date(query.checkInDateFrom);
+        filter.checkInDate.$gte = startOfDayVN(query.checkInDateFrom);
       }
       if (query.checkInDateTo) {
-        filter.checkInDate.$lte = new Date(query.checkInDateTo);
+        filter.checkInDate.$lte = endOfDayVN(query.checkInDateTo);
       }
     }
 
@@ -175,6 +192,9 @@ export class ReservationRepository {
         { path: 'assignedStaffId', select: 'name email phoneNumber role' },
         { path: 'cancelledBy', select: 'name email role' },
         { path: 'refundedBy', select: 'name email role' },
+        { path: 'forceCancelledBy', select: 'name email role' },
+        { path: 'arrivedBy', select: 'name email role' },
+        { path: 'graceExtendedBy', select: 'name email role' },
       ],
     });
   }
@@ -184,7 +204,9 @@ export class ReservationRepository {
     data: Partial<IReservation>,
     session?: ClientSession
   ) {
-    const query = this.reservation.findByIdAndUpdate(id, data, { new: true });
+    const query = this.reservation.findByIdAndUpdate(id, data, {
+      returnDocument: 'after',
+    });
     if (session) {
       query.session(session);
     }
@@ -209,7 +231,7 @@ export class ReservationRepository {
     };
 
     const query = this.reservation.findOneAndUpdate(filter, updateData, {
-      new: true,
+      returnDocument: 'after',
     });
     if (session) {
       query.session(session);
@@ -310,6 +332,7 @@ export class ReservationRepository {
     const query = this.reservation.find({
       status: ReservationStatusEnum.OVERDUE,
       graceExpiresAt: { $ne: null, $lt: now },
+      arrivedAt: null,
       deleted: false,
     });
     if (session) {
@@ -392,7 +415,7 @@ export class ReservationRepository {
         $inc: { refundAmount: additionalAmount },
         $set: { refundStatus: RefundStatusEnum.PENDING },
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (session) {
       query.session(session);

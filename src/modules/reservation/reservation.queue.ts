@@ -27,6 +27,13 @@ export class ReservationQueue {
       connection: bullmqConnection,
       defaultJobOptions,
     });
+
+    this.queue.on('error', (err) => {
+      if (process.env.NODE_ENV === 'test') {
+        return;
+      }
+      console.error('Reservation Queue Redis Error:', err);
+    });
   }
 
   /**

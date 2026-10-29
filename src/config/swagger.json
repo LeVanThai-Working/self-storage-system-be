@@ -856,6 +856,8 @@
 					"approve",
 					"reject",
 					"cancel",
+					"force_cancel",
+					"void",
 					"check_in",
 					"check_out",
 					"renew",
@@ -875,9 +877,20 @@
 					"inventory_move",
 					"inventory_adjust",
 					"reassign_unit",
+					"propose_reassign_unit",
+					"accept_reassign_unit",
+					"reject_reassign_unit",
 					"expire",
 					"mark_overdue",
+					"mark_arrived",
+					"extend_grace",
 					"refund",
+					"approve_refund",
+					"reject_refund",
+					"pay_refund",
+					"assign_transaction",
+					"confirm_settlement",
+					"dispute_settlement",
 					"create_inventory_request",
 					"verify_pickup_code",
 					"complete_outbound_handover",
@@ -914,6 +927,7 @@
 					"approval_request",
 					"contract",
 					"payment",
+					"refund_request",
 					"notification",
 					"storage_rack",
 					"rack_tier",
@@ -2316,7 +2330,8 @@
 					"reserved",
 					"occupied",
 					"under_maintenance",
-					"inactive"
+					"inactive",
+					"pending_clearance"
 				],
 				"type": "string"
 			},
@@ -3453,7 +3468,8 @@
 				"enum": [
 					"customer",
 					"facility",
-					"system"
+					"system",
+					"facility_fault"
 				],
 				"type": "string"
 			},
@@ -3580,6 +3596,172 @@
 					"notes": {
 						"type": "string"
 					},
+					"pendingUnitChange": {
+						"properties": {
+							"proposedBy": {
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"email",
+									"name",
+									"id"
+								],
+								"type": "object"
+							},
+							"priceDifference": {
+								"type": "number",
+								"format": "double"
+							},
+							"newOffering": {
+								"properties": {
+									"status": {
+										"type": "string"
+									},
+									"minRentalDays": {
+										"type": "number",
+										"format": "double"
+									},
+									"depositMultiplier": {
+										"type": "number",
+										"format": "double"
+									},
+									"unitTypeId": {
+										"type": "string"
+									},
+									"pricePerUnit": {
+										"type": "number",
+										"format": "double"
+									},
+									"billingUnit": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"pricePerUnit",
+									"billingUnit",
+									"id"
+								],
+								"type": "object"
+							},
+							"newStorageUnit": {
+								"properties": {
+									"zone": {
+										"type": "string"
+									},
+									"status": {
+										"type": "string"
+									},
+									"floor": {
+										"type": "number",
+										"format": "double"
+									},
+									"unitNumber": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"status",
+									"floor",
+									"unitNumber",
+									"id"
+								],
+								"type": "object"
+							},
+							"proposedAt": {
+								"type": "string"
+							},
+							"oldUnitStatus": {
+								"type": "string"
+							},
+							"reason": {
+								"type": "string"
+							},
+							"newPricePerUnit": {
+								"type": "number",
+								"format": "double"
+							},
+							"newFacilityUnitTypeOfferingId": {
+								"type": "string"
+							},
+							"newStorageUnitId": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"proposedAt",
+							"oldUnitStatus",
+							"reason",
+							"newPricePerUnit",
+							"newFacilityUnitTypeOfferingId",
+							"newStorageUnitId"
+						],
+						"type": "object"
+					},
+					"outOfSlot": {
+						"type": "boolean"
+					},
+					"earlyCheckIn": {
+						"type": "boolean"
+					},
+					"immediateForfeitWarning": {
+						"type": "boolean"
+					},
+					"policySnapshot": {
+						"properties": {
+							"cancellationMode": {
+								"type": "string",
+								"enum": [
+									"slot_start",
+									"calendar_day"
+								]
+							},
+							"noShowGraceHours": {
+								"type": "number",
+								"format": "double"
+							},
+							"forfeitPercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"freeCancelHours": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"noShowGraceHours",
+							"forfeitPercent",
+							"freeCancelHours"
+						],
+						"type": "object"
+					},
+					"acceptedAt": {
+						"type": "string"
+					},
+					"policyVersion": {
+						"type": "string"
+					},
 					"paymentId": {
 						"type": "string"
 					},
@@ -3622,6 +3804,96 @@
 						"type": "object"
 					},
 					"refundedAt": {
+						"type": "string"
+					},
+					"graceExtensionReason": {
+						"type": "string"
+					},
+					"graceExtendedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"graceExtendedAt": {
+						"type": "string"
+					},
+					"arrivedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"arrivedAt": {
+						"type": "string"
+					},
+					"forceCancelledAt": {
+						"type": "string"
+					},
+					"forceCancelledBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"incidentId": {
 						"type": "string"
 					},
 					"cancellationSource": {
@@ -3735,6 +4007,9 @@
 					"unitChangeHistory": {
 						"items": {
 							"properties": {
+								"changedAt": {
+									"type": "string"
+								},
 								"changedBy": {
 									"properties": {
 										"role": {
@@ -3759,6 +4034,87 @@
 										"id"
 									],
 									"type": "object"
+								},
+								"rejectReason": {
+									"type": "string"
+								},
+								"decisionAt": {
+									"type": "string"
+								},
+								"decisionBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"proposedAt": {
+									"type": "string"
+								},
+								"proposedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"status": {
+									"type": "string",
+									"enum": [
+										"pending",
+										"accepted",
+										"rejected"
+									]
+								},
+								"toPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"fromPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"toOfferingId": {
+									"type": "string"
+								},
+								"fromOfferingId": {
+									"type": "string"
 								},
 								"toUnit": {
 									"properties": {
@@ -3814,9 +4170,6 @@
 									],
 									"type": "object"
 								},
-								"changedAt": {
-									"type": "string"
-								},
 								"reason": {
 									"type": "string"
 								},
@@ -3828,7 +4181,6 @@
 								}
 							},
 							"required": [
-								"changedAt",
 								"reason",
 								"toUnitId",
 								"fromUnitId"
@@ -3836,6 +4188,9 @@
 							"type": "object"
 						},
 						"type": "array"
+					},
+					"termsAccepted": {
+						"type": "boolean"
 					},
 					"refundStatus": {
 						"$ref": "#/components/schemas/RefundStatusEnum"
@@ -3847,6 +4202,12 @@
 					"refundAmount": {
 						"type": "number",
 						"format": "double"
+					},
+					"evidenceImages": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"status": {
 						"$ref": "#/components/schemas/ReservationStatusEnum"
@@ -3940,9 +4301,11 @@
 					"updatedAt",
 					"createdAt",
 					"unitChangeHistory",
+					"termsAccepted",
 					"refundStatus",
 					"forfeitedAmount",
 					"refundAmount",
+					"evidenceImages",
 					"status",
 					"totalAmount",
 					"amenities",
@@ -3995,6 +4358,9 @@
 			},
 			"infer_typeofcreateReservationSchema_": {
 				"properties": {
+					"termsAccepted": {
+						"type": "boolean"
+					},
 					"notes": {
 						"type": "string"
 					},
@@ -4271,6 +4637,9 @@
 							"available"
 						]
 					},
+					"customerAgreed": {
+						"type": "boolean"
+					},
 					"reason": {
 						"type": "string"
 					},
@@ -4279,6 +4648,7 @@
 					}
 				},
 				"required": [
+					"customerAgreed",
 					"reason",
 					"newStorageUnitId"
 				],
@@ -4286,6 +4656,27 @@
 			},
 			"ReassignStorageUnitRequest": {
 				"$ref": "#/components/schemas/infer_typeofreassignStorageUnitSchema_"
+			},
+			"infer_typeofrespondUnitReassignSchema_": {
+				"properties": {
+					"rejectReason": {
+						"type": "string"
+					},
+					"action": {
+						"type": "string",
+						"enum": [
+							"accept",
+							"reject"
+						]
+					}
+				},
+				"required": [
+					"action"
+				],
+				"type": "object"
+			},
+			"RespondUnitReassignRequest": {
+				"$ref": "#/components/schemas/infer_typeofrespondUnitReassignSchema_"
 			},
 			"infer_typeofconfirmReservationSchema_": {
 				"properties": {
@@ -4306,6 +4697,15 @@
 			},
 			"infer_typeofcancelReservationSchema_": {
 				"properties": {
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumber": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
 					"cancellationReason": {
 						"type": "string"
 					}
@@ -4348,6 +4748,639 @@
 			},
 			"ConfirmRefundRequest": {
 				"$ref": "#/components/schemas/infer_typeofconfirmRefundSchema_"
+			},
+			"IncidentCategoryEnum": {
+				"enum": [
+					"structural",
+					"electrical",
+					"water_leak",
+					"security",
+					"cleanliness",
+					"other"
+				],
+				"type": "string"
+			},
+			"infer_typeofforceCancelReservationSchema_": {
+				"properties": {
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumber": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
+					"incidentDetails": {
+						"properties": {
+							"description": {
+								"type": "string"
+							},
+							"images": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"category": {
+								"$ref": "#/components/schemas/IncidentCategoryEnum"
+							},
+							"title": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"images",
+							"category",
+							"title"
+						],
+						"type": "object"
+					},
+					"incidentId": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"reason"
+				],
+				"type": "object"
+			},
+			"ForceCancelReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofforceCancelReservationSchema_"
+			},
+			"infer_typeofmarkCustomerArrivedSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"MarkCustomerArrivedRequest": {
+				"$ref": "#/components/schemas/infer_typeofmarkCustomerArrivedSchema_"
+			},
+			"infer_typeofextendGracePeriodSchema_": {
+				"properties": {
+					"reason": {
+						"type": "string"
+					},
+					"extensionHours": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"reason",
+					"extensionHours"
+				],
+				"type": "object"
+			},
+			"ExtendGracePeriodRequest": {
+				"$ref": "#/components/schemas/infer_typeofextendGracePeriodSchema_"
+			},
+			"RefundRequestReasonEnum": {
+				"enum": [
+					"customer_cancel",
+					"facility_cancel",
+					"system_cancel",
+					"late_payment",
+					"amount_mismatch",
+					"deposit_settlement",
+					"facility_fault"
+				],
+				"type": "string"
+			},
+			"RefundRequestStatusEnum": {
+				"enum": [
+					"pending_approval",
+					"approved",
+					"paid",
+					"rejected",
+					"cancelled"
+				],
+				"type": "string"
+			},
+			"infer_typeofrefundRequestResponseSchema_": {
+				"properties": {
+					"cancelledAt": {
+						"type": "string"
+					},
+					"cancelledBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"paidAt": {
+						"type": "string"
+					},
+					"paidBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"rejectedAt": {
+						"type": "string"
+					},
+					"rejectedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"approvedAt": {
+						"type": "string"
+					},
+					"approvedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"requestedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"note": {
+						"type": "string"
+					},
+					"cancellationReason": {
+						"type": "string"
+					},
+					"rejectionReason": {
+						"type": "string"
+					},
+					"proofImageUrl": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumberMasked": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
+					"customer": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"facility": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"paymentId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"requestedAt": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RefundRequestStatusEnum"
+					},
+					"reason": {
+						"$ref": "#/components/schemas/RefundRequestReasonEnum"
+					},
+					"amount": {
+						"type": "number",
+						"format": "double"
+					},
+					"refundCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"requestedAt",
+					"status",
+					"reason",
+					"amount",
+					"refundCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"RefundRequestResponse": {
+				"$ref": "#/components/schemas/infer_typeofrefundRequestResponseSchema_"
+			},
+			"ApiResponse_RefundRequestResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RefundRequestResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateRefundRequestSchema_": {
+				"properties": {
+					"note": {
+						"type": "string"
+					},
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumber": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
+					"paymentId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"reason": {
+						"$ref": "#/components/schemas/RefundRequestReasonEnum"
+					},
+					"amount": {
+						"type": "number",
+						"format": "double"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"reason",
+					"amount",
+					"customerId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"CreateRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateRefundRequestSchema_"
+			},
+			"infer_typeofapproveRefundRequestSchema_": {
+				"properties": {
+					"note": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"ApproveRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofapproveRefundRequestSchema_"
+			},
+			"infer_typeofrejectRefundRequestSchema_": {
+				"properties": {
+					"rejectionReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"rejectionReason"
+				],
+				"type": "object"
+			},
+			"RejectRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofrejectRefundRequestSchema_"
+			},
+			"infer_typeofconfirmPaidRefundSchema_": {
+				"properties": {
+					"note": {
+						"type": "string"
+					},
+					"proofImageUrl": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"referenceCode"
+				],
+				"type": "object"
+			},
+			"ConfirmPaidRefund": {
+				"$ref": "#/components/schemas/infer_typeofconfirmPaidRefundSchema_"
+			},
+			"infer_typeofcancelRefundRequestSchema_": {
+				"properties": {
+					"cancellationReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"cancellationReason"
+				],
+				"type": "object"
+			},
+			"CancelRefundRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelRefundRequestSchema_"
+			},
+			"PaginatedData_RefundRequestResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/RefundRequestResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_RefundRequestResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_RefundRequestResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofrefundRequestQuerySchema_": {
+				"properties": {
+					"reason": {
+						"$ref": "#/components/schemas/RefundRequestReasonEnum"
+					},
+					"status": {
+						"$ref": "#/components/schemas/RefundRequestStatusEnum"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"reservationId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"amount"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"RefundRequestQuery": {
+				"$ref": "#/components/schemas/infer_typeofrefundRequestQuerySchema_"
 			},
 			"SepayWebhookPayload": {
 				"properties": {
@@ -4411,7 +5444,8 @@
 			"PaymentPurposeEnum": {
 				"enum": [
 					"reservation_deposit",
-					"contract_deposit"
+					"contract_deposit",
+					"rent_first_period"
 				],
 				"type": "string"
 			},
@@ -4816,6 +5850,226 @@
 			"PaymentQuery": {
 				"$ref": "#/components/schemas/infer_typeofpaymentQuerySchema_"
 			},
+			"PaymentTransactionResultEnum": {
+				"description": "Outcome of processing a single bank transaction received from SePay.\nRECEIVED is the initial state (stored before processing) and also marks\ntransactions whose processing was interrupted, so a retry can resume them.",
+				"enum": [
+					"received",
+					"matched",
+					"partially_matched",
+					"unmatched",
+					"amount_mismatch",
+					"late",
+					"ignored"
+				],
+				"type": "string"
+			},
+			"infer_typeofpaymentTransactionResponseSchema_": {
+				"properties": {
+					"matchedPaymentId": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"accumulated": {
+						"type": "number",
+						"format": "double"
+					},
+					"transferAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"transferType": {
+						"type": "string"
+					},
+					"content": {
+						"type": "string"
+					},
+					"code": {
+						"type": "string"
+					},
+					"subAccount": {
+						"type": "string"
+					},
+					"accountNumber": {
+						"type": "string"
+					},
+					"transactionDate": {
+						"type": "string"
+					},
+					"gateway": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"result": {
+						"$ref": "#/components/schemas/PaymentTransactionResultEnum"
+					},
+					"sepayId": {
+						"type": "number",
+						"format": "double"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"result",
+					"sepayId",
+					"id"
+				],
+				"type": "object"
+			},
+			"PaymentTransactionResponse": {
+				"$ref": "#/components/schemas/infer_typeofpaymentTransactionResponseSchema_"
+			},
+			"PaginatedData_PaymentTransactionResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/PaymentTransactionResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_PaymentTransactionResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_PaymentTransactionResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofunmatchedTransactionQuerySchema_": {
+				"properties": {
+					"code": {
+						"type": "string"
+					},
+					"accountNumber": {
+						"type": "string"
+					},
+					"gateway": {
+						"type": "string"
+					},
+					"result": {
+						"$ref": "#/components/schemas/PaymentTransactionResultEnum"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"sortBy": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortOrder",
+					"sortBy",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"UnmatchedTransactionQuery": {
+				"$ref": "#/components/schemas/infer_typeofunmatchedTransactionQuerySchema_"
+			},
+			"ApiResponse_PaymentTransactionResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaymentTransactionResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofassignUnmatchedTransactionSchema_": {
+				"properties": {
+					"paymentCode": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"paymentCode"
+				],
+				"type": "object"
+			},
+			"AssignUnmatchedTransactionRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignUnmatchedTransactionSchema_"
+			},
 			"infer_typeofcancelPaymentSchema_": {
 				"properties": {
 					"cancellationReason": {
@@ -4844,13 +6098,13 @@
 			},
 			"infer_typeofconfirmManualPaymentSchema_": {
 				"properties": {
-					"proofImageUrl": {
-						"type": "string"
-					},
 					"referenceCode": {
 						"type": "string"
 					},
 					"note": {
+						"type": "string"
+					},
+					"proofImageUrl": {
 						"type": "string"
 					},
 					"method": {
@@ -4866,6 +6120,7 @@
 				},
 				"required": [
 					"note",
+					"proofImageUrl",
 					"method"
 				],
 				"type": "object"
@@ -5194,17 +6449,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"IncidentCategoryEnum": {
-				"enum": [
-					"structural",
-					"electrical",
-					"water_leak",
-					"security",
-					"cleanliness",
-					"other"
-				],
-				"type": "string"
 			},
 			"IncidentSeverityEnum": {
 				"enum": [
@@ -11657,8 +12901,8 @@
 			},
 			"ContractAddendumTypeEnum": {
 				"enum": [
-					"add",
-					"remove"
+					"renew",
+					"unit_change"
 				],
 				"type": "string"
 			},
@@ -11672,6 +12916,33 @@
 				],
 				"type": "string"
 			},
+			"ContractTerminationTypeEnum": {
+				"enum": [
+					"mutual",
+					"customer_request",
+					"violation"
+				],
+				"type": "string"
+			},
+			"ContractDepositStatusEnum": {
+				"enum": [
+					"held",
+					"applied",
+					"partially_refunded",
+					"refunded",
+					"forfeited",
+					"disputed"
+				],
+				"type": "string"
+			},
+			"ViolationCategoryEnum": {
+				"enum": [
+					"prohibited_goods",
+					"overdue_payment",
+					"property_damage"
+				],
+				"type": "string"
+			},
 			"ContractStatusEnum": {
 				"enum": [
 					"draft",
@@ -11680,6 +12951,13 @@
 					"completed",
 					"cancelled",
 					"terminated"
+				],
+				"type": "string"
+			},
+			"ContractCancellationTypeEnum": {
+				"enum": [
+					"void",
+					"cancel"
 				],
 				"type": "string"
 			},
@@ -11831,6 +13109,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"outOfSlot": {
+						"type": "boolean"
+					},
+					"earlyCheckIn": {
+						"type": "boolean"
+					},
 					"staffSignedAt": {
 						"type": "string"
 					},
@@ -11868,6 +13152,12 @@
 					"terminationReason": {
 						"type": "string"
 					},
+					"violationCategory": {
+						"$ref": "#/components/schemas/ViolationCategoryEnum"
+					},
+					"terminationType": {
+						"$ref": "#/components/schemas/ContractTerminationTypeEnum"
+					},
 					"cancelledAt": {
 						"type": "string"
 					},
@@ -11899,6 +13189,21 @@
 					"cancellationReason": {
 						"type": "string"
 					},
+					"cancellationType": {
+						"$ref": "#/components/schemas/ContractCancellationTypeEnum"
+					},
+					"disputeReason": {
+						"type": "string"
+					},
+					"disputedAt": {
+						"type": "string"
+					},
+					"settlementConfirmedAt": {
+						"type": "string"
+					},
+					"depositStatus": {
+						"$ref": "#/components/schemas/ContractDepositStatusEnum"
+					},
 					"inspectionNotes": {
 						"type": "string"
 					},
@@ -11927,6 +13232,12 @@
 						],
 						"type": "object"
 					},
+					"firstPeriodPaymentId": {
+						"type": "string"
+					},
+					"firstPeriodPaidAt": {
+						"type": "string"
+					},
 					"depositPaymentId": {
 						"type": "string"
 					},
@@ -11951,6 +13262,44 @@
 					"createdAt": {
 						"type": "string"
 					},
+					"signatureHistory": {
+						"items": {
+							"properties": {
+								"resetReason": {
+									"type": "string"
+								},
+								"resetAt": {
+									"type": "string"
+								},
+								"previousEndDate": {
+									"type": "string"
+								},
+								"previousStartDate": {
+									"type": "string"
+								},
+								"signedAt": {
+									"type": "string"
+								},
+								"party": {
+									"type": "string",
+									"enum": [
+										"customer",
+										"staff"
+									]
+								}
+							},
+							"required": [
+								"resetReason",
+								"resetAt",
+								"previousEndDate",
+								"previousStartDate",
+								"signedAt",
+								"party"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
 					"staffSigned": {
 						"type": "boolean"
 					},
@@ -11963,7 +13312,166 @@
 					"status": {
 						"$ref": "#/components/schemas/ContractStatusEnum"
 					},
+					"terminationHistory": {
+						"items": {
+							"properties": {
+								"terminatedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"violationCategory": {
+									"$ref": "#/components/schemas/ViolationCategoryEnum"
+								},
+								"forfeitedAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"depositStatus": {
+									"$ref": "#/components/schemas/ContractDepositStatusEnum"
+								},
+								"storageUnitStatus": {
+									"$ref": "#/components/schemas/StorageUnitStatusEnum"
+								},
+								"terminatedAt": {
+									"type": "string"
+								},
+								"evidenceFiles": {
+									"items": {
+										"properties": {
+											"fileHash": {
+												"type": "string"
+											},
+											"uploadedAt": {
+												"type": "string"
+											},
+											"url": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"uploadedAt",
+											"url"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"reportFiles": {
+									"items": {
+										"properties": {
+											"fileHash": {
+												"type": "string"
+											},
+											"uploadedAt": {
+												"type": "string"
+											},
+											"url": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"uploadedAt",
+											"url"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"reason": {
+									"type": "string"
+								},
+								"terminationType": {
+									"$ref": "#/components/schemas/ContractTerminationTypeEnum"
+								}
+							},
+							"required": [
+								"forfeitedAmount",
+								"depositStatus",
+								"storageUnitStatus",
+								"terminatedAt",
+								"evidenceFiles",
+								"reportFiles",
+								"reason",
+								"terminationType"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"evidenceFiles": {
+						"items": {
+							"properties": {
+								"fileHash": {
+									"type": "string"
+								},
+								"uploadedAt": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"uploadedAt",
+								"url"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"reportFiles": {
+						"items": {
+							"properties": {
+								"fileHash": {
+									"type": "string"
+								},
+								"uploadedAt": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"uploadedAt",
+								"url"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"inspectionPhotos": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"additionalPaymentRequired": {
+						"type": "number",
+						"format": "double"
+					},
+					"forfeitedAmount": {
 						"type": "number",
 						"format": "double"
 					},
@@ -12191,6 +13699,72 @@
 									],
 									"type": "object"
 								},
+								"newStorageUnit": {
+									"properties": {
+										"zone": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"floor",
+										"unitNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"newStorageUnitId": {
+									"type": "string"
+								},
+								"previousStorageUnit": {
+									"properties": {
+										"zone": {
+											"type": "string"
+										},
+										"status": {
+											"type": "string"
+										},
+										"floor": {
+											"type": "number",
+											"format": "double"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"status",
+										"floor",
+										"unitNumber",
+										"id"
+									],
+									"type": "object"
+								},
+								"previousStorageUnitId": {
+									"type": "string"
+								},
+								"newEndDate": {
+									"type": "string"
+								},
+								"previousEndDate": {
+									"type": "string"
+								},
 								"staffSigned": {
 									"type": "boolean"
 								},
@@ -12373,11 +13947,17 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
+					"signatureHistory",
 					"staffSigned",
 					"customerSigned",
 					"termsAccepted",
 					"status",
+					"terminationHistory",
+					"evidenceFiles",
+					"reportFiles",
+					"inspectionPhotos",
 					"additionalPaymentRequired",
+					"forfeitedAmount",
 					"refundAmount",
 					"overdueFee",
 					"damageFee",
@@ -12659,12 +14239,25 @@
 			},
 			"infer_typeofcancelContractSchema_": {
 				"properties": {
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumber": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
 					"cancellationReason": {
 						"type": "string"
+					},
+					"cancellationType": {
+						"$ref": "#/components/schemas/ContractCancellationTypeEnum"
 					}
 				},
 				"required": [
-					"cancellationReason"
+					"cancellationReason",
+					"cancellationType"
 				],
 				"type": "object"
 			},
@@ -12693,31 +14286,17 @@
 					"notes": {
 						"type": "string"
 					},
-					"amenities": {
-						"items": {
-							"properties": {
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"facilityAmenityOfferingId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"quantity",
-								"facilityAmenityOfferingId"
-							],
-							"type": "object"
-						},
-						"type": "array"
+					"newStorageUnitId": {
+						"type": "string"
+					},
+					"newEndDate": {
+						"type": "string"
 					},
 					"type": {
 						"$ref": "#/components/schemas/ContractAddendumTypeEnum"
 					}
 				},
 				"required": [
-					"amenities",
 					"type"
 				],
 				"type": "object"
@@ -12793,6 +14372,12 @@
 					"actualCheckOutDate": {
 						"type": "string"
 					},
+					"inspectionPhotos": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"inspectionNotes": {
 						"type": "string"
 					},
@@ -12813,15 +14398,52 @@
 				"properties": {
 					"terminationReason": {
 						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"violationCategory": {
+						"$ref": "#/components/schemas/ViolationCategoryEnum"
+					},
+					"evidenceFileUrls": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"reportFileUrls": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"terminationType": {
+						"$ref": "#/components/schemas/ContractTerminationTypeEnum"
 					}
 				},
 				"required": [
-					"terminationReason"
+					"evidenceFileUrls",
+					"reportFileUrls",
+					"terminationType"
 				],
 				"type": "object"
 			},
 			"TerminateContractRequest": {
 				"$ref": "#/components/schemas/infer_typeofterminateContractSchema_"
+			},
+			"infer_typeofdisputeSettlementSchema_": {
+				"properties": {
+					"disputeReason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"disputeReason"
+				],
+				"type": "object"
+			},
+			"DisputeSettlementRequest": {
+				"$ref": "#/components/schemas/infer_typeofdisputeSettlementSchema_"
 			},
 			"ApprovalRequestTargetTypeEnum": {
 				"enum": [
@@ -16493,7 +18115,7 @@
 						}
 					},
 					"400": {
-						"description": "Unit cannot be put into/taken out of maintenance in current status",
+						"description": "Unit cannot be put into/taken out of maintenance in current status, or still contains customer inventory (MESSAGE_CODE_629)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -16513,7 +18135,7 @@
 						}
 					}
 				},
-				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\n\n//",
+				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\nTurning maintenance off is rejected (MESSAGE_CODE_629) while customer goods remain inside the unit.\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -17134,7 +18756,7 @@
 						}
 					}
 				},
-				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).",
+				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).\nEnforces minimum same-day preparation lead time (sameDayLeadMinutes, 400 MESSAGE_CODE_328),\nmaximum startDate offset from checkInDate (maxStartDateOffsetDays, 400 MESSAGE_CODE_329),\nand flags immediateForfeitWarning when booking is within 24 hours of check-in.",
 				"tags": [
 					"Reservations"
 				],
@@ -17485,6 +19107,78 @@
 				}
 			}
 		},
+		"/reservations/{id}/respond-reassign": {
+			"post": {
+				"operationId": "RespondUnitReassign",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer or Staff responds to a pending unit reassign proposal (accept or reject) [CHỐT D4].\n- Accept: applies new unit, updates basePrice to upgraded price tier, frees old unit.\n- Reject: cancels reservation as FACILITY_FAULT, releases both units, creates 100% deposit refund request.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RespondUnitReassignRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/reservations/{id}/confirm": {
 			"post": {
 				"operationId": "ConfirmReservation",
@@ -17741,6 +19435,706 @@
 						}
 					}
 				}
+			}
+		},
+		"/reservations/{id}/force-cancel": {
+			"post": {
+				"operationId": "ForceCancelReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager / Business Ops Manager / System Admin force-cancels a reservation when storage unit is unavailable due to an incident.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ForceCancelReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/mark-arrived": {
+			"post": {
+				"operationId": "MarkCustomerArrived",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Staff or Manager marks that customer has arrived at facility for check-in.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MarkCustomerArrivedRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/extend-grace": {
+			"post": {
+				"operationId": "ExtendGracePeriod",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager, Business Ops Manager, or System Admin extends check-in grace period for customer.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ExtendGracePeriodRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests": {
+			"post": {
+				"operationId": "CreateRefundRequest",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tạo yêu cầu hoàn tiền mới (Manual hoặc System triggered).",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateRefundRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "ListRefundRequests",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_RefundRequestResponse__"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tra cứu danh sách yêu cầu hoàn tiền theo bộ lọc và phân trang.",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "reason",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RefundRequestReasonEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RefundRequestStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "reservationId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"amount"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/refund-requests/{id}/approve": {
+			"post": {
+				"operationId": "ApproveRefundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden / Maker-Checker violation / Exceed threshold",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Phê duyệt yêu cầu hoàn tiền (Maker-Checker và Ngưỡng OPS).",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ApproveRefundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests/{id}/reject": {
+			"post": {
+				"operationId": "RejectRefundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Từ chối yêu cầu hoàn tiền.",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RejectRefundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests/{id}/confirm-paid": {
+			"post": {
+				"operationId": "ConfirmPaidRefundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Xác nhận đã chuyển khoản/hoàn tiền thành công (Trạng thái PAID là bất biến).",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ConfirmPaidRefund"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests/{id}/cancel": {
+			"post": {
+				"operationId": "CancelRefundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Hủy yêu cầu hoàn tiền (bởi người yêu cầu trước khi phê duyệt).",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelRefundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/refund-requests/{id}": {
+			"get": {
+				"operationId": "GetRefundRequestById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RefundRequestResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Chi tiết một yêu cầu hoàn tiền.",
+				"tags": [
+					"Refund Requests"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/payments/sepay/webhook": {
@@ -18051,6 +20445,210 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/payments/transactions/unmatched": {
+			"get": {
+				"operationId": "GetUnmatchedTransactions",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_PaymentTransactionResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "List unmatched transactions for reconciliation.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "code",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "accountNumber",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "gateway",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "result",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/PaymentTransactionResultEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/payments/transactions/{id}/assign": {
+			"post": {
+				"operationId": "AssignUnmatchedTransaction",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentTransactionResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Transaction or Payment not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Manually assign an unmatched transaction to a payment.",
+				"tags": [
+					"Payments"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignUnmatchedTransactionRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/payments/{id}": {
@@ -22487,7 +25085,7 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_644 if contract OVERDUE)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -22527,7 +25125,7 @@
 						}
 					}
 				},
-				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.",
+				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -22600,7 +25198,7 @@
 						}
 					}
 				},
-				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.",
+				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.\nPermitted when contract status is ACTIVE or OVERDUE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -22673,7 +25271,7 @@
 						}
 					}
 				},
-				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.",
+				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.\nPermitted when contract status is ACTIVE or OVERDUE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -22706,7 +25304,7 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_644 if contract OVERDUE)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -22746,7 +25344,7 @@
 						}
 					}
 				},
-				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.",
+				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -23486,6 +26084,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -23529,6 +26137,16 @@
 					},
 					"401": {
 						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -23694,6 +26312,26 @@
 								}
 							}
 						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
 					}
 				},
 				"description": "Batch process active contracts that have passed their endDate to mark them as OVERDUE.",
@@ -23714,6 +26352,26 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
 								}
 							}
 						}
@@ -23770,6 +26428,26 @@
 							}
 						}
 					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -23781,7 +26459,7 @@
 						}
 					}
 				},
-				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\nWhen both customerSigned and staffSigned are true, contract automatically becomes ACTIVE.",
+				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\nContract remains DRAFT until Facility Manager completes check-in.",
 				"tags": [
 					"Contracts"
 				],
@@ -23832,6 +26510,26 @@
 							}
 						}
 					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -23843,7 +26541,7 @@
 						}
 					}
 				},
-				"description": "Staff confirms handover & signs contract on Web (Two-party signing: Staff side).\nWhen both customerSigned and staffSigned are true, contract automatically becomes ACTIVE and storage unit becomes OCCUPIED.",
+				"description": "Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).\nRequires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.\nIf actualCheckInDate shifts contract dates and customer had already signed, saves previous signature\nin signatureHistory, resets customerSigned to false, and rejects with 400 MESSAGE_CODE_425\nrequiring customer re-signing before check-in can be finalized.",
 				"tags": [
 					"Contracts"
 				],
@@ -23894,6 +26592,26 @@
 							}
 						}
 					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -23905,7 +26623,7 @@
 						}
 					}
 				},
-				"description": "Cancel DRAFT contract.\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
+				"description": "Cancel or Void DRAFT contract.\n- cancellationType = 'cancel': Cancel contract. If sourced from reservation, forfeiture / refund is calculated based on policy snapshot. If walk-in, deposit is 100% forfeited.\n- cancellationType = 'void': Void invalid draft contract (Staff/Manager/Ops/Admin only). If sourced from reservation, reservation and unit hold are preserved. If walk-in, deposit is 100% refunded.",
 				"tags": [
 					"Contracts"
 				],
@@ -23971,6 +26689,7 @@
 				"tags": [
 					"Contracts"
 				],
+				"deprecated": true,
 				"security": [],
 				"parameters": [
 					{
@@ -24018,6 +26737,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -24029,7 +26758,7 @@
 						}
 					}
 				},
-				"description": "Customer requests to add (install) or remove (uninstall) amenities for an ACTIVE contract (Creates Contract Addendum in PENDING_APPROVAL).",
+				"description": "Create a Contract Addendum (RENEW or UNIT_CHANGE).\n- RENEW: CUSTOMER creates in PENDING_APPROVAL; FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT.\n- UNIT_CHANGE: Only FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT and reserves the replacement unit.",
 				"tags": [
 					"Contracts"
 				],
@@ -24080,6 +26809,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -24091,7 +26830,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager approves amenity addendum request (ADD or REMOVE), creates DRAFT addendum, and assigns staff for physical handover/uninstall.",
+				"description": "Facility Manager approves a PENDING_APPROVAL addendum request and transitions it to DRAFT for customer signing.",
 				"tags": [
 					"Contracts"
 				],
@@ -24150,6 +26889,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -24161,7 +26910,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager rejects amenity addendum request and releases locked inventory (if ADD).",
+				"description": "Facility Manager rejects a PENDING_APPROVAL addendum request.",
 				"tags": [
 					"Contracts"
 				],
@@ -24220,6 +26969,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -24231,7 +26990,7 @@
 						}
 					}
 				},
-				"description": "Customer signs addendum on Mobile (Two-party signing: Customer side).\nWhen both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.",
+				"description": "Customer signs addendum (First signing step: Customer side).\nAddendum remains in DRAFT awaiting Facility Manager signature.",
 				"tags": [
 					"Contracts"
 				],
@@ -24281,7 +27040,17 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "Bad Request (MESSAGE_CODE_410/412/415 for signing state, MESSAGE_CODE_629 if old unit still contains inventory on UNIT_CHANGE)",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -24301,7 +27070,7 @@
 						}
 					}
 				},
-				"description": "Staff confirms physical handover/uninstall & signs addendum on Web (Two-party signing: Staff side).\nWhen both customerSigned and staffSigned are true, addendum becomes ACTIVE and changes are applied to the contract.",
+				"description": "Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).\nTransitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.\nFor UNIT_CHANGE addendums, returns 400 MESSAGE_CODE_629 if the previous storage unit still contains customer inventory.",
 				"tags": [
 					"Contracts"
 				],
@@ -24360,6 +27129,16 @@
 							}
 						}
 					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -24371,7 +27150,7 @@
 						}
 					}
 				},
-				"description": "Cancel addendum (when PENDING_APPROVAL or DRAFT) and release locked amenity inventory (if ADD).",
+				"description": "Cancel addendum (when PENDING_APPROVAL or DRAFT) and release reserved replacement storage unit (if UNIT_CHANGE).",
 				"tags": [
 					"Contracts"
 				],
@@ -24421,7 +27200,27 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "Bad Request (MESSAGE_CODE_401 if invalid contract status, MESSAGE_CODE_420 if customer inventory remains, MESSAGE_CODE_421 if open incidents exist)",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -24441,7 +27240,7 @@
 						}
 					}
 				},
-				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.",
+				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.\nReturns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract,\nor 400 MESSAGE_CODE_421 if open (unclosed) incidents still exist on this contract.",
 				"tags": [
 					"Contracts"
 				],
@@ -24492,6 +27291,26 @@
 							}
 						}
 					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
 					"404": {
 						"description": "Not Found",
 						"content": {
@@ -24524,6 +27343,160 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/TerminateContractRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/contracts/{id}/settlement/confirm": {
+			"post": {
+				"operationId": "ConfirmSettlement",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer confirms contract deposit settlement agreement.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/contracts/{id}/settlement/dispute": {
+			"post": {
+				"operationId": "DisputeSettlement",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer disputes contract deposit settlement deductions / damage fee.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DisputeSettlementRequest"
 							}
 						}
 					}

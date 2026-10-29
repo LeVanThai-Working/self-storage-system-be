@@ -16,10 +16,13 @@ import { Payment, PaymentTransaction } from '../payment/payment.model.ts';
 import { PaymentRepository } from '../payment/payment.repository.ts';
 import { Contract } from '../contract/contract.model.ts';
 import { ContractRepository } from '../contract/contract.repository.ts';
+import { Incident } from '../incident/incident.model.ts';
+import { IncidentRepository } from '../incident/incident.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { notificationService } from '../notification/notification.container.ts';
 import { facilityTimeSlotRepository } from '../facilityTimeSlot/facilityTimeSlot.container.ts';
 import { reservationQueue } from './reservation.queue.ts';
+import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
 
 export const reservationRepository = new ReservationRepository(Reservation);
 const facilityRepository = new FacilityRepository(Facility);
@@ -33,6 +36,7 @@ const storageUnitRepository = new StorageUnitRepository(StorageUnit);
 const userRepository = new UserRepository(User);
 const paymentRepository = new PaymentRepository(Payment, PaymentTransaction);
 const contractRepository = new ContractRepository(Contract);
+const incidentRepository = new IncidentRepository(Incident);
 
 export const reservationService = new ReservationService(
   reservationRepository,
@@ -46,7 +50,9 @@ export const reservationService = new ReservationService(
   auditLogService,
   notificationService,
   reservationQueue,
-  contractRepository
+  contractRepository,
+  refundRequestService,
+  incidentRepository
 );
 
 export const reservationController = new ReservationController(

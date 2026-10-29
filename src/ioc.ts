@@ -45,6 +45,8 @@ import {
 import { InventoryRequestController } from './modules/customerInventory/inventoryRequest.controller.ts';
 import { UploadController } from './modules/upload/upload.controller.ts';
 import { uploadController } from './modules/upload/upload.container.ts';
+import { RefundRequestController } from './modules/refundRequest/refundRequest.controller.ts';
+import { refundRequestController } from './modules/refundRequest/refundRequest.container.ts';
 import { IncidentController } from './modules/incident/incident.controller.ts';
 import { incidentController } from './modules/incident/incident.container.ts';
 import { SupportTicketController } from './modules/support/supportTicket.controller.ts';
@@ -117,6 +119,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === UploadController) {
       return uploadController as unknown as T;
+    }
+    if (controller === RefundRequestController) {
+      return refundRequestController as unknown as T;
     }
     if (controller === IncidentController) {
       return incidentController as unknown as T;

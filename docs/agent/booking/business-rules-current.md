@@ -122,7 +122,7 @@ Các thông tin bạn yêu cầu cung cấp:
 Mốc freeCancelHours = 24 tính từ 00:00 của checkInDate hay từ giờ bắt đầu của checkInTimeSlot? Hiện trạng trong hệ thống: Đang tính khoảng cách từ thời điểm khách bấm hủy (Date.now()) đến mốc checkInDate (new Date(reservation.checkInDate).getTime(), thông thường được gửi lên dưới dạng đầu ngày 00:00), chưa ghép giờ bắt đầu của checkInTimeSlot (ví dụ 14:00 - 16:00) vào để tính. Hệ quả thực tế: Nếu khách đặt lịch check-in vào khung giờ chiều (15:00 ngày mai) nhưng bấm hủy vào lúc 09:00 sáng hôm nay: Nếu tính theo giờ bắt đầu của khung giờ (15:00 ngày mai): khách vẫn còn 30 tiếng ( ≥ 24 h ≥24h). Nhưng vì hệ thống đang so với mốc đầu ngày checkInDate, khoảng cách sẽ nhỏ hơn 24 tiếng và khách bị tính là hủy sát giờ (mất cọc). Hướng khuyến nghị: Quy định theo mốc đầu ngày 00:00 của ngày nhận kho rất phổ biến trong ngành lưu trú/kho bãi (dễ truyền thông trên UI: "Hủy trước ngày nhận kho ít nhất 1 ngày để được hoàn cọc 100%"). Tuy nhiên, nếu bạn muốn tính chính xác từng giờ theo giờ mở đầu của checkInTimeSlot (ví dụ tách "14:00" từ "14:00 - 16:00" cộng vào checkInDate), hệ thống chỉ cần cập nhật thêm 5 dòng xử lý chuỗi giờ.
 Trường hợp startDate > checkInDate dùng cho tình huống nào, cho lệch tối đa bao nhiêu ngày, kho có bị giữ RESERVED suốt khoảng đó không, và tính tiền từ ngày nào? Tình huống sử dụng: Mặc định nếu khách không truyền startDate, hệ thống tự gán startDate = checkInDate (nhận kho ngày nào tính tiền thuê từ ngày đó). Trường hợp startDate > checkInDate phục vụ tình huống khách muốn đến cơ sở làm thủ tục ký hợp đồng, nhận chìa khóa/thẻ từ trước vài ngày, nhưng ngày chính thức bắt đầu kỳ thuê (startDate) để chuyển đồ vào là một ngày sau đó. Độ lệch tối đa: Hiện tại hệ thống chỉ ràng buộc startDate >= checkInDate và chưa khóa cứng số ngày lệch tối đa giữa startDate và checkInDate. Trạng thái giữ kho & Tính tiền: Ngay từ lúc tạo đơn đặt chỗ, phòng kho đã bị khóa sang RESERVED (không ai khác đặt được). Khi khách đến làm thủ tục check-in tại quầy, phòng kho chuyển sang OCCUPIED. Khi tạo Hợp đồng (Contract) từ đơn đặt chỗ, kỳ hạn hợp đồng sẽ lấy mốc bắt đầu từ reservation.startDate và kết thúc tại startDate + rentalDuration. Do đó, tiền thuê định kỳ được tính từ startDate. Lưu ý vận hành: Nếu không giới hạn khoảng cách giữa checkInDate và startDate, khách có thể lách luật bằng cách đặt checkInDate là ngày mai nhưng startDate cách đó 1 tháng (giữ kho miễn phí). Nếu bạn không có nhu cầu tách ngày làm thủ tục và ngày bắt đầu tính tiền, tốt nhất nên ràng buộc startDate = checkInDate (hoặc chỉ cho lệch tối đa 1–3 ngày).
 Khách có được check-in sớm hơn ngày hẹn hoặc ngoài khung giờ không, và operatingHours có được enforce ở đâu không? Check-in sớm hơn ngày hẹn hoặc ngoài khung giờ: Được phép. Ở bước nhân viên tạo Hợp đồng (POST /contracts) và xác nhận bàn giao kho (POST /contracts/:id/check-in), hệ thống chỉ kiểm tra đơn đặt chỗ đã ở trạng thái CONFIRMED (hoặc OVERDUE trong hạn 24h) hay chưa, không chặn nếu thời điểm bấm check-in sớm hơn checkInDate hoặc lệch khỏi checkInTimeSlot. Lý do thiết kế: checkInDate và checkInTimeSlot có vai trò điều phối năng lực phục vụ tại quầy (tránh quá tải nhân sự cùng một lúc) và làm mốc tính quá hạn No-show. Nếu khách đến sớm hơn hẹn mà phòng kho đã sẵn sàng (RESERVED sẵn cho khách đó) và có nhân viên rảnh tiếp đón, nhân viên hoàn toàn có thể bấm check-in linh hoạt cho khách; hệ thống sẽ ghi nhận thời điểm thực tế vào trường actualCheckInDate trên Hợp đồng. Việc kiểm tra operatingHours (Giờ mở cửa của cơ sở): Hiện tại trường operatingHours: { open, close } trên Facility chỉ mang tính hiển thị thông tin (và làm cơ sở khi cấu hình các khung giờ FacilityTimeSlot). Hệ thống Backend không chặn cứng việc gọi API theo operatingHours để tránh khóa tay nhân viên khi họ cần xử lý nghiệp vụ ngoài giờ hành chính.
-Khi cơ sở không giao được kho sau CONFIRMED (và không còn kho nào trống để thay thế reassign-unit) thì vận hành xử lý thế nào? Trên hệ thống hiện tại: Đúng như quy tắc đã chốt, sau khi đơn đã CONFIRMED, nút Hủy đơn từ phía Cơ sở bị khóa cứng (MESSAGE_CODE_312), và nút Đổi kho (reassign-unit) yêu cầu phải có phòng trống cùng hạng hoặc cao hơn. Nếu cơ sở cháy sạch phòng (không còn phòng trống nào cùng hạng hoặc cao hơn), nhân viên sẽ không thể tự bấm hủy đơn trên hệ thống. Cách xử lý vận hành thực tế (Workaround hiện có hoặc đề xuất bổ sung): Cách 1 (Theo luồng hiện có): Quản lý cơ sở liên hệ trực tiếp với khách hàng để xin lỗi, thỏa thuận hoàn trả 100% tiền cọc (kèm bồi thường nếu có) bên ngoài, hoặc nhờ khách bấm hủy (nếu còn ≥ 24 h ≥24h thì hệ thống tự mở refundStatus = PENDING). Cách 2 (Khuyến nghị nếu muốn khép kín trên hệ thống): Cho phép duy nhất vai trò cấp cao (SYSTEM_ADMIN hoặc BUSINESS_OPS_MANAGER) có quyền "Hủy bất khả kháng từ phía cơ sở (Force Cancel with 100% Refund)" ngay cả khi đã CONFIRMED, bắt buộc nhập biên bản lý do sự cố để tự động trả phòng về UNDER_MAINTENANCE và bật refundStatus = PENDING hoàn 100% cọc cho khách.
+Khi cơ sở không giao được kho sau CONFIRMED (và không còn kho nào trống để thay thế reassign-unit) thì vận hành xử lý thế nào? [CHỐT D3 - ĐÃ TRIỂN KHAI]: Hệ thống cung cấp endpoint khẩn cấp POST /reservations/:id/force-cancel cho phép FACILITY_MANAGER (thuộc đúng cơ sở được phân công), BUSINESS_OPS_MANAGER, và SYSTEM_ADMIN thực hiện Force Cancel với chính sách hoàn 100% tiền cọc cho khách hàng. Quy trình tự động: (1) Kiểm tra trạng thái: chỉ cho phép CONFIRMED, PAYMENT_SUCCESSFUL, hoặc OVERDUE (chặn 400 MESSAGE_CODE_324 nếu sai); (2) Bắt buộc biên bản sự cố: truyền incidentId hợp lệ thuộc cơ sở hoặc truyền incidentDetails (tự động tạo Incident mới với status: REPORTED, putUnitUnderMaintenance: true); (3) Tự động vô hiệu hóa (VOID) hợp đồng nháp DRAFT liên kết trong cùng transaction (status = CANCELLED, cancellationType = VOID, forfeitedAmount = 0); (4) Đưa phòng kho sang UNDER_MAINTENANCE và giải phóng toàn bộ tiện ích liên quan; (5) Tạo RefundRequest lý do FACILITY_FAULT hoàn trả 100% cọc; (6) Gửi notification và Email xin lỗi khách hàng độ ưu tiên cao (NotificationPriorityEnum.HIGH); (7) Ghi AuditLog FORCE_CANCEL. Nút hủy thường (POST /reservations/:id/cancel) từ phía cơ sở vẫn khóa cứng 400 MESSAGE_CODE_312 sau khi CONFIRMED.
 Quy trình hoàn tiền thực hiện thế nào, lấy tài khoản nhận ở đâu, có SLA không? Và "Manual confirm" thanh toán dùng cho trường hợp nào, ai được phép? Về quy trình Hoàn tiền (confirm-refund): Cách thực hiện & Người chuyển: Hệ thống không tự động gọi API ngân hàng để bắn tiền đi (SePay chỉ nhận biến động chiều tiền vào, không hỗ trợ chi hộ tự động). Khi đơn có refundStatus = PENDING, Quản lý cơ sở (FACILITY_MANAGER) hoặc Kế toán/Admin thực hiện chuyển khoản thủ công (hoặc trả tiền mặt tại quầy) cho khách, sau đó gọi POST /reservations/:id/confirm-refund kèm mã giao dịch ngân hàng (referenceCode) và ghi chú (notes) để đổi trạng thái sang REFUNDED. Lấy số tài khoản nhận tiền hoàn ở đâu: Hiện tại trong Schema Reservation, CancelReservationRequest và Profile chưa có trường lưu Số tài khoản / Ngân hàng nhận hoàn tiền của khách. Trong thực tế vận hành hiện tại, nhân viên sẽ liên hệ qua số điện thoại/email của khách (đã có trong snapshot customer) hoặc khách ghi thông tin tài khoản ngân hàng vào ô cancellationReason / notes khi bấm hủy. (Nếu muốn chặt chẽ hơn trên UI, có thể thêm các trường tùy chọn refundBankName, refundAccountNumber, refundAccountHolder vào body khi khách bấm hủy đơn). SLA hoàn tiền: Hệ thống không đặt bộ đếm thời gian tự động cho việc hoàn tiền; SLA hoàn tiền (ví dụ: hoàn tiền trong vòng 1–3 ngày làm việc) là cam kết quy trình vận hành của cơ sở, quản lý theo dõi qua bộ lọc GET /reservations?refundStatus=pending. Về "Manual Confirm" thanh toán (POST /payments/:id/confirm-manual): Dùng cho trường hợp nào: Dùng khi khách đóng tiền cọc trực tiếp bằng tiền mặt tại quầy (CASH) hoặc chuyển khoản ngân hàng thủ công (BANK_TRANSFER) nhưng quên ghi mã thanh toán paymentCode khiến Webhook SePay không tự khớp lệnh được. Bắt buộc chứng từ: Khi gọi API này, nhân viên bắt buộc phải truyền phương thức (cash hoặc bank_transfer), ghi chú xác minh (note), và có thể đính kèm mã tham chiếu (referenceCode) cùng ảnh chụp biên lai/màn hình chuyển khoản (proofImageUrl). Ai được phép thực hiện: Chỉ dành cho nhân sự nội bộ gồm FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, và SYSTEM_ADMIN (Khách hàng tuyệt đối không gọi được). Mọi thao tác đều lưu lại confirmedBy, confirmedAt và ghi vào Audit Log.
 Lúc tạo Reservation, khách có tick đồng ý chính sách hủy & mất cọc không, và có lưu phiên bản điều khoản không? Hiện trạng trong hệ thống: Ở phân hệ Contract (Hợp đồng): Đã có trường termsAccepted: boolean bắt buộc phải bằng true khi ký nhận kho (MESSAGE_CODE_411). Ở phân hệ Reservation (Đặt chỗ): Trong createReservationSchema và Reservation model hiện chưa có trường termsAccepted cũng như chưa lưu phiên bản điều khoản (policyVersion). Việc tick chọn đồng ý chính sách đặt cọc/mất cọc hiện đang do tầng Frontend kiểm soát trên form đặt chỗ trước khi cho bấm nút gửi request.
 Webhook SePay xử lý Idempotency thế nào? Chuyển thiếu, chuyển thừa, chuyển từ người khác thì sao? Cơ chế chống trùng lặp (Idempotency): Mỗi giao dịch từ SePay gửi sang đều có một mã định danh duy nhất id (sepayId, kiểu số). Trong bảng PaymentTransaction, trường sepayId được đánh Unique Index. Ngay khi nhận Webhook, hệ thống kiểm tra findTransactionBySepayId(payload.id). Nếu giao dịch đó đã tồn tại và có kết quả là MATCHED, IGNORED, hoặc LATE, hệ thống trả về 200 OK (Transaction already processed) ngay lập tức mà không cộng tiền lần hai. Nếu có 2 request Webhook đến cùng một mili-giây gây đụng độ Unique Index, khối try/catch sẽ bắt lại và đọc bản ghi đã tạo. Kiểm tra chiều giao dịch & Số tài khoản đích: Chỉ xử lý giao dịch tiền vào (transferType === 'in'), bỏ qua tiền ra (IGNORED). Kiểm tra số tài khoản nhận tiền (payload.accountNumber) phải khớp với tài khoản cấu hình của hệ thống; nếu lệch hoặc không tìm thấy mã paymentCode trong nội dung chuyển khoản sẽ đánh dấu UNMATCHED. Xử lý Chuyển thiếu (Underpayment): Hệ thống cộng dồn số tiền của các lần chuyển vào paidAmount = currentPaid + payload.transferAmount. Nếu newPaidAmount < payment.amount: Phiếu thanh toán chuyển sang trạng thái PARTIALLY_PAID (thanh toán một phần), giao dịch ghi nhận PARTIALLY_MATCHED. Đơn đặt chỗ vẫn giữ nguyên ở PENDING_PAYMENT (chưa được xác nhận đóng cọc). Khi khách chuyển thêm phần còn thiếu trước khi hết hạn 15 phút sao cho tổng newPaidAmount >= payment.amount, đơn mới chuyển sang PAYMENT_SUCCESSFUL. (Lưu ý nhỏ: Nếu khách chuyển thiếu 1 phần rồi để quá 15 phút hết hạn, đơn hết hạn nhưng khoản tiền chuyển thiếu đó hiện chưa tự động đẩy sang flagOrphanedPayment như trường hợp chuyển muộn sau khi đã hết hạn — đây là một edge case rất nhỏ). Xử lý Chuyển thừa (Overpayment): Nếu newPaidAmount > payment.amount: Đơn đặt chỗ vẫn được kích hoạt thành công sang PAYMENT_SUCCESSFUL. Phần tiền thừa được tính tự động và lưu rõ vào trường overpaidAmount = newPaidAmount - payment.amount trên bản ghi Payment để bộ phận kế toán đối soát và hoàn trả phần dư. Xử lý Chuyển từ tài khoản ngân hàng của người khác: Hệ thống khớp lệnh hoàn toàn dựa trên mã thanh toán (paymentCode) nằm trong nội dung chuyển khoản (quét từ mã VietQR của đơn đó). Do đó, khách hàng nhờ người thân, bạn bè hoặc dùng tài khoản ngân hàng bất kỳ quét mã QR đều được hệ thống chấp nhận và gạch nợ bình thường.
@@ -162,10 +162,33 @@ Phân công / Đổi nhân viên hỗ trợ tiếp đón check-in (POST /reserva
 Role được phép: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN (Không cho phép CUSTOMER và FACILITY_STAFF).
 Phạm vi & Kiểm tra: Quản lý cơ sở chỉ được phân công trên đơn thuộc cơ sở của mình; nhân viên được gán phải có role FACILITY_STAFF hoặc FACILITY_MANAGER thuộc cùng cơ sở đó.
 
-Đổi phòng kho sự cố trước khi nhận kho (POST /reservations/:id/reassign-unit)
+Đổi phòng kho sự cố trước khi nhận kho (POST /reservations/:id/reassign-unit & POST /reservations/:id/respond-reassign) [CHỐT D4]
 
-Role được phép: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN (Không cho phép CUSTOMER và FACILITY_STAFF).
-Phạm vi & Kiểm tra: Quản lý cơ sở chỉ đổi kho cho đơn thuộc cơ sở của mình khi đơn đang ở trạng thái PAYMENT_SUCCESSFUL, CONFIRMED, hoặc OVERDUE.
+1. Đề xuất đổi kho (POST /reservations/:id/reassign-unit):
+
+- Role được phép: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN (Không cho phép CUSTOMER và FACILITY_STAFF).
+- Phạm vi & Trạng thái: Quản lý cơ sở chỉ đổi kho cho đơn thuộc cơ sở của mình khi đơn đang ở trạng thái PAYMENT_SUCCESSFUL, CONFIRMED, hoặc OVERDUE.
+- Quy tắc chọn kho: Kho mới phải có trạng thái AVAILABLE, cùng cơ sở, và thuộc loại kho cùng bậc hoặc cao cấp hơn (không cho phép hạ cấp kho, chặn 400 MESSAGE_CODE_316). Nếu có hợp đồng DRAFT liên kết, kho mới sẽ đồng bộ cập nhật sang hợp đồng DRAFT.
+- Khóa tạm & Đề xuất (2 bước): Hệ thống khóa kho mới sang RESERVED, giữ nguyên kho cũ ở RESERVED, lưu thông tin đề xuất vào `reservation.pendingUnitChange` (kèm newStorageUnitId, newFacilityUnitTypeOfferingId, newBasePrice, reason, proposedBy), lưu lịch sử `unitChangeHistory` với trạng thái `pending`, và gửi thông báo + email cho khách hàng.
+- Chế độ tức thì (customerAgreed: true): Nếu quản lý đã trao đổi trực tiếp và khách đồng ý ngay tại quầy, cờ `customerAgreed: true` cho phép đề xuất và áp dụng đổi kho thành công trong cùng một transaction.
+
+2. Phản hồi đề xuất đổi kho (POST /reservations/:id/respond-reassign):
+
+- Role được phép: CUSTOMER (chủ đơn) hoặc FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN (thuộc cơ sở của đơn, đại diện thao tác theo xác nhận của khách).
+- Trường hợp Đồng ý (action: 'accept'):
+  - Áp dụng kho mới cho đơn (storageUnitId = pending.newStorageUnitId, facilityUnitTypeOfferingId = pending.newFacilityUnitTypeOfferingId).
+  - Cập nhật đơn giá `basePrice = newOffering.pricePerUnit` theo loại kho mới ([CHỐT D4] — khách thanh toán theo loại kho nâng cấp trong các kỳ thuê sau).
+  - Giải phóng kho cũ sang UNDER_MAINTENANCE (hoặc AVAILABLE tùy cấu hình oldUnitMaintenanceStatus).
+  - Xóa `pendingUnitChange = null`, cập nhật lịch sử `unitChangeHistory` sang status: 'accepted'.
+  - Nếu có hợp đồng DRAFT liên kết, đồng bộ kho mới, đơn giá mới và reset chữ ký của khách để ký lại bản nháp đã cập nhật.
+- Trường hợp Từ chối (action: 'reject'):
+  - Giải phóng kho mới đang khóa tạm về AVAILABLE.
+  - Đưa kho cũ gặp sự cố sang UNDER_MAINTENANCE.
+  - Hủy đơn đặt chỗ với nguồn hủy do lỗi cơ sở (`cancellationSource: FACILITY_FAULT`, reason: rejectReason).
+  - Tự động tạo yêu cầu hoàn cọc 100% qua `RefundRequest` với lý do `FACILITY_FAULT` (hoàn trả toàn bộ depositAmount).
+  - Xóa `pendingUnitChange = null`, cập nhật lịch sử `unitChangeHistory` sang status: 'rejected'.
+  - Vô hiệu hóa (VOID) hợp đồng DRAFT liên kết nếu có.
+- Cơ chế giải phóng khóa mồ côi (Orphaned lock prevention): Khi đơn đặt chỗ bị hủy (cancelReservation), tự hủy No-show/quên confirm (expireSingleReservation/processOverdue), hoặc Force Cancel, nếu đơn đang có `pendingUnitChange` thì kho mới đang khóa tạm sẽ tự động được giải phóng về AVAILABLE.
 
 Hủy đơn đặt chỗ (POST /reservations/:id/cancel)
 
@@ -215,14 +238,39 @@ Nhân viên FACILITY_STAFF (assignedStaffId) chỉ đóng vai trò người hỗ
 Chỉ FACILITY_MANAGER được phân công quản lý cơ sở đó (assertFacilityAccess) mới được ký.
 Bắt buộc khách hàng phải đã ký trước (contract.customerSigned === true). Khi FACILITY_MANAGER ký xong, hợp đồng chuyển ngay sang ACTIVE, kho sang OCCUPIED, và đơn đặt chỗ sang COMPLETED.
 
-Hủy hợp đồng nháp (POST /contracts/:id/cancel khi đang DRAFT)
+Hủy hoặc Hủy vô hiệu hợp đồng nháp (POST /contracts/:id/cancel khi đang DRAFT)
 
-Role được phép: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN.
-Hiện trạng vs Cập nhật P0:
-Hiện tại: Comment TODO chỉ ghi FACILITY_MANAGER, FACILITY_STAFF nhưng trong Service chưa kiểm tra quyền.
-Cập nhật P0:
-Nếu là CUSTOMER: chỉ chủ hợp đồng (contract.customerId === caller.userId) được hủy.
-Nếu là FACILITY_STAFF hoặc FACILITY_MANAGER: phải thuộc cơ sở của hợp đồng (assertFacilityAccess).
+Role được phép:
+
+- Với `cancellationType = 'cancel'` (mặc định): CUSTOMER (chủ hợp đồng), FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN.
+- Với `cancellationType = 'void'`: Chỉ FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN (CUSTOMER bị từ chối 403 `MESSAGE_CODE_103`).
+
+Quy tắc chi tiết (Tách VOID vs CANCEL - T2.3):
+
+1. **Luồng CANCEL (`cancellationType = 'cancel'`):**
+   - Áp dụng khi khách đổi ý không muốn thuê nữa.
+   - Nếu hợp đồng sinh từ Đặt chỗ (source = RESERVATION):
+     - Tính tiền hoàn/phạt theo `policySnapshot` của đơn đặt chỗ qua hàm thuần `computeCancellationOutcome`.
+     - Hủy luôn đơn đặt chỗ (`status = CANCELLED`, `cancellationSource` ghi nhận theo vai trò người gọi: `CUSTOMER` hoặc `FACILITY`).
+     - Nhả phòng kho về `AVAILABLE` và nhả tiện ích `inUseQuantity`.
+     - Tự động tạo `RefundRequest` nếu còn số tiền hoàn hợp lệ.
+     - Cập nhật hợp đồng: `status = CANCELLED`, `cancellationType = 'cancel'`, `refundAmount`, `forfeitedAmount`, `depositStatus` (`REFUNDED` nếu hủy miễn phí, `PARTIALLY_REFUNDED`, hoặc `FORFEITED`).
+   - Nếu hợp đồng vãng lai (source = WALK_IN):
+     - Mất 100% tiền cọc nếu đã đóng cọc (`forfeitedAmount = depositAmount`, `depositStatus = FORFEITED`). Nếu chưa đóng cọc thì phạt 0.
+     - Nhả phòng kho về `AVAILABLE` và nhả tiện ích.
+
+2. **Luồng VOID (`cancellationType = 'void'`):**
+   - Áp dụng khi nhân viên quầy tạo nhầm bản nháp hợp đồng (sai giá thuê, sai kỳ hạn, nhầm phòng, nhầm tiện ích) và cần lập lại bản nháp mới cho khách.
+   - Bắt buộc nhập lý do `cancellationReason` tối thiểu 3 ký tự.
+   - Nếu hợp đồng sinh từ Đặt chỗ (source = RESERVATION):
+     - Đơn đặt chỗ liên kết bắt buộc phải đang ở trạng thái `CONFIRMED` hoặc `OVERDUE` (nếu đã bị hủy hoặc hoàn tất từ trước thì từ chối 400 `MESSAGE_CODE_422`).
+     - Đơn đặt chỗ được **bảo toàn nguyên vẹn** (giữ nguyên trạng thái `CONFIRMED` hoặc `OVERDUE`, không cấp thêm thời gian ân hạn, không tính hoàn/phạt, không nhả cọc).
+     - Phòng kho và tiện ích tiếp tục được giữ nguyên (`RESERVED` / `inUse`) cho đơn đặt chỗ của khách.
+     - Hợp đồng nháp sai bị đóng sang `CANCELLED` với `cancellationType = 'void'`, `forfeitedAmount = 0`, `refundAmount = 0`, `depositStatus = HELD`.
+     - Nhân viên có thể lập tức tạo lại bản nháp hợp đồng mới từ đơn đặt chỗ đó.
+   - Nếu hợp đồng vãng lai (source = WALK_IN):
+     - Nhả phòng kho về `AVAILABLE` và nhả tiện ích.
+     - Nếu khách đã đóng cọc tại quầy, hoàn trả 100% tiền cọc thông qua `RefundRequest` với lý do `FACILITY_CANCEL` (`refundAmount = depositAmount`, `depositStatus = REFUNDED`).
 
 Nghiệm thu trả kho & Thanh lý hợp đồng (POST /contracts/:id/check-out)
 
@@ -278,3 +326,116 @@ Tích hợp bên ngoài Cổng thanh toán: Đã tích hợp SePay (src/modules/
 Thông báo (Kênh & Các mốc gửi hiện tại) Kênh thông báo (notification.enum.ts): Khai báo 2 kênh trong enum: IN_APP (lưu MongoDB + đẩy realtime qua Socket.IO) và EMAIL. Thực tế trong NotificationService hiện đang hoạt động chính trên kênh IN_APP (Database + Socket.IO). Không có SMS hay Firebase Push (FCM). Các mốc đang gửi thông báo tự động hiện tại: Trong ReservationService: Đã gắn đầy đủ ở mọi mốc (Tạo đơn giữ chỗ, Thanh toán cọc thành công, Cơ sở xác nhận đơn & phân công nhân viên, Đổi phòng kho sự cố, Hủy đơn bởi khách/cơ sở, Xác nhận đã hoàn tiền cọc, Cảnh báo chuyển sang OVERDUE, Thông báo tự động hủy No-show, Cảnh báo tiền chuyển khoản muộn mồ côi). Trong ContractService: Hiện tại chưa gắn lệnh gọi notificationService nào (mọi thao tác tạo hợp đồng, ký hợp đồng, check-in, quá hạn, check-out, phụ lục chưa bắn notification).
 Nội dung Điều khoản / T&C hiện hành Hiện trạng trong Backend: Backend không lưu trữ văn bản Điều khoản & Điều kiện (Terms & Conditions) trong Database hay template, mà chỉ lưu cờ xác nhận termsAccepted: boolean khi khách và nhân viên ký. Các quy tắc chế tài đang được mã hóa trực tiếp (hardcode) thành logic trong Service: Hủy đơn đặt chỗ trong vòng < 24h trước checkInDate hoặc quá hạn ân hạn 24h (No-show): khấu trừ 100% tiền cọc. Hủy hợp đồng DRAFT: khấu trừ 100% tiền cọc. Trả kho quá hạn endDate: phạt 1.5 × đơn giá ngày cho mỗi ngày quá hạn, trừ trực tiếp vào tiền cọc. Hư hại kho/thiết bị khi trả kho: nhân viên kiểm tra nhập số tiền damageFee và ghi chú inspectionNotes, trừ trực tiếp vào tiền cọc. Quy định về danh mục hàng cấm và giới hạn trách nhiệm bồi thường hiện chưa có bảng dữ liệu hay trường lưu trữ ở Backend (do văn bản tĩnh phía Frontend hiển thị).
 Giờ hoạt động cơ sở & Quy mô hệ thống Giờ hoạt động cơ sở: Trong Facility (facility.model.ts) có trường operatingHours: { open: string, close: string } (ví dụ "08:00", "20:00"). Trong FacilityTimeSlot (facilityTimeSlot.model.ts) chia các ca check-in trong ngày kèm giới hạn maxCapacity (mặc định 2 khách/ca). Giới hạn đặt chỗ của mỗi khách hàng (reservation.config.ts): tối đa 3 đơn đang chờ thanh toán (maxPendingPerCustomer = 3), tối đa 5 đơn đang hoạt động cùng lúc (maxActivePerCustomer = 5), đặt trước tối đa 30 ngày (maxAdvanceDays = 30). Quy mô thiết kế: Mô hình chuỗi nhiều cơ sở (Multi-facility), mỗi cơ sở có 1 FACILITY_MANAGER và nhiều FACILITY_STAFF (user.assignedFacilityId). Phân trang giới hạn tối đa 100 bản ghi/trang.
+
+## T2.5: Quy tắc ghi nhận khách đến (arrivedAt) & Hạn chót check-in
+
+1. **Ghi nhận khách đến hiện trường (`POST /reservations/:id/mark-arrived`):**
+   - **Role được phép:** `FACILITY_STAFF`, `FACILITY_MANAGER` (thuộc đúng cơ sở qua `assertFacilityAccess`), `BUSINESS_OPS_MANAGER`, `SYSTEM_ADMIN`. Không cho phép `CUSTOMER`.
+   - **Điều kiện:** Đơn đặt chỗ ở trạng thái `CONFIRMED` hoặc `OVERDUE`. Nếu chưa đến hạn hoặc đã hủy/hoàn thành, ném lỗi 400 `MESSAGE_CODE_325`. Nếu đã được ghi nhận trước đó (`arrivedAt != null`), ném lỗi 400 `MESSAGE_CODE_326`.
+   - **Hành vi:** Lưu `arrivedAt = new Date()`, `arrivedBy = caller.userId`, ghi audit log `MARK_ARRIVED`.
+
+2. **Chặn tự động hủy No-show khi khách đã đến:**
+   - Trong cron job quét No-show (`processOverdueReservations` Step 2), truy vấn quét tìm các đơn quá hạn có thêm điều kiện `{ arrivedAt: null }`.
+   - Đơn đã có `arrivedAt` sẽ **không bao giờ bị hệ thống tự động hủy No-show** và tịch thu cọc, giúp bảo vệ quyền lợi của khách hàng khi đã có mặt tại kho nhưng thủ tục bàn giao/làm hợp đồng bị chậm trễ.
+
+3. **Gia hạn thời gian check-in (`POST /reservations/:id/extend-grace`):**
+   - **Role được phép:** Chỉ `FACILITY_MANAGER` (thuộc cơ sở qua `assertFacilityAccess`), `BUSINESS_OPS_MANAGER`, `SYSTEM_ADMIN`. Nhân viên thường (`FACILITY_STAFF`) và khách hàng (`CUSTOMER`) bị từ chối với lỗi 403 `MESSAGE_CODE_103`.
+   - **Điều kiện:** Đơn ở trạng thái `CONFIRMED` hoặc `OVERDUE`. Bắt buộc truyền `additionalHours` (1 - 72 giờ) và `reason` (tối thiểu 10 ký tự, tối đa 500 ký tự).
+   - **Hành vi:**
+     - Tính mốc gốc = `Math.max(now, reservation.graceExpiresAt ?? calculateCheckInDeadlineVN(reservation))` rồi cộng thêm `additionalHours`.
+     - Cập nhật `graceExpiresAt`, `graceExtendedAt = new Date()`, `graceExtendedBy = caller.userId`, `graceExtensionReason = reason`.
+     - Ghi AuditLog hành động `EXTEND_GRACE`.
+     - Bảo toàn giá trị: Khi cron job quét chuyển đơn từ `CONFIRMED -> OVERDUE` (Step 1), hệ thống không đè mốc mặc định (24h) nếu Manager đã gia hạn `graceExpiresAt`.
+
+4. **Cổng kiểm soát tạo bản nháp hợp đồng từ đơn đặt chỗ (`ContractService.createContract`):**
+   - **Chặn tạo sớm:** Không cho phép tạo hợp đồng DRAFT trước ngày check-in (`now < startOfDayVN(checkInDate)`) nếu khách **chưa đến** (`arrivedAt === null`), trả lỗi 400 `MESSAGE_CODE_423`. Khách đã đến (`arrivedAt != null`) được phép tạo hợp đồng sớm.
+   - **Chặn tạo muộn:** Không cho phép tạo hợp đồng DRAFT nếu đã quá hạn check-in (tính cả thời gian đệm ký hợp đồng `checkInSigningBufferMinutes`, mặc định 30 phút) và khách **chưa đến**, trả lỗi 400 `MESSAGE_CODE_424`.
+
+## T2.6: Thời gian tối thiểu khi đặt trong ngày & Cảnh báo hủy mất cọc ngay
+
+1. **Thời gian chuẩn bị tối thiểu khi đặt trong ngày (`sameDayLeadMinutes`):**
+   - Áp dụng khi khách hàng đặt chỗ check-in ngay trong ngày (`isSameDayVN(checkInDate, todayVN)`).
+   - Bắt buộc giờ bắt đầu của ca check-in (`slotStartTime`) phải cách thời điểm đặt ít nhất `sameDayLeadMinutes` (mặc định 120 phút, cấu hình qua biến môi trường `RESERVATION_SAME_DAY_LEAD_MINUTES`).
+   - Nếu không thỏa mãn, hệ thống từ chối tạo đơn với lỗi 400 `MESSAGE_CODE_328` ("Check-in time slot requires at least {0} minutes preparation lead time").
+   - Các đơn đặt cho ngày tương lai không bị ràng buộc bởi `sameDayLeadMinutes`.
+
+2. **Cảnh báo mất cọc ngay lập tức (`immediateForfeitWarning`):**
+   - Khi đơn đặt chỗ được tạo trong vòng 24 giờ trước giờ check-in (`now > freeCancelDeadline`), hệ thống tự động đánh dấu cờ `immediateForfeitWarning = true` lưu vào Database và trả về trong phản hồi API.
+   - Cờ này giúp giao diện Frontend cảnh báo rõ ràng cho khách hàng rằng đơn đặt trong khoảng thời gian này nếu thanh toán và hủy thì sẽ bị trừ 100% tiền cọc ngay lập tức (không có khoảng thời gian hủy miễn phí).
+   - Đơn đặt trước > 24 giờ được đánh dấu `immediateForfeitWarning = false`.
+
+## T2.7: Giới hạn ngày bắt đầu hợp đồng & Cơ chế ký lại hợp đồng khi đổi ngày check-in
+
+1. **Giới hạn khoảng cách `startDate` so với `checkInDate` (`maxStartDateOffsetDays`):**
+   - Ngày bắt đầu tính tiền thuê kho (`startDate`) không được vượt quá `checkInDate + maxStartDateOffsetDays` (mặc định 3 ngày, cấu hình qua biến môi trường `RESERVATION_MAX_START_DATE_OFFSET_DAYS`).
+   - Đồng thời `startDate` không được sớm hơn `checkInDate`.
+   - Nếu `startDate > checkInDate + maxStartDateOffsetDays`, hệ thống từ chối tạo đơn với lỗi 400 `MESSAGE_CODE_329` ("Start date cannot exceed {0} days after check-in date").
+
+2. **Cơ chế hủy chữ ký cũ & bắt buộc ký lại khi check-in trễ làm trượt ngày hợp đồng [CHỐT OPEN D2]:**
+   - Khi Quản lý cơ sở gọi `POST /contracts/:id/check-in` với `actualCheckInDate` trễ hơn ngày bắt đầu hợp đồng dự kiến (`startOfDayVN(actualCheckInDate) > startOfDayVN(contract.startDate)`):
+     - Hệ thống tính toán lại ngày bắt đầu và kết thúc mới (`finalStartDate = startOfDayVN(actualCheckInDate)`, `finalEndDate = finalStartDate + leaseDurationMs`).
+     - Nếu khách hàng **đã ký bản nháp hợp đồng trước đó** (`contract.customerSigned === true`), chữ ký cũ trên bản nháp với ngày thuê cũ không còn giá trị pháp lý.
+     - Hệ thống tự động:
+       1. Lưu lại thông tin chữ ký cũ vào mảng lịch sử `signatureHistory` trên hợp đồng (`party: 'customer'`, `signedAt`, `previousStartDate`, `previousEndDate`, `resetAt`, `resetReason`).
+       2. Cập nhật `startDate = finalStartDate`, `endDate = finalEndDate`.
+       3. Thu hồi chữ ký: đặt lại `customerSigned = false`, `customerSignedAt = null`.
+       4. Từ chối hoàn tất check-in, trả lỗi 400 `MESSAGE_CODE_425` ("Contract dates were adjusted. Customer must re-sign the updated draft before check-in").
+     - **Quy trình tiếp theo:** Khách hàng tiến hành ký lại bản nháp đã cập nhật ngày (trên ứng dụng hoặc Quản lý in bản PDF mới để khách ký tay rồi kích hoạt).
+     - Sau khi khách hàng ký lại (`customerSigned = true`), Quản lý cơ sở gọi lại `POST /contracts/:id/check-in` để hoàn tất kích hoạt hợp đồng sang `ACTIVE` và phòng kho sang `OCCUPIED`.
+
+## T2.8: Cờ check-in sớm, ngoài khung giờ & Giờ hoạt động cơ sở (Soft Warning & Audit Logging)
+
+1. **Nguyên tắc cốt lõi (Chỉ cảnh báo mềm - Tuyệt đối không chặn 400):**
+   - Khách hàng có quyền đến cơ sở sớm hơn lịch hẹn hoặc ngoài khung giờ đã đặt trước (thậm chí ngoài giờ mở cửa thông thường nếu có nhân viên trực hỗ trợ). Hệ thống **không được phép chặn cứng HTTP 400** gây cản trở trải nghiệm nhận kho thực tế của khách hàng.
+   - Thay vào đó, hệ thống tự động đánh giá và gắn cờ cảnh báo mềm (`earlyCheckIn`, `outOfSlot`) trên bản ghi dữ liệu, đồng thời ghi nhận chi tiết vào `AuditLog` để phục vụ công tác giám sát vận hành.
+
+2. **Cờ `earlyCheckIn`:**
+   - Được đánh giá khi thực hiện check-in hợp đồng (`POST /contracts/:id/check-in`) hoặc nhân viên ghi nhận khách đến (`POST /reservations/:id/mark-arrived`).
+   - `earlyCheckIn = true` nếu ngày thực tế check-in sớm hơn ngày hẹn check-in theo lịch Việt Nam (`startOfDayVN(actualDate) < startOfDayVN(reservation.checkInDate)`).
+   - Ngược lại `earlyCheckIn = false`. Nếu hợp đồng vãng lai (`WALK_IN` không có đơn đặt chỗ), `earlyCheckIn = null`.
+   - Cờ được lưu trên cả `Contract` và `Reservation` liên kết, trả về trong `ContractResponse` và `ReservationResponse`.
+
+3. **Cờ `outOfSlot`:**
+   - Được đánh giá khi thời điểm check-in thực tế nằm ngoài khung giờ đã đăng ký (`reservation.checkInTimeSlot`, ví dụ: `"09:00 - 11:00"`).
+   - `outOfSlot = true` nếu thời điểm check-in sớm hơn giờ bắt đầu của khung giờ, muộn hơn giờ kết thúc của khung giờ, hoặc khác ngày lịch hẹn.
+   - Ngược lại `outOfSlot = false`. Nếu hợp đồng vãng lai (`WALK_IN`), `outOfSlot = null`.
+
+4. **Kiểm tra giờ mở cửa cơ sở (`Facility.operatingHours`) & Ký hợp đồng:**
+   - Giờ hoạt động của cơ sở được cấu hình trong `Facility.operatingHours` (`{ open: "HH:mm", close: "HH:mm" }`).
+   - Khi khách hàng ký hợp đồng (`POST /contracts/:id/customer-sign`) hoặc nhân viên hoàn tất check-in (`POST /contracts/:id/check-in`), hệ thống kiểm tra đối chiếu với giờ mở cửa:
+     - Nếu ngoài giờ mở cửa: hệ thống vẫn cho phép thực hiện thành công (không chặn lỗi), nhưng tự động ghi cờ `outsideOperatingHours = true` và `operatingHours` cơ sở vào `metadata` của `AuditLog` (`SIGN_CONTRACT` hoặc `CHECK_IN`).
+     - Hỗ trợ cả trường hợp giờ hoạt động qua đêm (overnight, e.g. `20:00 -> 06:00`).
+
+5. **Ghi nhận khách đến sớm tại quầy (`POST /reservations/:id/mark-arrived`):**
+   - Cho phép nhân viên/quản lý truyền thêm trường ghi chú tuỳ chọn `{ notes?: string }` (ví dụ: "Khách đến sớm 1 ngày cùng xe tải chở đồ").
+   - Ghi nhận `arrivedAt`, `arrivedBy`, `earlyCheckIn`, `outOfSlot`, `notes` vào đơn đặt chỗ và `metadata` của `AuditLog` (`MARK_ARRIVED`).
+
+## T2.10: Chấm dứt hợp đồng an toàn & Vòng đời dọn dẹp phòng kho (PENDING_CLEARANCE) [CHỐT D14]
+
+1. **Quy tắc cốt lõi khi chấm dứt hợp đồng (`POST /contracts/:id/terminate`):**
+   - **Role được phép:** `FACILITY_MANAGER` (thuộc đúng cơ sở qua `assertFacilityAccess`), `BUSINESS_OPS_MANAGER`, `SYSTEM_ADMIN`. Nghiêm cấm `CUSTOMER` và `FACILITY_STAFF`.
+   - **Trạng thái hợp đồng hợp lệ:** Chỉ được thực hiện khi hợp đồng đang ở trạng thái `ACTIVE` hoặc `OVERDUE`.
+   - **Bắt buộc biên bản và ảnh bằng chứng:**
+     - Phải đính kèm tối thiểu 1 URL file biên bản thanh lý/sự cố (`reportFileUrls.length >= 1`).
+     - Phải đính kèm tối thiểu 1 URL ảnh bằng chứng hiện trường/niêm phong (`evidenceFileUrls.length >= 1`).
+     - Nếu thiếu hoặc mảng rỗng: từ chối 400 (`MESSAGE_CODE_426`).
+   - **Phân loại chấm dứt (`terminationType`):**
+     - Bắt buộc chọn một trong 3 loại: `MUTUAL` (thỏa thuận hai bên), `CUSTOMER_REQUEST` (khách hàng yêu cầu chấm dứt sớm), `VIOLATION` (vi phạm điều khoản).
+     - Nếu `terminationType = 'violation'`: bắt buộc truyền thêm `violationCategory` (`PROHIBITED_GOODS`, `OVERDUE_PAYMENT`, `PROPERTY_DAMAGE`). Nếu thiếu: từ chối 400 (`MESSAGE_CODE_427`).
+   - **Rào chắn chống lạm quyền đối với lý do nợ (`OVERDUE_PAYMENT`):**
+     - Chỉ được phép chấm dứt với lý do `OVERDUE_PAYMENT` khi hợp đồng đã ở trạng thái `OVERDUE` và ngày kết thúc `contract.endDate` đã trôi qua ít nhất 5 ngày (`now - endDate >= contractConfig.overdueTerminationGraceDays * 86400000`, mặc định 5 ngày).
+     - Nếu hợp đồng đang `ACTIVE` (chưa trễ hạn) hoặc `OVERDUE` chưa đủ 5 ngày mà quản lý cố tình chọn lý do nợ quá hạn: từ chối 400 (`MESSAGE_CODE_428`).
+
+2. **Lưu vết tính toàn vẹn tài liệu (File Hash & Append-only History):**
+   - Mỗi file biên bản và ảnh bằng chứng được hệ thống băm SHA-256 (`fileHash`) kèm thời điểm `uploadedAt` để lưu vết bất biến chống chỉnh sửa/giả mạo chứng từ sau này.
+   - Bản ghi chấm dứt được append vào lịch sử `contract.terminationHistory` (gồm: người thực hiện, thời gian, loại chấm dứt, lý do, files biên bản/bằng chứng kèm hash, trạng thái kho lúc chấm dứt, trạng thái cọc và số tiền tịch thu).
+
+3. **Chính sách Tiền cọc khi chấm dứt hợp đồng:**
+   - Cọc bị tịch thu 100% đối với mọi loại chấm dứt không do lỗi cơ sở (`depositStatus = ContractDepositStatusEnum.FORFEITED`, `forfeitedAmount = contract.depositAmount`, `refundAmount = 0`).
+
+4. **Vòng đời phòng kho & Trạng thái `PENDING_CLEARANCE`:**
+   - Khi hợp đồng bị chấm dứt (hoặc khi trả kho mà đồ khách vẫn còn bỏ lại), phòng kho chuyển ngay từ `OCCUPIED` sang trạng thái `PENDING_CLEARANCE` (chờ thanh lý / dọn dẹp hàng bỏ lại / xử lý niêm phong tài sản).
+   - **Rào chắn dọn dẹp:**
+     - Tuyệt đối không cho phép chuyển thẳng từ `PENDING_CLEARANCE` sang `AVAILABLE`.
+     - Trong thao tác bật bảo trì (`PATCH /storage-units/:id/maintenance` với `isUnderMaintenance: true`): nếu kho đang ở `PENDING_CLEARANCE` mà hàng tồn kho của khách vẫn còn trong kho (`countRemainingByStorageUnit > 0`), hệ thống **chặn không cho chuyển sang bảo trì** (trả 400 `MESSAGE_CODE_629`).
+     - Chỉ khi toàn bộ đồ đạc của khách đã được dọn sạch khỏi kho (`countRemainingByStorageUnit === 0`), nhân viên mới được chuyển kho sang `UNDER_MAINTENANCE` để bắt đầu quy trình vệ sinh, khử khuẩn và bảo trì kỹ thuật trước khi nhả về `AVAILABLE` cho khách thuê mới.

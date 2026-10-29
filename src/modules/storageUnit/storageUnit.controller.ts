@@ -206,6 +206,7 @@ export class StorageUnitController extends Controller {
 
   /**
    * Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)
+   * Turning maintenance off is rejected (MESSAGE_CODE_629) while customer goods remain inside the unit.
    *
    * // @Security('bearerAuth')
    * // @Security('cookieAuth')
@@ -220,7 +221,7 @@ export class StorageUnitController extends Controller {
   )
   @Response<ApiErrorResponse>(
     400,
-    'Unit cannot be put into/taken out of maintenance in current status'
+    'Unit cannot be put into/taken out of maintenance in current status, or still contains customer inventory (MESSAGE_CODE_629)'
   )
   @Response<ApiErrorResponse>(404, 'Storage unit not found')
   public async toggleMaintenance(

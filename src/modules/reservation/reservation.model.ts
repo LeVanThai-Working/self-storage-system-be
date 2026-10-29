@@ -23,9 +23,36 @@ export interface IReservationAmenity {
 export interface IReservationUnitChange {
   fromUnitId: Types.ObjectId;
   toUnitId: Types.ObjectId;
+  fromOfferingId?: Types.ObjectId | null;
+  toOfferingId?: Types.ObjectId | null;
+  fromPrice?: number | null;
+  toPrice?: number | null;
   reason: string;
-  changedBy: Types.ObjectId;
-  changedAt: Date;
+  status?: 'pending' | 'accepted' | 'rejected';
+  proposedBy?: Types.ObjectId | null;
+  proposedAt?: Date | null;
+  decisionBy?: Types.ObjectId | null;
+  decisionAt?: Date | null;
+  rejectReason?: string | null;
+  changedBy?: Types.ObjectId;
+  changedAt?: Date;
+}
+
+export interface IReservationPendingUnitChange {
+  newStorageUnitId: Types.ObjectId;
+  newFacilityUnitTypeOfferingId: Types.ObjectId;
+  newPricePerUnit: number;
+  reason: string;
+  oldUnitStatus: 'under_maintenance' | 'available';
+  proposedBy: Types.ObjectId;
+  proposedAt: Date;
+}
+
+export interface IReservationPolicySnapshot {
+  freeCancelHours: number;
+  forfeitPercent: number;
+  noShowGraceHours: number;
+  cancellationMode?: 'slot_start' | 'calendar_day';
 }
 
 export interface IReservation extends SoftDeleteDocument {
@@ -56,6 +83,15 @@ export interface IReservation extends SoftDeleteDocument {
   cancelledBy?: Types.ObjectId | null;
   cancelledAt?: Date | null;
   cancellationSource?: ReservationCancelSourceEnum | null;
+  incidentId?: Types.ObjectId | null;
+  evidenceImages?: string[];
+  forceCancelledBy?: Types.ObjectId | null;
+  forceCancelledAt?: Date | null;
+  arrivedAt?: Date | null;
+  arrivedBy?: Types.ObjectId | null;
+  graceExtendedAt?: Date | null;
+  graceExtendedBy?: Types.ObjectId | null;
+  graceExtensionReason?: string | null;
   refundAmount?: number;
   forfeitedAmount?: number;
   refundStatus: RefundStatusEnum;
@@ -66,6 +102,15 @@ export interface IReservation extends SoftDeleteDocument {
   paidAt?: Date | null;
   paidAmount?: number;
   paymentId?: Types.ObjectId | null;
+  termsAccepted: boolean;
+  policyVersion?: string | null;
+  acceptedAt?: Date | null;
+  acceptedIp?: string | null;
+  policySnapshot?: IReservationPolicySnapshot | null;
+  immediateForfeitWarning?: boolean | null;
+  earlyCheckIn?: boolean | null;
+  outOfSlot?: boolean | null;
+  pendingUnitChange?: IReservationPendingUnitChange | null;
   unitChangeHistory: IReservationUnitChange[];
   notes?: string | null;
   createdAt: Date;
@@ -112,6 +157,47 @@ const reservationAmenitySchema = new Schema<IReservationAmenity>(
   { _id: false }
 );
 
+const reservationPendingUnitChangeSchema =
+  new Schema<IReservationPendingUnitChange>(
+    {
+      newStorageUnitId: {
+        type: Schema.Types.ObjectId,
+        ref: 'StorageUnit',
+        required: true,
+      },
+      newFacilityUnitTypeOfferingId: {
+        type: Schema.Types.ObjectId,
+        ref: 'FacilityUnitTypeOffering',
+        required: true,
+      },
+      newPricePerUnit: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+      reason: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      oldUnitStatus: {
+        type: String,
+        enum: ['under_maintenance', 'available'],
+        default: 'under_maintenance',
+      },
+      proposedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      proposedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+    { _id: false }
+  );
+
 const reservationUnitChangeSchema = new Schema<IReservationUnitChange>(
   {
     fromUnitId: {
@@ -124,19 +210,91 @@ const reservationUnitChangeSchema = new Schema<IReservationUnitChange>(
       ref: 'StorageUnit',
       required: true,
     },
+    fromOfferingId: {
+      type: Schema.Types.ObjectId,
+      ref: 'FacilityUnitTypeOffering',
+      default: null,
+    },
+    toOfferingId: {
+      type: Schema.Types.ObjectId,
+      ref: 'FacilityUnitTypeOffering',
+      default: null,
+    },
+    fromPrice: {
+      type: Number,
+      default: null,
+    },
+    toPrice: {
+      type: Number,
+      default: null,
+    },
     reason: {
       type: String,
       required: true,
       trim: true,
     },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected'],
+      default: 'accepted',
+    },
+    proposedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    proposedAt: {
+      type: Date,
+      default: null,
+    },
+    decisionBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    decisionAt: {
+      type: Date,
+      default: null,
+    },
+    rejectReason: {
+      type: String,
+      default: null,
+    },
     changedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      default: null,
     },
     changedAt: {
       type: Date,
       default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
+const reservationPolicySnapshotSchema = new Schema<IReservationPolicySnapshot>(
+  {
+    freeCancelHours: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    forfeitPercent: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+    },
+    noShowGraceHours: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    cancellationMode: {
+      type: String,
+      enum: ['slot_start', 'calendar_day'],
+      default: 'slot_start',
     },
   },
   { _id: false }
@@ -276,6 +434,47 @@ const reservationSchema = new Schema<IReservation>(
       enum: Object.values(ReservationCancelSourceEnum),
       default: null,
     },
+    incidentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Incident',
+      default: null,
+    },
+    evidenceImages: {
+      type: [String],
+      default: [],
+    },
+    forceCancelledBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    forceCancelledAt: {
+      type: Date,
+      default: null,
+    },
+    arrivedAt: {
+      type: Date,
+      default: null,
+    },
+    arrivedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    graceExtendedAt: {
+      type: Date,
+      default: null,
+    },
+    graceExtendedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    graceExtensionReason: {
+      type: String,
+      default: null,
+      trim: true,
+    },
     refundAmount: {
       type: Number,
       default: 0,
@@ -322,6 +521,44 @@ const reservationSchema = new Schema<IReservation>(
     paymentId: {
       type: Schema.Types.ObjectId,
       ref: 'Payment',
+      default: null,
+    },
+    termsAccepted: {
+      type: Boolean,
+      default: false,
+    },
+    policyVersion: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    acceptedAt: {
+      type: Date,
+      default: null,
+    },
+    acceptedIp: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    policySnapshot: {
+      type: reservationPolicySnapshotSchema,
+      default: null,
+    },
+    immediateForfeitWarning: {
+      type: Boolean,
+      default: false,
+    },
+    earlyCheckIn: {
+      type: Boolean,
+      default: null,
+    },
+    outOfSlot: {
+      type: Boolean,
+      default: null,
+    },
+    pendingUnitChange: {
+      type: reservationPendingUnitChangeSchema,
       default: null,
     },
     unitChangeHistory: {

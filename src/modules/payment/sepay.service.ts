@@ -28,7 +28,7 @@ export class SepayService {
   public extractPaymentCode(rawText: string | null | undefined): string | null {
     if (!rawText) return null;
     const prefix = this.config.paymentCodePrefix;
-    const regex = new RegExp(`\\b(${prefix}[A-Za-z0-9]{3,8})\\b`, 'i');
+    const regex = new RegExp(`\\b(${prefix}[A-Za-z0-9_]{3,30})\\b`, 'i');
     const match = rawText.match(regex);
     return match ? match[1].toUpperCase() : null;
   }

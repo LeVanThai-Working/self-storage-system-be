@@ -108,6 +108,30 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_318: 'MESSAGE_CODE_318',
   // Check-in Date Has Already Passed
   MESSAGE_CODE_319: 'MESSAGE_CODE_319',
+  // Maker-Checker Violation
+  MESSAGE_CODE_320: 'MESSAGE_CODE_320',
+  // Demo Refund Simulation Disabled
+  MESSAGE_CODE_321: 'MESSAGE_CODE_321',
+  // Reservation Terms Must Be Accepted
+  MESSAGE_CODE_322: 'MESSAGE_CODE_322',
+  // Force Cancellation Requires Incident Details Or Incident ID
+  MESSAGE_CODE_323: 'MESSAGE_CODE_323',
+  // Reservation Cannot Be Force Cancelled In Current Status
+  MESSAGE_CODE_324: 'MESSAGE_CODE_324',
+  // Reservation Cannot Be Marked As Arrived In Current Status
+  MESSAGE_CODE_325: 'MESSAGE_CODE_325',
+  // Customer Has Already Been Marked As Arrived
+  MESSAGE_CODE_326: 'MESSAGE_CODE_326',
+  // Reservation Grace Period Cannot Be Extended In Current Status
+  MESSAGE_CODE_327: 'MESSAGE_CODE_327',
+  // Check-in Time Slot Requires Preparation Lead Time
+  MESSAGE_CODE_328: 'MESSAGE_CODE_328',
+  // Start Date Cannot Exceed Check-in Date By More Than Limit
+  MESSAGE_CODE_329: 'MESSAGE_CODE_329',
+  // No Pending Unit Reassign Proposal Found
+  MESSAGE_CODE_330: 'MESSAGE_CODE_330',
+  // Another Unit Reassign Proposal Is Already Pending
+  MESSAGE_CODE_331: 'MESSAGE_CODE_331',
 
   // ==========================================
   // CONTRACT (400 - 408)
@@ -140,6 +164,36 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_412: 'MESSAGE_CODE_412',
   // Insufficient Contracted Amenity Quantity To Remove
   MESSAGE_CODE_413: 'MESSAGE_CODE_413',
+  // Customer Must Sign Contract Before Check-In
+  MESSAGE_CODE_414: 'MESSAGE_CODE_414',
+  // Customer Must Sign Contract Addendum Before Staff Sign
+  MESSAGE_CODE_415: 'MESSAGE_CODE_415',
+  // Direct Contract Renewal Is Deprecated
+  MESSAGE_CODE_416: 'MESSAGE_CODE_416',
+  // Contract Deposit Settlement Disputed
+  MESSAGE_CODE_417: 'MESSAGE_CODE_417',
+  // Contract Inspection Photos Required For Damage Assessment
+  MESSAGE_CODE_418: 'MESSAGE_CODE_418',
+  // Deposit Settlement Already Confirmed
+  MESSAGE_CODE_419: 'MESSAGE_CODE_419',
+  // Cannot Check Out Contract While Customer Inventory Remains
+  MESSAGE_CODE_420: 'MESSAGE_CODE_420',
+  // Cannot Check Out Contract While Open Incidents Exist
+  MESSAGE_CODE_421: 'MESSAGE_CODE_421',
+  // Cannot Void Contract: Linked Reservation Is No Longer Active
+  MESSAGE_CODE_422: 'MESSAGE_CODE_422',
+  // Cannot Create Contract Draft Before Check-In Date Unless Customer Has Arrived
+  MESSAGE_CODE_423: 'MESSAGE_CODE_423',
+  // Reservation Check-In Deadline Has Expired
+  MESSAGE_CODE_424: 'MESSAGE_CODE_424',
+  // Contract Dates Shifted And Customer Must Resign Updated Draft
+  MESSAGE_CODE_425: 'MESSAGE_CODE_425',
+  // Contract Termination Requires Report File And Evidence Photos
+  MESSAGE_CODE_426: 'MESSAGE_CODE_426',
+  // Violation Termination Requires Violation Category
+  MESSAGE_CODE_427: 'MESSAGE_CODE_427',
+  // Overdue Payment Termination Requires Overdue Grace Period Exceeded
+  MESSAGE_CODE_428: 'MESSAGE_CODE_428',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -162,6 +216,32 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_507: 'MESSAGE_CODE_507',
   // Payment Account Mismatch
   MESSAGE_CODE_508: 'MESSAGE_CODE_508',
+  // Proof Image Required For Manual Payment
+  MESSAGE_CODE_509: 'MESSAGE_CODE_509',
+  // Payment Transaction Not Found
+  MESSAGE_CODE_510: 'MESSAGE_CODE_510',
+  // Refund Request Not Found
+  MESSAGE_CODE_511: 'MESSAGE_CODE_511',
+  // Invalid Refund Request Status Transition
+  MESSAGE_CODE_512: 'MESSAGE_CODE_512',
+  // Total Refund Amount Exceeds Net Settled Amount
+  MESSAGE_CODE_513: 'MESSAGE_CODE_513',
+  // Refund Approver Cannot Be Requester
+  MESSAGE_CODE_514: 'MESSAGE_CODE_514',
+  // Reference Code Required For Paid Refund
+  MESSAGE_CODE_515: 'MESSAGE_CODE_515',
+  // Paid Refund Cannot Be Modified
+  MESSAGE_CODE_516: 'MESSAGE_CODE_516',
+  // Payment Transaction Already Assigned
+  MESSAGE_CODE_517: 'MESSAGE_CODE_517',
+  // Payment Transaction Amount Mismatch
+  MESSAGE_CODE_518: 'MESSAGE_CODE_518',
+  // Contract First Period Rent Not Paid
+  MESSAGE_CODE_519: 'MESSAGE_CODE_519',
+  // Contract Deposit Must Be Paid Before First Period Rent
+  MESSAGE_CODE_520: 'MESSAGE_CODE_520',
+  // Contract First Period Rent Already Paid
+  MESSAGE_CODE_521: 'MESSAGE_CODE_521',
 
   // ==========================================
   // STORAGE RACK & TIER (600 - 603)
@@ -174,6 +254,10 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_602: 'MESSAGE_CODE_602',
   // Storage Rack Code Already Exists
   MESSAGE_CODE_603: 'MESSAGE_CODE_603',
+  // Storage Unit Does Not Support Rack Layout
+  MESSAGE_CODE_604: 'MESSAGE_CODE_604',
+  // Invalid Rack Zone Pricing Configuration
+  MESSAGE_CODE_605: 'MESSAGE_CODE_605',
 
   // ==========================================
   // CUSTOMER SKU (610 - 614)
@@ -190,7 +274,7 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_614: 'MESSAGE_CODE_614',
 
   // ==========================================
-  // CUSTOMER INVENTORY & MOVEMENT (620 - 628)
+  // CUSTOMER INVENTORY & MOVEMENT (620 - 629)
   // ==========================================
   // Inventory Record Not Found
   MESSAGE_CODE_620: 'MESSAGE_CODE_620',
@@ -210,9 +294,11 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_627: 'MESSAGE_CODE_627',
   // SKU Does Not Belong To Customer
   MESSAGE_CODE_628: 'MESSAGE_CODE_628',
+  // Storage Unit Still Contains Customer Inventory
+  MESSAGE_CODE_629: 'MESSAGE_CODE_629',
 
   // ==========================================
-  // INVENTORY REQUEST - DUAL HANDSHAKE (630 - 636)
+  // INVENTORY REQUEST - DUAL HANDSHAKE (630 - 644)
   // ==========================================
   // Inventory Request Not Found
   MESSAGE_CODE_630: 'MESSAGE_CODE_630',
@@ -242,6 +328,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_642: 'MESSAGE_CODE_642',
   // Incident Not Eligible For Emergency Rack Migration
   MESSAGE_CODE_643: 'MESSAGE_CODE_643',
+  // Contract Status Does Not Allow This Inventory Operation
+  MESSAGE_CODE_644: 'MESSAGE_CODE_644',
 
   // ==========================================
   // INCIDENT (700 - 709)
@@ -342,6 +430,22 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_318: 'Reservation Has An Active Linked Contract',
   MESSAGE_CODE_319:
     'Check-in Date Has Already Passed, Cannot Confirm Reservation',
+  MESSAGE_CODE_320:
+    'Refund Confirmer Must Be Different From Payment Confirmer (Maker-Checker Violation)',
+  MESSAGE_CODE_321: 'Demo Refund Simulation Is Disabled In This Environment',
+  MESSAGE_CODE_322: 'Reservation Terms Must Be Accepted',
+  MESSAGE_CODE_323:
+    'Force Cancellation Requires Incident Details Or Incident ID',
+  MESSAGE_CODE_324: 'Reservation Cannot Be Force Cancelled In Current Status',
+  MESSAGE_CODE_325: 'Reservation Cannot Be Marked As Arrived In Current Status',
+  MESSAGE_CODE_326: 'Customer Has Already Been Marked As Arrived',
+  MESSAGE_CODE_327:
+    'Reservation Grace Period Cannot Be Extended In Current Status',
+  MESSAGE_CODE_328:
+    'Check-in time slot requires at least {0} minutes preparation lead time',
+  MESSAGE_CODE_329: 'Start date cannot exceed {0} days after check-in date',
+  MESSAGE_CODE_330: 'No Pending Unit Reassign Proposal Found',
+  MESSAGE_CODE_331: 'Another Unit Reassign Proposal Is Already Pending',
 
   // Contract
   MESSAGE_CODE_400: 'Contract Not Found',
@@ -360,6 +464,28 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_411: 'Contract Terms Must Be Accepted',
   MESSAGE_CODE_412: 'Party Has Already Signed',
   MESSAGE_CODE_413: 'Insufficient Contracted Amenity Quantity To Remove',
+  MESSAGE_CODE_414: 'Customer Must Sign Contract Before Check-In',
+  MESSAGE_CODE_415: 'Customer Must Sign Contract Addendum Before Staff Sign',
+  MESSAGE_CODE_416:
+    'Direct Contract Renewal Is Deprecated. Please Use Contract Addendum (RENEW) via POST /contracts/{id}/addendums',
+  MESSAGE_CODE_417: 'Contract Deposit Settlement Disputed',
+  MESSAGE_CODE_418: 'Contract Inspection Photos Required For Damage Assessment',
+  MESSAGE_CODE_419: 'Deposit Settlement Already Confirmed',
+  MESSAGE_CODE_420:
+    'Cannot Check Out Contract While Customer Inventory Remains',
+  MESSAGE_CODE_421: 'Cannot Check Out Contract While Open Incidents Exist',
+  MESSAGE_CODE_422:
+    'Cannot Void Contract: Linked Reservation Is No Longer Active',
+  MESSAGE_CODE_423:
+    'Cannot Create Contract Draft Before Check-In Date Unless Customer Has Arrived',
+  MESSAGE_CODE_424: 'Reservation Check-In Deadline Has Expired',
+  MESSAGE_CODE_425:
+    'Contract dates were adjusted. Customer must re-sign the updated draft before check-in',
+  MESSAGE_CODE_426:
+    'Contract Termination Requires At Least One Report File And One Evidence Photo',
+  MESSAGE_CODE_427: 'Violation Termination Requires Violation Category',
+  MESSAGE_CODE_428:
+    'Overdue Payment Termination Requires Overdue Grace Period Exceeded (At Least 5 Days Overdue)',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',
@@ -371,6 +497,19 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_506: 'Contract Deposit Not Paid',
   MESSAGE_CODE_507: 'Payment Already Settled',
   MESSAGE_CODE_508: 'Payment Account Mismatch',
+  MESSAGE_CODE_509: 'Proof Image Is Required For Manual Payment Confirmation',
+  MESSAGE_CODE_510: 'Payment Transaction Not Found',
+  MESSAGE_CODE_511: 'Refund Request Not Found',
+  MESSAGE_CODE_512: 'Invalid Refund Request Status Transition',
+  MESSAGE_CODE_513: 'Total Refund Amount Exceeds Net Settled Amount',
+  MESSAGE_CODE_514: 'Refund Approver Cannot Be Requester',
+  MESSAGE_CODE_515: 'Reference Code Is Required For Paid Refund',
+  MESSAGE_CODE_516: 'Paid Refund Cannot Be Modified',
+  MESSAGE_CODE_517: 'Payment Transaction Already Assigned',
+  MESSAGE_CODE_518: 'Payment Transaction Amount Mismatch',
+  MESSAGE_CODE_519: 'Contract First Period Rent Not Paid',
+  MESSAGE_CODE_520: 'Contract Deposit Must Be Paid Before First Period Rent',
+  MESSAGE_CODE_521: 'Contract First Period Rent Already Paid',
 
   // Storage Rack & Tier
   MESSAGE_CODE_600: 'Storage Rack Not Found',
@@ -397,8 +536,9 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_626: 'Invalid Inventory Movement Quantity',
   MESSAGE_CODE_627: 'Destination Tier Must Be Different From Source Tier',
   MESSAGE_CODE_628: 'SKU Does Not Belong To Customer',
+  MESSAGE_CODE_629: 'Storage Unit Still Contains Customer Inventory',
 
-  // Inventory Request (Task 7D Dual Handshake)
+  // Inventory Request (Task 7D Dual Handshake & Task 7E Batch Migration)
   MESSAGE_CODE_630: 'Inventory Request Not Found',
   MESSAGE_CODE_631: 'Invalid Or Expired Pickup Code Or OTP',
   MESSAGE_CODE_632: 'Invalid Inventory Request Status Transition',
@@ -415,6 +555,7 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
     'Legal Basis, Incident Report Or Emergency Reason Required For Rack Migration',
   MESSAGE_CODE_642: 'Batch Rack Migration Requires Identical Rack Tier Count',
   MESSAGE_CODE_643: 'Incident Not Eligible For Emergency Rack Migration',
+  MESSAGE_CODE_644: 'Contract Status Does Not Allow This Inventory Operation',
 
   // Incident
   MESSAGE_CODE_700: 'Incident Not Found',

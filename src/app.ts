@@ -31,6 +31,20 @@ const app: Express = express();
 const httpServer = http.createServer(app);
 const port = Number(process.env.PORT) || 5000;
 
+// Production safety: fail fast if insecure fallback or demo simulation flags are enabled in production
+if (process.env.NODE_ENV === 'production') {
+  if (process.env.ALLOW_INSECURE_CALLER_FALLBACK === 'true') {
+    throw new Error(
+      'FATAL: ALLOW_INSECURE_CALLER_FALLBACK must not be enabled in production.'
+    );
+  }
+  if (process.env.ENABLE_DEMO_REFUND_SIMULATION === 'true') {
+    throw new Error(
+      'FATAL: ENABLE_DEMO_REFUND_SIMULATION must not be enabled in production.'
+    );
+  }
+}
+
 // Initialize Socket.IO Server
 initSocketServer(httpServer);
 
@@ -42,10 +56,17 @@ app.use(requestContextMiddleware);
 
 // Connect to Database, Redis & BullMQ Workers
 const initServices = async () => {
-  await connect();
-  await connectRedis();
-  await initReservationWorker();
-  await initInventoryRequestWorker();
+  try {
+    await connect();
+    await connectRedis();
+    await initReservationWorker();
+    await initInventoryRequestWorker();
+  } catch (error) {
+    console.error('Fatal error initializing services:', error);
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+  }
 };
 initServices();
 

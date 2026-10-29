@@ -42,20 +42,21 @@ export function Transactional() {
           flushAfterCommitHooks(scope);
           return result;
         } catch (error: unknown) {
-          // Fallback for standalone MongoDB environments (without replica set enabled)
+          // Fallback only permitted in non-production environments (standalone MongoDB without replica set)
           const errMessage = error instanceof Error ? error.message : '';
-          if (
+          const isReplicaSetError =
             errMessage.includes('replica set member') ||
             errMessage.includes(
               'Transaction numbers are only allowed on a replica set'
-            )
-          ) {
+            );
+
+          if (process.env.NODE_ENV !== 'production' && isReplicaSetError) {
             scope.afterCommitHooks = [];
             const result = await originalMethod.apply(this, args);
             flushAfterCommitHooks(scope);
             return result;
           }
-          // On rollback or uncaught error, discard hooks
+          // In production or on normal business rollback/error: never fall back, discard hooks and rethrow
           scope.afterCommitHooks = [];
           throw error;
         } finally {
