@@ -144,7 +144,7 @@ export class InventoryRequestService {
         inventory.status &&
         inventory.status !== InventoryItemStatusEnum.NORMAL
       ) {
-        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
       }
     }
 
@@ -377,7 +377,7 @@ export class InventoryRequestService {
           existingInv.status &&
           existingInv.status !== InventoryItemStatusEnum.NORMAL
         ) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
         }
 
         // Atomic decrement guard (prevents negative stock)
