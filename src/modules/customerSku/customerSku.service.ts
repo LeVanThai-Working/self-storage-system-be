@@ -223,7 +223,7 @@ export class CustomerSkuService {
       description: data.description?.trim(),
       category: data.category?.trim(),
       barcode: data.barcode?.trim(),
-      uom: data.uom?.trim() || 'piece',
+      uom: data.uom?.trim() || 'cái',
       dimensions: data.dimensions,
       volume,
       weightKg: data.weightKg,

@@ -3,6 +3,7 @@ import {
   Route,
   Tags,
   Get,
+  Request,
   Post,
   Patch,
   Delete,
@@ -14,7 +15,12 @@ import {
   // Security,
   Middlewares,
 } from 'tsoa';
-import type { StorageRackService } from './storageRack.service.ts';
+import type {
+  StorageRackService,
+  CallerContext,
+} from './storageRack.service.ts';
+import type { Request as ExpressRequest } from 'express';
+import { jwtUtil } from '../auth/auth.container.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { formatMessage } from '../../utils/format.util.ts';
 import { validateRequest } from '../../middlewares/validate.middleware.ts';
@@ -40,6 +46,60 @@ import type {
   ApiErrorResponse,
 } from '../../common/types/apiResponse.type.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
+
+/**
+ * Helper to extract caller context flexibly during development (Rule 14)
+ */
+function extractCaller(req: ExpressRequest): CallerContext {
+  const user = req.user as
+    | {
+        _id?: { toString(): string };
+        role?: string;
+        assignedFacilityId?: { toString(): string };
+      }
+    | undefined;
+
+  if (user?._id) {
+    return {
+      id: user._id.toString(),
+      role: user.role,
+      assignedFacilityId: user.assignedFacilityId?.toString(),
+    };
+  }
+
+  const headerUserId = req.headers['x-user-id'] as string;
+  const headerRole = req.headers['x-user-role'] as string;
+  const headerFacilityId = req.headers['x-facility-id'] as string;
+  if (headerUserId) {
+    return {
+      id: headerUserId,
+      role: headerRole,
+      assignedFacilityId: headerFacilityId,
+    };
+  }
+
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const payload = jwtUtil.verifyAccessToken(authHeader.split(' ')[1]) as {
+        userId?: string;
+        role?: string;
+        assignedFacilityId?: string;
+      };
+      if (payload?.userId) {
+        return {
+          id: payload.userId,
+          role: payload.role,
+          assignedFacilityId: payload.assignedFacilityId,
+        };
+      }
+    } catch {
+      // Ignored: proceed to fallback
+    }
+  }
+
+  return {};
+}
 
 @Tags('Storage Racks')
 @Route('storage-racks')
@@ -82,9 +142,14 @@ export class StorageRackController extends Controller {
   @Middlewares(validateRequest({ params: storageUnitIdParamSchema }))
   @Response<ApiErrorResponse>(404, 'Storage Unit not found')
   public async getRacksByUnit(
-    @Path() unitId: string
+    @Path() unitId: string,
+    @Request() req: ExpressRequest
   ): Promise<ApiResponse<StorageRackResponse[]>> {
-    const racks = await this.storageRackService.getRacksByStorageUnit(unitId);
+    const caller = extractCaller(req);
+    const racks = await this.storageRackService.getRacksByStorageUnit(
+      unitId,
+      caller
+    );
 
     return {
       success: true,

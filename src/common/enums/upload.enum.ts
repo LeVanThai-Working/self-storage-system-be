@@ -4,5 +4,6 @@ export enum CloudinaryFolderEnum {
   UNIT_TYPES = 'self-storage/unit-types',
   AVATARS = 'self-storage/avatars',
   CONTRACTS = 'self-storage/contracts',
+  SKU = 'self-storage/skus',
   GENERAL = 'self-storage/general',
 }

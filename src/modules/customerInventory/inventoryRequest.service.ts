@@ -17,7 +17,13 @@ import {
   AuditActionEnum,
   AuditResourceEnum,
 } from '../../common/enums/auditLog.enum.ts';
+import {
+  NotificationTypeEnum,
+  NotificationPriorityEnum,
+  NotificationChannelEnum,
+} from '../../common/enums/notification.enum.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { NotificationService } from '../notification/notification.service.ts';
 import type { InventoryRequestRepository } from './inventoryRequest.repository.ts';
 import type { CustomerInventoryRepository } from './customerInventory.repository.ts';
 import type { InventoryMovementRepository } from './inventoryMovement.repository.ts';
@@ -67,7 +73,8 @@ export class InventoryRequestService {
     private readonly rackTierRepository: RackTierRepository,
     private readonly storageUnitRepository: StorageUnitRepository,
     private readonly userRepository?: UserRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly notificationService?: NotificationService
   ) {}
 
   private validateRoleAccess(caller: CallerContext) {
@@ -189,6 +196,33 @@ export class InventoryRequestService {
       resourceId: String(createdDoc._id),
       after: createdDoc,
     });
+
+    if (this.notificationService) {
+      this.notificationService
+        .sendNotification({
+          recipientId: toId(contract.customerId),
+          facilityId: toId(contract.facilityId),
+          title: `[Chờ xác nhận nhập kho] Phiếu nhập kho ${requestCode} đã được tạo`,
+          content: `Nhân viên đã tiếp nhận hàng hóa tại sảnh tiếp nhận (Mã phiếu: ${requestCode}). Vui lòng kiểm tra hình ảnh và xác nhận đối soát trong vòng 24 giờ.`,
+          type: NotificationTypeEnum.CUSTOMER_INVENTORY,
+          priority: NotificationPriorityEnum.HIGH,
+          channels: [
+            NotificationChannelEnum.IN_APP,
+            NotificationChannelEnum.EMAIL,
+          ],
+          metadata: {
+            requestId: String(createdDoc._id),
+            requestCode,
+            contractId: data.contractId,
+          },
+        })
+        .catch((err) => {
+          console.warn(
+            'Failed to dispatch staff-assisted inbound notification:',
+            err
+          );
+        });
+    }
 
     const populated = await this.inventoryRequestRepository.findById(
       String(createdDoc._id)
@@ -471,6 +505,29 @@ export class InventoryRequestService {
       before: request,
       after: completed,
     });
+
+    if (this.notificationService) {
+      this.notificationService
+        .sendNotification({
+          recipientId: toId(request.customerId),
+          facilityId: toId(request.facilityId),
+          title: `[Bàn giao thành công] Phiếu xuất kho ${request.requestCode} đã hoàn tất`,
+          content: `Hàng hóa theo phiếu xuất kho ${request.requestCode} đã được bàn giao thành công cho đơn vị vận chuyển/người nhận.`,
+          type: NotificationTypeEnum.CUSTOMER_INVENTORY,
+          priority: NotificationPriorityEnum.NORMAL,
+          channels: [NotificationChannelEnum.IN_APP],
+          metadata: {
+            requestId: id,
+            requestCode: request.requestCode,
+          },
+        })
+        .catch((err) => {
+          console.warn(
+            'Failed to dispatch completeOutboundHandover notification:',
+            err
+          );
+        });
+    }
 
     const populated = await this.inventoryRequestRepository.findById(
       id,

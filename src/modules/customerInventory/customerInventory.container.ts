@@ -20,6 +20,7 @@ import { userRepository } from '../user/user.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { Incident } from '../incident/incident.model.ts';
 import { IncidentRepository } from '../incident/incident.repository.ts';
+import { notificationService } from '../notification/notification.container.ts';
 
 const customerSkuRepository = new CustomerSkuRepository(CustomerSku);
 const incidentRepository = new IncidentRepository(Incident);
@@ -44,7 +45,8 @@ export const customerInventoryService = new CustomerInventoryService(
   storageUnitRepository,
   auditLogService,
   userRepository,
-  incidentRepository
+  incidentRepository,
+  notificationService
 );
 
 export const inventoryRequestService = new InventoryRequestService(
@@ -56,7 +58,8 @@ export const inventoryRequestService = new InventoryRequestService(
   rackTierRepository,
   storageUnitRepository,
   userRepository,
-  auditLogService
+  auditLogService,
+  notificationService
 );
 
 export const customerInventoryController = new CustomerInventoryController(

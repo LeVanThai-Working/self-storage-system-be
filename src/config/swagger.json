@@ -2965,6 +2965,9 @@
 					"name": {
 						"type": "string"
 					},
+					"isMine": {
+						"type": "boolean"
+					},
 					"currentCustomerId": {
 						"type": "string"
 					},
@@ -6140,7 +6143,8 @@
 					"contract",
 					"payment",
 					"incident",
-					"support_ticket"
+					"support_ticket",
+					"customer_inventory"
 				],
 				"type": "string"
 			},
@@ -11828,6 +11832,15 @@
 					"unrackedItems": {
 						"items": {
 							"properties": {
+								"relatedIncidentId": {
+									"type": "string"
+								},
+								"holdingReason": {
+									"type": "string"
+								},
+								"status": {
+									"type": "string"
+								},
 								"notes": {
 									"type": "string"
 								},
@@ -11916,6 +11929,26 @@
 					"racks": {
 						"items": {
 							"properties": {
+								"isMine": {
+									"type": "boolean"
+								},
+								"currentContractId": {
+									"type": "string"
+								},
+								"customPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"zone": {
+									"type": "string"
+								},
+								"bay": {
+									"type": "number",
+									"format": "double"
+								},
+								"aisle": {
+									"type": "string"
+								},
 								"status": {
 									"type": "string"
 								},
@@ -11961,6 +11994,15 @@
 											"items": {
 												"items": {
 													"properties": {
+														"relatedIncidentId": {
+															"type": "string"
+														},
+														"holdingReason": {
+															"type": "string"
+														},
+														"status": {
+															"type": "string"
+														},
 														"notes": {
 															"type": "string"
 														},

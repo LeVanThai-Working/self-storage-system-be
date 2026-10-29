@@ -22,7 +22,13 @@ import {
   IncidentSeverityEnum,
   IncidentStatusEnum,
 } from '../../common/enums/incident.enum.ts';
+import {
+  NotificationTypeEnum,
+  NotificationPriorityEnum,
+  NotificationChannelEnum,
+} from '../../common/enums/notification.enum.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { NotificationService } from '../notification/notification.service.ts';
 import type { IncidentRepository } from '../incident/incident.repository.ts';
 import type { CustomerInventoryRepository } from './customerInventory.repository.ts';
 import type { InventoryMovementRepository } from './inventoryMovement.repository.ts';
@@ -160,6 +166,32 @@ function toPopulated(ref: unknown): PopulatedRef | null {
   return null;
 }
 
+/**
+ * State machine transition matrix for InventoryItemStatusEnum (Rule 646)
+ */
+const VALID_ITEM_STATUS_TRANSITIONS: Record<
+  InventoryItemStatusEnum,
+  InventoryItemStatusEnum[]
+> = {
+  [InventoryItemStatusEnum.NORMAL]: [
+    InventoryItemStatusEnum.TEMPORARY_HOLDING,
+    InventoryItemStatusEnum.DAMAGED,
+    InventoryItemStatusEnum.DISPUTED,
+  ],
+  [InventoryItemStatusEnum.TEMPORARY_HOLDING]: [
+    InventoryItemStatusEnum.NORMAL,
+    InventoryItemStatusEnum.DAMAGED,
+  ],
+  [InventoryItemStatusEnum.DAMAGED]: [
+    InventoryItemStatusEnum.NORMAL,
+    InventoryItemStatusEnum.DISPUTED,
+  ],
+  [InventoryItemStatusEnum.DISPUTED]: [
+    InventoryItemStatusEnum.NORMAL,
+    InventoryItemStatusEnum.DAMAGED,
+  ],
+};
+
 export class CustomerInventoryService {
   constructor(
     private readonly inventoryRepository: CustomerInventoryRepository,
@@ -171,7 +203,8 @@ export class CustomerInventoryService {
     private readonly storageUnitRepository: StorageUnitRepository,
     private readonly auditLogService?: AuditLogService,
     private readonly userRepository?: UserRepository,
-    private readonly incidentRepository?: IncidentRepository
+    private readonly incidentRepository?: IncidentRepository,
+    private readonly notificationService?: NotificationService
   ) {}
 
   /**
@@ -180,6 +213,19 @@ export class CustomerInventoryService {
    *   + Absolutely block FACILITY_STAFF and FACILITY_MANAGER (throw 403)
    *   + Only allow CUSTOMER (inventory owner) or system admins
    */
+  /**
+   * Block direct Stock In / Out for Customers and Staff;
+   * Only Business Ops Manager and System Admin can call direct in/out.
+   */
+  private validateDirectStockInOutAccess(caller: CallerContext): void {
+    if (
+      caller.role !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      caller.role !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+  }
+
   private validatePrivacy(caller: CallerContext, isMutation = false): void {
     if (isMutation) {
       if (
@@ -354,7 +400,7 @@ export class CustomerInventoryService {
     caller: CallerContext,
     session?: ClientSession
   ): Promise<CustomerInventoryResponse> {
-    this.validatePrivacy(caller, true);
+    this.validateDirectStockInOutAccess(caller);
 
     const { contractCustomerId, storageUnitId, facilityId, storageRackId } =
       await this.validateEntities(
@@ -480,7 +526,7 @@ export class CustomerInventoryService {
     caller: CallerContext,
     session?: ClientSession
   ): Promise<CustomerInventoryResponse> {
-    this.validatePrivacy(caller, true);
+    this.validateDirectStockInOutAccess(caller);
 
     const { contractCustomerId, storageUnitId, facilityId } =
       await this.validateEntities(
@@ -826,6 +872,30 @@ export class CustomerInventoryService {
       },
     });
 
+    if (this.notificationService) {
+      this.notificationService
+        .sendNotification({
+          recipientId: toId(contractCustomerId),
+          facilityId: facilityId ? toId(facilityId) : undefined,
+          title: '[Vận chuyển nội bộ] Hàng hóa của bạn đã được thay đổi vị trí',
+          content: `Nhân viên đã di dời số lượng ${data.quantity} của mã hàng thuộc hợp đồng sang vị trí mới. Lý do: "${data.reason}". Mã biến động: ${movementCode}.`,
+          type: NotificationTypeEnum.CUSTOMER_INVENTORY,
+          priority: NotificationPriorityEnum.NORMAL,
+          channels: [NotificationChannelEnum.IN_APP],
+          metadata: {
+            movementCode,
+            skuId: data.skuId,
+            quantity: data.quantity,
+            contractId: data.contractId,
+            fromRackTierId: data.fromRackTierId || null,
+            toRackTierId: data.toRackTierId || null,
+          },
+        })
+        .catch((err) => {
+          console.warn('Failed to dispatch stockMove notification:', err);
+        });
+    }
+
     const populatedDest = await this.inventoryRepository.findById(
       destInventoryId,
       session
@@ -845,7 +915,10 @@ export class CustomerInventoryService {
     caller: CallerContext,
     session?: ClientSession
   ): Promise<CustomerInventoryResponse> {
-    this.validatePrivacy(caller, true);
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
 
     const { contractCustomerId, storageUnitId, facilityId, storageRackId } =
       await this.validateEntities(
@@ -856,6 +929,17 @@ export class CustomerInventoryService {
         MovementTypeEnum.ADJUST,
         session
       );
+
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId || String(staffFacilityId) !== String(facilityId)) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
 
     const existing = await this.inventoryRepository.findByPosition(
       data.contractId,
@@ -990,6 +1074,16 @@ export class CustomerInventoryService {
     // Customers can only view their own inventory
     if (isCustomer) {
       enforcedQuery.customerId = caller.id;
+    } else if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      enforcedQuery.facilityId = staffFacilityId;
     }
 
     const result = await this.inventoryRepository.findPaginated(enforcedQuery);
@@ -1018,6 +1112,18 @@ export class CustomerInventoryService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      const itemFacilityId = toId(item.facilityId);
+      if (!staffFacilityId || staffFacilityId !== itemFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
     return validateResponse(
       customerInventoryResponseSchema,
       this.formatInventory(item)
@@ -1037,6 +1143,16 @@ export class CustomerInventoryService {
     // Customers can only view their own history
     if (isCustomer) {
       enforcedQuery.customerId = caller.id;
+    } else if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      enforcedQuery.facilityId = staffFacilityId;
     }
 
     const result = await this.movementRepository.findPaginated(enforcedQuery);
@@ -1055,21 +1171,19 @@ export class CustomerInventoryService {
     storageUnitId: string,
     caller: CallerContext
   ): Promise<StorageUnitInventoryTreeResponse> {
-    if (caller.role === RoleEnum.FACILITY_STAFF) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-    }
-
     const unit = await this.storageUnitRepository.findById(storageUnitId);
     if (!unit) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
     }
     const unitFacilityId = String(unit.facilityId?._id || unit.facilityId);
 
-    if (caller.role === RoleEnum.FACILITY_MANAGER) {
-      if (
-        !caller.assignedFacilityId ||
-        caller.assignedFacilityId !== unitFacilityId
-      ) {
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId || staffFacilityId !== unitFacilityId) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
     }
@@ -1106,6 +1220,11 @@ export class CustomerInventoryService {
         quantity: doc.quantity,
         lastMovementAt: new Date(doc.lastMovementAt).toISOString(),
         notes: doc.notes || null,
+        status: doc.status || InventoryItemStatusEnum.NORMAL,
+        holdingReason: doc.holdingReason || null,
+        relatedIncidentId: doc.relatedIncidentId
+          ? String(doc.relatedIncidentId)
+          : null,
         sku: {
           id: String(sku._id),
           skuCode: sku.skuCode || '',
@@ -1163,12 +1282,25 @@ export class CustomerInventoryService {
         };
       });
 
+      const isMine =
+        caller?.id && rack.currentCustomerId
+          ? String(rack.currentCustomerId) === caller.id
+          : false;
+
       return {
         id: rackId,
         rackCode: rack.rackCode,
         name: rack.name || null,
         status: rack.status || null,
         tierCount: rack.tierCount,
+        aisle: rack.aisle || null,
+        bay: rack.bay ?? null,
+        zone: rack.zone || null,
+        customPrice: rack.customPrice ?? null,
+        currentContractId: rack.currentContractId
+          ? String(rack.currentContractId)
+          : null,
+        isMine,
         tiers: formattedTiers,
       };
     });
@@ -1253,10 +1385,6 @@ export class CustomerInventoryService {
     skuId: string,
     caller: CallerContext
   ): Promise<SkuLocationsResponse> {
-    if (caller.role === RoleEnum.FACILITY_STAFF) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-    }
-
     const sku = await this.skuRepository.findById(skuId);
     if (!sku) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_610);
@@ -1367,10 +1495,6 @@ export class CustomerInventoryService {
     barcode: string,
     caller: CallerContext
   ): Promise<SkuLocationsResponse> {
-    if (caller.role === RoleEnum.FACILITY_STAFF) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-    }
-
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
     const sku = await this.skuRepository.findByBarcode(
       isCustomer ? caller.id : undefined,
@@ -1967,6 +2091,34 @@ export class CustomerInventoryService {
       },
     });
 
+    if (this.notificationService) {
+      this.notificationService
+        .sendNotification({
+          recipientId: toId(contract.customerId),
+          facilityId: toId(fromRack.facilityId),
+          title: `[Di dời kệ kho] Hàng hóa của bạn đã được chuyển từ Kệ ${fromRack.rackCode} sang Kệ ${toRack.rackCode}`,
+          content: `Nhân viên đã hoàn tất di dời toàn bộ ${totalQuantityMigrated} sản phẩm trên Kệ ${fromRack.rackCode} sang Kệ ${toRack.rackCode}. Căn cứ: "${data.emergencyReason || 'Theo thỏa thuận phụ lục hợp đồng'}".`,
+          type: NotificationTypeEnum.CUSTOMER_INVENTORY,
+          priority: NotificationPriorityEnum.HIGH,
+          channels: [
+            NotificationChannelEnum.IN_APP,
+            NotificationChannelEnum.EMAIL,
+          ],
+          metadata: {
+            fromRackId: data.fromRackId,
+            toRackId: data.toRackId,
+            contractId: resolvedContractId,
+            totalQuantityMigrated,
+          },
+        })
+        .catch((err) => {
+          console.warn(
+            'Failed to dispatch batchMigrateRack notification:',
+            err
+          );
+        });
+    }
+
     // 16. Return validated response
     return validateResponse(batchMigrateRackResponseSchema, {
       fromRackId: data.fromRackId,
@@ -2172,6 +2324,39 @@ export class CustomerInventoryService {
       },
     });
 
+    if (this.notificationService) {
+      const affectedCustomerIds = Array.from(
+        new Set(items.map((it) => toId(it.customerId)).filter(Boolean))
+      );
+      for (const customerId of affectedCustomerIds) {
+        this.notificationService
+          .sendNotification({
+            recipientId: customerId,
+            facilityId: toId(fromRack.facilityId) || undefined,
+            title: `[Sơ tán khẩn cấp] Hàng hóa trên Kệ ${fromRack.rackCode} đã được đưa về khu vực an toàn`,
+            content: `Do sự cố kỹ thuật tại Kệ ${fromRack.rackCode}, nhân viên đã sơ tán khẩn cấp ${totalQuantityEvacuated} sản phẩm xuống khu vực lưu tạm (Temporary Holding) để đảm bảo an toàn. Lý do: "${data.emergencyReason || data.incidentId}".`,
+            type: NotificationTypeEnum.CUSTOMER_INVENTORY,
+            priority: NotificationPriorityEnum.URGENT,
+            channels: [
+              NotificationChannelEnum.IN_APP,
+              NotificationChannelEnum.EMAIL,
+            ],
+            metadata: {
+              rackId: data.fromRackId,
+              totalQuantityEvacuated,
+              emergencyReason: data.emergencyReason,
+              incidentId: data.incidentId || null,
+            },
+          })
+          .catch((err) => {
+            console.warn(
+              'Failed to dispatch evacuateRackToHolding notification:',
+              err
+            );
+          });
+      }
+    }
+
     return validateResponse(evacuateRackResponseSchema, {
       fromRackId: data.fromRackId,
       fromRackCode: fromRack.rackCode || '',
@@ -2217,7 +2402,22 @@ export class CustomerInventoryService {
       }
     }
 
-    if (data.status === InventoryItemStatusEnum.DAMAGED && data.incidentId) {
+    const currentStatus =
+      (inventory.status as InventoryItemStatusEnum) ||
+      InventoryItemStatusEnum.NORMAL;
+
+    if (data.status !== currentStatus) {
+      const allowedTransitions =
+        VALID_ITEM_STATUS_TRANSITIONS[currentStatus] || [];
+      if (!allowedTransitions.includes(data.status)) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_646);
+      }
+    }
+
+    if (data.status === InventoryItemStatusEnum.DAMAGED) {
+      if (!data.incidentId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_700);
+      }
       if (this.incidentRepository) {
         const incident = await this.incidentRepository.findById(
           data.incidentId,
@@ -2244,6 +2444,31 @@ export class CustomerInventoryService {
       before: inventory,
       after: updated,
     });
+
+    if (this.notificationService) {
+      this.notificationService
+        .sendNotification({
+          recipientId: toId(inventory.customerId),
+          facilityId: facilityId ? toId(facilityId) : undefined,
+          title: `[Cập nhật trạng thái] Hàng hóa của bạn đã chuyển sang trạng thái "${data.status}"`,
+          content: `Hàng hóa lưu kho đã được nhân viên cập nhật trạng thái sang "${data.status}". Lý do: "${data.reason}".`,
+          type: NotificationTypeEnum.CUSTOMER_INVENTORY,
+          priority: NotificationPriorityEnum.HIGH,
+          channels: [NotificationChannelEnum.IN_APP],
+          metadata: {
+            inventoryId: id,
+            status: data.status,
+            reason: data.reason,
+            incidentId: data.incidentId || null,
+          },
+        })
+        .catch((err) => {
+          console.warn(
+            'Failed to dispatch updateInventoryStatus notification:',
+            err
+          );
+        });
+    }
 
     const populated = await this.inventoryRepository.findById(id, session);
     return validateResponse(

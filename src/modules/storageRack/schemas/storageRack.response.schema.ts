@@ -44,6 +44,7 @@ export const storageRackResponseSchema = z.object({
   customPrice: z.number().optional().nullable(),
   currentContractId: z.string().optional().nullable(),
   currentCustomerId: z.string().optional().nullable(),
+  isMine: z.boolean().optional().nullable(),
   name: z.string().optional().nullable(),
   tierCount: z.number(),
   status: z.enum(RackStatusEnum),

@@ -171,6 +171,9 @@ export const treeTierItemSchema = z.object({
     z.string(),
   ]),
   notes: z.string().optional().nullable(),
+  status: z.string().optional().nullable(),
+  holdingReason: z.string().optional().nullable(),
+  relatedIncidentId: z.string().optional().nullable(),
   sku: z.object({
     id: z.string(),
     skuCode: z.string(),
@@ -216,6 +219,12 @@ export const treeRackSchema = z.object({
   name: z.string().optional().nullable(),
   status: z.string().optional().nullable(),
   tierCount: z.number(),
+  aisle: z.string().optional().nullable(),
+  bay: z.number().optional().nullable(),
+  zone: z.string().optional().nullable(),
+  customPrice: z.number().optional().nullable(),
+  currentContractId: z.string().optional().nullable(),
+  isMine: z.boolean().optional().nullable(),
   tiers: z.array(treeTierSchema),
 });
 
