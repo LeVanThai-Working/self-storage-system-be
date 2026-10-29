@@ -1,5 +1,8 @@
 import z from 'zod';
-import { MovementTypeEnum } from '../../../common/enums/customerInventory.enum.ts';
+import {
+  MovementTypeEnum,
+  InventoryItemStatusEnum,
+} from '../../../common/enums/customerInventory.enum.ts';
 
 export const paginationMetadataSchema = z.object({
   page: z.number(),
@@ -83,6 +86,11 @@ export const customerInventoryResponseSchema = z.object({
   rackTierId: z.string().optional().nullable(),
   skuId: z.string(),
   quantity: z.number(),
+  status: z
+    .nativeEnum(InventoryItemStatusEnum)
+    .default(InventoryItemStatusEnum.NORMAL),
+  holdingReason: z.string().optional().nullable(),
+  relatedIncidentId: z.string().optional().nullable(),
   lastMovementAt: z.union([
     z.date().transform((d) => d.toISOString()),
     z.string(),
@@ -311,3 +319,15 @@ export const batchMigrateRackResponseSchema = z.object({
 export type BatchMigrateRackResponse = z.infer<
   typeof batchMigrateRackResponseSchema
 >;
+
+export const evacuateRackResponseSchema = z.object({
+  fromRackId: z.string(),
+  fromRackCode: z.string(),
+  rackStatus: z.string(),
+  evacuatedItemsCount: z.number(),
+  totalQuantityEvacuated: z.number(),
+  movementsGenerated: z.array(z.string()),
+  message: z.string(),
+});
+
+export type EvacuateRackResponse = z.infer<typeof evacuateRackResponseSchema>;
