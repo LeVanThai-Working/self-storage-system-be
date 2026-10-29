@@ -10435,6 +10435,81 @@
 			"CreateInboundRequest": {
 				"$ref": "#/components/schemas/infer_typeofcreateInboundRequestSchema_"
 			},
+			"infer_typeofcreatePreAdvisedInboundRequestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"transporterInfo": {
+						"properties": {
+							"deliveryCompany": {
+								"type": "string"
+							},
+							"vehiclePlate": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"phoneNumber",
+							"name"
+						],
+						"type": "object"
+					},
+					"items": {
+						"items": {
+							"properties": {
+								"rackTierId": {
+									"type": "string"
+								},
+								"storageRackId": {
+									"type": "string"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"skuId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"quantity",
+								"skuId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"contractId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"items",
+					"contractId"
+				],
+				"type": "object"
+			},
+			"CreatePreAdvisedInboundRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreatePreAdvisedInboundRequestSchema_"
+			},
+			"infer_typeofcancelInboundRequestSchema_": {
+				"properties": {
+					"reason": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"CancelInboundRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelInboundRequestSchema_"
+			},
 			"infer_typeofdisputeInboundRequestSchema_": {
 				"properties": {
 					"disputeReason": {
@@ -10815,6 +10890,62 @@
 						"type": "string"
 					}
 				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofregenerateOtpResponseSchema_": {
+				"properties": {
+					"expiresAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"rawOtpCode": {
+						"type": "string"
+					},
+					"requestCode": {
+						"type": "string"
+					},
+					"requestId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"expiresAt",
+					"rawOtpCode",
+					"requestCode",
+					"requestId"
+				],
+				"type": "object"
+			},
+			"RegenerateOtpResponse": {
+				"$ref": "#/components/schemas/infer_typeofregenerateOtpResponseSchema_"
+			},
+			"ApiResponse_RegenerateOtpResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RegenerateOtpResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -24878,6 +25009,121 @@
 				}
 			}
 		},
+		"/customer-inventories/inbound-requests/pre-advised": {
+			"post": {
+				"operationId": "CreatePreAdvisedInboundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "5b. Customer creates a Pre-advised Inbound Request (Returns rawOtpCode & QR payload)",
+				"tags": [
+					"Customer Inventory Request (Dual Handshake)"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreatePreAdvisedInboundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer-inventories/inbound-requests/{id}/cancel": {
+			"post": {
+				"operationId": "CancelInboundRequest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Cannot cancel request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "5c. Customer cancels Pre-advised Inbound Request (Only allowed when PENDING)",
+				"tags": [
+					"Customer Inventory Request (Dual Handshake)"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelInboundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/customer-inventories/inbound-requests/{id}/confirm": {
 			"post": {
 				"operationId": "ConfirmInboundRequest",
@@ -25201,6 +25447,68 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/customer-inventories/requests/{id}/regenerate-otp": {
+			"post": {
+				"operationId": "RegenerateOtp",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RegenerateOtpResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Request Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "10b. Customer regenerates OTP for Pending Request",
+				"tags": [
+					"Customer Inventory Request (Dual Handshake)"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/customer-inventories/requests/{id}": {

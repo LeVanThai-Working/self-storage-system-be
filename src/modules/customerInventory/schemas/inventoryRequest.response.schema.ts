@@ -108,6 +108,13 @@ export const paginatedInventoryRequestResponseSchema = z.object({
   pagination: paginationMetadataSchema,
 });
 
+export const regenerateOtpResponseSchema = z.object({
+  requestId: z.string(),
+  requestCode: z.string(),
+  rawOtpCode: z.string(),
+  expiresAt: z.date(),
+});
+
 export type InventoryRequestItemResponse = z.infer<
   typeof inventoryRequestItemResponseSchema
 >;
@@ -120,3 +127,4 @@ export type VerifiedHandoverDetailsResponse = z.infer<
 export type PaginatedInventoryRequestResponse = z.infer<
   typeof paginatedInventoryRequestResponseSchema
 >;
+export type RegenerateOtpResponse = z.infer<typeof regenerateOtpResponseSchema>;

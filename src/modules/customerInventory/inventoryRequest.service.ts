@@ -37,15 +37,18 @@ import { inventoryRequestQueue } from './inventoryRequest.queue.ts';
 import {
   inventoryRequestResponseSchema,
   verifiedHandoverDetailsResponseSchema,
+  regenerateOtpResponseSchema,
   type InventoryRequestResponse,
   type VerifiedHandoverDetailsResponse,
   type PaginatedInventoryRequestResponse,
+  type RegenerateOtpResponse,
 } from './schemas/inventoryRequest.response.schema.ts';
 import type {
   CreateOutboundRequest,
   VerifyPickupCodeRequest,
   CompleteOutboundHandoverRequest,
   CreateInboundRequest,
+  CreatePreAdvisedInboundRequest,
   PutawayInboundRequest,
   InventoryRequestQuery,
 } from './schemas/inventoryRequest.request.schema.ts';
@@ -251,8 +254,11 @@ export class InventoryRequestService {
     const trimmedCode = data.pickupCode.trim();
     let request: IInventoryRequest | null;
 
-    // Check if input is QR Payload ("PICKUP:REQ-...:UUID") or Raw UUID
-    if (trimmedCode.startsWith('PICKUP:')) {
+    // Check if input is QR Payload ("PICKUP:REQ-...:UUID", "INBOUND:REQ-...:UUID") or Raw UUID
+    if (
+      trimmedCode.startsWith('PICKUP:') ||
+      trimmedCode.startsWith('INBOUND:')
+    ) {
       const parts = trimmedCode.split(':');
       const token = parts[2] || parts[1];
       request =
@@ -596,6 +602,194 @@ export class InventoryRequestService {
   }
 
   /**
+   * 4b. Customer cancels Pre-advised Inbound Request (Only allowed when PENDING)
+   */
+  async cancelInboundRequest(
+    id: string,
+    caller: CallerContext,
+    reason?: string
+  ): Promise<InventoryRequestResponse> {
+    this.validateRoleAccess(caller);
+
+    const request = await this.inventoryRequestRepository.findById(id);
+    if (!request || request.deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_630);
+    }
+
+    if (String(request.customerId?._id || request.customerId) !== caller.id) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    if (request.status !== InventoryRequestStatusEnum.PENDING) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_634);
+    }
+
+    const cancelled =
+      await this.inventoryRequestRepository.conditionalUpdateStatus(
+        id,
+        InventoryRequestStatusEnum.PENDING,
+        InventoryRequestStatusEnum.CANCELLED,
+        {
+          cancelledAt: new Date(),
+          staffNotes: reason?.trim()
+            ? `Cancelled by customer: ${reason.trim()}`
+            : 'Cancelled by customer',
+          pickupQrToken: null,
+          otpHash: null,
+        }
+      );
+
+    if (!cancelled) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_634);
+    }
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CANCEL_INVENTORY_REQUEST,
+      resourceType: AuditResourceEnum.INVENTORY_REQUEST,
+      resourceId: id,
+      before: request,
+      after: cancelled,
+    });
+
+    return validateResponse(
+      inventoryRequestResponseSchema,
+      this.formatRequest(cancelled)
+    );
+  }
+
+  /**
+   * 4c. Customer regenerates OTP for Pending Request
+   */
+  async regenerateOtp(
+    id: string,
+    caller: CallerContext
+  ): Promise<RegenerateOtpResponse> {
+    this.validateRoleAccess(caller);
+
+    const request = await this.inventoryRequestRepository.findById(id);
+    if (!request || request.deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_630);
+    }
+
+    if (String(request.customerId?._id || request.customerId) !== caller.id) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    if (request.status !== InventoryRequestStatusEnum.PENDING) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_632);
+    }
+
+    const rawOtpCode = String(crypto.randomInt(100000, 999999));
+    const otpHash = this.hashOtp(rawOtpCode);
+    const expiresAt =
+      request.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const updated = await this.inventoryRequestRepository.updateById(id, {
+      otpHash,
+      expiresAt,
+    });
+
+    if (!updated) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_632);
+    }
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE,
+      resourceType: AuditResourceEnum.INVENTORY_REQUEST,
+      resourceId: id,
+      before: request,
+      after: updated,
+    });
+
+    return validateResponse(regenerateOtpResponseSchema, {
+      requestId: String(updated._id),
+      requestCode: updated.requestCode,
+      rawOtpCode,
+      expiresAt: updated.expiresAt || expiresAt,
+    });
+  }
+
+  /**
+   * 4d. Customer creates a Pre-advised Inbound Request
+   */
+  async createPreAdvisedInboundRequest(
+    data: CreatePreAdvisedInboundRequest,
+    caller: CallerContext
+  ): Promise<InventoryRequestResponse> {
+    this.validateRoleAccess(caller);
+
+    // Contract validation
+    const contract = await this.contractRepository.findById(data.contractId);
+    if (!contract || contract.deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+    if (String(contract.customerId?._id || contract.customerId) !== caller.id) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+    if (contract.status !== ContractStatusEnum.ACTIVE) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_622);
+    }
+
+    const facilityId = contract.facilityId?._id || contract.facilityId;
+    const storageUnitId = contract.storageUnitId?._id || contract.storageUnitId;
+
+    // Generate Request Code
+    const countToday = await this.inventoryRequestRepository.countRequestsToday(
+      InventoryRequestTypeEnum.INBOUND
+    );
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const requestCode = `REQ-IN-${dateStr}-${String(countToday + 1).padStart(4, '0')}`;
+
+    // Security Credentials
+    const rawOtpCode = String(crypto.randomInt(100000, 999999));
+    const otpHash = this.hashOtp(rawOtpCode);
+    const pickupQrToken = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    const createdDoc = await this.inventoryRequestRepository.create({
+      requestCode,
+      type: InventoryRequestTypeEnum.INBOUND,
+      status: InventoryRequestStatusEnum.PENDING,
+      customerId: new Types.ObjectId(caller.id),
+      contractId: new Types.ObjectId(data.contractId),
+      facilityId: new Types.ObjectId(String(facilityId)),
+      storageUnitId: new Types.ObjectId(String(storageUnitId)),
+      items: data.items.map((it) => ({
+        skuId: new Types.ObjectId(it.skuId),
+        quantity: it.quantity,
+        storageRackId: it.storageRackId
+          ? new Types.ObjectId(it.storageRackId)
+          : undefined,
+        rackTierId: it.rackTierId
+          ? new Types.ObjectId(it.rackTierId)
+          : undefined,
+      })),
+      pickupQrToken,
+      otpHash,
+      expiresAt,
+      isVerified: false,
+      transporterInfo: data.transporterInfo,
+      staffNotes: data.notes?.trim(),
+    });
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE_INVENTORY_REQUEST,
+      resourceType: AuditResourceEnum.INVENTORY_REQUEST,
+      resourceId: String(createdDoc._id),
+      after: createdDoc,
+    });
+
+    const populated = await this.inventoryRequestRepository.findById(
+      String(createdDoc._id)
+    );
+    const formatted = this.formatRequest(populated || createdDoc);
+    formatted.rawOtpCode = rawOtpCode;
+    formatted.pickupQrPayload = `INBOUND:${requestCode}:${pickupQrToken}`;
+
+    return validateResponse(inventoryRequestResponseSchema, formatted);
+  }
+
+  /**
    * 5. Staff assists Inbound delivery receipt (Creates request in Staging Area with 3 evidence images)
    */
   async createInboundRequest(
@@ -904,7 +1098,10 @@ export class InventoryRequestService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
-    if (request.status !== InventoryRequestStatusEnum.READY_TO_PUTAWAY) {
+    if (
+      request.status !== InventoryRequestStatusEnum.READY_TO_PUTAWAY &&
+      request.status !== InventoryRequestStatusEnum.PROCESSING
+    ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_632);
     }
 
@@ -1026,7 +1223,10 @@ export class InventoryRequestService {
     const completed =
       await this.inventoryRequestRepository.conditionalUpdateStatus(
         id,
-        InventoryRequestStatusEnum.READY_TO_PUTAWAY,
+        [
+          InventoryRequestStatusEnum.READY_TO_PUTAWAY,
+          InventoryRequestStatusEnum.PROCESSING,
+        ],
         InventoryRequestStatusEnum.COMPLETED,
         {
           items: updatedItems,
@@ -1242,7 +1442,7 @@ export class InventoryRequestService {
       ),
       pickupQrToken: raw.pickupQrToken || null,
       pickupQrPayload: raw.pickupQrToken
-        ? `PICKUP:${raw.requestCode}:${raw.pickupQrToken}`
+        ? `${raw.type === InventoryRequestTypeEnum.INBOUND ? 'INBOUND' : 'PICKUP'}:${raw.requestCode}:${raw.pickupQrToken}`
         : null,
       rawOtpCode: null as string | null,
       expiresAt: raw.expiresAt || null,
