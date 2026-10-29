@@ -14,6 +14,7 @@ export interface ICustomerInventory extends SoftDeleteDocument {
   rackTierId?: Types.ObjectId | null;
   skuId: Types.ObjectId;
   quantity: number;
+  pendingOutboundQuantity: number;
   status: InventoryItemStatusEnum;
   holdingReason?: string | null;
   relatedIncidentId?: Types.ObjectId | null;
@@ -69,6 +70,12 @@ const customerInventorySchema = new Schema<ICustomerInventory>(
       index: true,
     },
     quantity: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+    pendingOutboundQuantity: {
       type: Number,
       required: true,
       min: 0,

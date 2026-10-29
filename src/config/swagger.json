@@ -898,6 +898,7 @@
 					"dispute_inbound_request",
 					"putaway_inbound_request",
 					"cancel_inventory_request",
+					"expire_inventory_request",
 					"batch_migrate_rack",
 					"evacuate_rack_to_holding",
 					"update_inventory_status",
@@ -10042,6 +10043,9 @@
 					"notes": {
 						"type": "string"
 					},
+					"expiresAt": {
+						"type": "string"
+					},
 					"transporterInfo": {
 						"properties": {
 							"deliveryCompany": {
@@ -10439,6 +10443,9 @@
 			"infer_typeofcreatePreAdvisedInboundRequestSchema_": {
 				"properties": {
 					"notes": {
+						"type": "string"
+					},
+					"expiresAt": {
 						"type": "string"
 					},
 					"transporterInfo": {
@@ -11163,6 +11170,14 @@
 					"status": {
 						"$ref": "#/components/schemas/InventoryItemStatusEnum"
 					},
+					"availableQuantity": {
+						"type": "number",
+						"format": "double"
+					},
+					"pendingOutboundQuantity": {
+						"type": "number",
+						"format": "double"
+					},
 					"quantity": {
 						"type": "number",
 						"format": "double"
@@ -11188,6 +11203,8 @@
 				},
 				"required": [
 					"status",
+					"availableQuantity",
+					"pendingOutboundQuantity",
 					"quantity",
 					"skuId",
 					"storageUnitId",
@@ -12041,6 +12058,14 @@
 									],
 									"type": "object"
 								},
+								"availableQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"pendingOutboundQuantity": {
+									"type": "number",
+									"format": "double"
+								},
 								"quantity": {
 									"type": "number",
 									"format": "double"
@@ -12051,6 +12076,8 @@
 							},
 							"required": [
 								"sku",
+								"availableQuantity",
+								"pendingOutboundQuantity",
 								"quantity",
 								"inventoryId"
 							],
@@ -12203,6 +12230,14 @@
 															],
 															"type": "object"
 														},
+														"availableQuantity": {
+															"type": "number",
+															"format": "double"
+														},
+														"pendingOutboundQuantity": {
+															"type": "number",
+															"format": "double"
+														},
 														"quantity": {
 															"type": "number",
 															"format": "double"
@@ -12213,6 +12248,8 @@
 													},
 													"required": [
 														"sku",
+														"availableQuantity",
+														"pendingOutboundQuantity",
 														"quantity",
 														"inventoryId"
 													],

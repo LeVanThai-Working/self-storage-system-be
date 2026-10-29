@@ -22,6 +22,7 @@ import {
   NotificationPriorityEnum,
   NotificationChannelEnum,
 } from '../../common/enums/notification.enum.ts';
+import { INVENTORY_REQUEST_EXPIRY_CONFIG } from '../../config/inventory.config.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import type { NotificationService } from '../notification/notification.service.ts';
 import type { InventoryRequestRepository } from './inventoryRequest.repository.ts';
@@ -115,9 +116,11 @@ export class InventoryRequestService {
   /**
    * 1. Customer creates an Outbound (Stock Out) Request
    */
+  @Transactional()
   async createOutboundRequest(
     data: CreateOutboundRequest,
-    caller: CallerContext
+    caller: CallerContext,
+    session?: ClientSession
   ): Promise<InventoryRequestResponse> {
     this.validateRoleAccess(caller);
 
@@ -136,7 +139,7 @@ export class InventoryRequestService {
     const facilityId = contract.facilityId?._id || contract.facilityId;
     const storageUnitId = contract.storageUnitId?._id || contract.storageUnitId;
 
-    // Validate inventory availability for each requested item
+    // Validate inventory availability and reserve atomically for each requested item
     for (const item of data.items) {
       if (!item.storageRackId || !item.rackTierId) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_635);
@@ -145,9 +148,10 @@ export class InventoryRequestService {
         data.contractId,
         item.skuId,
         String(storageUnitId),
-        item.rackTierId
+        item.rackTierId,
+        session
       );
-      if (!inventory || inventory.quantity < item.quantity) {
+      if (!inventory) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
       }
       if (
@@ -155,6 +159,17 @@ export class InventoryRequestService {
         inventory.status !== InventoryItemStatusEnum.NORMAL
       ) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
+      }
+
+      // Atomic reserve guard: check availableQuantity >= item.quantity and increment pendingOutboundQuantity
+      const reserved =
+        await this.customerInventoryRepository.incrementPendingQuantity(
+          String(inventory._id),
+          item.quantity,
+          session
+        );
+      if (!reserved) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
       }
     }
 
@@ -165,33 +180,59 @@ export class InventoryRequestService {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const requestCode = `REQ-OUT-${dateStr}-${String(countToday + 1).padStart(4, '0')}`;
 
-    // Security Credentials
+    // Security Credentials & Expiration
     const rawOtpCode = String(crypto.randomInt(100000, 999999));
     const otpHash = this.hashOtp(rawOtpCode);
     const pickupQrToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    const createdDoc = await this.inventoryRequestRepository.create({
-      requestCode,
-      type: InventoryRequestTypeEnum.OUTBOUND,
-      status: InventoryRequestStatusEnum.PENDING,
-      customerId: new Types.ObjectId(caller.id),
-      contractId: new Types.ObjectId(data.contractId),
-      facilityId: new Types.ObjectId(String(facilityId)),
-      storageUnitId: new Types.ObjectId(String(storageUnitId)),
-      items: data.items.map((it) => ({
-        skuId: new Types.ObjectId(it.skuId),
-        quantity: it.quantity,
-        storageRackId: new Types.ObjectId(it.storageRackId),
-        rackTierId: new Types.ObjectId(it.rackTierId),
-      })),
-      pickupQrToken,
-      otpHash,
-      expiresAt,
-      isVerified: false,
-      transporterInfo: data.transporterInfo,
-      staffNotes: data.notes?.trim(),
-    });
+    let expiresAt: Date;
+    if (data.expiresAt) {
+      expiresAt = new Date(data.expiresAt);
+      const minExpiresAt = new Date(
+        Date.now() +
+          INVENTORY_REQUEST_EXPIRY_CONFIG.MIN_EXPIRY_HOURS * 60 * 60 * 1000
+      );
+      const maxExpiresAt = new Date(
+        Date.now() +
+          INVENTORY_REQUEST_EXPIRY_CONFIG.MAX_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+      );
+      if (expiresAt < minExpiresAt || expiresAt > maxExpiresAt) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+      }
+    } else {
+      expiresAt = new Date(
+        Date.now() +
+          INVENTORY_REQUEST_EXPIRY_CONFIG.DEFAULT_OUTBOUND_EXPIRY_HOURS *
+            60 *
+            60 *
+            1000
+      );
+    }
+
+    const createdDoc = await this.inventoryRequestRepository.create(
+      {
+        requestCode,
+        type: InventoryRequestTypeEnum.OUTBOUND,
+        status: InventoryRequestStatusEnum.PENDING,
+        customerId: new Types.ObjectId(caller.id),
+        contractId: new Types.ObjectId(data.contractId),
+        facilityId: new Types.ObjectId(String(facilityId)),
+        storageUnitId: new Types.ObjectId(String(storageUnitId)),
+        items: data.items.map((it) => ({
+          skuId: new Types.ObjectId(it.skuId),
+          quantity: it.quantity,
+          storageRackId: new Types.ObjectId(it.storageRackId),
+          rackTierId: new Types.ObjectId(it.rackTierId),
+        })),
+        pickupQrToken,
+        otpHash,
+        expiresAt,
+        isVerified: false,
+        transporterInfo: data.transporterInfo,
+        staffNotes: data.notes?.trim(),
+      },
+      session
+    );
 
     this.auditLogService?.record({
       action: AuditActionEnum.CREATE_INVENTORY_REQUEST,
@@ -420,11 +461,12 @@ export class InventoryRequestService {
           throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
         }
 
-        // Atomic decrement guard (prevents negative stock)
+        // Atomic decrement real quantity and release pendingOutboundQuantity
         const updatedInv =
-          await this.customerInventoryRepository.incrementQuantity(
+          await this.customerInventoryRepository.deductHandoverQuantity(
             String(existingInv._id),
-            -actualQty,
+            actualQty,
+            reqItem.quantity,
             session
           );
 
@@ -548,14 +590,16 @@ export class InventoryRequestService {
   /**
    * 4. Customer cancels Outbound Request (Only allowed when PENDING)
    */
+  @Transactional()
   async cancelOutboundRequest(
     id: string,
     caller: CallerContext,
-    reason?: string
+    reason?: string,
+    session?: ClientSession
   ): Promise<InventoryRequestResponse> {
     this.validateRoleAccess(caller);
 
-    const request = await this.inventoryRequestRepository.findById(id);
+    const request = await this.inventoryRequestRepository.findById(id, session);
     if (!request || request.deleted) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_630);
     }
@@ -580,11 +624,32 @@ export class InventoryRequestService {
             : 'Cancelled by customer',
           pickupQrToken: null,
           otpHash: null,
-        }
+        },
+        session
       );
 
     if (!cancelled) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_634);
+    }
+
+    // Release reserved pendingOutboundQuantity for all items
+    for (const item of request.items) {
+      const tierIdStr = String(item.rackTierId?._id || item.rackTierId);
+      const skuIdStr = String(item.skuId?._id || item.skuId);
+      const inv = await this.customerInventoryRepository.findByPosition(
+        String(request.contractId?._id || request.contractId),
+        skuIdStr,
+        String(request.storageUnitId?._id || request.storageUnitId),
+        tierIdStr,
+        session
+      );
+      if (inv) {
+        await this.customerInventoryRepository.incrementPendingQuantity(
+          String(inv._id),
+          -item.quantity,
+          session
+        );
+      }
     }
 
     this.auditLogService?.record({
@@ -740,11 +805,35 @@ export class InventoryRequestService {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const requestCode = `REQ-IN-${dateStr}-${String(countToday + 1).padStart(4, '0')}`;
 
-    // Security Credentials
+    // Security Credentials & Expiration
     const rawOtpCode = String(crypto.randomInt(100000, 999999));
     const otpHash = this.hashOtp(rawOtpCode);
     const pickupQrToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    let expiresAt: Date;
+    if (data.expiresAt) {
+      expiresAt = new Date(data.expiresAt);
+      const minExpiresAt = new Date(
+        Date.now() +
+          INVENTORY_REQUEST_EXPIRY_CONFIG.MIN_EXPIRY_HOURS * 60 * 60 * 1000
+      );
+      const maxExpiresAt = new Date(
+        Date.now() +
+          INVENTORY_REQUEST_EXPIRY_CONFIG.MAX_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+      );
+      if (expiresAt < minExpiresAt || expiresAt > maxExpiresAt) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+      }
+    } else {
+      expiresAt = new Date(
+        Date.now() +
+          INVENTORY_REQUEST_EXPIRY_CONFIG.DEFAULT_INBOUND_EXPIRY_DAYS *
+            24 *
+            60 *
+            60 *
+            1000
+      );
+    }
 
     const createdDoc = await this.inventoryRequestRepository.create({
       requestCode,
@@ -1363,6 +1452,100 @@ export class InventoryRequestService {
     }
 
     return processedCount;
+  }
+
+  /**
+   * Background Worker Job: Automatically expires pending requests past their expiresAt deadline
+   * and releases any reserved pendingOutboundQuantity.
+   */
+  async processExpiredRequests(): Promise<number> {
+    const expiredRequests =
+      await this.inventoryRequestRepository.findExpiredPendingRequests(
+        new Date()
+      );
+
+    let expiredCount = 0;
+    for (const req of expiredRequests) {
+      try {
+        const updated =
+          await this.inventoryRequestRepository.conditionalUpdateStatus(
+            String(req._id),
+            InventoryRequestStatusEnum.PENDING,
+            InventoryRequestStatusEnum.EXPIRED,
+            {
+              pickupQrToken: null,
+              otpHash: null,
+            }
+          );
+
+        if (!updated) continue;
+
+        // If it was an OUTBOUND request, release all reserved pendingOutboundQuantity
+        if (req.type === InventoryRequestTypeEnum.OUTBOUND) {
+          for (const item of req.items) {
+            const tierIdStr = String(item.rackTierId?._id || item.rackTierId);
+            const skuIdStr = String(item.skuId?._id || item.skuId);
+            const inv = await this.customerInventoryRepository.findByPosition(
+              String(req.contractId?._id || req.contractId),
+              skuIdStr,
+              String(req.storageUnitId?._id || req.storageUnitId),
+              tierIdStr
+            );
+            if (inv) {
+              await this.customerInventoryRepository.incrementPendingQuantity(
+                String(inv._id),
+                -item.quantity
+              );
+            }
+          }
+        }
+
+        this.auditLogService?.record({
+          action: AuditActionEnum.EXPIRE_INVENTORY_REQUEST,
+          resourceType: AuditResourceEnum.INVENTORY_REQUEST,
+          resourceId: String(req._id),
+          actor: { id: 'SYSTEM', role: 'SYSTEM', email: 'system@internal' },
+          metadata: {
+            requestCode: req.requestCode,
+            type: req.type,
+            reason: 'Auto-expired past validity deadline',
+          },
+        });
+
+        if (this.notificationService) {
+          this.notificationService
+            .sendNotification({
+              recipientId: toId(req.customerId),
+              facilityId: toId(req.facilityId),
+              title: `[Hết hạn yêu cầu] Phiếu ${req.requestCode} đã hết hiệu lực`,
+              content: `Phiếu yêu cầu ${req.type === InventoryRequestTypeEnum.OUTBOUND ? 'xuất kho' : 'nhập kho'} ${req.requestCode} đã quá thời hạn hiệu lực và tự động bị hủy. Hàng hóa giữ chỗ (nếu có) đã được hoàn nguyên về kho.`,
+              type: NotificationTypeEnum.CUSTOMER_INVENTORY,
+              priority: NotificationPriorityEnum.NORMAL,
+              channels: [
+                NotificationChannelEnum.IN_APP,
+                NotificationChannelEnum.EMAIL,
+              ],
+              metadata: {
+                requestId: String(req._id),
+                requestCode: req.requestCode,
+                status: InventoryRequestStatusEnum.EXPIRED,
+              },
+            })
+            .catch((err) => {
+              console.warn(
+                'Failed to dispatch processExpiredRequests notification:',
+                err
+              );
+            });
+        }
+
+        expiredCount++;
+      } catch (err) {
+        console.error(`Failed to expire request ${req._id}:`, err);
+      }
+    }
+
+    return expiredCount;
   }
 
   private formatRequest(doc: IInventoryRequest) {

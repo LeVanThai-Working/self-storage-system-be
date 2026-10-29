@@ -86,6 +86,8 @@ export const customerInventoryResponseSchema = z.object({
   rackTierId: z.string().optional().nullable(),
   skuId: z.string(),
   quantity: z.number(),
+  pendingOutboundQuantity: z.number().default(0),
+  availableQuantity: z.number().default(0),
   status: z
     .nativeEnum(InventoryItemStatusEnum)
     .default(InventoryItemStatusEnum.NORMAL),
@@ -166,6 +168,8 @@ export type PaginatedInventoryMovementResponse = z.infer<
 export const treeTierItemSchema = z.object({
   inventoryId: z.string(),
   quantity: z.number(),
+  pendingOutboundQuantity: z.number().default(0),
+  availableQuantity: z.number().default(0),
   lastMovementAt: z.union([
     z.date().transform((d) => d.toISOString()),
     z.string(),

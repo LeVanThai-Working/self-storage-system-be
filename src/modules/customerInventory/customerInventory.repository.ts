@@ -184,6 +184,86 @@ export class CustomerInventoryRepository {
   }
 
   /**
+   * Atomically reserve or release pending outbound quantity.
+   * When delta > 0 (reserve): checks that availableQuantity (quantity - pendingOutboundQuantity) >= delta.
+   * When delta < 0 (release / cancel): checks that pendingOutboundQuantity >= Math.abs(delta).
+   */
+  async incrementPendingQuantity(
+    id: string,
+    delta: number,
+    session?: ClientSession
+  ) {
+    const filter: FilterQuery<ICustomerInventory> = {
+      _id: new Types.ObjectId(id),
+      deleted: { $ne: true },
+    };
+
+    if (delta > 0) {
+      // Guard: available = quantity - pendingOutboundQuantity >= delta
+      filter.$expr = {
+        $gte: [
+          {
+            $subtract: [
+              { $ifNull: ['$quantity', 0] },
+              { $ifNull: ['$pendingOutboundQuantity', 0] },
+            ],
+          },
+          delta,
+        ],
+      };
+    } else if (delta < 0) {
+      // Guard: pendingOutboundQuantity >= Math.abs(delta)
+      filter.pendingOutboundQuantity = { $gte: Math.abs(delta) };
+    }
+
+    const query = this.inventory.findOneAndUpdate(
+      filter,
+      {
+        $inc: { pendingOutboundQuantity: delta },
+      },
+      { returnDocument: 'after' }
+    );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Atomically deduct both real quantity and pendingOutboundQuantity on successful handover.
+   * Ensures neither quantity nor pendingOutboundQuantity becomes negative.
+   */
+  async deductHandoverQuantity(
+    id: string,
+    quantity: number,
+    pendingQuantity: number,
+    session?: ClientSession
+  ) {
+    const filter: FilterQuery<ICustomerInventory> = {
+      _id: new Types.ObjectId(id),
+      quantity: { $gte: quantity },
+      pendingOutboundQuantity: { $gte: pendingQuantity },
+      deleted: { $ne: true },
+    };
+
+    const query = this.inventory.findOneAndUpdate(
+      filter,
+      {
+        $inc: {
+          quantity: -quantity,
+          pendingOutboundQuantity: -pendingQuantity,
+        },
+        $set: { lastMovementAt: new Date() },
+      },
+      { returnDocument: 'after' }
+    );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
    * Calculate total inventory quantity of an SKU across the system (or filtered by query).
    * Supports Rule 613: Prevent deleting SKU when stock still exists.
    */

@@ -40,6 +40,18 @@ async function processInventoryRequestJob(job: Job): Promise<void> {
       break;
     }
 
+    case INVENTORY_REQUEST_JOB.EXPIRE_PENDING: {
+      console.log(
+        '[InventoryRequestWorker] Running scan to expire overdue pending inventory requests...'
+      );
+      const expiredCount =
+        await inventoryRequestService.processExpiredRequests();
+      console.log(
+        `[InventoryRequestWorker] Completed expiry scan. Expired requests: ${expiredCount}.`
+      );
+      break;
+    }
+
     default:
       console.warn(`[InventoryRequestWorker] Unknown job name: ${job.name}`);
   }

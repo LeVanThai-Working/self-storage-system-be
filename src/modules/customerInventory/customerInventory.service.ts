@@ -117,6 +117,7 @@ interface FormattableInventory {
   rackTierId?: PopulatedRef | Types.ObjectId | string | null;
   skuId: PopulatedRef | Types.ObjectId | string;
   quantity: number;
+  pendingOutboundQuantity?: number;
   status?: InventoryItemStatusEnum | string;
   holdingReason?: string | null;
   relatedIncidentId?: PopulatedRef | Types.ObjectId | string | null;
@@ -1218,9 +1219,14 @@ export class CustomerInventoryService {
       const sku = toPopulated(doc.skuId);
       if (!sku) continue;
 
+      const pendingQty = Number(doc.pendingOutboundQuantity) || 0;
+      const availableQty = Math.max(0, doc.quantity - pendingQty);
+
       const formattedItem: TreeTierItem = {
         inventoryId: String(doc._id),
         quantity: doc.quantity,
+        pendingOutboundQuantity: pendingQty,
+        availableQuantity: availableQty,
         lastMovementAt: new Date(doc.lastMovementAt).toISOString(),
         notes: doc.notes || null,
         status: doc.status || InventoryItemStatusEnum.NORMAL,
@@ -1600,6 +1606,12 @@ export class CustomerInventoryService {
     const tier = toPopulated(doc.rackTierId);
     const sku = toPopulated(doc.skuId);
 
+    const pendingOutboundQuantity = Number(doc.pendingOutboundQuantity) || 0;
+    const availableQuantity = Math.max(
+      0,
+      doc.quantity - pendingOutboundQuantity
+    );
+
     return {
       id: String(doc._id),
       customerId: toId(doc.customerId),
@@ -1610,6 +1622,8 @@ export class CustomerInventoryService {
       rackTierId: doc.rackTierId ? toId(doc.rackTierId) : null,
       skuId: toId(doc.skuId),
       quantity: doc.quantity,
+      pendingOutboundQuantity,
+      availableQuantity,
       status:
         (doc.status as InventoryItemStatusEnum) ||
         InventoryItemStatusEnum.NORMAL,

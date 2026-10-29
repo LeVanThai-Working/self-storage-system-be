@@ -32,6 +32,7 @@ export const createOutboundRequestSchema = z.object({
     .array(outboundRequestItemSchema)
     .min(1, 'Request must contain at least one item'),
   transporterInfo: transporterInfoSchema.optional(),
+  expiresAt: z.string().datetime().optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -92,6 +93,7 @@ export const createPreAdvisedInboundRequestSchema = z.object({
     .array(inboundRequestItemSchema)
     .min(1, 'Inbound request must contain at least one item'),
   transporterInfo: transporterInfoSchema.optional(),
+  expiresAt: z.string().datetime().optional(),
   notes: z.string().max(500).optional(),
 });
 
