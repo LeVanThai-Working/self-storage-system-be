@@ -92,6 +92,26 @@ function extractCaller(req: ExpressRequest): CallerContext {
     }
   }
 
+  const cookieToken = req.cookies?.accessToken;
+  if (cookieToken) {
+    try {
+      const payload = jwtUtil.verifyAccessToken(cookieToken) as {
+        userId?: string;
+        role?: string;
+        assignedFacilityId?: string;
+      };
+      if (payload?.userId) {
+        return {
+          id: payload.userId,
+          role: payload.role,
+          assignedFacilityId: payload.assignedFacilityId,
+        };
+      }
+    } catch {
+      // Ignored: fallback logic
+    }
+  }
+
   const bodyUserId = (req.body as Record<string, unknown> | undefined)?.userId;
   if (bodyUserId && typeof bodyUserId === 'string') {
     return {
