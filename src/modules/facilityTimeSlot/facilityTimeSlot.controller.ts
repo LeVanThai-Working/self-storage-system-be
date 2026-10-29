@@ -18,6 +18,7 @@ import {
 import type { Request as ExpressRequest } from 'express';
 import type { FacilityTimeSlotService } from './facilityTimeSlot.service.ts';
 import type { IUser } from '../user/user.model.ts';
+import { jwtUtil } from '../auth/auth.container.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { formatMessage } from '../../utils/format.util.ts';
 import { validateRequest } from '../../middlewares/validate.middleware.ts';
@@ -47,6 +48,21 @@ function extractCaller(req: ExpressRequest): { userId?: string } {
   const headerUserId = req.headers['x-user-id'];
   if (typeof headerUserId === 'string' && headerUserId.trim()) {
     return { userId: headerUserId.trim() };
+  }
+
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ')
+    ? authHeader.split(' ')[1]
+    : req.cookies?.accessToken;
+  if (token) {
+    try {
+      const payload = jwtUtil.verifyAccessToken(token) as { userId?: string };
+      if (payload?.userId) {
+        return { userId: payload.userId };
+      }
+    } catch {
+      // Ignored: proceed to fallback
+    }
   }
   return {};
 }
