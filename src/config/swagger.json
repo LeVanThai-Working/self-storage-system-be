@@ -911,7 +911,10 @@
 					"create_support_ticket",
 					"process_support_ticket",
 					"complete_support_ticket",
-					"cancel_support_ticket"
+					"cancel_support_ticket",
+					"revoke_authorization",
+					"digitize_contract",
+					"digitize_addendum"
 				],
 				"type": "string"
 			},
@@ -939,7 +942,10 @@
 					"inventory_movement",
 					"inventory_request",
 					"incident",
-					"support_ticket"
+					"support_ticket",
+					"legal_entity",
+					"signing_authorization",
+					"contract_template"
 				],
 				"type": "string"
 			},
@@ -2798,6 +2804,67 @@
 			"ToggleMaintenanceRequest": {
 				"$ref": "#/components/schemas/infer_typeoftoggleMaintenanceSchema_"
 			},
+			"ApiResponse__reconciledCount-number--details-Array__unitId-string--unitNumber-string--facilityId-string____": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"properties": {
+							"details": {
+								"items": {
+									"properties": {
+										"facilityId": {
+											"type": "string"
+										},
+										"unitNumber": {
+											"type": "string"
+										},
+										"unitId": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"facilityId",
+										"unitNumber",
+										"unitId"
+									],
+									"type": "object"
+								},
+								"type": "array"
+							},
+							"reconciledCount": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"details",
+							"reconciledCount"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"RackStatusEnum": {
 				"enum": [
 					"available",
@@ -3443,6 +3510,276 @@
 			"UpdateRackTierRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateRackTierSchema_"
 			},
+			"infer_typeofsigningAuthorizationResponseSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"fileHash": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"active",
+							"revoked",
+							"expired"
+						]
+					},
+					"documentUrl": {
+						"type": "string"
+					},
+					"validTo": {
+						"type": "string"
+					},
+					"validFrom": {
+						"type": "string"
+					},
+					"issuedDate": {
+						"type": "string"
+					},
+					"authorizationNumber": {
+						"type": "string"
+					},
+					"facilityIds": {
+						"items": {},
+						"type": "array"
+					},
+					"authorizedUserId": {},
+					"legalEntityId": {},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"status",
+					"documentUrl",
+					"validTo",
+					"validFrom",
+					"issuedDate",
+					"authorizationNumber",
+					"facilityIds",
+					"authorizedUserId",
+					"legalEntityId",
+					"id"
+				],
+				"type": "object"
+			},
+			"SigningAuthorizationResponse": {
+				"$ref": "#/components/schemas/infer_typeofsigningAuthorizationResponseSchema_"
+			},
+			"ApiResponse_SigningAuthorizationResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/SigningAuthorizationResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateSigningAuthorizationSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"documentUrl": {
+						"type": "string"
+					},
+					"validTo": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"validFrom": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"issuedDate": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"authorizationNumber": {
+						"type": "string"
+					},
+					"facilityIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"authorizedUserId": {
+						"type": "string"
+					},
+					"legalEntityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"documentUrl",
+					"validTo",
+					"validFrom",
+					"issuedDate",
+					"authorizationNumber",
+					"facilityIds",
+					"authorizedUserId",
+					"legalEntityId"
+				],
+				"type": "object"
+			},
+			"CreateSigningAuthorizationRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateSigningAuthorizationSchema_"
+			},
+			"PaginatedData_SigningAuthorizationResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/SigningAuthorizationResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_SigningAuthorizationResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_SigningAuthorizationResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofsigningAuthorizationQuerySchema_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"active",
+							"revoked",
+							"expired"
+						]
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"legalEntityId": {
+						"type": "string"
+					},
+					"authorizedUserId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"issuedDate",
+							"validFrom",
+							"validTo"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"SigningAuthorizationQuery": {
+				"$ref": "#/components/schemas/infer_typeofsigningAuthorizationQuerySchema_"
+			},
+			"infer_typeofupdateSigningAuthorizationSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"documentUrl": {
+						"type": "string"
+					},
+					"validTo": {
+						"type": "string",
+						"format": "date-time"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateSigningAuthorizationRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateSigningAuthorizationSchema_"
+			},
 			"BillingUnitEnum": {
 				"enum": [
 					"day",
@@ -4002,6 +4339,9 @@
 					"expiresAt": {
 						"type": "string"
 					},
+					"rentalTargetType": {
+						"type": "string"
+					},
 					"storageUnitId": {
 						"type": "string"
 					},
@@ -4288,6 +4628,12 @@
 					"startDate": {
 						"type": "string"
 					},
+					"rentedRackIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"facilityUnitTypeOfferingId": {
 						"type": "string"
 					},
@@ -4323,6 +4669,7 @@
 					"checkInTimeSlot",
 					"checkInDate",
 					"startDate",
+					"rentedRackIds",
 					"facilityUnitTypeOfferingId",
 					"facilityId",
 					"customerId",
@@ -4376,6 +4723,12 @@
 					},
 					"facilityUnitTypeOfferingId": {
 						"type": "string"
+					},
+					"rentedRackIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"amenities": {
 						"items": {
@@ -6457,6 +6810,359 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"infer_typeoflegalEntityResponseSchema_": {
+				"properties": {
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"active",
+							"inactive"
+						]
+					},
+					"bankAccount": {
+						"properties": {
+							"accountHolder": {
+								"type": "string"
+							},
+							"accountNumber": {
+								"type": "string"
+							},
+							"bankName": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"accountHolder",
+							"accountNumber",
+							"bankName"
+						],
+						"type": "object"
+					},
+					"legalRepresentative": {
+						"properties": {
+							"idNumber": {
+								"type": "string"
+							},
+							"title": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"title",
+							"name"
+						],
+						"type": "object"
+					},
+					"registeredAddress": {
+						"type": "string"
+					},
+					"taxCode": {
+						"type": "string"
+					},
+					"companyName": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"status",
+					"bankAccount",
+					"legalRepresentative",
+					"registeredAddress",
+					"taxCode",
+					"companyName",
+					"id"
+				],
+				"type": "object"
+			},
+			"LegalEntityResponse": {
+				"$ref": "#/components/schemas/infer_typeoflegalEntityResponseSchema_"
+			},
+			"ApiResponse_LegalEntityResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/LegalEntityResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateLegalEntitySchema_": {
+				"properties": {
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"active",
+							"inactive"
+						]
+					},
+					"bankAccount": {
+						"properties": {
+							"accountHolder": {
+								"type": "string"
+							},
+							"accountNumber": {
+								"type": "string"
+							},
+							"bankName": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"accountHolder",
+							"accountNumber",
+							"bankName"
+						],
+						"type": "object"
+					},
+					"legalRepresentative": {
+						"properties": {
+							"idNumber": {
+								"type": "string"
+							},
+							"title": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"title",
+							"name"
+						],
+						"type": "object"
+					},
+					"registeredAddress": {
+						"type": "string"
+					},
+					"taxCode": {
+						"type": "string"
+					},
+					"companyName": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"status",
+					"bankAccount",
+					"legalRepresentative",
+					"registeredAddress",
+					"taxCode",
+					"companyName"
+				],
+				"type": "object"
+			},
+			"CreateLegalEntityRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateLegalEntitySchema_"
+			},
+			"PaginatedData_LegalEntityResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/LegalEntityResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_LegalEntityResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_LegalEntityResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeoflegalEntityQuerySchema_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"active",
+							"inactive"
+						]
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"createdAt",
+							"companyName",
+							"taxCode"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"LegalEntityQuery": {
+				"$ref": "#/components/schemas/infer_typeoflegalEntityQuerySchema_"
+			},
+			"infer_typeofupdateLegalEntitySchema_": {
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": [
+							"active",
+							"inactive"
+						]
+					},
+					"email": {
+						"type": "string"
+					},
+					"phone": {
+						"type": "string"
+					},
+					"bankAccount": {
+						"properties": {
+							"accountHolder": {
+								"type": "string"
+							},
+							"accountNumber": {
+								"type": "string"
+							},
+							"bankName": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"accountHolder",
+							"accountNumber",
+							"bankName"
+						],
+						"type": "object"
+					},
+					"legalRepresentative": {
+						"properties": {
+							"idNumber": {
+								"type": "string"
+							},
+							"title": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"title",
+							"name"
+						],
+						"type": "object"
+					},
+					"registeredAddress": {
+						"type": "string"
+					},
+					"taxCode": {
+						"type": "string"
+					},
+					"companyName": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"UpdateLegalEntityRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateLegalEntitySchema_"
 			},
 			"IncidentSeverityEnum": {
 				"enum": [
@@ -13475,6 +14181,9 @@
 					"customerSignedAt": {
 						"type": "string"
 					},
+					"signingAuthorizationSnapshot": {},
+					"customerSnapshot": {},
+					"legalEntitySnapshot": {},
 					"terminatedAt": {
 						"type": "string"
 					},
@@ -13607,6 +14316,9 @@
 					"assignedStaffId": {
 						"type": "string"
 					},
+					"rentalTargetType": {
+						"type": "string"
+					},
 					"reservationId": {
 						"type": "string"
 					},
@@ -13665,6 +14377,27 @@
 					},
 					"status": {
 						"$ref": "#/components/schemas/ContractStatusEnum"
+					},
+					"signedContractFiles": {
+						"items": {
+							"properties": {
+								"fileHash": {
+									"type": "string"
+								},
+								"uploadedAt": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"uploadedAt",
+								"url"
+							],
+							"type": "object"
+						},
+						"type": "array"
 					},
 					"terminationHistory": {
 						"items": {
@@ -14119,6 +14852,27 @@
 								"previousEndDate": {
 									"type": "string"
 								},
+								"signedAddendumFiles": {
+									"items": {
+										"properties": {
+											"fileHash": {
+												"type": "string"
+											},
+											"uploadedAt": {
+												"type": "string"
+											},
+											"url": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"uploadedAt",
+											"url"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
 								"staffSigned": {
 									"type": "boolean"
 								},
@@ -14195,6 +14949,7 @@
 								}
 							},
 							"required": [
+								"signedAddendumFiles",
 								"staffSigned",
 								"customerSigned",
 								"requestedAt",
@@ -14279,6 +15034,12 @@
 					"facilityUnitTypeOfferingId": {
 						"type": "string"
 					},
+					"rentedRackIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"storageUnitId": {
 						"type": "string"
 					},
@@ -14306,6 +15067,7 @@
 					"customerSigned",
 					"termsAccepted",
 					"status",
+					"signedContractFiles",
 					"terminationHistory",
 					"evidenceFiles",
 					"reportFiles",
@@ -14326,6 +15088,7 @@
 					"endDate",
 					"startDate",
 					"facilityUnitTypeOfferingId",
+					"rentedRackIds",
 					"storageUnitId",
 					"facilityId",
 					"customerId",
@@ -14437,6 +15200,81 @@
 			},
 			"CreateContractRequest": {
 				"$ref": "#/components/schemas/infer_typeofcreateContractSchema_"
+			},
+			"infer_typeofwalkInContractSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					},
+					"idCardBackPhotoUrl": {
+						"type": "string"
+					},
+					"idCardFrontPhotoUrl": {
+						"type": "string"
+					},
+					"address": {
+						"type": "string"
+					},
+					"rentedRackIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"idCardNumber": {
+						"type": "string"
+					},
+					"dateOfBirth": {
+						"type": "string"
+					},
+					"customerPhone": {
+						"type": "string"
+					},
+					"customerEmail": {
+						"type": "string"
+					},
+					"customerName": {
+						"type": "string"
+					},
+					"billingUnit": {
+						"$ref": "#/components/schemas/BillingUnitEnum"
+					},
+					"endDate": {
+						"type": "string"
+					},
+					"startDate": {
+						"type": "string"
+					},
+					"facilityUnitTypeOfferingId": {
+						"type": "string"
+					},
+					"storageUnitId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"idCardNumber",
+					"dateOfBirth",
+					"customerPhone",
+					"customerEmail",
+					"customerName",
+					"billingUnit",
+					"endDate",
+					"startDate",
+					"facilityUnitTypeOfferingId",
+					"storageUnitId",
+					"facilityId"
+				],
+				"type": "object"
+			},
+			"WalkInContractRequest": {
+				"$ref": "#/components/schemas/infer_typeofwalkInContractSchema_"
 			},
 			"PaginatedData_ContractResponse_": {
 				"properties": {
@@ -14554,6 +15392,47 @@
 			"ContractQuery": {
 				"$ref": "#/components/schemas/infer_typeofcontractQuerySchema_"
 			},
+			"ApiResponse__html-string--contractCode-string__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"properties": {
+							"contractCode": {
+								"type": "string"
+							},
+							"html": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"contractCode",
+							"html"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"infer_typeofcustomerSignContractSchema_": {
 				"properties": {
 					"notes": {
@@ -14575,6 +15454,12 @@
 				"properties": {
 					"notes": {
 						"type": "string"
+					},
+					"signedContractFileUrls": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"actualCheckInDate": {
 						"type": "string"
@@ -14691,6 +15576,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"signedAddendumFileUrls": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
 					"damageFee": {
 						"type": "number",
 						"format": "double"
@@ -14798,6 +15689,72 @@
 			},
 			"DisputeSettlementRequest": {
 				"$ref": "#/components/schemas/infer_typeofdisputeSettlementSchema_"
+			},
+			"infer_typeofprocessContractOverdueResponseSchema_": {
+				"properties": {
+					"failedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"processedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"overdueCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"failedCount",
+					"processedCount",
+					"overdueCount"
+				],
+				"type": "object"
+			},
+			"ProcessContractOverdueResponse": {
+				"$ref": "#/components/schemas/infer_typeofprocessContractOverdueResponseSchema_"
+			},
+			"ApiResponse_ProcessContractOverdueResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ProcessContractOverdueResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofprocessContractOverdueQuerySchema_": {
+				"properties": {
+					"limit": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"type": "object"
+			},
+			"ProcessContractOverdueQuery": {
+				"$ref": "#/components/schemas/infer_typeofprocessContractOverdueQuerySchema_"
 			},
 			"ApprovalRequestTargetTypeEnum": {
 				"enum": [
@@ -18568,6 +19525,49 @@
 				]
 			}
 		},
+		"/storage-units/reconcile": {
+			"post": {
+				"operationId": "Reconcile",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__reconciledCount-number--details-Array__unitId-string--unitNumber-string--facilityId-string____"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Reconcile orphan RESERVED storage units that have no active Reservation or Contract.\n\n//",
+				"tags": [
+					"Storage Units"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
 		"/storage-racks": {
 			"get": {
 				"operationId": "GetStorageRacks",
@@ -19075,6 +20075,267 @@
 				]
 			}
 		},
+		"/signing-authorizations": {
+			"post": {
+				"operationId": "CreateSigningAuthorization",
+				"responses": {
+					"201": {
+						"description": "Signing authorization created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SigningAuthorizationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Legal Entity not found"
+					}
+				},
+				"tags": [
+					"SigningAuthorization"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateSigningAuthorizationRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetAllSigningAuthorizations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_SigningAuthorizationResponse__"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"SigningAuthorization"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"active",
+								"revoked",
+								"expired"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "legalEntityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "authorizedUserId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"issuedDate",
+								"validFrom",
+								"validTo"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/signing-authorizations/{id}": {
+			"get": {
+				"operationId": "GetSigningAuthorizationById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SigningAuthorizationResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Signing authorization not found"
+					}
+				},
+				"tags": [
+					"SigningAuthorization"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateSigningAuthorization",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SigningAuthorizationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Signing authorization not found"
+					}
+				},
+				"tags": [
+					"SigningAuthorization"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateSigningAuthorizationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/signing-authorizations/{id}/revoke": {
+			"post": {
+				"operationId": "RevokeSigningAuthorization",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SigningAuthorizationResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Signing authorization not found"
+					}
+				},
+				"tags": [
+					"SigningAuthorization"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/reservations": {
 			"post": {
 				"operationId": "CreateReservation",
@@ -19340,6 +20601,16 @@
 					},
 					"401": {
 						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -21542,6 +22813,239 @@
 				"description": "Xoá mềm 1 thông báo của người dùng.",
 				"tags": [
 					"Notification"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/legal-entities": {
+			"post": {
+				"operationId": "CreateLegalEntity",
+				"responses": {
+					"201": {
+						"description": "Legal Entity created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_LegalEntityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request / Duplicate Tax Code"
+					},
+					"403": {
+						"description": "Forbidden"
+					}
+				},
+				"tags": [
+					"LegalEntity"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateLegalEntityRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetAllLegalEntities",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_LegalEntityResponse__"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"LegalEntity"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"active",
+								"inactive"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"createdAt",
+								"companyName",
+								"taxCode"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/legal-entities/{id}": {
+			"get": {
+				"operationId": "GetLegalEntityById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_LegalEntityResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Legal Entity not found"
+					}
+				},
+				"tags": [
+					"LegalEntity"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"patch": {
+				"operationId": "UpdateLegalEntity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_LegalEntityResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"404": {
+						"description": "Legal Entity not found"
+					}
+				},
+				"tags": [
+					"LegalEntity"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateLegalEntityRequest"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "DeleteLegalEntity",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_LegalEntityResponse_"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Legal Entity not found"
+					}
+				},
+				"tags": [
+					"LegalEntity"
 				],
 				"security": [],
 				"parameters": [
@@ -26993,22 +28497,22 @@
 				]
 			}
 		},
-		"/contracts/process-overdue": {
+		"/contracts/walk-in": {
 			"post": {
-				"operationId": "ProcessOverdue",
+				"operationId": "CreateWalkInContract",
 				"responses": {
-					"200": {
-						"description": "Success",
+					"201": {
+						"description": "Walk-in contract created successfully",
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+									"$ref": "#/components/schemas/ApiResponse_ContractResponse_"
 								}
 							}
 						}
 					},
-					"401": {
-						"description": "Unauthorized",
+					"400": {
+						"description": "Bad Request",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -27026,14 +28530,33 @@
 								}
 							}
 						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
 					}
 				},
-				"description": "Batch process active contracts that have passed their endDate to mark them as OVERDUE.",
 				"tags": [
 					"Contracts"
 				],
 				"security": [],
-				"parameters": []
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/WalkInContractRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/contracts/{id}": {
@@ -27082,6 +28605,57 @@
 					}
 				},
 				"description": "View contract details by ID.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/contracts/{id}/draft-pdf": {
+			"get": {
+				"operationId": "GetContractDraftPdf",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__html-string--contractCode-string__"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
 				"tags": [
 					"Contracts"
 				],
@@ -28195,6 +29769,69 @@
 						}
 					}
 				}
+			}
+		},
+		"/contracts/process-overdue": {
+			"post": {
+				"operationId": "ProcessOverdue",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ProcessContractOverdueResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Scan and transition expired ACTIVE contracts to OVERDUE status.\nCalculates overdue penalty fees and isolates failures per contract.",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
 			}
 		},
 		"/approval-requests": {

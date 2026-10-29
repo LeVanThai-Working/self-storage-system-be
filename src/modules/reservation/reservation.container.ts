@@ -23,6 +23,7 @@ import { notificationService } from '../notification/notification.container.ts';
 import { facilityTimeSlotRepository } from '../facilityTimeSlot/facilityTimeSlot.container.ts';
 import { reservationQueue } from './reservation.queue.ts';
 import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
+import { storageRackRepository } from '../storageRack/storageRack.container.ts';
 
 export const reservationRepository = new ReservationRepository(Reservation);
 const facilityRepository = new FacilityRepository(Facility);
@@ -52,7 +53,8 @@ export const reservationService = new ReservationService(
   reservationQueue,
   contractRepository,
   refundRequestService,
-  incidentRepository
+  incidentRepository,
+  storageRackRepository
 );
 
 export const reservationController = new ReservationController(

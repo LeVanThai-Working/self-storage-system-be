@@ -30,6 +30,9 @@ export const createReservationSchema = z.object({
   storageUnitId: z
     .string()
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid storage unit ID format'),
+  rentedRackIds: z
+    .array(z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid rack ID format'))
+    .optional(),
   checkInDate: dateStringSchema,
   checkInTimeSlot: z.string().min(3).max(50).trim(),
   facilityUnitTypeOfferingId: z

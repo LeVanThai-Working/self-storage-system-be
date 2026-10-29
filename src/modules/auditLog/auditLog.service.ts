@@ -9,7 +9,7 @@ import type {
   RecordAuditInput,
 } from '../../common/types/auditLog.type.ts';
 import { getRequestContext } from '../../utils/requestContext.util.ts';
-import { registerAfterCommit } from '../../utils/transactionScope.util.ts';
+import { runAfterCommit } from '../../utils/transactionScope.util.ts';
 import {
   buildAuditChanges,
   sanitizeAuditMetadata,
@@ -71,13 +71,9 @@ export class AuditLogService {
       };
 
       // If running inside a @Transactional() execution, buffer until successful commit
-      const enqueuedInTx = registerAfterCommit(() => {
+      runAfterCommit(() => {
         this.publisher.publish([event]);
       });
-
-      if (!enqueuedInTx) {
-        this.publisher.publish([event]);
-      }
     } catch (error) {
       console.error('[AuditLogService] Failed to record audit event:', error);
     }

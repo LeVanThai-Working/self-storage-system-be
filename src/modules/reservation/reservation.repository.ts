@@ -26,6 +26,19 @@ export interface ReservationQueryFilter {
   checkInDateTo?: string | Date;
 }
 
+export interface QueryBatchOptions {
+  limit?: number;
+  skip?: number;
+}
+
+function isClientSession(val: unknown): val is ClientSession {
+  return Boolean(
+    val &&
+    typeof val === 'object' &&
+    typeof (val as { inTransaction?: unknown }).inTransaction === 'function'
+  );
+}
+
 export class ReservationRepository {
   constructor(private readonly reservation: SoftDeleteModel<IReservation>) {}
 
@@ -242,14 +255,34 @@ export class ReservationRepository {
   /**
    * Finds all reservations that have expired while waiting for payment.
    */
-  async findExpired(now: Date = new Date(), session?: ClientSession) {
+  async findExpired(
+    now: Date = new Date(),
+    optionsOrSession?: QueryBatchOptions | ClientSession,
+    session?: ClientSession
+  ) {
+    let options: QueryBatchOptions | undefined;
+    let actualSession: ClientSession | undefined;
+
+    if (isClientSession(optionsOrSession)) {
+      actualSession = optionsOrSession;
+    } else {
+      options = optionsOrSession;
+      actualSession = session;
+    }
+
     const query = this.reservation.find({
       status: ReservationStatusEnum.PENDING_PAYMENT,
       expiresAt: { $ne: null, $lt: now },
       deleted: false,
     });
-    if (session) {
-      query.session(session);
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (actualSession) {
+      query.session(actualSession);
     }
     return query.exec();
   }
@@ -311,7 +344,21 @@ export class ReservationRepository {
   /**
    * Finds all reservations that were confirmed but the customer never checked in on the scheduled date.
    */
-  async findOverdueCheckIn(now: Date = new Date(), session?: ClientSession) {
+  async findOverdueCheckIn(
+    now: Date = new Date(),
+    optionsOrSession?: QueryBatchOptions | ClientSession,
+    session?: ClientSession
+  ) {
+    let options: QueryBatchOptions | undefined;
+    let actualSession: ClientSession | undefined;
+
+    if (isClientSession(optionsOrSession)) {
+      actualSession = optionsOrSession;
+    } else {
+      options = optionsOrSession;
+      actualSession = session;
+    }
+
     const startOfToday = startOfDayVN(now);
 
     const query = this.reservation.find({
@@ -319,8 +366,14 @@ export class ReservationRepository {
       checkInDate: { $lt: startOfToday },
       deleted: false,
     });
-    if (session) {
-      query.session(session);
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (actualSession) {
+      query.session(actualSession);
     }
     return query.exec();
   }
@@ -328,15 +381,35 @@ export class ReservationRepository {
   /**
    * Finds all overdue reservations whose 24-hour grace period has expired (no-show).
    */
-  async findNoShow(now: Date = new Date(), session?: ClientSession) {
+  async findNoShow(
+    now: Date = new Date(),
+    optionsOrSession?: QueryBatchOptions | ClientSession,
+    session?: ClientSession
+  ) {
+    let options: QueryBatchOptions | undefined;
+    let actualSession: ClientSession | undefined;
+
+    if (isClientSession(optionsOrSession)) {
+      actualSession = optionsOrSession;
+    } else {
+      options = optionsOrSession;
+      actualSession = session;
+    }
+
     const query = this.reservation.find({
       status: ReservationStatusEnum.OVERDUE,
       graceExpiresAt: { $ne: null, $lt: now },
       arrivedAt: null,
       deleted: false,
     });
-    if (session) {
-      query.session(session);
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (actualSession) {
+      query.session(actualSession);
     }
     return query.exec();
   }
@@ -344,7 +417,21 @@ export class ReservationRepository {
   /**
    * Finds paid reservations that have past checkInDate without confirmation.
    */
-  async findPaidPastCheckIn(now: Date = new Date(), session?: ClientSession) {
+  async findPaidPastCheckIn(
+    now: Date = new Date(),
+    optionsOrSession?: QueryBatchOptions | ClientSession,
+    session?: ClientSession
+  ) {
+    let options: QueryBatchOptions | undefined;
+    let actualSession: ClientSession | undefined;
+
+    if (isClientSession(optionsOrSession)) {
+      actualSession = optionsOrSession;
+    } else {
+      options = optionsOrSession;
+      actualSession = session;
+    }
+
     const startOfToday = startOfDayVN(now);
 
     const query = this.reservation.find({
@@ -352,8 +439,14 @@ export class ReservationRepository {
       checkInDate: { $lt: startOfToday },
       deleted: false,
     });
-    if (session) {
-      query.session(session);
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (actualSession) {
+      query.session(actualSession);
     }
     return query.exec();
   }
@@ -417,6 +510,83 @@ export class ReservationRepository {
       },
       { returnDocument: 'after' }
     );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Find confirmed reservations scheduled for check-in on a specific date range (e.g. tomorrow T-1).
+   */
+  async findConfirmedForDateRange(
+    startDate: Date,
+    endDate: Date,
+    session?: ClientSession
+  ) {
+    const query = this.reservation.find({
+      status: ReservationStatusEnum.CONFIRMED,
+      checkInDate: { $gte: startDate, $lte: endDate },
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Find unconfirmed paid reservations nearing check-in deadline.
+   */
+  async findUnconfirmedPaidBeforeDate(
+    maxCheckInDate: Date,
+    session?: ClientSession
+  ) {
+    const query = this.reservation.find({
+      status: ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+      checkInDate: { $lte: maxCheckInDate },
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Find overdue reservations whose grace period will expire within a window.
+   */
+  async findExpiringGrace(now: Date, windowEnd: Date, session?: ClientSession) {
+    const query = this.reservation.find({
+      status: ReservationStatusEnum.OVERDUE,
+      arrivedAt: null,
+      graceExpiresAt: { $gte: now, $lte: windowEnd },
+      deleted: false,
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Check if a storage unit is held by any active reservation
+   */
+  async countActiveByStorageUnitId(
+    storageUnitId: string,
+    session?: ClientSession
+  ): Promise<number> {
+    const query = this.reservation.countDocuments({
+      storageUnitId,
+      status: {
+        $in: [
+          ReservationStatusEnum.PENDING_PAYMENT,
+          ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+          ReservationStatusEnum.CONFIRMED,
+        ],
+      },
+      deleted: false,
+    });
     if (session) {
       query.session(session);
     }

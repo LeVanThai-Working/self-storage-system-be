@@ -39,7 +39,7 @@ export function Transactional() {
             scope.afterCommitHooks = [];
             result = await originalMethod.apply(this, [...args, session]);
           });
-          flushAfterCommitHooks(scope);
+          await flushAfterCommitHooks(scope);
           return result;
         } catch (error: unknown) {
           // Fallback only permitted in non-production environments (standalone MongoDB without replica set)
@@ -53,7 +53,7 @@ export function Transactional() {
           if (process.env.NODE_ENV !== 'production' && isReplicaSetError) {
             scope.afterCommitHooks = [];
             const result = await originalMethod.apply(this, args);
-            flushAfterCommitHooks(scope);
+            await flushAfterCommitHooks(scope);
             return result;
           }
           // In production or on normal business rollback/error: never fall back, discard hooks and rethrow

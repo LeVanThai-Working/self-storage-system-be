@@ -4,6 +4,7 @@ import MongooseDelete, {
   type SoftDeleteModel,
 } from 'mongoose-delete';
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
+import { RentalTargetTypeEnum } from '../../common/enums/rental.enum.ts';
 import {
   RefundStatusEnum,
   ReservationCancelSourceEnum,
@@ -62,6 +63,7 @@ export interface IReservation extends SoftDeleteDocument {
   facilityId: Types.ObjectId;
   facilityUnitTypeOfferingId: Types.ObjectId;
   storageUnitId: Types.ObjectId;
+  rentalTargetType?: RentalTargetTypeEnum;
   rentedRackIds?: Types.ObjectId[];
   startDate: Date;
   checkInDate: Date;
@@ -332,6 +334,11 @@ const reservationSchema = new Schema<IReservation>(
       ref: 'StorageUnit',
       required: true,
     },
+    rentalTargetType: {
+      type: String,
+      enum: Object.values(RentalTargetTypeEnum),
+      default: RentalTargetTypeEnum.STORAGE_UNIT,
+    },
     rentedRackIds: {
       type: [
         {
@@ -583,13 +590,14 @@ reservationSchema.index({ status: 1, expiresAt: 1 });
 reservationSchema.index({ status: 1, graceExpiresAt: 1 });
 reservationSchema.index({ facilityId: 1, checkInDate: 1, checkInTimeSlot: 1 });
 
-// Partial Unique Index: Only ONE active reservation can lock a storageUnit at any time
+// Partial Unique Index: Only ONE active reservation can lock a storageUnit at any time (for standard STORAGE_UNIT rentals)
 reservationSchema.index(
   { storageUnitId: 1 },
   {
     unique: true,
     partialFilterExpression: {
       storageUnitId: { $type: 'objectId' },
+      rentalTargetType: RentalTargetTypeEnum.STORAGE_UNIT,
       status: {
         $in: [
           ReservationStatusEnum.PENDING_PAYMENT,

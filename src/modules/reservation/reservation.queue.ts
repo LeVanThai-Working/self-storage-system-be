@@ -9,6 +9,7 @@ export const RESERVATION_QUEUE_NAME = 'reservation-queue';
 export const RESERVATION_JOB = {
   EXPIRE_HOLDING: 'expire_holding_reservation',
   CHECK_OVERDUE: 'check_overdue_reservations',
+  REMIND_SCHEDULE: 'remind_schedule_reservations',
 } as const;
 
 export interface ExpireReservationJobData {
@@ -77,6 +78,20 @@ export class ReservationQueue {
       { pattern: '*/15 * * * *' },
       {
         name: RESERVATION_JOB.CHECK_OVERDUE,
+        data: { triggeredAt: new Date().toISOString() },
+      }
+    );
+  }
+
+  /**
+   * Setup a repeatable job to send schedule reminders (T-1, pending unconfirmed, grace expiring) every 30 minutes.
+   */
+  async setupScheduleRemindersRepeatableJob(): Promise<void> {
+    await this.queue.upsertJobScheduler(
+      'repeatable-remind-schedule',
+      { pattern: '*/30 * * * *' },
+      {
+        name: RESERVATION_JOB.REMIND_SCHEDULE,
         data: { triggeredAt: new Date().toISOString() },
       }
     );

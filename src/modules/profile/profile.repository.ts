@@ -1,4 +1,4 @@
-import type mongoose from 'mongoose';
+import type { ClientSession, default as mongoose } from 'mongoose';
 import type { IProfile } from './profile.model.ts';
 import type { SoftDeleteModel } from 'mongoose-delete';
 
@@ -11,13 +11,18 @@ export class ProfileRepository {
 
   async upsertByUserId(
     userId: string,
-    data: Partial<Omit<IProfile, '_id' | 'userId' | 'createdAt' | 'updatedAt'>>
+    data: Partial<Omit<IProfile, '_id' | 'userId' | 'createdAt' | 'updatedAt'>>,
+    session?: ClientSession
   ): Promise<IProfile> {
-    return this.profile.findOneAndUpdate(
+    const q = this.profile.findOneAndUpdate(
       { userId },
       { $set: data },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
-    ) as Promise<IProfile>;
+    );
+    if (session) {
+      q.session(session);
+    }
+    return q.exec() as Promise<IProfile>;
   }
 
   async softDeleteByUserId(

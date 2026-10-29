@@ -3,6 +3,7 @@ import type { SoftDeleteModel } from 'mongoose-delete';
 import type { IContract } from './contract.model.ts';
 import { paginate, type PaginateResult } from '../../utils/pagination.util.ts';
 import {
+  ContractAddendumStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
 } from '../../common/enums/contract.enum.ts';
@@ -247,6 +248,43 @@ export class ContractRepository {
   }
 
   /**
+   * Atomically executes check-in transition from DRAFT to ACTIVE with conditional guard.
+   * Prevents race conditions / double check-in.
+   */
+  async atomicCheckIn(
+    id: string,
+    conditions: {
+      status: ContractStatusEnum;
+      customerSigned: boolean;
+      storageUnitId: string;
+    },
+    updateData: Partial<IContract>,
+    session?: ClientSession
+  ): Promise<IContract | null> {
+    const query = this.contract.findOneAndUpdate(
+      {
+        _id: id,
+        status: conditions.status,
+        customerSigned: conditions.customerSigned,
+        storageUnitId: Types.ObjectId.isValid(conditions.storageUnitId)
+          ? new Types.ObjectId(conditions.storageUnitId)
+          : conditions.storageUnitId,
+        deleted: false,
+      },
+      {
+        $set: updateData,
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
    * Conditionally touch `lastInventoryActivityAt` when the contract is in one of
    * `allowedStatuses`. Writes to the Contract document within the caller's session
    * so any concurrent check-out / termination triggers a WiredTiger WriteConflict
@@ -321,12 +359,88 @@ export class ContractRepository {
 
   async findExpiredActiveContracts(
     now: Date = new Date(),
+    options?: { limit?: number; skip?: number },
     session?: ClientSession
   ) {
     const query = this.contract.find({
       status: ContractStatusEnum.ACTIVE,
       endDate: { $lt: now },
     });
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  async findExpiringActiveContracts(
+    rangeStart: Date,
+    rangeEnd: Date,
+    options?: { limit?: number; skip?: number },
+    session?: ClientSession
+  ) {
+    const query = this.contract.find({
+      status: ContractStatusEnum.ACTIVE,
+      endDate: { $gte: rangeStart, $lte: rangeEnd },
+    });
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  async findExpiredDraftContracts(
+    now: Date = new Date(),
+    options?: { limit?: number; skip?: number },
+    session?: ClientSession
+  ) {
+    const query = this.contract.find({
+      status: ContractStatusEnum.DRAFT,
+      expiresAt: { $ne: null, $lt: now },
+    });
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  async findContractsWithExpiredDraftAddendums(
+    now: Date = new Date(),
+    options?: { limit?: number; skip?: number },
+    session?: ClientSession
+  ) {
+    const query = this.contract.find({
+      'addendums.status': {
+        $in: [
+          ContractAddendumStatusEnum.PENDING_APPROVAL,
+          ContractAddendumStatusEnum.DRAFT,
+        ],
+      },
+      'addendums.expiresAt': { $ne: null, $lt: now },
+    });
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
     if (session) {
       query.session(session);
     }

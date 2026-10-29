@@ -13,6 +13,10 @@ import type { ReservationQueue } from './reservation.queue.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import type { NotificationService } from '../notification/notification.service.ts';
 import type { IncidentRepository } from '../incident/incident.repository.ts';
+import type { StorageRackRepository } from '../storageRack/storageRack.repository.ts';
+import type { IStorageRack } from '../storageRack/storageRack.model.ts';
+import type { IStorageUnit } from '../storageUnit/storageUnit.model.ts';
+import { RentalTargetTypeEnum } from '../../common/enums/rental.enum.ts';
 import type {
   IReservation,
   IReservationAmenity,
@@ -63,6 +67,7 @@ import {
   buildReservationPolicySnapshot,
   getReservationConfig,
   isDemoRefundSimulationEnabled,
+  type ReservationConfig,
 } from '../../config/reservation.config.ts';
 import {
   calculateCheckInDeadlineVN,
@@ -72,6 +77,7 @@ import {
   resolveReservationPolicy,
 } from '../../utils/reservationPolicy.util.ts';
 import { getRequestContext } from '../../utils/requestContext.util.ts';
+import { runAfterCommit } from '../../utils/transactionScope.util.ts';
 import {
   addDays,
   checkOperatingHoursMatchVN,
@@ -110,7 +116,8 @@ export class ReservationService {
     private readonly reservationQueue?: ReservationQueue,
     private readonly contractRepository?: ContractRepository,
     private readonly refundRequestService?: RefundRequestService,
-    private readonly incidentRepository?: IncidentRepository
+    private readonly incidentRepository?: IncidentRepository,
+    private readonly storageRackRepository?: StorageRackRepository
   ) {}
 
   private async generateUniqueReservationCode(
@@ -136,7 +143,14 @@ export class ReservationService {
     targetUnitStatus: StorageUnitStatusEnum = StorageUnitStatusEnum.AVAILABLE,
     session?: ClientSession
   ): Promise<void> {
-    if (reservation.storageUnitId) {
+    if (reservation.rentedRackIds && reservation.rentedRackIds.length > 0) {
+      if (this.storageRackRepository) {
+        const rackIds = reservation.rentedRackIds.map((id) =>
+          String((id as { _id?: Types.ObjectId })._id || id)
+        );
+        await this.storageRackRepository.releaseRacksAtomic(rackIds, session);
+      }
+    } else if (reservation.storageUnitId) {
       const unitIdStr = String(
         (reservation.storageUnitId as { _id?: Types.ObjectId })._id ||
           reservation.storageUnitId
@@ -195,14 +209,7 @@ export class ReservationService {
       );
     }
 
-    this.reservationQueue
-      ?.removeExpireReservationJob(reservation._id.toString())
-      .catch((err: Error) => {
-        console.warn(
-          '[ReservationService] Could not remove BullMQ job:',
-          err.message
-        );
-      });
+    this.removeExpirationJob(reservation._id.toString());
   }
 
   private async validateCheckInStaff(
@@ -481,6 +488,14 @@ export class ReservationService {
       facilityId: facilityIdStr,
       facilityUnitTypeOfferingId: offeringIdStr,
       storageUnitId: storageUnitIdStr,
+      rentalTargetType: (raw.rentalTargetType as string) ?? null,
+      rentedRackIds: Array.isArray(raw.rentedRackIds)
+        ? raw.rentedRackIds.map((id) =>
+            typeof id === 'object' && id !== null && '_id' in id
+              ? String((id as { _id: unknown })._id)
+              : String(id)
+          )
+        : [],
       startDate:
         raw.startDate instanceof Date
           ? raw.startDate.toISOString()
@@ -647,56 +662,52 @@ export class ReservationService {
     metadata?: Record<string, unknown>
   ): void {
     if (!this.notificationService) return;
-    try {
-      this.facilityRepository
-        .findById(facilityId)
-        .then(async (facility) => {
-          if (!facility) return;
-          let managerId = facility.managerId
-            ? String(
-                (facility.managerId as { _id?: Types.ObjectId })._id ||
-                  facility.managerId
-              )
-            : null;
+    runAfterCommit(async () => {
+      try {
+        const facility = await this.facilityRepository.findById(facilityId);
+        if (!facility) return;
+        let managerId = facility.managerId
+          ? String(
+              (facility.managerId as { _id?: Types.ObjectId })._id ||
+                facility.managerId
+            )
+          : null;
 
-          if (!managerId) {
-            const managers = await this.userRepository.findUsersByRoles([
-              RoleEnum.FACILITY_MANAGER,
-            ]);
-            const matched = managers.find(
-              (m) => String(m.assignedFacilityId) === facilityId
-            );
-            if (matched) {
-              managerId = String(matched._id);
-            }
-          }
-
-          if (managerId) {
-            await this.notificationService?.sendNotification({
-              recipientId: managerId,
-              facilityId,
-              title,
-              content,
-              type: NotificationTypeEnum.RESERVATION,
-              priority: NotificationPriorityEnum.HIGH,
-              channels: [NotificationChannelEnum.IN_APP],
-              metadata: {
-                ...metadata,
-                facilityId,
-                facilityName: facility.name,
-              },
-            });
-          }
-        })
-        .catch((err) => {
-          console.warn(
-            'Failed to notify facility manager:',
-            err?.message || err
+        if (!managerId) {
+          const managers = await this.userRepository.findUsersByRoles([
+            RoleEnum.FACILITY_MANAGER,
+          ]);
+          const matched = managers.find(
+            (m) => String(m.assignedFacilityId) === facilityId
           );
-        });
-    } catch (err) {
-      console.warn('Error initiating notification to facility manager:', err);
-    }
+          if (matched) {
+            managerId = String(matched._id);
+          }
+        }
+
+        if (managerId) {
+          await this.notificationService?.sendNotification({
+            recipientId: managerId,
+            facilityId,
+            title,
+            content,
+            type: NotificationTypeEnum.RESERVATION,
+            priority: NotificationPriorityEnum.HIGH,
+            channels: [NotificationChannelEnum.IN_APP],
+            metadata: {
+              ...metadata,
+              facilityId,
+              facilityName: facility.name,
+            },
+          });
+        }
+      } catch (err) {
+        console.warn(
+          'Failed to notify facility manager:',
+          (err as Error)?.message || err
+        );
+      }
+    });
   }
 
   private notifyAssignedStaff(
@@ -707,9 +718,9 @@ export class ReservationService {
     metadata?: Record<string, unknown>
   ): void {
     if (!this.notificationService) return;
-    try {
-      this.notificationService
-        .sendNotification({
+    runAfterCommit(async () => {
+      try {
+        await this.notificationService?.sendNotification({
           recipientId: staffId,
           facilityId,
           title,
@@ -722,13 +733,14 @@ export class ReservationService {
             facilityId,
             staffId,
           },
-        })
-        .catch((err) => {
-          console.warn('Failed to notify assigned staff:', err?.message || err);
         });
-    } catch (err) {
-      console.warn('Error initiating notification to assigned staff:', err);
-    }
+      } catch (err) {
+        console.warn(
+          'Failed to notify assigned staff:',
+          (err as Error)?.message || err
+        );
+      }
+    });
   }
 
   private notifyCustomer(
@@ -741,40 +753,70 @@ export class ReservationService {
     customChannels?: NotificationChannelEnum[]
   ): void {
     if (!this.notificationService) return;
-    try {
-      this.userRepository
-        .findById(customerId)
-        .then(async (customer) => {
-          if (!customer) return;
-          const channels = customChannels
-            ? [...customChannels]
-            : [NotificationChannelEnum.IN_APP];
-          if (!customChannels && customer.email) {
-            channels.push(NotificationChannelEnum.EMAIL);
-          }
-          await this.notificationService?.sendNotification({
-            recipientId: customerId,
+    runAfterCommit(async () => {
+      try {
+        const customer = await this.userRepository.findById(customerId);
+        if (!customer) return;
+        const channels = customChannels
+          ? [...customChannels]
+          : [NotificationChannelEnum.IN_APP];
+        if (!customChannels && customer.email) {
+          channels.push(NotificationChannelEnum.EMAIL);
+        }
+        await this.notificationService?.sendNotification({
+          recipientId: customerId,
+          facilityId,
+          title,
+          content,
+          type: NotificationTypeEnum.RESERVATION,
+          priority,
+          channels,
+          metadata: {
+            ...metadata,
             facilityId,
-            title,
-            content,
-            type: NotificationTypeEnum.RESERVATION,
-            priority,
-            channels,
-            metadata: {
-              ...metadata,
-              facilityId,
-              customerId,
-              customerEmail: customer.email,
-              email: customer.email,
-            },
-          });
-        })
-        .catch((err) => {
-          console.warn('Failed to notify customer:', err?.message || err);
+            customerId,
+            customerEmail: customer.email,
+            email: customer.email,
+          },
         });
-    } catch (err) {
-      console.warn('Error initiating notification to customer:', err);
-    }
+      } catch (err) {
+        console.warn(
+          'Failed to notify customer:',
+          (err as Error)?.message || err
+        );
+      }
+    });
+  }
+
+  private scheduleExpirationJob(reservationId: string, delayMs: number): void {
+    if (!this.reservationQueue) return;
+    runAfterCommit(async () => {
+      try {
+        await this.reservationQueue?.addExpireReservationJob(
+          reservationId,
+          delayMs
+        );
+      } catch (err: unknown) {
+        console.error(
+          '[ReservationService] Failed to schedule BullMQ expiration job:',
+          (err as Error).message
+        );
+      }
+    });
+  }
+
+  private removeExpirationJob(reservationId: string): void {
+    if (!this.reservationQueue) return;
+    runAfterCommit(async () => {
+      try {
+        await this.reservationQueue?.removeExpireReservationJob(reservationId);
+      } catch (err: unknown) {
+        console.warn(
+          '[ReservationService] Could not remove BullMQ job:',
+          (err as Error).message
+        );
+      }
+    });
   }
 
   // 1. Customer creates reservation (locks unit & enters PENDING_PAYMENT)
@@ -905,16 +947,54 @@ export class ReservationService {
       }
     }
 
-    // Atomic Lock Storage Unit
-    const unit = await this.storageUnitRepository.findAndReserveUnitAtomic(
-      data.storageUnitId,
-      data.facilityId,
-      session
+    const isRackRental = Boolean(
+      data.rentedRackIds && data.rentedRackIds.length > 0
     );
-    if (!unit) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_309, [
-        'Storage unit has just been booked by another customer',
-      ]);
+    let unit: IStorageUnit | null;
+    let reservedRacks: IStorageRack[] = [];
+
+    if (isRackRental) {
+      unit = await this.storageUnitRepository.findById(
+        data.storageUnitId,
+        session
+      );
+      if (
+        !unit ||
+        String(unit.facilityId?._id || unit.facilityId) !== data.facilityId
+      ) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+          'Storage Unit',
+        ]);
+      }
+      if (!this.storageRackRepository) {
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106, [
+          'Storage Rack repository not configured',
+        ]);
+      }
+      const racks = await this.storageRackRepository.findAndReserveRacksAtomic(
+        data.rentedRackIds!,
+        data.facilityId,
+        data.storageUnitId,
+        session
+      );
+      if (!racks || racks.length !== data.rentedRackIds!.length) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_637, [
+          'One or more selected storage racks are not available',
+        ]);
+      }
+      reservedRacks = racks;
+    } else {
+      // Atomic Lock Storage Unit
+      unit = await this.storageUnitRepository.findAndReserveUnitAtomic(
+        data.storageUnitId,
+        data.facilityId,
+        session
+      );
+      if (!unit) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_309, [
+          'Storage unit has just been booked by another customer',
+        ]);
+      }
     }
 
     const unitTypeIdStr = String(
@@ -1040,7 +1120,24 @@ export class ReservationService {
       }
     }
 
-    const basePrice = offering.pricePerUnit;
+    let basePrice = offering.pricePerUnit;
+    if (isRackRental) {
+      let rackTotalPrice = 0;
+      for (const rack of reservedRacks) {
+        if (typeof rack.customPrice === 'number' && rack.customPrice >= 0) {
+          rackTotalPrice += rack.customPrice;
+        } else if (
+          offering.rackZonePricing &&
+          typeof offering.rackZonePricing[rack.zone] === 'number'
+        ) {
+          rackTotalPrice += offering.rackZonePricing[rack.zone];
+        } else {
+          rackTotalPrice += offering.pricePerUnit;
+        }
+      }
+      basePrice = rackTotalPrice;
+    }
+
     const depositMultiplier = offering.depositMultiplier || 1;
     const depositAmount = basePrice * depositMultiplier;
     // Total upfront amount to settle is the depositAmount (amenities are billed periodically in contract)
@@ -1070,6 +1167,12 @@ export class ReservationService {
         facilityId: new Types.ObjectId(data.facilityId),
         facilityUnitTypeOfferingId: offering._id,
         storageUnitId: unit._id,
+        rentalTargetType: isRackRental
+          ? RentalTargetTypeEnum.STORAGE_RACK
+          : RentalTargetTypeEnum.STORAGE_UNIT,
+        rentedRackIds: isRackRental
+          ? data.rentedRackIds!.map((id) => new Types.ObjectId(id))
+          : [],
         startDate,
         checkInDate,
         checkInTimeSlot: data.checkInTimeSlot.trim(),
@@ -1141,17 +1244,10 @@ export class ReservationService {
     );
 
     // Schedule BullMQ expiration job
-    this.reservationQueue
-      ?.addExpireReservationJob(
-        created._id.toString(),
-        config.holdMinutes * 60 * 1000
-      )
-      .catch((err: Error) => {
-        console.error(
-          '[ReservationService] Failed to schedule BullMQ expiration job:',
-          err.message
-        );
-      });
+    this.scheduleExpirationJob(
+      created._id.toString(),
+      config.holdMinutes * 60 * 1000
+    );
 
     return validateResponse(reservationResponseSchema, formatted);
   }
@@ -1701,14 +1797,7 @@ export class ReservationService {
           session
         );
       }
-      this.reservationQueue
-        ?.removeExpireReservationJob(reservation._id.toString())
-        .catch((err: Error) => {
-          console.warn(
-            '[ReservationService] Could not remove BullMQ job:',
-            err.message
-          );
-        });
+      this.removeExpirationJob(reservation._id.toString());
 
       // 5. 100% deposit refund via RefundRequest (FACILITY_FAULT reason)
       const refundAmount = reservation.depositAmount || 0;
@@ -1872,14 +1961,7 @@ export class ReservationService {
       },
     });
 
-    this.reservationQueue
-      ?.removeExpireReservationJob(id)
-      .catch((err: Error) => {
-        console.error(
-          '[ReservationService] Failed to remove BullMQ expiration job:',
-          err.message
-        );
-      });
+    this.removeExpirationJob(id);
 
     const customerIdStr = String(
       (reservation.customerId as { _id?: Types.ObjectId })._id ||
@@ -3002,8 +3084,7 @@ export class ReservationService {
       return false;
     }
 
-    await this.releaseHold(res, StorageUnitStatusEnum.AVAILABLE, session);
-
+    // Step A: Atomic update status FIRST to claim this expiration exclusively
     const updated = await this.reservationRepository.atomicUpdateStatus(
       id,
       ReservationStatusEnum.PENDING_PAYMENT,
@@ -3012,6 +3093,9 @@ export class ReservationService {
     );
 
     if (!updated) return false;
+
+    // Step B: Release hold inside the same transaction session
+    await this.releaseHold(res, StorageUnitStatusEnum.AVAILABLE, session);
 
     this.auditLogService?.record({
       action: AuditActionEnum.EXPIRE,
@@ -3022,10 +3106,18 @@ export class ReservationService {
     });
 
     const customerIdStr = String(
-      (res.customerId as { _id?: Types.ObjectId })._id || res.customerId
+      res.customerId &&
+        typeof res.customerId === 'object' &&
+        '_id' in res.customerId
+        ? (res.customerId as { _id: Types.ObjectId })._id
+        : res.customerId
     );
     const facilityIdStr = String(
-      (res.facilityId as { _id?: Types.ObjectId })._id || res.facilityId
+      res.facilityId &&
+        typeof res.facilityId === 'object' &&
+        '_id' in res.facilityId
+        ? (res.facilityId as { _id: Types.ObjectId })._id
+        : res.facilityId
     );
 
     this.notifyCustomer(
@@ -3043,242 +3135,504 @@ export class ReservationService {
     return true;
   }
 
-  // 9. Process expired reservations (batch fallback)
-  @Transactional()
-  async processExpiredReservations(
-    session?: ClientSession
-  ): Promise<{ processedCount: number }> {
+  // 9. Process expired reservations (batch fallback with fault isolation)
+  async processExpiredReservations(options?: {
+    batchSize?: number;
+    limit?: number;
+  }): Promise<{ processedCount: number }> {
+    const config = getReservationConfig();
+    const limit =
+      options?.limit ?? options?.batchSize ?? config.overdueBatchSize ?? 50;
     const expiredList = await this.reservationRepository.findExpired(
       new Date(),
-      session
+      { limit }
     );
     let count = 0;
 
     for (const res of expiredList) {
-      const ok = await this.expireSingleReservation(
-        res._id.toString(),
-        session
-      );
-      if (ok) count++;
+      try {
+        const ok = await this.expireSingleReservation(res._id.toString());
+        if (ok) count++;
+      } catch (err: unknown) {
+        console.error(
+          `[ReservationService ALERT] Failed to expire reservation ${res.reservationCode} (${res._id}):`,
+          err instanceof Error ? err.message : String(err)
+        );
+      }
     }
 
     return { processedCount: count };
   }
 
-  // 10. Process overdue check-ins & no-show auto cancellations
+  // 10a. Process single overdue check-in with isolated transaction
   @Transactional()
-  async processOverdueReservations(session?: ClientSession): Promise<{
+  async processSingleOverdueCheckIn(
+    id: string,
+    now: Date = new Date(),
+    config: ReservationConfig = getReservationConfig(),
+    session?: ClientSession
+  ): Promise<boolean> {
+    const res = await this.reservationRepository.findById(id, session);
+    if (!res || res.status !== ReservationStatusEnum.CONFIRMED) {
+      return false;
+    }
+
+    const startOfToday = startOfDayVN(now);
+    if (res.checkInDate >= startOfToday) {
+      return false;
+    }
+
+    const policy = resolveReservationPolicy(res, config);
+    const defaultGraceExpiresAt = new Date(
+      endOfDayVN(res.checkInDate).getTime() +
+        policy.noShowGraceHours * 3600 * 1000
+    );
+    const graceExpiresAt =
+      res.graceExpiresAt && res.graceExpiresAt > defaultGraceExpiresAt
+        ? res.graceExpiresAt
+        : defaultGraceExpiresAt;
+
+    const updated = await this.reservationRepository.atomicUpdateStatus(
+      id,
+      ReservationStatusEnum.CONFIRMED,
+      {
+        status: ReservationStatusEnum.OVERDUE,
+        graceExpiresAt,
+      },
+      session
+    );
+
+    if (!updated) {
+      return false;
+    }
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.MARK_OVERDUE,
+      resourceType: AuditResourceEnum.RESERVATION,
+      resourceId: id,
+      before: this.formatReservation(res),
+      after: this.formatReservation(updated),
+      metadata: { graceExpiresAt: graceExpiresAt.toISOString() },
+    });
+
+    const customerIdStr = String(
+      res.customerId &&
+        typeof res.customerId === 'object' &&
+        '_id' in res.customerId
+        ? (res.customerId as { _id: Types.ObjectId })._id
+        : res.customerId
+    );
+    const facilityIdStr = String(
+      res.facilityId &&
+        typeof res.facilityId === 'object' &&
+        '_id' in res.facilityId
+        ? (res.facilityId as { _id: Types.ObjectId })._id
+        : res.facilityId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${res.reservationCode}] đã quá hạn check-in`,
+      `Đơn đặt chỗ [${res.reservationCode}] đã quá ngày hẹn check-in. Cơ sở hỗ trợ giữ chỗ thêm ${policy.noShowGraceHours} giờ (trước ${graceExpiresAt.toLocaleString('vi-VN')}). Vui lòng liên hệ cơ sở để hoàn tất nhận kho trước khi hết hạn giữ.`,
+      {
+        reservationId: id,
+        reservationCode: res.reservationCode,
+        graceExpiresAt: graceExpiresAt.toISOString(),
+      },
+      NotificationPriorityEnum.HIGH
+    );
+
+    return true;
+  }
+
+  // 10b. Process single no-show cancellation with isolated transaction
+  @Transactional()
+  async processSingleNoShow(
+    id: string,
+    now: Date = new Date(),
+    config: ReservationConfig = getReservationConfig(),
+    session?: ClientSession
+  ): Promise<boolean> {
+    const res = await this.reservationRepository.findById(id, session);
+    if (!res || res.status !== ReservationStatusEnum.OVERDUE) {
+      return false;
+    }
+
+    if (res.arrivedAt != null) {
+      return false;
+    }
+
+    const policy = resolveReservationPolicy(res, config);
+    const { forfeitedAmount, refundAmount } = computeForfeiture(
+      res.depositAmount,
+      policy.forfeitPercent
+    );
+    const refundStatus =
+      refundAmount > 0 ? RefundStatusEnum.PENDING : RefundStatusEnum.NONE;
+
+    // Step A: Atomic update status FIRST to claim this no-show exclusively
+    const updated = await this.reservationRepository.atomicUpdateStatus(
+      id,
+      ReservationStatusEnum.OVERDUE,
+      {
+        status: ReservationStatusEnum.CANCELLED,
+        cancellationReason: `Quá hạn thời gian giữ kho ${policy.noShowGraceHours}h sau ngày hẹn check-in (No-show)`,
+        cancelledAt: now,
+        cancellationSource: ReservationCancelSourceEnum.SYSTEM,
+        refundAmount,
+        forfeitedAmount,
+        refundStatus,
+      },
+      session
+    );
+
+    if (!updated) {
+      return false;
+    }
+
+    // Step B: Release hold inside the same transaction session
+    await this.releaseHold(res, StorageUnitStatusEnum.AVAILABLE, session);
+
+    if (refundAmount > 0) {
+      console.error(
+        `[ReservationService] No-show reservation ${res.reservationCode} has partial refundAmount=${refundAmount}, but job RefundRequest creation requires SYSTEM actor.`
+      );
+    }
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CANCEL,
+      resourceType: AuditResourceEnum.RESERVATION,
+      resourceId: id,
+      before: this.formatReservation(res),
+      after: this.formatReservation(updated),
+      metadata: {
+        reason: 'No-show grace expired',
+        forfeitedAmount,
+        refundAmount,
+      },
+    });
+
+    const customerIdStr = String(
+      res.customerId &&
+        typeof res.customerId === 'object' &&
+        '_id' in res.customerId
+        ? (res.customerId as { _id: Types.ObjectId })._id
+        : res.customerId
+    );
+    const facilityIdStr = String(
+      res.facilityId &&
+        typeof res.facilityId === 'object' &&
+        '_id' in res.facilityId
+        ? (res.facilityId as { _id: Types.ObjectId })._id
+        : res.facilityId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${res.reservationCode}] đã bị huỷ do quá hạn (No-show)`,
+      `Đơn đặt chỗ [${res.reservationCode}] đã tự động huỷ do quý khách không đến nhận kho sau thời gian hỗ trợ ${policy.noShowGraceHours}h. Tiền cọc ${forfeitedAmount.toLocaleString('vi-VN')} VNĐ đã được khấu trừ theo quy định.`,
+      {
+        reservationId: id,
+        reservationCode: res.reservationCode,
+        forfeitedAmount,
+        refundAmount,
+      },
+      NotificationPriorityEnum.HIGH
+    );
+
+    return true;
+  }
+
+  // 10c. Process single unconfirmed paid reservation past check-in with isolated transaction
+  @Transactional()
+  async processSingleUnconfirmed(
+    id: string,
+    now: Date = new Date(),
+    session?: ClientSession
+  ): Promise<boolean> {
+    const res = await this.reservationRepository.findById(id, session);
+    if (!res || res.status !== ReservationStatusEnum.PAYMENT_SUCCESSFUL) {
+      return false;
+    }
+
+    // Step A: Atomic update status FIRST to claim this cancellation exclusively
+    const updated = await this.reservationRepository.atomicUpdateStatus(
+      id,
+      ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+      {
+        status: ReservationStatusEnum.CANCELLED,
+        cancellationReason:
+          'Đơn đã thanh toán nhưng quá ngày check-in chưa được cơ sở xác nhận (Hệ thống tự động hủy & hoàn cọc 100%)',
+        cancelledAt: now,
+        cancellationSource: ReservationCancelSourceEnum.SYSTEM,
+        refundAmount: res.depositAmount,
+        forfeitedAmount: 0,
+        refundStatus: RefundStatusEnum.PENDING,
+      },
+      session
+    );
+
+    if (!updated) {
+      return false;
+    }
+
+    // Step B: Release hold inside the same transaction session
+    await this.releaseHold(res, StorageUnitStatusEnum.AVAILABLE, session);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CANCEL,
+      resourceType: AuditResourceEnum.RESERVATION,
+      resourceId: id,
+      before: this.formatReservation(res),
+      after: this.formatReservation(updated),
+      metadata: { reason: 'Unconfirmed past check-in auto-refund' },
+    });
+
+    const customerIdStr = String(
+      res.customerId &&
+        typeof res.customerId === 'object' &&
+        '_id' in res.customerId
+        ? (res.customerId as { _id: Types.ObjectId })._id
+        : res.customerId
+    );
+    const facilityIdStr = String(
+      res.facilityId &&
+        typeof res.facilityId === 'object' &&
+        '_id' in res.facilityId
+        ? (res.facilityId as { _id: Types.ObjectId })._id
+        : res.facilityId
+    );
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Đơn đặt chỗ [${res.reservationCode}] đã tự động huỷ & hoàn cọc`,
+      `Đơn đặt chỗ [${res.reservationCode}] đã tự động huỷ do quá ngày hẹn check-in mà chưa hoàn tất thủ tục. Tiền cọc ${(res.depositAmount || 0).toLocaleString('vi-VN')} VNĐ đang được hoàn trả cho bạn.`,
+      {
+        reservationId: id,
+        reservationCode: res.reservationCode,
+        refundAmount: res.depositAmount,
+      },
+      NotificationPriorityEnum.HIGH
+    );
+
+    this.notifyFacilityManager(
+      facilityIdStr,
+      `Đơn [${res.reservationCode}] tự động huỷ & yêu cầu hoàn cọc`,
+      `Đơn đặt chỗ [${res.reservationCode}] quá hạn check-in khi chưa được xác nhận. Hệ thống đã huỷ và mở trạng thái chờ hoàn cọc 100% cho khách hàng.`,
+      {
+        reservationId: id,
+        reservationCode: res.reservationCode,
+        refundAmount: res.depositAmount,
+      }
+    );
+
+    return true;
+  }
+
+  // 10. Process overdue check-ins & no-show auto cancellations with per-record isolation and batching
+  async processOverdueReservations(options?: {
+    batchSize?: number;
+    limit?: number;
+  }): Promise<{
     overdueCount: number;
     noShowCount: number;
     unconfirmedCount: number;
+    processedCount: number;
+    failedCount: number;
   }> {
     const now = new Date();
     const config = getReservationConfig();
+    const batchSize =
+      options?.limit ?? options?.batchSize ?? config.overdueBatchSize ?? 50;
+
     let overdueCount = 0;
     let noShowCount = 0;
     let unconfirmedCount = 0;
+    let failedCount = 0;
 
     // Step 1: CONFIRMED past checkInDate -> OVERDUE with grace period from snapshot
     const overdueList = await this.reservationRepository.findOverdueCheckIn(
       now,
-      session
+      { limit: batchSize }
     );
     for (const res of overdueList) {
-      const policy = resolveReservationPolicy(res, config);
-      const defaultGraceExpiresAt = new Date(
-        endOfDayVN(res.checkInDate).getTime() +
-          policy.noShowGraceHours * 3600 * 1000
-      );
-      const graceExpiresAt =
-        res.graceExpiresAt && res.graceExpiresAt > defaultGraceExpiresAt
-          ? res.graceExpiresAt
-          : defaultGraceExpiresAt;
-
-      const updated = await this.reservationRepository.atomicUpdateStatus(
-        res._id.toString(),
-        ReservationStatusEnum.CONFIRMED,
-        {
-          status: ReservationStatusEnum.OVERDUE,
-          graceExpiresAt,
-        },
-        session
-      );
-
-      if (updated) {
-        overdueCount++;
-        this.auditLogService?.record({
-          action: AuditActionEnum.MARK_OVERDUE,
-          resourceType: AuditResourceEnum.RESERVATION,
-          resourceId: res._id.toString(),
-          before: this.formatReservation(res),
-          after: this.formatReservation(updated),
-          metadata: { graceExpiresAt: graceExpiresAt.toISOString() },
-        });
-
-        const customerIdStr = String(
-          (res.customerId as { _id?: Types.ObjectId })._id || res.customerId
+      try {
+        const ok = await this.processSingleOverdueCheckIn(
+          res._id.toString(),
+          now,
+          config
         );
-        const facilityIdStr = String(
-          (res.facilityId as { _id?: Types.ObjectId })._id || res.facilityId
-        );
-
-        this.notifyCustomer(
-          customerIdStr,
-          facilityIdStr,
-          `Đơn đặt chỗ [${res.reservationCode}] đã quá hạn check-in`,
-          `Đơn đặt chỗ [${res.reservationCode}] đã quá ngày hẹn check-in. Cơ sở hỗ trợ giữ chỗ thêm ${policy.noShowGraceHours} giờ (trước ${graceExpiresAt.toLocaleString('vi-VN')}). Vui lòng liên hệ cơ sở để hoàn tất nhận kho trước khi hết hạn giữ.`,
-          {
-            reservationId: res._id.toString(),
-            reservationCode: res.reservationCode,
-            graceExpiresAt: graceExpiresAt.toISOString(),
-          },
-          NotificationPriorityEnum.HIGH
+        if (ok) overdueCount++;
+      } catch (err: unknown) {
+        failedCount++;
+        console.error(
+          `[ReservationService ALERT] Failed to process overdue check-in for reservation ${res.reservationCode} (${res._id}):`,
+          err instanceof Error ? err.message : String(err)
         );
       }
     }
 
     // Step 2: OVERDUE past graceExpiresAt -> CANCELLED (No-show, forfeiture from snapshot)
-    const noShowList = await this.reservationRepository.findNoShow(
-      now,
-      session
-    );
+    const noShowList = await this.reservationRepository.findNoShow(now, {
+      limit: batchSize,
+    });
     for (const res of noShowList) {
-      const policy = resolveReservationPolicy(res, config);
-      const { forfeitedAmount, refundAmount } = computeForfeiture(
-        res.depositAmount,
-        policy.forfeitPercent
-      );
-      const refundStatus =
-        refundAmount > 0 ? RefundStatusEnum.PENDING : RefundStatusEnum.NONE;
-
-      await this.releaseHold(res, StorageUnitStatusEnum.AVAILABLE, session);
-
-      const updated = await this.reservationRepository.atomicUpdateStatus(
-        res._id.toString(),
-        ReservationStatusEnum.OVERDUE,
-        {
-          status: ReservationStatusEnum.CANCELLED,
-          cancellationReason: `Quá hạn thời gian giữ kho ${policy.noShowGraceHours}h sau ngày hẹn check-in (No-show)`,
-          cancelledAt: now,
-          cancellationSource: ReservationCancelSourceEnum.SYSTEM,
-          refundAmount,
-          forfeitedAmount,
-          refundStatus,
-        },
-        session
-      );
-
-      if (updated) {
-        noShowCount++;
-        if (refundAmount > 0) {
-          console.error(
-            `[ReservationService] No-show reservation ${res.reservationCode} has partial refundAmount=${refundAmount}, but job RefundRequest creation requires SYSTEM actor.`
-          );
-        }
-
-        this.auditLogService?.record({
-          action: AuditActionEnum.CANCEL,
-          resourceType: AuditResourceEnum.RESERVATION,
-          resourceId: res._id.toString(),
-          before: this.formatReservation(res),
-          after: this.formatReservation(updated),
-          metadata: {
-            reason: 'No-show grace expired',
-            forfeitedAmount,
-            refundAmount,
-          },
-        });
-
-        const customerIdStr = String(
-          (res.customerId as { _id?: Types.ObjectId })._id || res.customerId
+      try {
+        const ok = await this.processSingleNoShow(
+          res._id.toString(),
+          now,
+          config
         );
-        const facilityIdStr = String(
-          (res.facilityId as { _id?: Types.ObjectId })._id || res.facilityId
-        );
-
-        this.notifyCustomer(
-          customerIdStr,
-          facilityIdStr,
-          `Đơn đặt chỗ [${res.reservationCode}] đã bị huỷ do quá hạn (No-show)`,
-          `Đơn đặt chỗ [${res.reservationCode}] đã tự động huỷ do quý khách không đến nhận kho sau thời gian hỗ trợ ${policy.noShowGraceHours}h. Tiền cọc ${forfeitedAmount.toLocaleString('vi-VN')} VNĐ đã được khấu trừ theo quy định.`,
-          {
-            reservationId: res._id.toString(),
-            reservationCode: res.reservationCode,
-            forfeitedAmount,
-            refundAmount,
-          },
-          NotificationPriorityEnum.HIGH
+        if (ok) noShowCount++;
+      } catch (err: unknown) {
+        failedCount++;
+        console.error(
+          `[ReservationService ALERT] Failed to process no-show cancellation for reservation ${res.reservationCode} (${res._id}):`,
+          err instanceof Error ? err.message : String(err)
         );
       }
     }
 
     // Step 3: PAYMENT_SUCCESSFUL past checkInDate without confirmation -> System cancel & 100% refund
     const unconfirmedList =
-      await this.reservationRepository.findPaidPastCheckIn(now, session);
+      await this.reservationRepository.findPaidPastCheckIn(now, {
+        limit: batchSize,
+      });
     for (const res of unconfirmedList) {
-      await this.releaseHold(res, StorageUnitStatusEnum.AVAILABLE, session);
-
-      const updated = await this.reservationRepository.atomicUpdateStatus(
-        res._id.toString(),
-        ReservationStatusEnum.PAYMENT_SUCCESSFUL,
-        {
-          status: ReservationStatusEnum.CANCELLED,
-          cancellationReason:
-            'Đơn đã thanh toán nhưng quá ngày check-in chưa được cơ sở xác nhận (Hệ thống tự động hủy & hoàn cọc 100%)',
-          cancelledAt: now,
-          cancellationSource: ReservationCancelSourceEnum.SYSTEM,
-          refundAmount: res.depositAmount,
-          forfeitedAmount: 0,
-          refundStatus: RefundStatusEnum.PENDING,
-        },
-        session
-      );
-
-      if (updated) {
-        unconfirmedCount++;
-        this.auditLogService?.record({
-          action: AuditActionEnum.CANCEL,
-          resourceType: AuditResourceEnum.RESERVATION,
-          resourceId: res._id.toString(),
-          before: this.formatReservation(res),
-          after: this.formatReservation(updated),
-          metadata: { reason: 'Unconfirmed past check-in auto-refund' },
-        });
-
-        const customerIdStr = String(
-          (res.customerId as { _id?: Types.ObjectId })._id || res.customerId
-        );
-        const facilityIdStr = String(
-          (res.facilityId as { _id?: Types.ObjectId })._id || res.facilityId
-        );
-
-        this.notifyCustomer(
-          customerIdStr,
-          facilityIdStr,
-          `Đơn đặt chỗ [${res.reservationCode}] đã tự động huỷ & hoàn cọc`,
-          `Đơn đặt chỗ [${res.reservationCode}] đã tự động huỷ do quá ngày hẹn check-in mà chưa hoàn tất thủ tục. Tiền cọc ${(res.depositAmount || 0).toLocaleString('vi-VN')} VNĐ đang được hoàn trả cho bạn.`,
-          {
-            reservationId: res._id.toString(),
-            reservationCode: res.reservationCode,
-            refundAmount: res.depositAmount,
-          },
-          NotificationPriorityEnum.HIGH
-        );
-
-        this.notifyFacilityManager(
-          facilityIdStr,
-          `Đơn [${res.reservationCode}] tự động huỷ & yêu cầu hoàn cọc`,
-          `Đơn đặt chỗ [${res.reservationCode}] quá hạn check-in khi chưa được xác nhận. Hệ thống đã huỷ và mở trạng thái chờ hoàn cọc 100% cho khách hàng.`,
-          {
-            reservationId: res._id.toString(),
-            reservationCode: res.reservationCode,
-            refundAmount: res.depositAmount,
-          }
+      try {
+        const ok = await this.processSingleUnconfirmed(res._id.toString(), now);
+        if (ok) unconfirmedCount++;
+      } catch (err: unknown) {
+        failedCount++;
+        console.error(
+          `[ReservationService ALERT] Failed to process unconfirmed check-in auto-refund for reservation ${res.reservationCode} (${res._id}):`,
+          err instanceof Error ? err.message : String(err)
         );
       }
     }
 
-    return { overdueCount, noShowCount, unconfirmedCount };
+    return {
+      overdueCount,
+      noShowCount,
+      unconfirmedCount,
+      processedCount: overdueCount + noShowCount + unconfirmedCount,
+      failedCount,
+    };
+  }
+
+  /**
+   * Process schedule reminders:
+   * 1. Remind customer 1 day before scheduled check-in (T-1).
+   * 2. Remind facility manager / staff of reservations in PAYMENT_SUCCESSFUL nearing checkInDate.
+   * 3. Warn customer whose grace period is expiring soon (within next 2 hours).
+   */
+  async processScheduleReminders(now: Date = new Date()): Promise<{
+    remindedCheckInCount: number;
+    remindedUnconfirmedCount: number;
+    remindedGraceExpiringCount: number;
+  }> {
+    let remindedCheckInCount = 0;
+    let remindedUnconfirmedCount = 0;
+    let remindedGraceExpiringCount = 0;
+
+    // 1. T-1 Check-in Reminder for CONFIRMED reservations
+    const tomorrow = addDays(now, 1);
+    const startOfTomorrow = startOfDayVN(tomorrow);
+    const endOfTomorrow = endOfDayVN(tomorrow);
+
+    const upcomingList =
+      await this.reservationRepository.findConfirmedForDateRange(
+        startOfTomorrow,
+        endOfTomorrow
+      );
+
+    for (const res of upcomingList) {
+      try {
+        this.notifyCustomer(
+          res.customerId.toString(),
+          res.facilityId.toString(),
+          'Nhắc lịch nhận kho ngày mai (T-1)',
+          `Đơn đặt chỗ ${res.reservationCode} của quý khách có lịch nhận kho vào ngày mai (${res.checkInDate.toISOString().slice(0, 10)}) tại khung giờ ${res.checkInTimeSlot}. Vui lòng đến đúng giờ!`,
+          {
+            reservationId: res._id.toString(),
+            reservationCode: res.reservationCode,
+            checkInDate: res.checkInDate,
+            checkInTimeSlot: res.checkInTimeSlot,
+            type: 'CHECK_IN_REMINDER_T_MINUS_1',
+          },
+          NotificationPriorityEnum.HIGH
+        );
+        remindedCheckInCount++;
+      } catch (err: unknown) {
+        console.warn(
+          `[ReservationService] Failed to send T-1 reminder for ${res.reservationCode}:`,
+          err instanceof Error ? err.message : String(err)
+        );
+      }
+    }
+
+    // 2. Unconfirmed paid reservations reminder to facility manager (checkInDate <= tomorrow)
+    const pendingList =
+      await this.reservationRepository.findUnconfirmedPaidBeforeDate(
+        endOfTomorrow
+      );
+    for (const res of pendingList) {
+      try {
+        this.notifyFacilityManager(
+          res.facilityId.toString(),
+          'Cảnh báo đơn đặt chỗ chưa xác nhận',
+          `Đơn đặt chỗ ${res.reservationCode} đã thanh toán thành công và có lịch hẹn ngày ${res.checkInDate.toISOString().slice(0, 10)} nhưng chưa được nhân viên xác nhận. Vui lòng xử lý sớm!`,
+          {
+            reservationId: res._id.toString(),
+            reservationCode: res.reservationCode,
+            type: 'UNCONFIRMED_RESERVATION_ALERT',
+          }
+        );
+        remindedUnconfirmedCount++;
+      } catch (err: unknown) {
+        console.warn(
+          `[ReservationService] Failed to alert manager for unconfirmed reservation ${res.reservationCode}:`,
+          err instanceof Error ? err.message : String(err)
+        );
+      }
+    }
+
+    // 3. Grace expiring soon warning to customer (graceExpiresAt within next 2 hours)
+    const windowEnd = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const graceExpiringList =
+      await this.reservationRepository.findExpiringGrace(now, windowEnd);
+    for (const res of graceExpiringList) {
+      try {
+        this.notifyCustomer(
+          res.customerId.toString(),
+          res.facilityId.toString(),
+          'Cảnh báo sắp hết thời gian ân hạn nhận kho',
+          `Thời gian ân hạn cho đơn đặt chỗ ${res.reservationCode} sẽ hết hạn vào lúc ${res.graceExpiresAt?.toISOString()}. Sau thời gian này đơn sẽ bị hủy theo chính sách No-show!`,
+          {
+            reservationId: res._id.toString(),
+            reservationCode: res.reservationCode,
+            graceExpiresAt: res.graceExpiresAt,
+            type: 'GRACE_EXPIRING_WARNING',
+          },
+          NotificationPriorityEnum.URGENT
+        );
+        remindedGraceExpiringCount++;
+      } catch (err: unknown) {
+        console.warn(
+          `[ReservationService] Failed to send grace expiry warning for ${res.reservationCode}:`,
+          err instanceof Error ? err.message : String(err)
+        );
+      }
+    }
+
+    return {
+      remindedCheckInCount,
+      remindedUnconfirmedCount,
+      remindedGraceExpiringCount,
+    };
   }
 
   // 11. View reservation details

@@ -59,6 +59,12 @@ export const contractAmenityResponseSchema = z.object({
   addedAt: z.string(),
 });
 
+export const contractTerminationFileResponseSchema = z.object({
+  url: z.string(),
+  fileHash: z.string().optional().nullable(),
+  uploadedAt: z.string(),
+});
+
 export const contractAddendumResponseSchema = z.object({
   id: z.string(),
   addendumCode: z.string(),
@@ -90,6 +96,9 @@ export const contractAddendumResponseSchema = z.object({
   cancellationReason: z.string().optional().nullable(),
   cancelledBy: userSnapshotSchema.optional().nullable(),
   cancelledAt: z.string().optional().nullable(),
+  signedAddendumFiles: z
+    .array(contractTerminationFileResponseSchema)
+    .default([]),
   notes: z.string().optional().nullable(),
 });
 
@@ -108,12 +117,6 @@ export const contractSignatureHistoryResponseSchema = z.object({
   previousEndDate: z.string(),
   resetAt: z.string(),
   resetReason: z.string(),
-});
-
-export const contractTerminationFileResponseSchema = z.object({
-  url: z.string(),
-  fileHash: z.string().optional().nullable(),
-  uploadedAt: z.string(),
 });
 
 export const contractTerminationHistoryResponseSchema = z.object({
@@ -137,6 +140,8 @@ export const contractResponseSchema = z.object({
   customerId: z.string(),
   facilityId: z.string(),
   storageUnitId: z.string(),
+  rentalTargetType: z.string().optional().nullable(),
+  rentedRackIds: z.array(z.string()).optional().default([]),
   facilityUnitTypeOfferingId: z.string(),
   assignedStaffId: z.string().optional().nullable(),
   startDate: z.string(),
@@ -181,6 +186,12 @@ export const contractResponseSchema = z.object({
   terminationHistory: z
     .array(contractTerminationHistoryResponseSchema)
     .default([]),
+  signedContractFiles: z
+    .array(contractTerminationFileResponseSchema)
+    .default([]),
+  legalEntitySnapshot: z.any().optional().nullable(),
+  customerSnapshot: z.any().optional().nullable(),
+  signingAuthorizationSnapshot: z.any().optional().nullable(),
   status: z.enum(ContractStatusEnum),
   termsAccepted: z.boolean(),
   customerSigned: z.boolean(),
@@ -201,6 +212,16 @@ export const contractResponseSchema = z.object({
 });
 
 export const contractListResponseSchema = z.array(contractResponseSchema);
+
+export const processContractOverdueResponseSchema = z.object({
+  overdueCount: z.number(),
+  processedCount: z.number(),
+  failedCount: z.number(),
+});
+
+export type ProcessContractOverdueResponse = z.infer<
+  typeof processContractOverdueResponseSchema
+>;
 
 export type ContractAmenityResponse = z.infer<
   typeof contractAmenityResponseSchema
