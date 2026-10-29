@@ -5853,7 +5853,7 @@
 				"$ref": "#/components/schemas/infer_typeofpaymentQuerySchema_"
 			},
 			"PaymentTransactionResultEnum": {
-				"description": "Outcome of processing a single bank transaction received from SePay.\r\nRECEIVED is the initial state (stored before processing) and also marks\r\ntransactions whose processing was interrupted, so a retry can resume them.",
+				"description": "Outcome of processing a single bank transaction received from SePay.\nRECEIVED is the initial state (stored before processing) and also marks\ntransactions whose processing was interrupted, so a retry can resume them.",
 				"enum": [
 					"received",
 					"matched",
@@ -17934,7 +17934,7 @@
 						}
 					}
 				},
-				"description": "Create a new physical storage unit\r\n\r\n//",
+				"description": "Create a new physical storage unit\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -18166,7 +18166,7 @@
 						}
 					}
 				},
-				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\r\n\r\n//",
+				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -18226,7 +18226,7 @@
 						}
 					}
 				},
-				"description": "Soft-delete storage unit\r\n\r\n//",
+				"description": "Soft-delete storage unit\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -18278,7 +18278,7 @@
 						}
 					}
 				},
-				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\r\nTurning maintenance off is rejected (MESSAGE_CODE_629) while customer goods remain inside the unit.\r\n\r\n//",
+				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\nTurning maintenance off is rejected (MESSAGE_CODE_629) while customer goods remain inside the unit.\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -18340,7 +18340,7 @@
 						}
 					}
 				},
-				"description": "Restore soft-deleted storage unit\r\n\r\n//",
+				"description": "Restore soft-deleted storage unit\n\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -18899,7 +18899,7 @@
 						}
 					}
 				},
-				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).\r\nEnforces minimum same-day preparation lead time (sameDayLeadMinutes, 400 MESSAGE_CODE_328),\r\nmaximum startDate offset from checkInDate (maxStartDateOffsetDays, 400 MESSAGE_CODE_329),\r\nand flags immediateForfeitWarning when booking is within 24 hours of check-in.",
+				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).\nEnforces minimum same-day preparation lead time (sameDayLeadMinutes, 400 MESSAGE_CODE_328),\nmaximum startDate offset from checkInDate (maxStartDateOffsetDays, 400 MESSAGE_CODE_329),\nand flags immediateForfeitWarning when booking is within 24 hours of check-in.",
 				"tags": [
 					"Reservations"
 				],
@@ -19295,7 +19295,7 @@
 						}
 					}
 				},
-				"description": "Customer or Staff responds to a pending unit reassign proposal (accept or reject) [CHỐT D4].\r\n- Accept: applies new unit, updates basePrice to upgraded price tier, frees old unit.\r\n- Reject: cancels reservation as FACILITY_FAULT, releases both units, creates 100% deposit refund request.",
+				"description": "Customer or Staff responds to a pending unit reassign proposal (accept or reject) [CHỐT D4].\n- Accept: applies new unit, updates basePrice to upgraded price tier, frees old unit.\n- Reject: cancels reservation as FACILITY_FAULT, releases both units, creates 100% deposit refund request.",
 				"tags": [
 					"Reservations"
 				],
@@ -20316,7 +20316,7 @@
 						}
 					}
 				},
-				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\r\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
+				"description": "Public webhook endpoint invoked by SePay upon successful bank transaction.\nAuthenticated via header 'Authorization: Apikey <KEY>'.",
 				"tags": [
 					"Payments"
 				],
@@ -20420,7 +20420,7 @@
 						}
 					}
 				},
-				"description": "Get paginated list of payments.\r\nCustomers only see their own payments. Staff can filter across facilities.",
+				"description": "Get paginated list of payments.\nCustomers only see their own payments. Staff can filter across facilities.",
 				"tags": [
 					"Payments"
 				],
@@ -20582,7 +20582,7 @@
 						}
 					}
 				},
-				"description": "Process expired pending payments (Cron / Batch job).\r\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
+				"description": "Process expired pending payments (Cron / Batch job).\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
 				"tags": [
 					"Payments"
 				],
@@ -25268,7 +25268,7 @@
 						}
 					}
 				},
-				"description": "1. Stock In (Stock In)\r\nCustomer stores new items into their unit or rack tier.\r\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
+				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -25341,7 +25341,7 @@
 						}
 					}
 				},
-				"description": "2. Stock Out (Stock Out)\r\nCustomer retrieves items from their unit or rack tier.\r\nPermitted when contract status is ACTIVE or OVERDUE.",
+				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.\nPermitted when contract status is ACTIVE or OVERDUE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -25414,7 +25414,7 @@
 						}
 					}
 				},
-				"description": "3. Internal Stock Move (Stock Move)\r\nInternal warehouse operation: Staff/FM/Ops/Admin relocates items between locations or from holding area onto a rack tier.\nPermitted when contract status is ACTIVE or OVERDUE.",
+				"description": "3. Internal Stock Move (Stock Move)\nInternal warehouse operation: Staff/FM/Ops/Admin relocates items between locations or from holding area onto a rack tier.\nPermitted when contract status is ACTIVE or OVERDUE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -25487,7 +25487,7 @@
 						}
 					}
 				},
-				"description": "4. Stock Adjust (Stock Adjust)\r\nCustomer counts and updates physical inventory with mandatory reason.\r\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
+				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -25530,7 +25530,7 @@
 						}
 					}
 				},
-				"description": "5. Inventory Movement Ledger\r\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
+				"description": "5. Inventory Movement Ledger\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -25687,7 +25687,7 @@
 						}
 					}
 				},
-				"description": "6. Query current inventory list\r\nView current stock quantities of SKUs across units and rack tiers.",
+				"description": "6. Query current inventory list\nView current stock quantities of SKUs across units and rack tiers.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -25865,7 +25865,7 @@
 						}
 					}
 				},
-				"description": "8. Storage Unit Inventory Tree\r\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
+				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -25927,7 +25927,7 @@
 						}
 					}
 				},
-				"description": "9. Query SKU storage locations by SKU ID\r\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
+				"description": "9. Query SKU storage locations by SKU ID\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -26041,7 +26041,7 @@
 						}
 					}
 				},
-				"description": "11. Customer Personal Inventory Dashboard Summary\r\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
+				"description": "11. Customer Personal Inventory Dashboard Summary\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -26183,7 +26183,7 @@
 						}
 					}
 				},
-				"description": "8. Batch Rack Migration\r\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\r\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
+				"description": "8. Batch Rack Migration\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -26256,7 +26256,7 @@
 						}
 					}
 				},
-				"description": "12. Evacuate Rack To Holding Area (Task 7G)\r\nEmergency evacuation of all items from a damaged rack to the holding area (rackTierId: null, status: TEMPORARY_HOLDING)\r\nand setting rack status to MAINTENANCE.",
+				"description": "12. Evacuate Rack To Holding Area (Task 7G)\nEmergency evacuation of all items from a damaged rack to the holding area (rackTierId: null, status: TEMPORARY_HOLDING)\nand setting rack status to MAINTENANCE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -26329,7 +26329,7 @@
 						}
 					}
 				},
-				"description": "13. Update Inventory Item Status (Task 7G)\r\nUpdate item status (e.g. DAMAGED, DISPUTED, or back to NORMAL).",
+				"description": "13. Update Inventory Item Status (Task 7G)\nUpdate item status (e.g. DAMAGED, DISPUTED, or back to NORMAL).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -26411,7 +26411,7 @@
 						}
 					}
 				},
-				"description": "Create a new contract (From Reservation or Walk-in).\r\nStatus will be DRAFT.",
+				"description": "Create a new contract (From Reservation or Walk-in).\nStatus will be DRAFT.",
 				"tags": [
 					"Contracts"
 				],
@@ -26765,7 +26765,7 @@
 						}
 					}
 				},
-				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\r\nContract remains DRAFT until Facility Manager completes check-in.",
+				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\nContract remains DRAFT until Facility Manager completes check-in.",
 				"tags": [
 					"Contracts"
 				],
@@ -26847,7 +26847,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).\r\nRequires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.\r\nIf actualCheckInDate shifts contract dates and customer had already signed, saves previous signature\r\nin signatureHistory, resets customerSigned to false, and rejects with 400 MESSAGE_CODE_425\r\nrequiring customer re-signing before check-in can be finalized.",
+				"description": "Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).\nRequires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.\nIf actualCheckInDate shifts contract dates and customer had already signed, saves previous signature\nin signatureHistory, resets customerSigned to false, and rejects with 400 MESSAGE_CODE_425\nrequiring customer re-signing before check-in can be finalized.",
 				"tags": [
 					"Contracts"
 				],
@@ -26929,7 +26929,7 @@
 						}
 					}
 				},
-				"description": "Cancel or Void DRAFT contract.\r\n- cancellationType = 'cancel': Cancel contract. If sourced from reservation, forfeiture / refund is calculated based on policy snapshot. If walk-in, deposit is 100% forfeited.\r\n- cancellationType = 'void': Void invalid draft contract (Staff/Manager/Ops/Admin only). If sourced from reservation, reservation and unit hold are preserved. If walk-in, deposit is 100% refunded.",
+				"description": "Cancel or Void DRAFT contract.\n- cancellationType = 'cancel': Cancel contract. If sourced from reservation, forfeiture / refund is calculated based on policy snapshot. If walk-in, deposit is 100% forfeited.\n- cancellationType = 'void': Void invalid draft contract (Staff/Manager/Ops/Admin only). If sourced from reservation, reservation and unit hold are preserved. If walk-in, deposit is 100% refunded.",
 				"tags": [
 					"Contracts"
 				],
@@ -27064,7 +27064,7 @@
 						}
 					}
 				},
-				"description": "Create a Contract Addendum (RENEW or UNIT_CHANGE).\r\n- RENEW: CUSTOMER creates in PENDING_APPROVAL; FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT.\r\n- UNIT_CHANGE: Only FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT and reserves the replacement unit.",
+				"description": "Create a Contract Addendum (RENEW or UNIT_CHANGE).\n- RENEW: CUSTOMER creates in PENDING_APPROVAL; FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT.\n- UNIT_CHANGE: Only FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT and reserves the replacement unit.",
 				"tags": [
 					"Contracts"
 				],
@@ -27296,7 +27296,7 @@
 						}
 					}
 				},
-				"description": "Customer signs addendum (First signing step: Customer side).\r\nAddendum remains in DRAFT awaiting Facility Manager signature.",
+				"description": "Customer signs addendum (First signing step: Customer side).\nAddendum remains in DRAFT awaiting Facility Manager signature.",
 				"tags": [
 					"Contracts"
 				],
@@ -27376,7 +27376,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).\r\nTransitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.\r\nFor UNIT_CHANGE addendums, returns 400 MESSAGE_CODE_629 if the previous storage unit still contains customer inventory.",
+				"description": "Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).\nTransitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.\nFor UNIT_CHANGE addendums, returns 400 MESSAGE_CODE_629 if the previous storage unit still contains customer inventory.",
 				"tags": [
 					"Contracts"
 				],
@@ -27546,7 +27546,7 @@
 						}
 					}
 				},
-				"description": "Check-out & Liquidate contract.\r\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\r\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.\r\nReturns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract,\r\nor 400 MESSAGE_CODE_421 if open (unclosed) incidents still exist on this contract.",
+				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.\nReturns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract,\nor 400 MESSAGE_CODE_421 if open (unclosed) incidents still exist on this contract.",
 				"tags": [
 					"Contracts"
 				],
@@ -27628,7 +27628,7 @@
 						}
 					}
 				},
-				"description": "Terminate contract early due to terms violation.\r\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
+				"description": "Terminate contract early due to terms violation.\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
 				"tags": [
 					"Contracts"
 				],

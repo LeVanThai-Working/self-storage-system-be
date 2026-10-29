@@ -319,8 +319,9 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
           fromRackTierId: String(tier1Id),
           toRackTierId: String(tier2Id),
           quantity: 4,
+          reason: 'Staff reorganizing items',
         },
-        customer1Caller
+        staffACaller
       );
       expect(afterMove.quantity).toBe(4);
 
@@ -352,8 +353,9 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
           fromRackTierId: String(tier1Id),
           toRackTierId: String(tier2Id),
           quantity: 4,
+          reason: 'Staff moving items for customer',
         },
-        customer1Caller
+        staffACaller
       );
       expect(afterMove.quantity).toBe(4);
 
@@ -456,8 +458,9 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
               fromRackTierId: String(tier1Id),
               toRackTierId: String(tier2Id),
               quantity: 1,
+              reason: 'Staff attempt move on non-operational contract',
             },
-            customer1Caller
+            staffACaller
           )
         ).rejects.toMatchObject({
           statusCode: 400,
