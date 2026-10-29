@@ -319,13 +319,17 @@ export class StorageUnitRepository {
 
   // Get full 2D map layout (all units of facility with their statuses)
   async getMapLayoutByFacility(facilityId: string) {
-    return this.storageUnit
-      .find({
-        facilityId,
-        deleted: false,
-      })
-      .populate(POPULATE_UNIT_TYPE)
-      .sort({ floor: 1, zone: 1, unitNumber: 1 });
+    return (
+      this.storageUnit
+        .find({
+          facilityId,
+          deleted: false,
+        })
+        // formatStorageUnit reads facilityId as a populated snapshot; a bare ObjectId fails validation.
+        .populate(POPULATE_FACILITY)
+        .populate(POPULATE_UNIT_TYPE)
+        .sort({ floor: 1, zone: 1, unitNumber: 1 })
+    );
   }
 
   async findUnitsByStatus(
