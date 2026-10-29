@@ -18,9 +18,11 @@ import {
 import { storageUnitRepository } from '../storageUnit/storageUnit.container.ts';
 import { userRepository } from '../user/user.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
-import { incidentRepository } from '../incident/incident.container.ts';
+import { Incident } from '../incident/incident.model.ts';
+import { IncidentRepository } from '../incident/incident.repository.ts';
 
 const customerSkuRepository = new CustomerSkuRepository(CustomerSku);
+const incidentRepository = new IncidentRepository(Incident);
 
 export const customerInventoryRepository = new CustomerInventoryRepository(
   CustomerInventory
