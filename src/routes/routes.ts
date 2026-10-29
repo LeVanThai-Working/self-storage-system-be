@@ -382,7 +382,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","batch_migrate_rack","evacuate_rack_to_holding","update_inventory_status","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","expire_inventory_request","batch_migrate_rack","evacuate_rack_to_holding","update_inventory_status","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
@@ -570,7 +570,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SupportTicketCategoryEnum": {
         "dataType": "refEnum",
-        "enums": ["billing_inquiry","contract_inquiry","unit_change_request","access_pin_reset","service_complaint","procedural_assistance","general_inquiry"],
+        "enums": ["billing_inquiry","contract_inquiry","unit_change_request","inventory_move_request","access_pin_reset","service_complaint","procedural_assistance","general_inquiry"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SupportTicketPriorityEnum": {
@@ -836,7 +836,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofstorageRackResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"address":{"dataType":"string"},"city":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"tiers":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"notes":{"dataType":"string"},"volume":{"dataType":"double"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"maxWeightKg":{"dataType":"double"},"status":{"ref":"RackTierStatusEnum","required":true},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"storageRackId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}}},"notes":{"dataType":"string"},"name":{"dataType":"string"},"currentCustomerId":{"dataType":"string"},"currentContractId":{"dataType":"string"},"customPrice":{"dataType":"double"},"zone":{"ref":"RackZoneEnum"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"status":{"ref":"RackStatusEnum","required":true},"tierCount":{"dataType":"double","required":true},"rackCode":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"address":{"dataType":"string"},"city":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"tiers":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"notes":{"dataType":"string"},"volume":{"dataType":"double"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"maxWeightKg":{"dataType":"double"},"status":{"ref":"RackTierStatusEnum","required":true},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"storageRackId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}}},"notes":{"dataType":"string"},"name":{"dataType":"string"},"isMine":{"dataType":"boolean"},"currentCustomerId":{"dataType":"string"},"currentContractId":{"dataType":"string"},"customPrice":{"dataType":"double"},"zone":{"ref":"RackZoneEnum"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"status":{"ref":"RackStatusEnum","required":true},"tierCount":{"dataType":"double","required":true},"rackCode":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "StorageRackResponse": {
@@ -1536,7 +1536,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationTypeEnum": {
         "dataType": "refEnum",
-        "enums": ["system","system_alert","approval_request","storage_unit","reservation","contract","payment","incident","support_ticket"],
+        "enums": ["system","system_alert","approval_request","storage_unit","reservation","contract","payment","incident","support_ticket","customer_inventory"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationPriorityEnum": {
@@ -2401,7 +2401,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcreateOutboundRequestSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTierId":{"dataType":"string","required":true},"storageRackId":{"dataType":"string","required":true},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"expiresAt":{"dataType":"string"},"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTierId":{"dataType":"string","required":true},"storageRackId":{"dataType":"string","required":true},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateOutboundRequest": {
@@ -2471,6 +2471,26 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofcreateInboundRequestSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcreatePreAdvisedInboundRequestSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"expiresAt":{"dataType":"string"},"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreatePreAdvisedInboundRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcreatePreAdvisedInboundRequestSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcancelInboundRequestSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CancelInboundRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcancelInboundRequestSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofdisputeInboundRequestSchema_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"disputeReason":{"dataType":"string","required":true}},"validators":{}},
@@ -2532,6 +2552,28 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofregenerateOtpResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"expiresAt":{"dataType":"datetime","required":true},"rawOtpCode":{"dataType":"string","required":true},"requestCode":{"dataType":"string","required":true},"requestId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RegenerateOtpResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofregenerateOtpResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_RegenerateOtpResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"RegenerateOtpResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "InventoryItemStatusEnum": {
         "dataType": "refEnum",
         "enums": ["normal","temporary_holding","damaged","disputed"],
@@ -2539,7 +2581,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcustomerInventoryResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"maxWeightKg":{"dataType":"double"},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"name":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"relatedIncidentId":{"dataType":"string"},"holdingReason":{"dataType":"string"},"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"status":{"ref":"InventoryItemStatusEnum","required":true},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"maxWeightKg":{"dataType":"double"},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"name":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"relatedIncidentId":{"dataType":"string"},"holdingReason":{"dataType":"string"},"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"status":{"ref":"InventoryItemStatusEnum","required":true},"availableQuantity":{"dataType":"double","required":true},"pendingOutboundQuantity":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CustomerInventoryResponse": {
@@ -2692,7 +2734,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofstorageUnitInventoryTreeResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"unrackedItems":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"weightKg":{"dataType":"double"},"volume":{"dataType":"double"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true},"quantity":{"dataType":"double","required":true},"inventoryId":{"dataType":"string","required":true}}},"required":true},"racks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"name":{"dataType":"string"},"tiers":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"volume":{"dataType":"double"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"maxWeightKg":{"dataType":"double"},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"weightKg":{"dataType":"double"},"volume":{"dataType":"double"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true},"quantity":{"dataType":"double","required":true},"inventoryId":{"dataType":"string","required":true}}},"required":true},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"required":true},"tierCount":{"dataType":"double","required":true},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true},"summary":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalQuantity":{"dataType":"double","required":true},"totalSkus":{"dataType":"double","required":true},"availableTiers":{"dataType":"double","required":true},"occupiedTiers":{"dataType":"double","required":true},"totalTiers":{"dataType":"double","required":true},"totalRacks":{"dataType":"double","required":true}},"required":true},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"unrackedItems":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"relatedIncidentId":{"dataType":"string"},"holdingReason":{"dataType":"string"},"status":{"dataType":"string"},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"weightKg":{"dataType":"double"},"volume":{"dataType":"double"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true},"availableQuantity":{"dataType":"double","required":true},"pendingOutboundQuantity":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"inventoryId":{"dataType":"string","required":true}}},"required":true},"racks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"isMine":{"dataType":"boolean"},"currentContractId":{"dataType":"string"},"customPrice":{"dataType":"double"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"status":{"dataType":"string"},"name":{"dataType":"string"},"tiers":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"volume":{"dataType":"double"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"maxWeightKg":{"dataType":"double"},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"relatedIncidentId":{"dataType":"string"},"holdingReason":{"dataType":"string"},"status":{"dataType":"string"},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"weightKg":{"dataType":"double"},"volume":{"dataType":"double"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}}},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true},"availableQuantity":{"dataType":"double","required":true},"pendingOutboundQuantity":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"inventoryId":{"dataType":"string","required":true}}},"required":true},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"required":true},"tierCount":{"dataType":"double","required":true},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true},"summary":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalQuantity":{"dataType":"double","required":true},"totalSkus":{"dataType":"double","required":true},"availableTiers":{"dataType":"double","required":true},"occupiedTiers":{"dataType":"double","required":true},"totalTiers":{"dataType":"double","required":true},"totalRacks":{"dataType":"double","required":true}},"required":true},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "StorageUnitInventoryTreeResponse": {
@@ -4986,6 +5028,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsStorageRackController_getRacksByUnit: Record<string, TsoaRoute.ParameterSchema> = {
                 unitId: {"in":"path","name":"unitId","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.get('/storage-racks/unit/:unitId',
             ...(fetchMiddlewares<RequestHandler>(StorageRackController)),
@@ -8784,6 +8827,79 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsInventoryRequestController_createPreAdvisedInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"CreatePreAdvisedInboundRequest"},
+        };
+        app.post('/customer-inventories/inbound-requests/pre-advised',
+            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.createPreAdvisedInboundRequest)),
+
+            async function InventoryRequestController_createPreAdvisedInboundRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_createPreAdvisedInboundRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createPreAdvisedInboundRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsInventoryRequestController_cancelInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"CancelInboundRequest"},
+        };
+        app.post('/customer-inventories/inbound-requests/:id/cancel',
+            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.cancelInboundRequest)),
+
+            async function InventoryRequestController_cancelInboundRequest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_cancelInboundRequest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'cancelInboundRequest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsInventoryRequestController_confirmInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
@@ -8953,6 +9069,42 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'processAutoAccept',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsInventoryRequestController_regenerateOtp: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.post('/customer-inventories/requests/:id/regenerate-otp',
+            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
+            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.regenerateOtp)),
+
+            async function InventoryRequestController_regenerateOtp(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_regenerateOtp, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'regenerateOtp',
                 controller,
                 response,
                 next,

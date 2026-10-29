@@ -92,7 +92,7 @@ export const stockAdjustRequestSchema = z.object({
   reason: z
     .string()
     .trim()
-    .min(3, 'Reason must be at least 3 characters')
+    .min(5, 'Reason must be at least 5 characters')
     .max(1000),
   notes: z.string().trim().max(1000).optional(),
 });
@@ -283,19 +283,29 @@ export type EvacuateRackToHoldingRequest = z.infer<
   typeof evacuateRackToHoldingRequestSchema
 >;
 
-export const updateInventoryStatusRequestSchema = z.object({
-  status: z.nativeEnum(InventoryItemStatusEnum),
-  reason: z
-    .string()
-    .trim()
-    .min(5, 'Reason must be at least 5 characters')
-    .max(1000),
-  incidentId: z
-    .string()
-    .regex(objectIdRegex, 'Invalid incidentId format')
-    .optional(),
-  holdingReason: z.string().trim().max(1000).optional(),
-});
+export const updateInventoryStatusRequestSchema = z
+  .object({
+    status: z.nativeEnum(InventoryItemStatusEnum),
+    reason: z
+      .string()
+      .trim()
+      .min(5, 'Reason must be at least 5 characters')
+      .max(1000),
+    incidentId: z
+      .string()
+      .regex(objectIdRegex, 'Invalid incidentId format')
+      .optional(),
+    holdingReason: z.string().trim().max(1000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.status === InventoryItemStatusEnum.DAMAGED && !data.incidentId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'incidentId is required when status is DAMAGED',
+        path: ['incidentId'],
+      });
+    }
+  });
 
 export type UpdateInventoryStatusRequest = z.infer<
   typeof updateInventoryStatusRequestSchema

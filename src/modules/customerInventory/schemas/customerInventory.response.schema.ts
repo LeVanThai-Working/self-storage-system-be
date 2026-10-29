@@ -86,6 +86,8 @@ export const customerInventoryResponseSchema = z.object({
   rackTierId: z.string().optional().nullable(),
   skuId: z.string(),
   quantity: z.number(),
+  pendingOutboundQuantity: z.number().default(0),
+  availableQuantity: z.number().default(0),
   status: z
     .nativeEnum(InventoryItemStatusEnum)
     .default(InventoryItemStatusEnum.NORMAL),
@@ -166,11 +168,16 @@ export type PaginatedInventoryMovementResponse = z.infer<
 export const treeTierItemSchema = z.object({
   inventoryId: z.string(),
   quantity: z.number(),
+  pendingOutboundQuantity: z.number().default(0),
+  availableQuantity: z.number().default(0),
   lastMovementAt: z.union([
     z.date().transform((d) => d.toISOString()),
     z.string(),
   ]),
   notes: z.string().optional().nullable(),
+  status: z.string().optional().nullable(),
+  holdingReason: z.string().optional().nullable(),
+  relatedIncidentId: z.string().optional().nullable(),
   sku: z.object({
     id: z.string(),
     skuCode: z.string(),
@@ -216,6 +223,12 @@ export const treeRackSchema = z.object({
   name: z.string().optional().nullable(),
   status: z.string().optional().nullable(),
   tierCount: z.number(),
+  aisle: z.string().optional().nullable(),
+  bay: z.number().optional().nullable(),
+  zone: z.string().optional().nullable(),
+  customPrice: z.number().optional().nullable(),
+  currentContractId: z.string().optional().nullable(),
+  isMine: z.boolean().optional().nullable(),
   tiers: z.array(treeTierSchema),
 });
 

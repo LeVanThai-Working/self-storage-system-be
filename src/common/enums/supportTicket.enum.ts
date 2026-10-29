@@ -2,6 +2,7 @@ export enum SupportTicketCategoryEnum {
   BILLING_INQUIRY = 'billing_inquiry',
   CONTRACT_INQUIRY = 'contract_inquiry',
   UNIT_CHANGE_REQUEST = 'unit_change_request',
+  INVENTORY_MOVE_REQUEST = 'inventory_move_request',
   ACCESS_PIN_RESET = 'access_pin_reset',
   SERVICE_COMPLAINT = 'service_complaint',
   PROCEDURAL_ASSISTANCE = 'procedural_assistance',

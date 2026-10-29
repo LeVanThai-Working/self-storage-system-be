@@ -42,6 +42,7 @@ describe('X3: Contract Check-out & Terminate with Remaining Customer Inventory',
   const customerId = new Types.ObjectId(TEST_USERS.customer1.id);
   const staffId = new Types.ObjectId(TEST_USERS.staffFacilityA.id);
   const managerId = new Types.ObjectId(TEST_USERS.managerFacilityA.id);
+  const adminId = new Types.ObjectId(TEST_USERS.systemAdmin.id);
   const offeringId = new Types.ObjectId('65d000000000000000000020');
   let storageUnitId: Types.ObjectId;
   let skuId: Types.ObjectId;
@@ -141,7 +142,7 @@ describe('X3: Contract Check-out & Terminate with Remaining Customer Inventory',
           skuId: String(skuId),
           quantity: 5,
         },
-        { id: String(customerId), role: RoleEnum.CUSTOMER }
+        { id: String(adminId), role: RoleEnum.SYSTEM_ADMIN }
       );
 
       await expect(
@@ -201,7 +202,7 @@ describe('X3: Contract Check-out & Terminate with Remaining Customer Inventory',
           skuId: String(skuId),
           quantity: 5,
         },
-        { id: String(customerId), role: RoleEnum.CUSTOMER }
+        { id: String(adminId), role: RoleEnum.SYSTEM_ADMIN }
       );
 
       // Customer stocks out all 5 items
@@ -212,7 +213,7 @@ describe('X3: Contract Check-out & Terminate with Remaining Customer Inventory',
           quantity: 5,
           reason: 'Clearing unit before check-out',
         },
-        { id: String(customerId), role: RoleEnum.CUSTOMER }
+        { id: String(adminId), role: RoleEnum.SYSTEM_ADMIN }
       );
 
       const checkedOut = await contractService.checkOutContract(

@@ -4,7 +4,14 @@ import { RackTierRepository } from './rackTier.repository.ts';
 import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
 import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import { RoleEnum } from '../../common/enums/user.enum.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
+
+export interface CallerContext {
+  id?: string;
+  role?: string;
+  assignedFacilityId?: string;
+}
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import {
   AuditActionEnum,
@@ -175,11 +182,27 @@ export class StorageRackService {
   }
 
   async getRacksByStorageUnit(
-    storageUnitId: string
+    storageUnitId: string,
+    caller?: CallerContext
   ): Promise<StorageRackResponse[]> {
     const unit = await this.storageUnitRepository.findById(storageUnitId);
     if (!unit) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+
+    const unitFacilityId = String(unit.facilityId?._id || unit.facilityId);
+    if (caller) {
+      if (
+        caller.role === RoleEnum.FACILITY_STAFF ||
+        caller.role === RoleEnum.FACILITY_MANAGER
+      ) {
+        if (
+          !caller.assignedFacilityId ||
+          caller.assignedFacilityId !== unitFacilityId
+        ) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        }
+      }
     }
 
     const racks =
@@ -187,12 +210,28 @@ export class StorageRackService {
     const allTiers =
       await this.rackTierRepository.findByStorageUnitId(storageUnitId);
 
+    const isCustomer = !caller?.role || caller.role === RoleEnum.CUSTOMER;
+
     const formattedRacks = racks.map((rack) => {
       const rackId = String(rack._id);
       const rackTiers = allTiers.filter(
         (t) => String(t.storageRackId) === rackId
       );
-      return this.formatStorageRack(rack, rackTiers);
+      const formatted = this.formatStorageRack(rack, rackTiers);
+      const rackCustomerId = rack.currentCustomerId
+        ? String(rack.currentCustomerId)
+        : null;
+
+      if (isCustomer) {
+        formatted.isMine =
+          caller?.id && rackCustomerId ? caller.id === rackCustomerId : false;
+        formatted.currentCustomerId = null;
+      } else {
+        formatted.isMine =
+          caller?.id && rackCustomerId ? caller.id === rackCustomerId : false;
+      }
+
+      return formatted;
     });
 
     return validateResponse(storageRackListResponseSchema, formattedRacks);

@@ -32,6 +32,7 @@ export const createOutboundRequestSchema = z.object({
     .array(outboundRequestItemSchema)
     .min(1, 'Request must contain at least one item'),
   transporterInfo: transporterInfoSchema.optional(),
+  expiresAt: z.string().datetime().optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -69,10 +70,6 @@ export const completeOutboundHandoverSchema = z.object({
     .optional(),
 });
 
-export const cancelOutboundRequestSchema = z.object({
-  reason: z.string().max(500).optional(),
-});
-
 export const inboundRequestItemSchema = z.object({
   skuId: z.string().regex(objectIdRegex, 'Invalid SKU ID format'),
   quantity: z.number().int().positive('Quantity must be greater than 0'),
@@ -84,6 +81,24 @@ export const inboundRequestItemSchema = z.object({
     .string()
     .regex(objectIdRegex, 'Invalid Rack Tier ID format')
     .optional(),
+});
+
+export const cancelInboundRequestSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
+
+export const createPreAdvisedInboundRequestSchema = z.object({
+  contractId: z.string().regex(objectIdRegex, 'Invalid Contract ID format'),
+  items: z
+    .array(inboundRequestItemSchema)
+    .min(1, 'Inbound request must contain at least one item'),
+  transporterInfo: transporterInfoSchema.optional(),
+  expiresAt: z.string().datetime().optional(),
+  notes: z.string().max(500).optional(),
+});
+
+export const cancelOutboundRequestSchema = z.object({
+  reason: z.string().max(500).optional(),
 });
 
 export const createInboundRequestSchema = z.object({
@@ -151,6 +166,10 @@ export type CompleteOutboundHandoverRequest = z.infer<
   typeof completeOutboundHandoverSchema
 >;
 export type CancelOutboundRequest = z.infer<typeof cancelOutboundRequestSchema>;
+export type CancelInboundRequest = z.infer<typeof cancelInboundRequestSchema>;
+export type CreatePreAdvisedInboundRequest = z.infer<
+  typeof createPreAdvisedInboundRequestSchema
+>;
 export type InboundRequestItem = z.infer<typeof inboundRequestItemSchema>;
 export type CreateInboundRequest = z.infer<typeof createInboundRequestSchema>;
 export type DisputeInboundRequest = z.infer<typeof disputeInboundRequestSchema>;

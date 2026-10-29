@@ -8,6 +8,7 @@ export enum NotificationTypeEnum {
   PAYMENT = 'payment',
   INCIDENT = 'incident',
   SUPPORT_TICKET = 'support_ticket',
+  CUSTOMER_INVENTORY = 'customer_inventory',
 }
 
 export enum NotificationPriorityEnum {

@@ -243,4 +243,22 @@ export class InventoryRequestRepository {
       ],
     });
   }
+
+  /**
+   * Find all requests currently in PENDING status that have expired (expiresAt <= now).
+   */
+  async findExpiredPendingRequests(
+    now: Date = new Date(),
+    session?: ClientSession
+  ): Promise<IInventoryRequest[]> {
+    const query = this.model.find({
+      status: InventoryRequestStatusEnum.PENDING,
+      expiresAt: { $ne: null, $lte: now },
+      deleted: { $ne: true },
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
 }

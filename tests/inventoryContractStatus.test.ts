@@ -118,6 +118,15 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
     role: RoleEnum.FACILITY_STAFF,
     assignedFacilityId: TEST_FACILITY_A_ID,
   };
+  const staffBCaller: CallerContext = {
+    id: TEST_USERS.staffFacilityB.id,
+    role: RoleEnum.FACILITY_STAFF,
+    assignedFacilityId: TEST_FACILITY_B_ID,
+  };
+  const adminCaller: CallerContext = {
+    id: TEST_USERS.systemAdmin.id,
+    role: RoleEnum.SYSTEM_ADMIN,
+  };
 
   beforeAll(async () => {
     await setupTestDB();
@@ -297,7 +306,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
           rackTierId: String(tier1Id),
           quantity: 10,
         },
-        customer1Caller
+        adminCaller
       );
       expect(afterIn.quantity).toBe(10);
 
@@ -308,7 +317,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
           rackTierId: String(tier1Id),
           quantity: 3,
         },
-        customer1Caller
+        adminCaller
       );
       expect(afterOut.quantity).toBe(7);
 
@@ -333,7 +342,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
           newQuantity: 5,
           reason: 'Cycle count adjustment',
         },
-        customer1Caller
+        staffACaller
       );
       expect(afterAdjust.quantity).toBe(5);
 
@@ -366,7 +375,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
           rackTierId: String(tier1Id),
           quantity: 6,
         },
-        customer1Caller
+        adminCaller
       );
       expect(afterOut.quantity).toBe(0);
     });
@@ -384,7 +393,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
             rackTierId: String(tier1Id),
             quantity: 2,
           },
-          customer1Caller
+          adminCaller
         )
       ).rejects.toMatchObject({
         statusCode: 400,
@@ -400,7 +409,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
             newQuantity: 10,
             reason: 'Attempted adjust while overdue',
           },
-          customer1Caller
+          staffACaller
         )
       ).rejects.toMatchObject({
         statusCode: 400,
@@ -428,7 +437,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
               rackTierId: String(tier1Id),
               quantity: 1,
             },
-            customer1Caller
+            adminCaller
           )
         ).rejects.toMatchObject({
           statusCode: 400,
@@ -443,7 +452,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
               rackTierId: String(tier1Id),
               quantity: 1,
             },
-            customer1Caller
+            adminCaller
           )
         ).rejects.toMatchObject({
           statusCode: 400,
@@ -476,7 +485,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
               newQuantity: 2,
               reason: 'Blocked adjust',
             },
-            customer1Caller
+            staffACaller
           )
         ).rejects.toMatchObject({
           statusCode: 400,
@@ -515,7 +524,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
       expect(tree.contract?.status).toBe(ContractStatusEnum.OVERDUE);
     });
 
-    it('blocks another customer, another facility manager, and facility staff from viewing OVERDUE tree', async () => {
+    it('blocks another customer, another facility manager, and staff from another facility from viewing OVERDUE tree', async () => {
       const contract = await seedContract(ContractStatusEnum.OVERDUE);
       await seedStockOnTier1(contract._id, 6);
 
@@ -539,12 +548,20 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
         messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
       });
 
+      // Staff of another facility is blocked (Rule 14)
       await expect(
-        inventoryService.getStorageUnitTree(String(storageUnitId), staffACaller)
+        inventoryService.getStorageUnitTree(String(storageUnitId), staffBCaller)
       ).rejects.toMatchObject({
         statusCode: 403,
         messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
       });
+
+      // Staff of the same facility is allowed (G3)
+      const staffTree = await inventoryService.getStorageUnitTree(
+        String(storageUnitId),
+        staffACaller
+      );
+      expect(staffTree).toBeDefined();
     });
 
     it('blocks another customer from withdrawing goods on an OVERDUE contract without touching lastInventoryActivityAt', async () => {
@@ -609,7 +626,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
               rackTierId: String(tier1Id),
               quantity: 10,
             },
-            customer1Caller
+            adminCaller
           )
         ).rejects.toMatchObject({
           statusCode: 400,

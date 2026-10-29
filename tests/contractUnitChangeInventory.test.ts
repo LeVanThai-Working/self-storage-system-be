@@ -36,6 +36,7 @@ describe('X6: Block UNIT_CHANGE Addendum Activation While Old Storage Unit Has I
   const facilityId = new Types.ObjectId(TEST_FACILITY_A_ID);
   const customerId = new Types.ObjectId(TEST_USERS.customer1.id);
   const managerId = new Types.ObjectId(TEST_USERS.managerFacilityA.id);
+  const adminId = new Types.ObjectId(TEST_USERS.systemAdmin.id);
   const offeringId = new Types.ObjectId('65d000000000000000000030');
   let oldUnitId: Types.ObjectId;
   let newUnitId: Types.ObjectId;
@@ -139,7 +140,7 @@ describe('X6: Block UNIT_CHANGE Addendum Activation While Old Storage Unit Has I
         skuId: String(skuId),
         quantity: 8,
       },
-      { id: String(customerId), role: RoleEnum.CUSTOMER }
+      { id: String(adminId), role: RoleEnum.SYSTEM_ADMIN }
     );
 
     // Facility manager creates UNIT_CHANGE addendum (reserves new unit)
@@ -207,7 +208,7 @@ describe('X6: Block UNIT_CHANGE Addendum Activation While Old Storage Unit Has I
         quantity: 8,
         reason: 'Vacating old unit before switching to new unit',
       },
-      { id: String(customerId), role: RoleEnum.CUSTOMER }
+      { id: String(adminId), role: RoleEnum.SYSTEM_ADMIN }
     );
 
     // Now manager signs addendum -> activation succeeds!
@@ -237,7 +238,7 @@ describe('X6: Block UNIT_CHANGE Addendum Activation While Old Storage Unit Has I
         skuId: String(skuId),
         quantity: 8,
       },
-      { id: String(customerId), role: RoleEnum.CUSTOMER }
+      { id: String(adminId), role: RoleEnum.SYSTEM_ADMIN }
     );
     expect(stockedInNewUnit.storageUnitId).toBe(String(newUnitId));
     expect(stockedInNewUnit.quantity).toBe(8);
@@ -252,7 +253,7 @@ describe('X6: Block UNIT_CHANGE Addendum Activation While Old Storage Unit Has I
         skuId: String(skuId),
         quantity: 10,
       },
-      { id: String(customerId), role: RoleEnum.CUSTOMER }
+      { id: String(adminId), role: RoleEnum.SYSTEM_ADMIN }
     );
 
     const newEndDate = new Date(

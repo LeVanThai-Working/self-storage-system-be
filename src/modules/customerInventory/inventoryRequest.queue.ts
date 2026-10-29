@@ -9,6 +9,7 @@ export const INVENTORY_REQUEST_QUEUE_NAME = 'inventory-request-queue';
 export const INVENTORY_REQUEST_JOB = {
   AUTO_ACCEPT_PENDING: 'auto_accept_pending_inbound',
   SCHEDULED_AUTO_ACCEPT_SINGLE: 'scheduled_auto_accept_single_inbound',
+  EXPIRE_PENDING: 'expire_pending_requests',
 } as const;
 
 export interface ScheduledAutoAcceptSingleJobData {
@@ -70,6 +71,21 @@ export class InventoryRequestQueue {
       { pattern: '*/15 * * * *' },
       {
         name: INVENTORY_REQUEST_JOB.AUTO_ACCEPT_PENDING,
+        data: { triggeredAt: new Date().toISOString() },
+      }
+    );
+  }
+
+  /**
+   * Setup a repeatable job to scan and auto-expire pending requests older than their expiresAt
+   * every 15 minutes.
+   */
+  async setupExpireRequestsRepeatableJob(): Promise<void> {
+    await this.queue.upsertJobScheduler(
+      'repeatable-expire-inventory-requests',
+      { pattern: '*/15 * * * *' },
+      {
+        name: INVENTORY_REQUEST_JOB.EXPIRE_PENDING,
         data: { triggeredAt: new Date().toISOString() },
       }
     );

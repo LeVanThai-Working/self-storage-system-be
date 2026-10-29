@@ -27,7 +27,9 @@ import {
   verifyPickupCodeSchema,
   completeOutboundHandoverSchema,
   cancelOutboundRequestSchema,
+  cancelInboundRequestSchema,
   createInboundRequestSchema,
+  createPreAdvisedInboundRequestSchema,
   disputeInboundRequestSchema,
   putawayInboundRequestSchema,
   inventoryRequestIdParamSchema,
@@ -36,7 +38,9 @@ import {
   type VerifyPickupCodeRequest,
   type CompleteOutboundHandoverRequest,
   type CancelOutboundRequest,
+  type CancelInboundRequest,
   type CreateInboundRequest,
+  type CreatePreAdvisedInboundRequest,
   type DisputeInboundRequest,
   type PutawayInboundRequest,
   type InventoryRequestQuery,
@@ -45,6 +49,7 @@ import type {
   InventoryRequestResponse,
   VerifiedHandoverDetailsResponse,
   PaginatedInventoryRequestResponse,
+  RegenerateOtpResponse,
 } from './schemas/inventoryRequest.response.schema.ts';
 import type {
   ApiResponse,
@@ -302,6 +307,76 @@ export class InventoryRequestController extends Controller {
   }
 
   /**
+   * 5b. Customer creates a Pre-advised Inbound Request (Returns rawOtpCode & QR payload)
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER
+  @Post('inbound-requests/pre-advised')
+  @Middlewares(validateRequest({ body: createPreAdvisedInboundRequestSchema }))
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Access Denied')
+  public async createPreAdvisedInboundRequest(
+    @Request() req: ExpressRequest,
+    @Body() body: CreatePreAdvisedInboundRequest
+  ): Promise<ApiResponse<InventoryRequestResponse>> {
+    const caller = extractCaller(req);
+    const created =
+      await this.inventoryRequestService.createPreAdvisedInboundRequest(
+        body,
+        caller
+      );
+
+    return {
+      success: true,
+      statusCode: 201,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_002,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_002, [
+        'Pre-advised Inbound Request',
+      ]),
+      data: created,
+    };
+  }
+
+  /**
+   * 5c. Customer cancels Pre-advised Inbound Request (Only allowed when PENDING)
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER
+  @Post('inbound-requests/{id}/cancel')
+  @Middlewares(
+    validateRequest({
+      params: inventoryRequestIdParamSchema,
+      body: cancelInboundRequestSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Cannot cancel request')
+  @Response<ApiErrorResponse>(403, 'Access Denied')
+  public async cancelInboundRequest(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: CancelInboundRequest
+  ): Promise<ApiResponse<InventoryRequestResponse>> {
+    const caller = extractCaller(req);
+    const cancelled = await this.inventoryRequestService.cancelInboundRequest(
+      id,
+      caller,
+      body.reason
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, [
+        'Inbound Request Cancelled',
+      ]),
+      data: cancelled,
+    };
+  }
+
+  /**
    * 6. Customer confirms Inbound receipt
    */
   // @Security('bearerAuth')
@@ -456,6 +531,33 @@ export class InventoryRequestController extends Controller {
       messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
       data: { processedCount: count },
+    };
+  }
+
+  /**
+   * 10b. Customer regenerates OTP for Pending Request
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER
+  @Post('requests/{id}/regenerate-otp')
+  @Middlewares(validateRequest({ params: inventoryRequestIdParamSchema }))
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Access Denied')
+  @Response<ApiErrorResponse>(404, 'Request Not Found')
+  public async regenerateOtp(
+    @Request() req: ExpressRequest,
+    @Path() id: string
+  ): Promise<ApiResponse<RegenerateOtpResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.inventoryRequestService.regenerateOtp(id, caller);
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Request OTP']),
+      data: result,
     };
   }
 
