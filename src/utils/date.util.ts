@@ -274,3 +274,21 @@ export function checkOperatingHoursMatchVN(
     close,
   };
 }
+
+/**
+ * Calculates a person's exact age in completed years based on Vietnam Time (UTC+7).
+ */
+export function calculateAgeVN(dob: Date, now: Date = new Date()): number {
+  const vnDobStr = getVNDateString(dob);
+  const vnNowStr = getVNDateString(now);
+
+  const [dobYear, dobMonth, dobDay] = vnDobStr.split('-').map(Number);
+  const [nowYear, nowMonth, nowDay] = vnNowStr.split('-').map(Number);
+
+  let age = nowYear - dobYear;
+  if (nowMonth < dobMonth || (nowMonth === dobMonth && nowDay < dobDay)) {
+    age--;
+  }
+
+  return Math.max(0, age);
+}

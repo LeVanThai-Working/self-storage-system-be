@@ -203,4 +203,138 @@ export class StorageRackRepository {
       await (doc as unknown as { restore: () => Promise<unknown> }).restore();
     }
   }
+
+  async findByIds(
+    rackIds: string[],
+    session?: ClientSession
+  ): Promise<IStorageRack[]> {
+    const validIds = rackIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (validIds.length === 0) return [];
+    return this.storageRack
+      .find({ _id: { $in: validIds } })
+      .session(session ?? null)
+      .populate(POPULATE_FACILITY)
+      .populate(POPULATE_STORAGE_UNIT);
+  }
+
+  async findAndReserveRacksAtomic(
+    rackIds: string[],
+    facilityId: string,
+    storageUnitId: string,
+    session?: ClientSession
+  ): Promise<IStorageRack[] | null> {
+    if (!rackIds.length) return [];
+    const validIds = rackIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (validIds.length !== rackIds.length) return null;
+
+    // Check availability of all requested racks within the same facility and unit
+    const availableRacks = await this.storageRack
+      .find({
+        _id: { $in: validIds },
+        facilityId: new Types.ObjectId(facilityId),
+        storageUnitId: new Types.ObjectId(storageUnitId),
+        status: RackStatusEnum.AVAILABLE,
+        deleted: false,
+      })
+      .session(session ?? null);
+
+    if (availableRacks.length !== rackIds.length) {
+      return null;
+    }
+
+    // Atomically transition them to RESERVED
+    await this.storageRack.updateMany(
+      {
+        _id: { $in: validIds },
+        status: RackStatusEnum.AVAILABLE,
+      },
+      {
+        $set: { status: RackStatusEnum.RESERVED },
+      },
+      { session }
+    );
+
+    return this.storageRack
+      .find({ _id: { $in: validIds } })
+      .session(session ?? null)
+      .populate(POPULATE_FACILITY)
+      .populate(POPULATE_STORAGE_UNIT);
+  }
+
+  async releaseRacksAtomic(
+    rackIds: string[],
+    session?: ClientSession
+  ): Promise<void> {
+    const validIds = rackIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (validIds.length === 0) return;
+
+    await this.storageRack.updateMany(
+      {
+        _id: { $in: validIds },
+        status: RackStatusEnum.RESERVED,
+      },
+      {
+        $set: { status: RackStatusEnum.AVAILABLE },
+      },
+      { session }
+    );
+  }
+
+  async occupyRacksAtomic(
+    rackIds: string[],
+    contractId: string,
+    customerId: string,
+    session?: ClientSession
+  ): Promise<void> {
+    const validIds = rackIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (validIds.length === 0) return;
+
+    await this.storageRack.updateMany(
+      {
+        _id: { $in: validIds },
+      },
+      {
+        $set: {
+          status: RackStatusEnum.RENTED,
+          currentContractId: new Types.ObjectId(contractId),
+          currentCustomerId: new Types.ObjectId(customerId),
+        },
+      },
+      { session }
+    );
+  }
+
+  async vacateRacksAtomic(
+    rackIds: string[],
+    contractId: string,
+    session?: ClientSession
+  ): Promise<void> {
+    const validIds = rackIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (validIds.length === 0) return;
+
+    await this.storageRack.updateMany(
+      {
+        _id: { $in: validIds },
+        currentContractId: new Types.ObjectId(contractId),
+      },
+      {
+        $set: {
+          status: RackStatusEnum.AVAILABLE,
+          currentContractId: null,
+          currentCustomerId: null,
+        },
+      },
+      { session }
+    );
+  }
 }

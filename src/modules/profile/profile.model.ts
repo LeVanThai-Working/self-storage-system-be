@@ -10,6 +10,10 @@ export interface IProfile extends SoftDeleteDocument {
   dateOfBirth?: Date;
   address?: string;
   gender?: GenderEnum;
+  encryptedIdCardNumber?: string;
+  idCardLast4?: string;
+  idCardFrontPhotoUrl?: string;
+  idCardBackPhotoUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +33,10 @@ const profileSchema = new mongoose.Schema<IProfile>(
       type: String,
       enum: Object.values(GenderEnum),
     },
+    encryptedIdCardNumber: { type: String, default: null },
+    idCardLast4: { type: String, default: null },
+    idCardFrontPhotoUrl: { type: String, default: null },
+    idCardBackPhotoUrl: { type: String, default: null },
   },
   {
     timestamps: true,

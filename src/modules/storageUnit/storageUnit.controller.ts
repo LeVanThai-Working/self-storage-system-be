@@ -13,7 +13,11 @@ import {
   Response,
   // Security,
   Middlewares,
+  Request,
 } from 'tsoa';
+import type { Request as ExpressRequest } from 'express';
+import { jwtUtil } from '../auth/auth.container.ts';
+import type { TokenPayload } from '../../utils/jwt.util.ts';
 import type { StorageUnitService } from './storageUnit.service.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { formatMessage } from '../../utils/format.util.ts';
@@ -38,6 +42,58 @@ import type {
   ApiErrorResponse,
 } from '../../common/types/apiResponse.type.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
+
+interface CallerInfo {
+  userId: string;
+  role: string;
+}
+
+function extractCaller(req: ExpressRequest): CallerInfo {
+  const user = req.user as
+    { _id?: { toString(): string }; role?: string } | undefined;
+  if (user?._id) {
+    return {
+      userId: user._id.toString(),
+      role: user.role || 'customer',
+    };
+  }
+
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    process.env.ALLOW_INSECURE_CALLER_FALLBACK === 'true'
+  ) {
+    const headerUserId = req.headers['x-user-id'] as string | undefined;
+    const headerUserRole = req.headers['x-user-role'] as string | undefined;
+    if (headerUserId) {
+      return {
+        userId: headerUserId,
+        role: headerUserRole || 'customer',
+      };
+    }
+  }
+
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const payload = jwtUtil.verifyAccessToken(
+        authHeader.split(' ')[1]
+      ) as TokenPayload;
+      if (payload?.userId) {
+        return {
+          userId: payload.userId,
+          role: payload.role || 'customer',
+        };
+      }
+    } catch {
+      // Ignored
+    }
+  }
+
+  return {
+    userId: 'anonymous',
+    role: 'customer',
+  };
+}
 
 @Tags('Storage Units')
 @Route('storage-units')
@@ -294,6 +350,42 @@ export class StorageUnitController extends Controller {
       messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Storage Unit']),
       data: unit,
+    };
+  }
+
+  /**
+   * Reconcile orphan RESERVED storage units that have no active Reservation or Contract.
+   *
+   * // @Security('bearerAuth')
+   * // @Security('cookieAuth')
+   * // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+   */
+  @Post('reconcile')
+  @SuccessResponse(200, 'Success')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  public async reconcile(@Request() req: ExpressRequest): Promise<
+    ApiResponse<{
+      reconciledCount: number;
+      details: Array<{
+        unitId: string;
+        unitNumber: string;
+        facilityId: string;
+      }>;
+    }>
+  > {
+    const caller = extractCaller(req);
+    const result = await this.storageUnitService.reconcileStorageUnits(
+      caller.userId,
+      caller.role
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: result,
     };
   }
 }

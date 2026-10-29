@@ -12,6 +12,7 @@ import {
   Response,
   SuccessResponse,
 } from 'tsoa';
+import { RoleEnum } from '../../common/enums/user.enum.ts';
 import type { Request as ExpressRequest } from 'express';
 import type { ReservationService } from './reservation.service.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
@@ -211,20 +212,35 @@ export class ReservationController extends Controller {
   // @Security('cookieAuth')
   // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
   @Response<ApiErrorResponse>(401, 'Unauthorized')
-  public async processOverdueReservations(): Promise<
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  public async processOverdueReservations(
+    @Request() req: ExpressRequest
+  ): Promise<
     ApiResponse<{
       overdueCount: number;
       noShowCount: number;
       unconfirmedCount: number;
     }>
   > {
+    const caller = extractCaller(req);
+    if (
+      caller.role !== RoleEnum.SYSTEM_ADMIN &&
+      caller.role !== RoleEnum.BUSINESS_OPS_MANAGER
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
     const result = await this.reservationService.processOverdueReservations();
     return {
       success: true,
       statusCode: 200,
       messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
-      data: result,
+      data: {
+        overdueCount: result.overdueCount,
+        noShowCount: result.noShowCount,
+        unconfirmedCount: result.unconfirmedCount,
+      },
     };
   }
 

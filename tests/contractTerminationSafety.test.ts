@@ -103,12 +103,12 @@ describe('T2.10: Safe Contract Termination & Storage Unit Clearance Lifecycle', 
       unitTypeOfferingRepo,
       facilityRepo,
       userRepo,
-      undefined, // authRedisService
-      undefined, // notificationService
       undefined, // auditLogService
       undefined, // refundRequestService
+      inventoryRepo, // customerInventoryRepository
       undefined, // incidentRepository
-      inventoryRepo
+      undefined, // contractQueue
+      undefined // notificationService
     );
   });
 
@@ -171,7 +171,8 @@ describe('T2.10: Safe Contract Termination & Storage Unit Clearance Lifecycle', 
   async function createTestContract(
     status: ContractStatusEnum = ContractStatusEnum.ACTIVE,
     endDateOffsetDays = 15,
-    customFacilityId: Types.ObjectId = facilityId
+    customFacilityId: Types.ObjectId = facilityId,
+    customStorageUnitId?: Types.ObjectId
   ) {
     const startDate = new Date(Date.now() - 15 * 86400000);
     const endDate = new Date(Date.now() + endDateOffsetDays * 86400000);
@@ -181,7 +182,7 @@ describe('T2.10: Safe Contract Termination & Storage Unit Clearance Lifecycle', 
       source: ContractSourceEnum.WALK_IN,
       customerId,
       facilityId: customFacilityId,
-      storageUnitId,
+      storageUnitId: customStorageUnitId || storageUnitId,
       facilityUnitTypeOfferingId: offeringId,
       startDate,
       endDate,
@@ -445,10 +446,18 @@ describe('T2.10: Safe Contract Termination & Storage Unit Clearance Lifecycle', 
       });
 
       // Cross facility contract
+      const unitB = await StorageUnit.create({
+        unitNumber: 'UNIT-TERM-FACB',
+        facilityId: facilityBId,
+        unitTypeId,
+        floor: 1,
+        status: StorageUnitStatusEnum.OCCUPIED,
+      });
       const contractB = await createTestContract(
         ContractStatusEnum.ACTIVE,
         15,
-        facilityBId
+        facilityBId,
+        unitB._id as Types.ObjectId
       );
       await expect(
         contractService.terminateContract(

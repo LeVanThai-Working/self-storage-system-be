@@ -46,6 +46,17 @@ async function processReservationJob(job: Job): Promise<void> {
       break;
     }
 
+    case RESERVATION_JOB.REMIND_SCHEDULE: {
+      console.log(
+        '[ReservationWorker] Running schedule reminders scan (T-1, unconfirmed, grace expiring)...'
+      );
+      const result = await reservationService.processScheduleReminders();
+      console.log(
+        `[ReservationWorker] Completed schedule reminders scan. T-1: ${result.remindedCheckInCount}, Unconfirmed: ${result.remindedUnconfirmedCount}, Grace expiring: ${result.remindedGraceExpiringCount}.`
+      );
+      break;
+    }
+
     default:
       console.warn(`[ReservationWorker] Unknown job name: ${job.name}`);
   }
@@ -85,8 +96,9 @@ export async function initReservationWorker(): Promise<Worker> {
   // Setup the hourly repeatable job for scanning overdue check-ins
   try {
     await reservationQueue.setupOverdueRepeatableJob();
+    await reservationQueue.setupScheduleRemindersRepeatableJob();
     console.log(
-      '[ReservationWorker] Repeatable overdue check-in job registered.'
+      '[ReservationWorker] Repeatable overdue check-in and schedule reminders jobs registered.'
     );
   } catch (error) {
     console.error(

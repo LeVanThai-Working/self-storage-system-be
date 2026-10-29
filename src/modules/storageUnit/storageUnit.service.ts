@@ -4,6 +4,9 @@ import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { UnitTypeRepository } from '../unitType/unitType.repository.ts';
 import type { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.repository.ts';
 import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
+import type { ReservationRepository } from '../reservation/reservation.repository.ts';
+import type { ContractRepository } from '../contract/contract.repository.ts';
+import { RoleEnum } from '../../common/enums/user.enum.ts';
 import type { IStorageUnit } from './storageUnit.model.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
@@ -39,7 +42,9 @@ export class StorageUnitService {
     private readonly unitTypeRepository: UnitTypeRepository,
     private readonly offeringRepository: FacilityUnitTypeOfferingRepository,
     private readonly customerInventoryRepository: CustomerInventoryRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly reservationRepository?: ReservationRepository,
+    private readonly contractRepository?: ContractRepository
   ) {}
 
   private formatStorageUnit(unit: unknown): unknown {
@@ -342,6 +347,32 @@ export class StorageUnitService {
       }
 
       // Put under maintenance: Block if currently RESERVED or OCCUPIED
+      if (
+        unit.status === StorageUnitStatusEnum.RESERVED ||
+        unit.status === StorageUnitStatusEnum.OCCUPIED
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+      }
+
+      if (this.reservationRepository) {
+        const activeResCount =
+          await this.reservationRepository.countActiveByStorageUnitId(
+            id,
+            session
+          );
+        if (activeResCount > 0) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+        }
+      }
+
+      if (this.contractRepository) {
+        const activeCtrCount =
+          await this.contractRepository.countActiveByStorageUnitId(id, session);
+        if (activeCtrCount > 0) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+        }
+      }
+
       const allowedFrom = Object.values(StorageUnitStatusEnum).filter(
         (s) =>
           s !== StorageUnitStatusEnum.RESERVED &&
@@ -417,7 +448,23 @@ export class StorageUnitService {
       unit.status === StorageUnitStatusEnum.RESERVED ||
       unit.status === StorageUnitStatusEnum.OCCUPIED
     ) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+    }
+
+    if (this.reservationRepository) {
+      const activeResCount =
+        await this.reservationRepository.countActiveByStorageUnitId(id);
+      if (activeResCount > 0) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+      }
+    }
+
+    if (this.contractRepository) {
+      const activeCtrCount =
+        await this.contractRepository.countActiveByStorageUnitId(id);
+      if (activeCtrCount > 0) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+      }
     }
 
     await this.storageUnitRepository.deleteById(id);
@@ -562,5 +609,90 @@ export class StorageUnitService {
       await this.storageUnitRepository.getMapLayoutByFacility(facilityId);
     const formatted = units.map((u) => this.formatStorageUnit(u));
     return validateResponse(storageUnitListResponseSchema, formatted);
+  }
+
+  /**
+   * Reconciles orphan RESERVED storage units.
+   * Finds units marked RESERVED that have no active Reservation or Contract holding them,
+   * and reverts them to AVAILABLE with an audit log.
+   */
+  async reconcileStorageUnits(
+    callerId?: string,
+    callerRole?: string
+  ): Promise<{
+    reconciledCount: number;
+    details: Array<{ unitId: string; unitNumber: string; facilityId: string }>;
+  }> {
+    if (callerRole !== undefined) {
+      if (
+        callerRole !== RoleEnum.SYSTEM_ADMIN &&
+        callerRole !== RoleEnum.BUSINESS_OPS_MANAGER
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_120);
+      }
+    }
+
+    const reservedUnits = await this.storageUnitRepository.findUnitsByStatus(
+      StorageUnitStatusEnum.RESERVED
+    );
+
+    const details: Array<{
+      unitId: string;
+      unitNumber: string;
+      facilityId: string;
+    }> = [];
+
+    for (const unit of reservedUnits) {
+      const unitId = String(unit._id);
+
+      let hasActiveReservation = false;
+      if (this.reservationRepository) {
+        const count =
+          await this.reservationRepository.countActiveByStorageUnitId(unitId);
+        hasActiveReservation = count > 0;
+      }
+
+      let hasActiveContract = false;
+      if (this.contractRepository) {
+        const count =
+          await this.contractRepository.countActiveByStorageUnitId(unitId);
+        hasActiveContract = count > 0;
+      }
+
+      if (!hasActiveReservation && !hasActiveContract) {
+        // Orphaned unit -> Reconcile to AVAILABLE
+        const updated =
+          await this.storageUnitRepository.releaseReservedUnitAtomic(
+            unitId,
+            StorageUnitStatusEnum.AVAILABLE
+          );
+        if (updated) {
+          details.push({
+            unitId,
+            unitNumber: unit.unitNumber,
+            facilityId: String(unit.facilityId),
+          });
+
+          this.auditLogService?.record({
+            action: AuditActionEnum.RESTORE,
+            resourceType: AuditResourceEnum.STORAGE_UNIT,
+            resourceId: unitId,
+            before: { status: StorageUnitStatusEnum.RESERVED },
+            after: { status: StorageUnitStatusEnum.AVAILABLE },
+            metadata: {
+              reason: 'ORPHAN_RECONCILIATION',
+              unitNumber: unit.unitNumber,
+              facilityId: String(unit.facilityId),
+              source: 'SYSTEM',
+            },
+          });
+        }
+      }
+    }
+
+    return {
+      reconciledCount: details.length,
+      details,
+    };
   }
 }

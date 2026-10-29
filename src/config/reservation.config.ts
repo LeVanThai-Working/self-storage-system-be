@@ -22,6 +22,7 @@ export interface ReservationConfig {
   checkInSigningBufferMinutes: number;
   sameDayLeadMinutes: number;
   maxStartDateOffsetDays: number;
+  overdueBatchSize: number;
 }
 
 function parseCancellationMode(
@@ -74,6 +75,8 @@ export function getReservationConfig(): ReservationConfig {
     Number(process.env.RESERVATION_SAME_DAY_LEAD_MINUTES) || 120;
   const maxStartDateOffsetDays =
     Number(process.env.RESERVATION_MAX_START_DATE_OFFSET_DAYS) || 3;
+  const overdueBatchSize =
+    Number(process.env.RESERVATION_OVERDUE_BATCH_SIZE) || 50;
 
   return {
     holdMinutes,
@@ -88,6 +91,7 @@ export function getReservationConfig(): ReservationConfig {
     checkInSigningBufferMinutes,
     sameDayLeadMinutes,
     maxStartDateOffsetDays,
+    overdueBatchSize,
   };
 }
 

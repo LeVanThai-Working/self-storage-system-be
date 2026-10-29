@@ -4,6 +4,7 @@ import MongooseDelete, {
   type SoftDeleteModel,
 } from 'mongoose-delete';
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
+import { RentalTargetTypeEnum } from '../../common/enums/rental.enum.ts';
 import {
   ContractAddendumStatusEnum,
   ContractAddendumTypeEnum,
@@ -55,7 +56,52 @@ export interface IContractAddendum {
   cancellationReason?: string | null;
   cancelledBy?: Types.ObjectId | null;
   cancelledAt?: Date | null;
+  expiresAt?: Date | null;
+  signedAddendumFiles?: IContractTerminationFile[];
+  signingAuthorizationSnapshot?: ISigningAuthorizationSnapshot | null;
   notes?: string | null;
+}
+
+export interface ILegalEntitySnapshot {
+  legalEntityId: Types.ObjectId;
+  companyName: string;
+  taxCode: string;
+  registeredAddress: string;
+  legalRepresentative: {
+    name: string;
+    title: string;
+    idNumber?: string;
+  };
+  bankAccount: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+  };
+}
+
+export interface ISigningAuthorizationSnapshot {
+  authorizationId: Types.ObjectId;
+  authorizedUserId: Types.ObjectId;
+  authorizationNumber: string;
+  issuedDate: Date;
+  validFrom: Date;
+  validTo: Date;
+  documentUrl: string;
+  fileHash?: string | null;
+}
+
+export interface ICustomerSnapshot {
+  customerId: Types.ObjectId;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  dateOfBirth?: Date | null;
+  address?: string | null;
+  idCardNumberMasked?: string | null;
+  idCardFrontPhotoUrl?: string | null;
+  idCardBackPhotoUrl?: string | null;
+  signedAt?: Date | null;
+  signedIp?: string | null;
 }
 
 export interface IContractRenewal {
@@ -102,6 +148,7 @@ export interface IContract extends SoftDeleteDocument {
   customerId: Types.ObjectId;
   facilityId: Types.ObjectId;
   storageUnitId: Types.ObjectId;
+  rentalTargetType?: RentalTargetTypeEnum;
   rentedRackIds?: Types.ObjectId[];
   facilityUnitTypeOfferingId: Types.ObjectId;
   assignedStaffId?: Types.ObjectId | null;
@@ -151,6 +198,11 @@ export interface IContract extends SoftDeleteDocument {
   reportFiles?: IContractTerminationFile[];
   evidenceFiles?: IContractTerminationFile[];
   terminationHistory?: IContractTerminationHistory[];
+  signedContractFiles?: IContractTerminationFile[];
+  legalEntitySnapshot?: ILegalEntitySnapshot | null;
+  customerSnapshot?: ICustomerSnapshot | null;
+  signingAuthorizationSnapshot?: ISigningAuthorizationSnapshot | null;
+  templateVersionId?: Types.ObjectId | null;
 
   status: ContractStatusEnum;
   termsAccepted: boolean;
@@ -162,6 +214,7 @@ export interface IContract extends SoftDeleteDocument {
   earlyCheckIn?: boolean | null;
   outOfSlot?: boolean | null;
   lastInventoryActivityAt?: Date | null;
+  expiresAt?: Date | null;
   notes?: string | null;
 
   createdAt: Date;
@@ -208,6 +261,91 @@ const contractAmenitySchema = new Schema<IContractAmenity>(
       type: Date,
       default: Date.now,
     },
+  },
+  { _id: false }
+);
+
+const contractTerminationFileSchema = new Schema<IContractTerminationFile>(
+  {
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    fileHash: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    uploadedAt: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
+const legalEntitySnapshotSchema = new Schema<ILegalEntitySnapshot>(
+  {
+    legalEntityId: {
+      type: Schema.Types.ObjectId,
+      ref: 'LegalEntity',
+      required: true,
+    },
+    companyName: { type: String, required: true },
+    taxCode: { type: String, required: true },
+    registeredAddress: { type: String, required: true },
+    legalRepresentative: {
+      name: { type: String, required: true },
+      title: { type: String, required: true },
+      idNumber: { type: String, default: null },
+    },
+    bankAccount: {
+      bankName: { type: String, required: true },
+      accountNumber: { type: String, required: true },
+      accountHolder: { type: String, required: true },
+    },
+  },
+  { _id: false }
+);
+
+const signingAuthorizationSnapshotSchema =
+  new Schema<ISigningAuthorizationSnapshot>(
+    {
+      authorizationId: {
+        type: Schema.Types.ObjectId,
+        ref: 'SigningAuthorization',
+        required: true,
+      },
+      authorizedUserId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      authorizationNumber: { type: String, required: true },
+      issuedDate: { type: Date, required: true },
+      validFrom: { type: Date, required: true },
+      validTo: { type: Date, required: true },
+      documentUrl: { type: String, required: true },
+      fileHash: { type: String, default: null },
+    },
+    { _id: false }
+  );
+
+const customerSnapshotSchema = new Schema<ICustomerSnapshot>(
+  {
+    customerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phoneNumber: { type: String, required: true },
+    dateOfBirth: { type: Date, default: null },
+    address: { type: String, default: null },
+    idCardNumberMasked: { type: String, default: null },
+    idCardFrontPhotoUrl: { type: String, default: null },
+    idCardBackPhotoUrl: { type: String, default: null },
+    signedAt: { type: Date, default: null },
+    signedIp: { type: String, default: null },
   },
   { _id: false }
 );
@@ -333,6 +471,18 @@ const contractAddendumSchema = new Schema<IContractAddendum>(
       type: Date,
       default: null,
     },
+    expiresAt: {
+      type: Date,
+      default: null,
+    },
+    signedAddendumFiles: {
+      type: [contractTerminationFileSchema],
+      default: [],
+    },
+    signingAuthorizationSnapshot: {
+      type: signingAuthorizationSnapshotSchema,
+      default: null,
+    },
     notes: {
       type: String,
       default: null,
@@ -396,27 +546,6 @@ const contractSignatureHistorySchema = new Schema<IContractSignatureHistory>(
       type: String,
       required: true,
       trim: true,
-    },
-  },
-  { _id: false }
-);
-
-const contractTerminationFileSchema = new Schema<IContractTerminationFile>(
-  {
-    url: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    fileHash: {
-      type: String,
-      default: null,
-      trim: true,
-    },
-    uploadedAt: {
-      type: Date,
-      required: true,
-      default: Date.now,
     },
   },
   { _id: false }
@@ -511,6 +640,11 @@ const contractSchema = new Schema<IContract>(
       type: Schema.Types.ObjectId,
       ref: 'StorageUnit',
       required: true,
+    },
+    rentalTargetType: {
+      type: String,
+      enum: Object.values(RentalTargetTypeEnum),
+      default: RentalTargetTypeEnum.STORAGE_UNIT,
     },
     rentedRackIds: {
       type: [
@@ -675,6 +809,10 @@ const contractSchema = new Schema<IContract>(
       type: Date,
       default: null,
     },
+    expiresAt: {
+      type: Date,
+      default: null,
+    },
     terminationType: {
       type: String,
       enum: Object.values(ContractTerminationTypeEnum),
@@ -709,6 +847,27 @@ const contractSchema = new Schema<IContract>(
     terminationHistory: {
       type: [contractTerminationHistorySchema],
       default: [],
+    },
+    signedContractFiles: {
+      type: [contractTerminationFileSchema],
+      default: [],
+    },
+    legalEntitySnapshot: {
+      type: legalEntitySnapshotSchema,
+      default: null,
+    },
+    customerSnapshot: {
+      type: customerSnapshotSchema,
+      default: null,
+    },
+    signingAuthorizationSnapshot: {
+      type: signingAuthorizationSnapshotSchema,
+      default: null,
+    },
+    templateVersionId: {
+      type: Schema.Types.ObjectId,
+      ref: 'ContractTemplate',
+      default: null,
     },
     status: {
       type: String,

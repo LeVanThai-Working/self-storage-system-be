@@ -10,6 +10,9 @@ export interface ContractConfig {
    * Defaults to 5 days.
    */
   overdueTerminationGraceDays: number;
+  minCustomerAge: number;
+  requireSigningAuthorization: boolean;
+  requireSignedContractScan: boolean;
 }
 
 /**
@@ -59,10 +62,25 @@ export function getContractConfig(): ContractConfig {
       ? rawGraceDays
       : DEFAULT_OVERDUE_TERMINATION_GRACE_DAYS;
 
+  const rawMinAge = Number(process.env.CONTRACT_MIN_CUSTOMER_AGE);
+  const minCustomerAge =
+    Number.isInteger(rawMinAge) && rawMinAge > 0 ? rawMinAge : 18;
+
+  const requireSigningAuthorization =
+    process.env.CONTRACT_REQUIRE_SIGNING_AUTHORIZATION === 'true' ||
+    process.env.NODE_ENV === 'production';
+
+  const requireSignedContractScan =
+    process.env.CONTRACT_REQUIRE_SIGNED_CONTRACT_SCAN === 'true' ||
+    process.env.NODE_ENV === 'production';
+
   return {
     overduePenaltyMultiplier,
     standardDaysPerMonth,
     overdueTerminationGraceDays,
+    minCustomerAge,
+    requireSigningAuthorization,
+    requireSignedContractScan,
   };
 }
 

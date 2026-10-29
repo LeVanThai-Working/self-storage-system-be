@@ -51,6 +51,10 @@ import { IncidentController } from './modules/incident/incident.controller.ts';
 import { incidentController } from './modules/incident/incident.container.ts';
 import { SupportTicketController } from './modules/support/supportTicket.controller.ts';
 import { supportTicketController } from './modules/support/supportTicket.container.ts';
+import { LegalEntityController } from './modules/legalEntity/legalEntity.controller.ts';
+import { legalEntityController } from './modules/legalEntity/legalEntity.container.ts';
+import { SigningAuthorizationController } from './modules/signingAuthorization/signingAuthorization.controller.ts';
+import { signingAuthorizationController } from './modules/signingAuthorization/signingAuthorization.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -128,6 +132,12 @@ export const iocContainer: IocContainer = {
     }
     if (controller === SupportTicketController) {
       return supportTicketController as unknown as T;
+    }
+    if (controller === LegalEntityController) {
+      return legalEntityController as unknown as T;
+    }
+    if (controller === SigningAuthorizationController) {
+      return signingAuthorizationController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

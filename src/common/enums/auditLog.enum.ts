@@ -76,6 +76,9 @@ export enum AuditActionEnum {
   PROCESS_SUPPORT_TICKET = 'process_support_ticket',
   COMPLETE_SUPPORT_TICKET = 'complete_support_ticket',
   CANCEL_SUPPORT_TICKET = 'cancel_support_ticket',
+  REVOKE_AUTHORIZATION = 'revoke_authorization',
+  DIGITIZE_CONTRACT = 'digitize_contract',
+  DIGITIZE_ADDENDUM = 'digitize_addendum',
 }
 
 export enum AuditResourceEnum {
@@ -102,6 +105,9 @@ export enum AuditResourceEnum {
   INVENTORY_REQUEST = 'inventory_request',
   INCIDENT = 'incident',
   SUPPORT_TICKET = 'support_ticket',
+  LEGAL_ENTITY = 'legal_entity',
+  SIGNING_AUTHORIZATION = 'signing_authorization',
+  CONTRACT_TEMPLATE = 'contract_template',
 }
 
 export enum AuditStatusEnum {

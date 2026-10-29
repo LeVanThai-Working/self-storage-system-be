@@ -439,3 +439,25 @@ Giờ hoạt động cơ sở & Quy mô hệ thống Giờ hoạt động cơ s�
      - Tuyệt đối không cho phép chuyển thẳng từ `PENDING_CLEARANCE` sang `AVAILABLE`.
      - Trong thao tác bật bảo trì (`PATCH /storage-units/:id/maintenance` với `isUnderMaintenance: true`): nếu kho đang ở `PENDING_CLEARANCE` mà hàng tồn kho của khách vẫn còn trong kho (`countRemainingByStorageUnit > 0`), hệ thống **chặn không cho chuyển sang bảo trì** (trả 400 `MESSAGE_CODE_629`).
      - Chỉ khi toàn bộ đồ đạc của khách đã được dọn sạch khỏi kho (`countRemainingByStorageUnit === 0`), nhân viên mới được chuyển kho sang `UNDER_MAINTENANCE` để bắt đầu quy trình vệ sinh, khử khuẩn và bảo trì kỹ thuật trước khi nhả về `AVAILABLE` cho khách thuê mới.
+
+## T3.1: Cô lập lỗi từng đơn và xử lý theo đợt cho `process-overdue` (Per-record Transaction Isolation & Batching)
+
+1. **Transaction per-record và Fault Isolation:**
+   - Hàm điều phối batch (`processOverdueReservations` và `processExpiredReservations`) không bọc toàn bộ bằng một transaction đơn nhất.
+   - Mỗi đơn được xử lý độc lập trong một transaction riêng (`processSingleOverdueCheckIn`, `processSingleNoShow`, `processSingleUnconfirmed`, `expireSingleReservation`) được bọc `@Transactional()`.
+   - Khi một đơn gặp sự cố hoặc ngoại lệ DB, chỉ riêng transaction của đơn đó bị rollback; hệ thống ghi log cảnh báo có cấu trúc `[ReservationService ALERT]` và tiếp tục xử lý các đơn còn lại trong danh sách, không làm dừng hay crash job ngầm.
+
+2. **Cơ chế chống Race Condition & Chống Double-Release:**
+   - Trong các luồng hủy do No-show, quá hạn check-in chưa xác nhận, hoặc hết hạn giữ chỗ:
+     - Hệ thống **gọi `atomicUpdateStatus` trước** bằng conditional update (`findOneAndUpdate` với trạng thái mong đợi) để xác lập quyền sở hữu độc quyền đơn đó.
+     - Nếu cập nhật trả về `null` (tiến trình khác hoặc thao tác người dùng đã thay đổi trạng thái trước), hệ thống lập tức thoát, **tuyệt đối không gọi `releaseHold`**.
+     - Chỉ khi `atomicUpdateStatus` thành công, hệ thống mới tiến hành giải phóng phòng kho (`releaseReservedUnitAtomic`) và trừ số lượng tiện ích (`releaseAmenityQuantityAtomic`) trong cùng session.
+   - Điều này triệt tiêu hoàn toàn nguy cơ chạy đồng thời giữa cron job và thao tác thủ công gây nhả kho 2 lần hoặc trừ âm số lượng tiện ích.
+
+3. **Batching và giới hạn truy vấn:**
+   - Các truy vấn quét đơn quá hạn và hết hạn (`findOverdueCheckIn`, `findNoShow`, `findPaidPastCheckIn`, `findExpired`) hỗ trợ tùy chọn `{ limit, skip }`.
+   - Giới hạn kích thước mỗi đợt quét được kiểm soát qua `overdueBatchSize` trong `reservation.config.ts` (mặc định 50 đơn, cấu hình qua `RESERVATION_OVERDUE_BATCH_SIZE`).
+
+4. **Phân quyền trên API kích hoạt thủ công (`POST /reservations/process-overdue`):**
+   - Chỉ cho phép `SYSTEM_ADMIN` và `BUSINESS_OPS_MANAGER` kích hoạt vì API quét toàn hệ thống.
+   - Nhân viên cơ sở (`FACILITY_STAFF`, `FACILITY_MANAGER`) và khách hàng (`CUSTOMER`) bị từ chối với mã lỗi 403 `MESSAGE_CODE_103`.
