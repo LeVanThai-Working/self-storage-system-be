@@ -34,12 +34,12 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     Tối đa 3 ngày, đặt trong config
     T2.7
     D3
-    Bản chất pháp lý của cọc đặt chỗ và mức bồi thường khi cơ sở từ chối giao kho (Điều 328 BLDS 2015, cần pháp chế)
-    Hoàn 100%, hệ số bồi thường thêm = 0 trong config cho đến khi pháp chế xác nhận
+    Bản chất pháp lý của cọc đặt chỗ và mức bồi thường khi cơ sở từ chối giao kho (Điều 328 BLDS 2015)
+    [ĐÃ CHỐT] Hoàn 100% cọc qua RefundRequest + gửi thư xin lỗi (email + notification); hệ số bồi thường thêm = 0 cho đến khi pháp chế yêu cầu
     T2.4
     D4
-    Giá khi nâng hạng miễn phí và khi gia hạn
-    Giữ rentalPrice trong kỳ hiện tại, gắn cờ isComplimentaryUpgrade; giá gia hạn do Manager nhập, không tự động
+    Giá khi nâng hạng kho và khi gia hạn
+    [ĐÃ CHỐT] Khách đồng ý nâng hạng thì tính tiền theo loại kho upgrade (không free upgrade vĩnh viễn tránh khách giữ kho giá hời); nếu không đồng ý thì hủy đơn hoàn cọc 100%
     T2.9, T4.5
     D5
     Hoàn tiền: tài khoản nhận, SLA, ngưỡng duyệt
@@ -67,7 +67,7 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     T4.2, T4.6
     D11
     Hình thức ký
-    Giữ click-to-sign nhưng bắt buộc lưu bằng chứng (termsVersion, hash nội dung, IP, thiết bị); OTP để sau
+    [ĐÃ CHỐT] Ký tay trên bản hợp đồng giấy in từ PDF nháp + Quản lý upload bản scan/ảnh hợp đồng đã ký 2 bên để kích hoạt; bỏ ký điện tử qua CA bên thứ 3
     T4.3
     D12
     Pháp nhân: một cho cả chuỗi hay mỗi cơ sở; ai có ủy quyền ký
@@ -75,11 +75,11 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     T4.1
     D13
     POST /contracts/:id/renew còn tồn tại không
-    Nếu còn thì vô hiệu hóa, chỉ giữ gia hạn qua phụ lục RENEW
+    [ĐÃ CHỐT] Vô hiệu hóa và trả lỗi 400 MESSAGE_CODE_416; toàn bộ gia hạn thực hiện qua phụ lục RENEW
     T0.6
     D14
     Terminate hoặc check-out khi đồ còn trong kho
-    Thêm bước PENDING_CLEARANCE trước khi kho sang UNDER_MAINTENANCE
+    [ĐÃ CHỐT] Kho vào PENDING_CLEARANCE; Terminate bắt buộc >= 1 biên bản + >= 1 ảnh bằng chứng, phân loại MUTUAL, CUSTOMER_REQUEST, VIOLATION; validate nợ > 5 ngày với OVERDUE_PAYMENT
     T2.10
 13. Backlog task
     Phase 0: bảo mật và phân quyền (P0)
@@ -97,8 +97,8 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     • Done khi: production không có replica set thì dừng với lỗi rõ ràng; webhook không hợp lệ bị từ chối có test.
     T0.5 Bộ test phân quyền dùng chung
     • Làm: helper tạo user theo role và cơ sở; ma trận test tự sinh từ bảng mục 5 để endpoint mới không bị bỏ sót.
-    T0.6 Dọn mâu thuẫn endpoint [OPEN D13]
-    • Làm: xác nhận POST /contracts/:id/renew; nếu còn thì vô hiệu hóa hoặc chuyển sang phụ lục RENEW. Thống nhất ai được confirm Reservation (Manager hay cả staff) giữa tài liệu luồng và ma trận quyền. Liệt kê các mâu thuẫn khác tìm thấy.
+    T0.6 Dọn mâu thuẫn endpoint [ĐÃ HOÀN THÀNH]
+    • Làm: Vô hiệu hóa POST /contracts/:id/renew (trả về 400 MESSAGE_CODE_416, đánh dấu @deprecated), chuyển toàn bộ luồng gia hạn sang Phụ lục RENEW (POST /contracts/:id/addendums). Thống nhất quyền Confirm Reservation: cả FACILITY_STAFF và FACILITY_MANAGER cùng cơ sở đều được phép xác nhận đơn.
     Phase 1: toàn vẹn tiền (P1)
     T1.1 Entity RefundRequest [OPEN D5]
     • Trường: paymentId, reservationId hoặc contractId, amount, reason (CUSTOMER_CANCEL, FACILITY_CANCEL, SYSTEM_CANCEL, LATE_PAYMENT, AMOUNT_MISMATCH, DEPOSIT_SETTLEMENT, FACILITY_FAULT), status (PENDING_APPROVAL → APPROVED → PAID, hoặc REJECTED / CANCELLED), tài khoản nhận (mã hóa), referenceCode, proofImageUrl, requestedBy, approvedBy, paidBy và các mốc thời gian.
@@ -128,8 +128,8 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     • Làm: thêm termsAccepted (bắt buộc true ở API), policyVersion, acceptedAt, acceptedIp. Snapshot freeCancelHours, quy tắc tịch thu và hạn no-show vào Reservation lúc tạo. Các luồng hủy và no-show đọc từ snapshot. Đơn cũ backfill chính sách hiện hành.
     T2.3 Tách VOID và CANCEL cho hợp đồng DRAFT
     • Làm: VOID (nhân viên nhập nhầm) đặt cancellationType = VOID, đơn về CONFIRMED, không mất cọc, bắt buộc lý do. CANCEL hủy đơn kèm áp chính sách Reservation, không còn tịch thu 100% cố định. Chỉ cho tạo DRAFT trong ngày hẹn hoặc khi khách đã tới (arrivedAt).
-    T2.4 Force Cancel do cơ sở không giao được kho [OPEN D3]
-    • Làm: Manager đề xuất, OPS hoặc ADMIN duyệt. Bắt buộc lý do và biên bản đính kèm. cancellationSource = FACILITY_FAULT, hoàn 100% qua RefundRequest, hệ số bồi thường thêm theo config. Kho về UNDER_MAINTENANCE hoặc AVAILABLE theo chỉ định. Có audit và thông báo cho khách.
+    T2.4 Force Cancel do cơ sở không giao được kho [ĐÃ CHỐT D3]
+    • Làm: Manager đề xuất khi không còn kho trống để đổi hoặc khách từ chối upgrade. Bắt buộc lý do và biên bản sự cố đính kèm. cancellationSource = FACILITY_FAULT, hoàn 100% cọc qua RefundRequest, giải phóng kho cũ về UNDER_MAINTENANCE. Tự động gửi thư xin lỗi qua Email và Notification. Có audit trail chi tiết.
     T2.5 arrivedAt và hạn check-in
     • Làm: nhân viên bấm khách đã tới thì tạm dừng no-show cho đơn đó. Manager gia hạn ân hạn kèm lý do và audit. Hạn check-in luôn tính trực tiếp từ endOfDayVN(checkInDate) + 24h tại thời điểm kiểm tra, không phụ thuộc graceExpiresAt do job set. Có khoảng đệm cho ca khách ký xong sát giờ.
     T2.6 Thời gian tối thiểu khi đặt trong ngày
@@ -138,43 +138,61 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     • Làm: ràng buộc startDate − checkInDate ≤ max. Lúc check-in chốt lại startDate và endDate; nếu khác DRAFT thì reset chữ ký khách và lưu lịch sử chữ ký.
     T2.8 Cờ check-in sớm hoặc ngoài khung giờ
     • Làm: không chặn cứng; ghi earlyCheckIn và outOfSlot kèm lý do vào audit. operatingHours là cảnh báo mềm. Ký hợp đồng ngoài giờ có audit rõ.
-    T2.9 Mở rộng reassign-unit [OPEN D4]
-    • Làm: cho hạ hạng khi khách đồng ý, kèm điều chỉnh giá hoặc refund chênh lệch. Free upgrade ghi priceSourceOfferingId và isComplimentaryUpgrade. Thông báo khách khi đổi kho. Nếu gần hết ân hạn thì tự gia hạn graceExpiresAt.
-    T2.10 Chấm dứt và trả kho an toàn [OPEN D14]
-    • Làm: thêm bước PENDING_CLEARANCE; biên bản kiểm tra khi trả kho; check-out chặn khi còn hóa đơn nợ. Phân biệt check-out (khách chủ động) với terminate (cơ sở chấm dứt: lý do, báo trước bao lâu, tiền thuê chưa dùng, phí chấm dứt sớm). Quy trình đồ bỏ lại chỉ được thiết kế sau khi pháp chế cho hướng dẫn (T4.7).
-    Phase 3: độ tin cậy của job và transaction (P1, P2)
-    T3.1 process-overdue xử lý từng đơn riêng
-    • Làm: mỗi đơn chạy trong transaction riêng (hoặc batch 20–50), bắt lỗi từng bản ghi rồi đi tiếp, ghi log lỗi kèm alert. Truy vấn quét có limit và phân trang. Giữ atomicUpdateStatus để cron và thao tác tay không xử lý kép.
-    • Done khi: test một bản ghi lỗi không chặn các đơn còn lại; test hai tiến trình chạy song song không double-release kho.
-    T3.2 Side effect chỉ chạy sau commit
-    • Làm: rà toàn bộ ReservationService, ContractService, PaymentService; chuyển notification, Socket.IO emit và BullMQ job vào afterCommitHooks.
-    • Done khi: test mô phỏng transaction retry hoặc rollback không phát sinh thông báo trùng hay thông báo sai.
-    T3.3 Job OVERDUE cho Contract và nhắc hạn
-    • Làm: BullMQ repeatable job cho Contract (tương tự Reservation) chuyển ACTIVE sang OVERDUE khi quá endDate. Nhắc trước hạn ở các mốc 30, 7 và 1 ngày; nhắc khi quá hạn và khi phí trễ hạn tăng. Giữ POST /contracts/process-overdue để chạy tay.
-    T3.4 Notification cho Contract và nhắc lịch Reservation
-    • Làm: gắn thông báo cho ContractService ở các mốc: tạo hợp đồng, khách ký, check-in, OVERDUE, check-out, terminate và từng bước của phụ lục. Reservation: nhắc khách trước ngày hẹn; nhắc cơ sở về đơn PAYMENT_SUCCESSFUL chưa confirm trước hạn; nhắc trước khi hết ân hạn. Kênh hiện có là IN_APP, EMAIL chỉ khi bật.
-    T3.5 TTL và job đối soát
-    • Làm: thêm expiresAt cho hợp đồng WALK_IN ở DRAFT và phụ lục PENDING_APPROVAL hoặc DRAFT; hết hạn thì tự hủy với source SYSTEM và nhả kho (kể cả kho mới của UNIT_CHANGE). Job đối soát: kho ở RESERVED mà không có Reservation hoặc Contract nào còn hoạt động giữ nó thì báo động hoặc tự nhả (có audit). Chặn đặt kho thành INACTIVE hoặc UNDER_MAINTENANCE khi còn đơn hay hợp đồng gắn với kho.
-    T3.6 Ràng buộc DB và idempotency
-    • Làm: partial unique index cho một hợp đồng DRAFT hoặc ACTIVE trên mỗi reservationId, và cho một hợp đồng đang giữ mỗi storageUnitId. check-in dùng conditional update kèm customerSigned = true và storageUnitId đúng. Idempotency key cho POST /contracts và các thao tác thanh toán.
-    Phase 4: pháp lý, chữ ký, PDF (P2, nhiều phần cần pháp chế)
-    T4.1 LegalEntity, SigningAuthorization và snapshot [OPEN D12]
-    • Làm: LegalEntity (companyName, taxCode, địa chỉ đăng ký, người đại diện pháp luật, chức vụ, tài khoản nhận tiền); Facility trỏ tới legalEntityId. SigningAuthorization (authorizedUserId, số và ngày văn bản ủy quyền, phạm vi, validFrom, validTo, file). check-in và facility-sign chỉ cho phép khi người ký là người đại diện hoặc có ủy quyền còn hiệu lực. Snapshot pháp nhân và ủy quyền vào Contract lúc ký.
-    T4.2 Danh tính khách [OPEN D10]
-    • Làm: bắt buộc dateOfBirth và kiểm tra ≥ 18 tuổi khi tạo hợp đồng. Snapshot thông tin khách (tên, SĐT, email, địa chỉ) vào Contract lúc ký. Lưu số CCCD (mã hóa) và ảnh giấy tờ khi check-in tại quầy. Luồng kích hoạt tài khoản walk-in, xác minh email hoặc SĐT.
-    T4.3 Bằng chứng ký và lịch sử chữ ký [OPEN D11]
-    • Làm: collection SignatureEvent (actor, role, đối tượng contract hoặc addendum, termsVersion, contentHash, IP, userAgent, thời điểm, revokedAt, lý do). Reset chữ ký đánh dấu revoked thay vì set null. Mọi thay đổi trọng yếu sau khi khách ký (giá, ngày, tiện ích, kho) đều reset chữ ký. Đổi tên staffSigned / staff-sign thành facilitySigned / facility-sign, giữ alias cũ.
-    T4.4 Template hợp đồng và xuất PDF
-    • Làm: ContractTemplate, ContractTemplateVersion (HTML kèm variablesSchema), ContractDocument (sha256, kind DRAFT, FINAL hoặc SIGNED). Render HTML sang PDF (Puppeteer, Playwright hoặc Gotenberg), nhúng font Unicode, helper tiền bằng chữ và ngày tiếng Việt. Preview render tức thời có watermark; bản FINAL render một lần khi hợp đồng ACTIVE rồi lưu, không render lại bằng template mới. Hợp đồng luôn trỏ tới templateVersionId.
-    • Cần từ pháp chế: nội dung T&C (hàng cấm, quyền kiểm tra kho, giới hạn trách nhiệm, bảo hiểm, điều khoản mất cọc).
-    T4.5 Rule phụ lục
-    • RENEW: giá kỳ gia hạn, newEndDate theo billingUnit, giới hạn tối thiểu và tối đa, số lần gia hạn, điều chỉnh cọc, gia hạn trễ sau endDate.
-    • UNIT_CHANGE: so sánh cả kích thước và đặc tính (không chỉ giá), quy trình khẩn cấp (di dời trước, ký bù sau), oldUnitStatus quyết định lúc ký bàn giao, xử lý hủy phụ lục sau khi khách đã chuyển đồ, tiện ích gắn với kho.
-    • Chung: maker-checker khi Manager tự tạo, duyệt và ký (ngưỡng cần OPS); validate lại lúc facility-sign (hợp đồng còn ACTIVE hoặc OVERDUE, kho mới còn RESERVED đúng phụ lục, newEndDate > endDate hiện tại).
-    T4.6 Walk-in tại quầy
-    • Làm: luồng khách đăng nhập và ký trên thiết bị tại quầy; tài khoản được kích hoạt sau (T4.2).
-    T4.7 Đồ bỏ lại và nợ (chỉ thiết kế)
-    • Làm: chỉ viết tài liệu thiết kế (thông báo, thời hạn, khóa ra vào, thanh lý, biên bản). Không lập trình trước khi pháp chế duyệt.
+    T2.9 Mở rộng reassign-unit [ĐÃ CHỐT D4]
+    • Làm: Quy trình đổi kho/upgrade do lỗi cơ sở ở giai đoạn CONFIRMED:
+    1. Manager đề xuất kho mới (kho mới khóa tạm RESERVED). Gửi thông báo chi tiết (lý do, loại kho mới, đơn giá mới) qua Email + Notification cho khách.
+    2. Khách hàng xác nhận (Accept / Reject):
+       - Nếu đồng ý: Lưu lịch sử unitChangeHistory (kho ban đầu, kho được đổi, trạng thái đồng ý, ngày giờ). Khách trả thêm tiền chênh lệch theo giá kho mới khi tạo/check-in hợp đồng (không áp dụng free upgrade vĩnh viễn tránh khách giữ kho giá hời). Hợp đồng thuê tạo theo kho mới cuối cùng.
+       - Nếu từ chối: Hủy đơn đặt chỗ (cancellationSource = FACILITY_FAULT), giải phóng kho mới tạm giữ, hoàn cọc 100% qua RefundRequest kèm thư xin lỗi qua Email + Notification.
+         T2.10 Chấm dứt và trả kho an toàn [ĐÃ CHỐT D14]
+         • Làm:
+    3. Quy tắc cốt lõi: Hợp đồng chỉ chuyển sang TERMINATED khi đã upload đủ biên bản (reportFileUrls, tối thiểu 1 file) và ảnh bằng chứng hiện trường (evidenceFileUrls, tối thiểu 1 file).
+    4. API POST /contracts/:id/terminate nhận thêm:
+       - terminationType: MUTUAL, CUSTOMER_REQUEST hoặc VIOLATION
+       - violationCategory (bắt buộc nếu VIOLATION): PROHIBITED_GOODS, OVERDUE_PAYMENT hoặc PROPERTY_DAMAGE
+       - reason: text giải trình
+       - reportFileUrls[]: biên bản thanh lý / sự cố, tối thiểu 1 file
+       - evidenceFileUrls[]: ảnh bằng chứng hiện trường / niêm phong, tối thiểu 1 file
+    5. Validation: Thiếu biên bản hoặc ảnh bằng chứng: từ chối. VIOLATION thiếu violationCategory: từ chối. OVERDUE_PAYMENT: bắt buộc kiểm tra hợp đồng có hóa đơn nợ quá hạn > 5 ngày (chống lạm quyền). File upload lưu kèm hash và thời điểm.
+    6. Lưu vết: Append-only terminationHistory (ai chấm dứt, lúc nào, loại gì, lý do, files đính kèm).
+    7. Kho & Cọc: Phòng kho chuyển sang PENDING_CLEARANCE trước khi dọn dẹp vệ sinh. Cọc tịch thu 100% với mọi loại chấm dứt không do lỗi cơ sở.
+       Phase 3: độ tin cậy của job và transaction (P1, P2)
+       T3.1 process-overdue xử lý từng đơn riêng
+       • Làm: mỗi đơn chạy trong transaction riêng (hoặc batch 20–50), bắt lỗi từng bản ghi rồi đi tiếp, ghi log lỗi kèm alert. Truy vấn quét có limit và phân trang. Giữ atomicUpdateStatus để cron và thao tác tay không xử lý kép.
+       • Done khi: test một bản ghi lỗi không chặn các đơn còn lại; test hai tiến trình chạy song song không double-release kho.
+       T3.2 Side effect chỉ chạy sau commit
+       • Làm: rà toàn bộ ReservationService, ContractService, PaymentService; chuyển notification, Socket.IO emit và BullMQ job vào afterCommitHooks.
+       • Done khi: test mô phỏng transaction retry hoặc rollback không phát sinh thông báo trùng hay thông báo sai.
+       T3.3 Job OVERDUE cho Contract và nhắc hạn
+       • Làm: BullMQ repeatable job cho Contract (tương tự Reservation) chuyển ACTIVE sang OVERDUE khi quá endDate. Nhắc trước hạn ở các mốc 30, 7 và 1 ngày; nhắc khi quá hạn và khi phí trễ hạn tăng. Giữ POST /contracts/process-overdue để chạy tay.
+       T3.4 Notification cho Contract và nhắc lịch Reservation
+       • Làm: gắn thông báo cho ContractService ở các mốc: tạo hợp đồng, khách ký, check-in, OVERDUE, check-out, terminate và từng bước của phụ lục. Reservation: nhắc khách trước ngày hẹn; nhắc cơ sở về đơn PAYMENT_SUCCESSFUL chưa confirm trước hạn; nhắc trước khi hết ân hạn. Kênh hiện có là IN_APP, EMAIL chỉ khi bật.
+       T3.5 TTL và job đối soát
+       • Làm: thêm expiresAt cho hợp đồng WALK_IN ở DRAFT và phụ lục PENDING_APPROVAL hoặc DRAFT; hết hạn thì tự hủy với source SYSTEM và nhả kho (kể cả kho mới của UNIT_CHANGE). Job đối soát: kho ở RESERVED mà không có Reservation hoặc Contract nào còn hoạt động giữ nó thì báo động hoặc tự nhả (có audit). Chặn đặt kho thành INACTIVE hoặc UNDER_MAINTENANCE khi còn đơn hay hợp đồng gắn với kho.
+       T3.6 Ràng buộc DB và idempotency
+       • Làm: partial unique index cho một hợp đồng DRAFT hoặc ACTIVE trên mỗi reservationId, và cho một hợp đồng đang giữ mỗi storageUnitId. check-in dùng conditional update kèm customerSigned = true và storageUnitId đúng. Idempotency key cho POST /contracts và các thao tác thanh toán.
+       Phase 4: pháp lý, chữ ký, PDF (P2, nhiều phần cần pháp chế)
+       T4.1 LegalEntity, SigningAuthorization và snapshot [OPEN D12]
+       • Làm: LegalEntity (companyName, taxCode, địa chỉ đăng ký, người đại diện pháp luật, chức vụ, tài khoản nhận tiền); Facility trỏ tới legalEntityId. SigningAuthorization (authorizedUserId, số và ngày văn bản ủy quyền, phạm vi, validFrom, validTo, file). check-in và facility-sign chỉ cho phép khi người ký là người đại diện hoặc có ủy quyền còn hiệu lực. Snapshot pháp nhân và ủy quyền vào Contract lúc ký.
+       T4.2 Danh tính khách [OPEN D10]
+       • Làm: bắt buộc dateOfBirth và kiểm tra ≥ 18 tuổi khi tạo hợp đồng. Snapshot thông tin khách (tên, SĐT, email, địa chỉ) vào Contract lúc ký. Lưu số CCCD (mã hóa) và ảnh giấy tờ khi check-in tại quầy. Luồng kích hoạt tài khoản walk-in, xác minh email hoặc SĐT.
+       T4.3 Ký hợp đồng giấy số hóa và lưu trữ bằng chứng ký [ĐÃ CHỐT D11]
+       • Làm: Bỏ quy trình ký điện tử CA bên thứ 3. Chuyển sang mô hình Hợp đồng giấy số hóa (Digitized Paper Contract):
+    8. Khách hàng ký giấy vật lý tại quầy -> bấm nút xác nhận trên hệ thống (POST /contracts/:id/customer-sign).
+    9. Quản lý cơ sở ký giấy, đóng dấu cơ sở -> chụp ảnh/scan đầy đủ các trang hợp đồng có chữ ký sống 2 bên.
+    10. Quản lý gọi check-in (POST /contracts/:id/check-in), bắt buộc đính kèm signedContractFileUrls[] (tối thiểu 1 file). Thiếu file bị từ chối 400. Sau khi upload đủ mới kích hoạt ACTIVE.
+    11. Lưu vết audit: actor, thời điểm, IP, hash các file hợp đồng đã upload.
+        T4.4 Template hợp đồng và xuất PDF bản nháp
+        • Làm: Xây dựng mẫu HTML/EJS và engine xuất file PDF bản nháp (ContractTemplate, variablesSchema). File PDF nháp được tạo khi hợp đồng ở DRAFT (chưa có chữ ký) để nhân viên in ra giấy A4 tại quầy cho 2 bên ký tay.
+        • Preview / Download PDF tức thời qua GET /contracts/:id/draft-pdf.
+        T4.5 Rule phụ lục và ký tay phụ lục
+        • RENEW: Chỉ CUSTOMER được quyền tạo yêu cầu RENEW (hoặc Manager tạo thay có ủy quyền). newEndDate hợp lệ.
+        • UNIT_CHANGE: So sánh giá và kích thước kho mới; khóa kho mới RESERVED; hủy phụ lục nhả kho mới về AVAILABLE.
+        • Quy trình ký tay phụ lục: Phụ lục ở DRAFT được xuất PDF nháp để in ra giấy -> hai bên ký tay -> Quản lý cơ sở upload bản scan/ảnh phụ lục đã ký (signedAddendumFileUrls[], tối thiểu 1 file) tại bước staff-sign để kích hoạt ACTIVE. Phụ lục đã ký trở thành tài liệu đính kèm (Annex) của hợp đồng gốc.
+        T4.6 Walk-in tại quầy
+        • Làm: luồng khách đăng nhập và ký trên thiết bị tại quầy; tài khoản được kích hoạt sau (T4.2).
+        T4.7 Đồ bỏ lại và nợ (chỉ thiết kế)
+        • Làm: chỉ viết tài liệu thiết kế (thông báo, thời hạn, khóa ra vào, thanh lý, biên bản). Không lập trình trước khi pháp chế duyệt.
 14. Ma trận quyền mục tiêu
     Ghi chú: “cơ sở” nghĩa là chỉ trong cơ sở được gán (assertFacilityAccess). “chủ HĐ” là chủ hợp đồng. Các ô đánh dấu (cần chốt) là chỗ tài liệu và ma trận hiện tại đang mâu thuẫn.
     Hành động
@@ -197,7 +215,7 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     ✓ tất cả
     Confirm Reservation
     ✗
-    ✓ cơ sở (cần chốt)
+    ✓ cơ sở
     ✓ cơ sở
     ✓
     ✓

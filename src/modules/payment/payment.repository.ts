@@ -24,6 +24,17 @@ export interface PaymentQueryFilter {
   createdAtTo?: string | Date;
 }
 
+export interface PaymentTransactionQueryFilter {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  result?: PaymentTransactionResultEnum;
+  gateway?: string;
+  accountNumber?: string;
+  code?: string;
+}
+
 export class PaymentRepository {
   constructor(
     private readonly payment: SoftDeleteModel<IPayment>,
@@ -74,9 +85,7 @@ export class PaymentRepository {
   ) {
     const query = this.payment.findOne({
       reservationId,
-      status: {
-        $in: [PaymentStatusEnum.PENDING, PaymentStatusEnum.PARTIALLY_PAID],
-      },
+      status: PaymentStatusEnum.PENDING,
     });
 
     if (session) {
@@ -93,9 +102,7 @@ export class PaymentRepository {
     const query = this.payment.updateMany(
       {
         reservationId,
-        status: {
-          $in: [PaymentStatusEnum.PENDING, PaymentStatusEnum.PARTIALLY_PAID],
-        },
+        status: PaymentStatusEnum.PENDING,
       },
       {
         status: PaymentStatusEnum.CANCELLED,
@@ -109,13 +116,19 @@ export class PaymentRepository {
     return query.exec();
   }
 
-  async findActiveByContract(contractId: string, session?: ClientSession) {
-    const query = this.payment.findOne({
+  async findActiveByContract(
+    contractId: string,
+    purpose?: PaymentPurposeEnum,
+    session?: ClientSession
+  ) {
+    const filter: FilterQuery<IPayment> = {
       contractId,
-      status: {
-        $in: [PaymentStatusEnum.PENDING, PaymentStatusEnum.PARTIALLY_PAID],
-      },
-    });
+      status: PaymentStatusEnum.PENDING,
+    };
+    if (purpose) {
+      filter.purpose = purpose;
+    }
+    const query = this.payment.findOne(filter);
 
     if (session) {
       query.session(session);
@@ -193,7 +206,9 @@ export class PaymentRepository {
   }
 
   async update(id: string, data: Partial<IPayment>, session?: ClientSession) {
-    const query = this.payment.findByIdAndUpdate(id, data, { new: true });
+    const query = this.payment.findByIdAndUpdate(id, data, {
+      returnDocument: 'after',
+    });
     if (session) {
       query.session(session);
     }
@@ -202,7 +217,7 @@ export class PaymentRepository {
 
   /**
    * Atomic update of a pending payment during status transitions (e.g. paying via webhook).
-   * Ensures status is still PENDING or PARTIALLY_PAID before updating.
+   * Ensures status is still PENDING before updating.
    */
   async atomicUpdatePayment(
     id: string,
@@ -211,13 +226,11 @@ export class PaymentRepository {
   ) {
     const filter: FilterQuery<IPayment> = {
       _id: id,
-      status: {
-        $in: [PaymentStatusEnum.PENDING, PaymentStatusEnum.PARTIALLY_PAID],
-      },
+      status: PaymentStatusEnum.PENDING,
     };
 
     const query = this.payment.findOneAndUpdate(filter, updateData, {
-      new: true,
+      returnDocument: 'after',
     });
     if (session) {
       query.session(session);
@@ -227,9 +240,7 @@ export class PaymentRepository {
 
   async findExpired(now: Date = new Date(), session?: ClientSession) {
     const query = this.payment.find({
-      status: {
-        $in: [PaymentStatusEnum.PENDING, PaymentStatusEnum.PARTIALLY_PAID],
-      },
+      status: PaymentStatusEnum.PENDING,
       expiresAt: { $ne: null, $lt: now },
     });
     if (session) {
@@ -302,7 +313,69 @@ export class PaymentRepository {
     }
 
     const query = this.paymentTransaction.findByIdAndUpdate(id, updateData, {
-      new: true,
+      returnDocument: 'after',
+    });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  async findTransactionById(
+    id: string,
+    session?: ClientSession
+  ): Promise<IPaymentTransaction | null> {
+    const query = this.paymentTransaction
+      .findById(id)
+      .populate('matchedPaymentId');
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  async findPaginatedTransactions(
+    query: PaymentTransactionQueryFilter
+  ): Promise<PaginateResult<IPaymentTransaction>> {
+    const filter: FilterQuery<IPaymentTransaction> = {};
+    if (query.result) {
+      filter.result = query.result;
+    }
+    if (query.gateway) {
+      filter.gateway = query.gateway;
+    }
+    if (query.accountNumber) {
+      filter.accountNumber = query.accountNumber;
+    }
+    if (query.code) {
+      filter.code = { $regex: query.code, $options: 'i' };
+    }
+
+    return paginate<IPaymentTransaction>(this.paymentTransaction, {
+      page: query.page,
+      limit: query.limit,
+      sortBy: query.sortBy || 'createdAt',
+      sortOrder: query.sortOrder || 'desc',
+      filter,
+      populate: 'matchedPaymentId',
+    });
+  }
+
+  async atomicUpdateTransaction(
+    id: string,
+    expectedResult:
+      PaymentTransactionResultEnum | PaymentTransactionResultEnum[],
+    updateData: Partial<IPaymentTransaction>,
+    session?: ClientSession
+  ): Promise<IPaymentTransaction | null> {
+    const filter: FilterQuery<IPaymentTransaction> = {
+      _id: id,
+      result: Array.isArray(expectedResult)
+        ? { $in: expectedResult }
+        : expectedResult,
+    };
+    const query = this.paymentTransaction.findOneAndUpdate(filter, updateData, {
+      returnDocument: 'after',
     });
     if (session) {
       query.session(session);

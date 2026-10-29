@@ -287,6 +287,36 @@ export class StorageUnitRepository {
     return q;
   }
 
+  // Atomic conditional status transition: only succeeds when the current status is
+  // one of `fromStatuses`. Returns null when the unit is missing, deleted or in another status.
+  async transitionStatusAtomic(
+    id: string,
+    fromStatuses: StorageUnitStatusEnum[],
+    to: StorageUnitStatusEnum,
+    session?: ClientSession,
+    extra: Partial<Pick<IStorageUnit, 'notes'>> = {}
+  ) {
+    const q = this.storageUnit
+      .findOneAndUpdate(
+        {
+          _id: id,
+          status: { $in: fromStatuses },
+          deleted: false,
+        },
+        {
+          status: to,
+          ...extra,
+        },
+        {
+          returnDocument: 'after',
+        }
+      )
+      .populate(POPULATE_FACILITY)
+      .populate(POPULATE_UNIT_TYPE);
+    if (session) q.session(session);
+    return q;
+  }
+
   // Get full 2D map layout (all units of facility with their statuses)
   async getMapLayoutByFacility(facilityId: string) {
     return this.storageUnit

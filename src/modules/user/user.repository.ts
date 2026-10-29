@@ -124,7 +124,7 @@ export class UserRepository {
   }
 
   async updateUser(id: string, data: Partial<IUser>) {
-    return this.user.findByIdAndUpdate(id, data, { new: true });
+    return this.user.findByIdAndUpdate(id, data, { returnDocument: 'after' });
   }
 
   async updatePassword(id: string, hashedPassword: string): Promise<void> {

@@ -26,7 +26,11 @@ import {
   confirmRefundSchema,
   confirmReservationSchema,
   createReservationSchema,
+  extendGracePeriodSchema,
+  forceCancelReservationSchema,
+  markCustomerArrivedSchema,
   reassignStorageUnitSchema,
+  respondUnitReassignSchema,
   reservationIdParamSchema,
   reservationQuerySchema,
   type AssignReservationStaffRequest,
@@ -34,7 +38,11 @@ import {
   type ConfirmRefundRequest,
   type ConfirmReservationRequest,
   type CreateReservationRequest,
+  type ExtendGracePeriodRequest,
+  type ForceCancelReservationRequest,
+  type MarkCustomerArrivedRequest,
   type ReassignStorageUnitRequest,
+  type RespondUnitReassignRequest,
   type ReservationQuery,
 } from './schemas/reservation.request.schema.ts';
 import type { ReservationResponse } from './schemas/reservation.response.schema.ts';
@@ -116,6 +124,9 @@ export class ReservationController extends Controller {
 
   /**
    * Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).
+   * Enforces minimum same-day preparation lead time (sameDayLeadMinutes, 400 MESSAGE_CODE_328),
+   * maximum startDate offset from checkInDate (maxStartDateOffsetDays, 400 MESSAGE_CODE_329),
+   * and flags immediateForfeitWarning when booking is within 24 hours of check-in.
    */
   @Post('')
   // @Security('bearerAuth')
@@ -282,6 +293,48 @@ export class ReservationController extends Controller {
   }
 
   /**
+   * Customer or Staff responds to a pending unit reassign proposal (accept or reject) [CHỐT D4].
+   * - Accept: applies new unit, updates basePrice to upgraded price tier, frees old unit.
+   * - Reject: cancels reservation as FACILITY_FAULT, releases both units, creates 100% deposit refund request.
+   */
+  @Post('{id}/respond-reassign')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Middlewares(
+    validateRequest({
+      params: reservationIdParamSchema,
+      body: respondUnitReassignSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async respondUnitReassign(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: RespondUnitReassignRequest
+  ): Promise<ApiResponse<ReservationResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.reservationService.respondUnitReassign(
+      id,
+      caller,
+      body
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, [
+        body.action === 'accept'
+          ? 'Storage Unit Reassign Accepted'
+          : 'Storage Unit Reassign Rejected',
+      ]),
+      data: result,
+    };
+  }
+
+  /**
    * Facility Staff officially confirms reservation after deposit payment.
    */
   @Post('{id}/confirm')
@@ -422,6 +475,116 @@ export class ReservationController extends Controller {
       statusCode: 200,
       messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Refund']),
+      data: result,
+    };
+  }
+
+  /**
+   * Facility Manager / Business Ops Manager / System Admin force-cancels a reservation when storage unit is unavailable due to an incident.
+   */
+  @Post('{id}/force-cancel')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Middlewares(
+    validateRequest({
+      params: reservationIdParamSchema,
+      body: forceCancelReservationSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async forceCancelReservation(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: ForceCancelReservationRequest
+  ): Promise<ApiResponse<ReservationResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.reservationService.forceCancelReservation(
+      id,
+      caller.userId,
+      caller.role,
+      body
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Reservation']),
+      data: result,
+    };
+  }
+
+  /**
+   * Facility Staff or Manager marks that customer has arrived at facility for check-in.
+   */
+  @Post('{id}/mark-arrived')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Middlewares(
+    validateRequest({
+      params: reservationIdParamSchema,
+      body: markCustomerArrivedSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async markCustomerArrived(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body?: MarkCustomerArrivedRequest
+  ): Promise<ApiResponse<ReservationResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.reservationService.markCustomerArrived(
+      id,
+      caller,
+      body
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, [
+        'Reservation Check-in Arrival',
+      ]),
+      data: result,
+    };
+  }
+
+  /**
+   * Facility Manager, Business Ops Manager, or System Admin extends check-in grace period for customer.
+   */
+  @Post('{id}/extend-grace')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Middlewares(
+    validateRequest({
+      params: reservationIdParamSchema,
+      body: extendGracePeriodSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async extendGracePeriod(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: ExtendGracePeriodRequest
+  ): Promise<ApiResponse<ReservationResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.reservationService.extendGracePeriod(
+      id,
+      caller,
+      body
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, [
+        'Reservation Grace Period',
+      ]),
       data: result,
     };
   }

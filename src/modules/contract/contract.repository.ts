@@ -55,7 +55,12 @@ export class ContractRepository {
       .populate('addendums.approvedBy', 'name email role')
       .populate('addendums.assignedStaffId', 'name email role phoneNumber')
       .populate('addendums.rejectedBy', 'name email role')
-      .populate('addendums.cancelledBy', 'name email role');
+      .populate('addendums.cancelledBy', 'name email role')
+      .populate(
+        'addendums.previousStorageUnitId',
+        'unitNumber floor zone status'
+      )
+      .populate('addendums.newStorageUnitId', 'unitNumber floor zone status');
 
     if (session) {
       query.session(session);
@@ -83,6 +88,26 @@ export class ContractRepository {
 
   async findByReservationId(reservationId: string, session?: ClientSession) {
     const query = this.contract.findOne({ reservationId });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Finds the latest active (non-cancelled) contract linked to a reservation.
+   * Used to allow creating a new contract after an earlier DRAFT contract was VOIDed.
+   */
+  async findActiveByReservationId(
+    reservationId: string,
+    session?: ClientSession
+  ) {
+    const query = this.contract
+      .findOne({
+        reservationId,
+        status: { $ne: ContractStatusEnum.CANCELLED },
+      })
+      .sort({ createdAt: -1 });
     if (session) {
       query.session(session);
     }
@@ -177,12 +202,22 @@ export class ContractRepository {
           path: 'addendums.assignedStaffId',
           select: 'name email role phoneNumber',
         },
+        {
+          path: 'addendums.previousStorageUnitId',
+          select: 'unitNumber floor zone status',
+        },
+        {
+          path: 'addendums.newStorageUnitId',
+          select: 'unitNumber floor zone status',
+        },
       ],
     });
   }
 
   async update(id: string, data: Partial<IContract>, session?: ClientSession) {
-    const query = this.contract.findByIdAndUpdate(id, data, { new: true });
+    const query = this.contract.findByIdAndUpdate(id, data, {
+      returnDocument: 'after',
+    });
     if (session) {
       query.session(session);
     }
@@ -203,8 +238,81 @@ export class ContractRepository {
     };
 
     const query = this.contract.findOneAndUpdate(filter, updateData, {
-      new: true,
+      returnDocument: 'after',
     });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Conditionally touch `lastInventoryActivityAt` when the contract is in one of
+   * `allowedStatuses`. Writes to the Contract document within the caller's session
+   * so any concurrent check-out / termination triggers a WiredTiger WriteConflict
+   * instead of allowing write-skew between inventory mutations and contract closure.
+   */
+  async touchIfStatusAtomic(
+    id: string,
+    allowedStatuses: readonly ContractStatusEnum[],
+    session?: ClientSession
+  ) {
+    const query = this.contract.findOneAndUpdate(
+      {
+        _id: id,
+        status: { $in: allowedStatuses },
+      },
+      {
+        $set: { lastInventoryActivityAt: new Date() },
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Atomically accumulate customer-liable incident `damageFee` and `staffEvidenceImages`
+   * onto an operational contract (`ACTIVE` or `OVERDUE`).
+   * Returns `null` if the contract does not exist or is no longer in `ACTIVE`/`OVERDUE`.
+   */
+  async accumulateIncidentDamageAtomic(
+    id: string,
+    addedDamageFee: number,
+    evidenceImages: string[] = [],
+    session?: ClientSession
+  ) {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    const updateDoc: Record<string, unknown> = {
+      $inc: { damageFee: addedDamageFee },
+    };
+
+    if (evidenceImages.length > 0) {
+      updateDoc.$addToSet = {
+        inspectionPhotos: { $each: evidenceImages },
+      };
+    }
+
+    const query = this.contract.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(id),
+        status: {
+          $in: [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE],
+        },
+      },
+      updateDoc,
+      {
+        returnDocument: 'after',
+      }
+    );
+
     if (session) {
       query.session(session);
     }
@@ -235,6 +343,31 @@ export class ContractRepository {
           ? new Types.ObjectId(storageUnitId)
           : storageUnitId,
         status: ContractStatusEnum.ACTIVE,
+      })
+      .populate('customerId', 'name email phoneNumber');
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  /**
+   * Find the current operational contract (ACTIVE or OVERDUE) occupying a storage unit.
+   * Used by `getStorageUnitTree` so customers and facility managers can still inspect
+   * goods while a contract is OVERDUE.
+   */
+  async findCurrentByStorageUnitId(
+    storageUnitId: string,
+    session?: ClientSession
+  ) {
+    const query = this.contract
+      .findOne({
+        storageUnitId: Types.ObjectId.isValid(storageUnitId)
+          ? new Types.ObjectId(storageUnitId)
+          : storageUnitId,
+        status: {
+          $in: [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE],
+        },
       })
       .populate('customerId', 'name email phoneNumber');
     if (session) {
@@ -284,17 +417,25 @@ export class ContractRepository {
     return query.exec();
   }
 
-  async countActiveByUserId(userId: string, session?: ClientSession) {
+  async countActiveByUserId(
+    userId: string,
+    includeDraft: boolean = false,
+    session?: ClientSession
+  ) {
+    const statuses = includeDraft
+      ? [
+          ContractStatusEnum.DRAFT,
+          ContractStatusEnum.ACTIVE,
+          ContractStatusEnum.OVERDUE,
+        ]
+      : [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE];
+
     const query = this.contract.countDocuments({
       customerId: Types.ObjectId.isValid(userId)
         ? new Types.ObjectId(userId)
         : userId,
       status: {
-        $in: [
-          ContractStatusEnum.DRAFT,
-          ContractStatusEnum.ACTIVE,
-          ContractStatusEnum.OVERDUE,
-        ],
+        $in: statuses,
       },
     });
     if (session) {

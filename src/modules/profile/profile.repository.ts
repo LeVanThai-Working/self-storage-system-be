@@ -16,7 +16,7 @@ export class ProfileRepository {
     return this.profile.findOneAndUpdate(
       { userId },
       { $set: data },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     ) as Promise<IProfile>;
   }
 

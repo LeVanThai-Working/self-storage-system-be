@@ -28,13 +28,21 @@ import {
   paymentIdParamSchema,
   paymentQuerySchema,
   sepayWebhookSchema,
+  paymentTransactionIdParamSchema,
+  assignUnmatchedTransactionSchema,
+  unmatchedTransactionQuerySchema,
   type CancelPaymentRequest,
   type ConfirmManualPaymentRequest,
   type CreatePaymentRequest,
   type PaymentQuery,
   type SepayWebhookPayload,
+  type AssignUnmatchedTransactionRequest,
+  type UnmatchedTransactionQuery,
 } from './schemas/payment.request.schema.ts';
-import type { PaymentResponse } from './schemas/payment.response.schema.ts';
+import type {
+  PaymentResponse,
+  PaymentTransactionResponse,
+} from './schemas/payment.response.schema.ts';
 import type {
   ApiResponse,
   ApiErrorResponse,
@@ -59,13 +67,19 @@ function extractCaller(req: ExpressRequest): CallerInfo {
     };
   }
 
-  const headerUserId = req.headers['x-user-id'] as string | undefined;
-  const headerUserRole = req.headers['x-user-role'] as string | undefined;
-  if (headerUserId) {
-    return {
-      userId: headerUserId,
-      role: headerUserRole || 'customer',
-    };
+  // Fallback 1: x-user-id and x-user-role headers (only allowed outside production when explicitly enabled)
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    process.env.ALLOW_INSECURE_CALLER_FALLBACK === 'true'
+  ) {
+    const headerUserId = req.headers['x-user-id'] as string | undefined;
+    const headerUserRole = req.headers['x-user-role'] as string | undefined;
+    if (headerUserId) {
+      return {
+        userId: headerUserId,
+        role: headerUserRole || 'customer',
+      };
+    }
   }
 
   const authHeader = req.headers.authorization;
@@ -227,6 +241,75 @@ export class PaymentController extends Controller {
   }
 
   /**
+   * List unmatched transactions for reconciliation.
+   */
+  @Get('transactions/unmatched')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Middlewares(validateRequest({ query: unmatchedTransactionQuerySchema }))
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  public async getUnmatchedTransactions(
+    @Request() req: ExpressRequest,
+    @Queries() query: UnmatchedTransactionQuery
+  ): Promise<ApiResponse<PaginatedData<PaymentTransactionResponse>>> {
+    const caller = extractCaller(req);
+    const result = await this.paymentService.getUnmatchedTransactions(
+      caller.userId,
+      caller.role,
+      query
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: result,
+    };
+  }
+
+  /**
+   * Manually assign an unmatched transaction to a payment.
+   */
+  @Post('transactions/{id}/assign')
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Middlewares(
+    validateRequest({
+      params: paymentTransactionIdParamSchema,
+      body: assignUnmatchedTransactionSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Transaction or Payment not found')
+  public async assignUnmatchedTransaction(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: AssignUnmatchedTransactionRequest
+  ): Promise<ApiResponse<PaymentTransactionResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.paymentService.assignUnmatchedTransaction(
+      id,
+      body.paymentCode,
+      caller.userId,
+      caller.role
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Transaction']),
+      data: result,
+    };
+  }
+
+  /**
    * Get payment details by ID (polling for payment status).
    */
   @Get('{id}')
@@ -325,6 +408,7 @@ export class PaymentController extends Controller {
     const result = await this.paymentService.confirmManualPayment(
       id,
       caller.userId,
+      caller.role,
       body
     );
 

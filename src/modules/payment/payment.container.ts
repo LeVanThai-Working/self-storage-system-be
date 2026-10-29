@@ -13,12 +13,16 @@ import {
   contractService,
 } from '../contract/contract.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
+import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
+import { User } from '../user/user.model.ts';
+import { UserRepository } from '../user/user.repository.ts';
 
 export const paymentRepository = new PaymentRepository(
   Payment,
   PaymentTransaction
 );
 export const sepayService = new SepayService(getSepayConfig());
+const userRepository = new UserRepository(User);
 
 export const paymentService = new PaymentService(
   paymentRepository,
@@ -27,7 +31,9 @@ export const paymentService = new PaymentService(
   contractRepository,
   reservationService,
   contractService,
-  auditLogService
+  auditLogService,
+  userRepository,
+  refundRequestService
 );
 
 export const paymentController = new PaymentController(

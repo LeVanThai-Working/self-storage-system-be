@@ -4,6 +4,7 @@ import {
   RefundStatusEnum,
   ReservationStatusEnum,
 } from '../../../common/enums/reservation.enum.ts';
+import { IncidentCategoryEnum } from '../../../common/enums/incident.enum.ts';
 
 export const reservationIdParamSchema = z.object({
   id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid reservation ID format'),
@@ -39,6 +40,7 @@ export const createReservationSchema = z.object({
   rentalDuration: z.number().int().min(1, 'Rental duration must be at least 1'),
   amenities: z.array(reservationAmenityInputSchema).optional().default([]),
   notes: z.string().max(1000).optional(),
+  termsAccepted: z.boolean().optional(),
 });
 
 export const reassignStorageUnitSchema = z.object({
@@ -50,6 +52,12 @@ export const reassignStorageUnitSchema = z.object({
     .enum(['under_maintenance', 'available'])
     .default('under_maintenance')
     .optional(),
+  customerAgreed: z.boolean().optional().default(false),
+});
+
+export const respondUnitReassignSchema = z.object({
+  action: z.enum(['accept', 'reject']),
+  rejectReason: z.string().max(500).optional(),
 });
 
 export const confirmReservationSchema = z.object({
@@ -64,6 +72,12 @@ export const cancelReservationSchema = z.object({
     .string()
     .min(3, 'Cancellation reason must be at least 3 characters')
     .max(500),
+  refundBankName: z.string().min(2).max(100).optional(),
+  refundAccountNumber: z
+    .string()
+    .regex(/^[0-9A-Za-z]{6,30}$/, 'Invalid bank account number format')
+    .optional(),
+  refundAccountHolder: z.string().min(2).max(100).optional(),
 });
 
 export const assignReservationStaffSchema = z.object({
@@ -75,6 +89,72 @@ export const confirmRefundSchema = z.object({
   referenceCode: z.string().max(100).optional().nullable(),
   notes: z.string().max(500).optional().nullable(),
 });
+
+export const forceCancelReservationSchema = z
+  .object({
+    reason: z
+      .string()
+      .trim()
+      .min(10, 'Reason must be at least 10 characters')
+      .max(1000, 'Reason cannot exceed 1000 characters'),
+    incidentId: z
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/, 'Invalid incident ID format')
+      .optional(),
+    incidentDetails: z
+      .object({
+        title: z
+          .string()
+          .trim()
+          .min(3, 'Title must be at least 3 characters')
+          .max(200, 'Title cannot exceed 200 characters'),
+        category: z
+          .nativeEnum(IncidentCategoryEnum)
+          .default(IncidentCategoryEnum.OTHER),
+        description: z.string().trim().max(2000).optional(),
+        images: z
+          .array(z.string().url('Image must be a valid URL'))
+          .min(1, 'At least 1 evidence image is required'),
+      })
+      .optional(),
+    refundBankName: z.string().trim().min(2).max(100).optional(),
+    refundAccountNumber: z
+      .string()
+      .trim()
+      .regex(/^[0-9A-Za-z]{6,30}$/, 'Invalid bank account number format')
+      .optional(),
+    refundAccountHolder: z.string().trim().min(2).max(100).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.incidentId && !data.incidentDetails) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'Either incidentId (for existing incident) or incidentDetails (to create new incident) must be provided',
+        path: ['incidentId'],
+      });
+    }
+  });
+
+export const extendGracePeriodSchema = z.object({
+  extensionHours: z
+    .number()
+    .int('Extension hours must be an integer')
+    .min(1, 'Extension hours must be at least 1 hour')
+    .max(72, 'Extension hours cannot exceed 72 hours'),
+  reason: z
+    .string()
+    .trim()
+    .min(5, 'Reason must be at least 5 characters')
+    .max(500, 'Reason cannot exceed 500 characters'),
+});
+
+export const markCustomerArrivedSchema = z
+  .object({
+    notes: z.string().max(1000).optional(),
+  })
+  .optional()
+  .default({});
 
 export const reservationQuerySchema = paginationQuerySchema.extend({
   customerId: z
@@ -110,6 +190,9 @@ export type CreateReservationRequest = z.infer<typeof createReservationSchema>;
 export type ReassignStorageUnitRequest = z.infer<
   typeof reassignStorageUnitSchema
 >;
+export type RespondUnitReassignRequest = z.infer<
+  typeof respondUnitReassignSchema
+>;
 export type ConfirmReservationRequest = z.infer<
   typeof confirmReservationSchema
 >;
@@ -118,5 +201,12 @@ export type AssignReservationStaffRequest = z.infer<
   typeof assignReservationStaffSchema
 >;
 export type ConfirmRefundRequest = z.infer<typeof confirmRefundSchema>;
+export type ForceCancelReservationRequest = z.infer<
+  typeof forceCancelReservationSchema
+>;
+export type ExtendGracePeriodRequest = z.infer<typeof extendGracePeriodSchema>;
+export type MarkCustomerArrivedRequest = z.infer<
+  typeof markCustomerArrivedSchema
+>;
 export type ReservationQuery = z.infer<typeof reservationQuerySchema>;
 export type ReservationIdParam = z.infer<typeof reservationIdParamSchema>;

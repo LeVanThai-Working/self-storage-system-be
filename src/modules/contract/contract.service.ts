@@ -1,27 +1,45 @@
+import crypto from 'node:crypto';
 import { Types, type ClientSession } from 'mongoose';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
+import {
+  checkOperatingHoursMatchVN,
+  checkTimeSlotMatchVN,
+  isEarlyCheckInVN,
+  startOfDayVN,
+} from '../../utils/date.util.ts';
+import { calculateContractOverdueFee } from '../../utils/contractFee.util.ts';
+import {
+  computeCancellationOutcome,
+  isReservationCheckInAllowed,
+} from '../../utils/reservationPolicy.util.ts';
+import { contractConfig } from '../../config/contract.config.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 import { RoleEnum } from '../../common/enums/user.enum.ts';
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
 import {
   ContractAddendumStatusEnum,
   ContractAddendumTypeEnum,
+  ContractCancellationTypeEnum,
+  ContractDepositStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
+  ContractTerminationTypeEnum,
+  ViolationCategoryEnum,
 } from '../../common/enums/contract.enum.ts';
 import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
 import {
-  RefundStatusEnum,
   ReservationCancelSourceEnum,
   ReservationStatusEnum,
 } from '../../common/enums/reservation.enum.ts';
+import { RefundReasonEnum } from '../../common/enums/refundRequest.enum.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
 } from '../../common/enums/auditLog.enum.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
+import type { RefundRequestService } from '../refundRequest/refundRequest.service.ts';
 import type { ContractRepository } from './contract.repository.ts';
 import type { ReservationRepository } from '../reservation/reservation.repository.ts';
 import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
@@ -29,11 +47,16 @@ import type { FacilityAmenityOfferingRepository } from '../facilityAmenityOfferi
 import type { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.repository.ts';
 import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { UserRepository } from '../user/user.repository.ts';
+import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
+import type { IncidentRepository } from '../incident/incident.repository.ts';
 import type {
   IContract,
   IContractAddendum,
   IContractAmenity,
   IContractRenewal,
+  IContractSignatureHistory,
+  IContractTerminationFile,
+  IContractTerminationHistory,
 } from './contract.model.ts';
 import {
   contractResponseSchema,
@@ -53,6 +76,7 @@ import type {
   RenewContractRequest,
   SignContractAddendumRequest,
   TerminateContractRequest,
+  DisputeSettlementRequest,
 } from './schemas/contract.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 
@@ -65,7 +89,10 @@ export class ContractService {
     private readonly unitTypeOfferingRepository: FacilityUnitTypeOfferingRepository,
     private readonly facilityRepository: FacilityRepository,
     private readonly userRepository: UserRepository,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly refundRequestService?: RefundRequestService,
+    private readonly customerInventoryRepository?: CustomerInventoryRepository,
+    private readonly incidentRepository?: IncidentRepository
   ) {}
 
   // 1. Create contract (From RESERVATION or WALK_IN)
@@ -76,6 +103,15 @@ export class ContractService {
     actorRole: string,
     session?: ClientSession
   ): Promise<ContractResponse> {
+    if (
+      actorRole !== RoleEnum.FACILITY_STAFF &&
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
     const contractCode = await this.generateContractCode();
 
     if (data.source === ContractSourceEnum.RESERVATION) {
@@ -85,9 +121,9 @@ export class ContractService {
         ]);
       }
 
-      // Check if a contract already exists for this reservation
+      // Check if an active contract already exists for this reservation
       const existingContract =
-        await this.contractRepository.findByReservationId(
+        await this.contractRepository.findActiveByReservationId(
           data.reservationId,
           session
         );
@@ -105,18 +141,6 @@ export class ContractService {
         throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
       }
 
-      // Reservation must be CONFIRMED or OVERDUE (within grace period)
-      if (
-        reservation.status !== ReservationStatusEnum.CONFIRMED &&
-        reservation.status !== ReservationStatusEnum.OVERDUE
-      ) {
-        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_406);
-      }
-
-      if (!reservation.storageUnitId) {
-        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_305);
-      }
-
       const customerId =
         reservation.customerId && typeof reservation.customerId === 'object'
           ? (reservation.customerId as { _id: Types.ObjectId })._id
@@ -126,6 +150,33 @@ export class ContractService {
         reservation.facilityId && typeof reservation.facilityId === 'object'
           ? (reservation.facilityId as { _id: Types.ObjectId })._id
           : (reservation.facilityId as Types.ObjectId);
+
+      await this.assertFacilityAccess(actorId, actorRole, String(facilityId));
+
+      // Reservation must be CONFIRMED or OVERDUE (within grace period)
+      if (
+        reservation.status !== ReservationStatusEnum.CONFIRMED &&
+        reservation.status !== ReservationStatusEnum.OVERDUE
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_406);
+      }
+
+      // Gate check for reservation: check-in date, arrival, and deadline window
+      const now = new Date();
+      const checkInGate = isReservationCheckInAllowed(reservation, now);
+      if (!checkInGate.isAllowed) {
+        if (checkInGate.code === 'MESSAGE_CODE_423') {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_423);
+        }
+        if (checkInGate.code === 'MESSAGE_CODE_424') {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_424);
+        }
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_406);
+      }
+
+      if (!reservation.storageUnitId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_305);
+      }
 
       const storageUnitId =
         reservation.storageUnitId &&
@@ -191,6 +242,7 @@ export class ContractService {
           totalPeriodicPrice,
           amenities: contractAmenities,
           status: ContractStatusEnum.DRAFT,
+          depositStatus: ContractDepositStatusEnum.HELD,
           termsAccepted: false,
           notes: data.notes || reservation.notes,
         },
@@ -214,6 +266,12 @@ export class ContractService {
       return validateResponse(contractResponseSchema, formatted);
     } else {
       // WALK_IN flow
+      await this.assertFacilityAccess(
+        actorId,
+        actorRole,
+        String(data.facilityId)
+      );
+
       const customer = await this.userRepository.findById(data.customerId!);
       if (!customer) {
         throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Customer']);
@@ -382,6 +440,7 @@ export class ContractService {
   async customerSignContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CustomerSignContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -390,8 +449,21 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
+    if (actorRole !== RoleEnum.CUSTOMER) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+    if (customerIdStr !== actorId) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
     if (contract.status !== ContractStatusEnum.DRAFT) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (contract.customerSigned) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_412);
     }
 
     if (data.termsAccepted === false) {
@@ -407,6 +479,19 @@ export class ContractService {
     }
 
     const now = new Date();
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    const facility = await this.facilityRepository.findById(facilityIdStr);
+    const opHoursMatch = checkOperatingHoursMatchVN(
+      facility?.operatingHours,
+      now
+    );
+    const outsideOperatingHours = !opHoursMatch.isWithinOperatingHours;
+    const operatingHours = facility?.operatingHours
+      ? {
+          open: facility.operatingHours.open,
+          close: facility.operatingHours.close,
+        }
+      : null;
     const bothSigned = Boolean(contract.staffSigned);
 
     if (bothSigned) {
@@ -457,17 +542,23 @@ export class ContractService {
       resourceId: id,
       before: this.formatContract(contract),
       after: formatted,
-      metadata: { party: 'customer', activated: bothSigned },
+      metadata: {
+        party: 'customer',
+        activated: bothSigned,
+        outsideOperatingHours,
+        operatingHours,
+      },
     });
 
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 2b. Staff confirms handover & signs contract on Web (Two-party signing: Staff side)
+  // 2b. Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side)
   @Transactional()
   async checkInContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CheckInContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -476,8 +567,29 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
     if (contract.status !== ContractStatusEnum.DRAFT) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (contract.staffSigned) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_412);
+    }
+
+    if (!contract.customerSigned) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_414);
     }
 
     if (data.termsAccepted === false) {
@@ -492,10 +604,97 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_506);
     }
 
+    // Require first period rent to be paid before check-in
+    if (!contract.firstPeriodPaidAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_519);
+    }
+
     const now = new Date();
     const actualCheckInDate = data.actualCheckInDate
       ? new Date(data.actualCheckInDate)
       : now;
+
+    // T2.8: Compute early check-in, out-of-slot, and facility operating hours soft flags
+    const facility = await this.facilityRepository.findById(facilityIdStr);
+    let reservation = null;
+    if (contract.reservationId) {
+      reservation = await this.reservationRepository.findById(
+        String(contract.reservationId),
+        session
+      );
+    }
+
+    const earlyCheckIn = reservation
+      ? isEarlyCheckInVN(reservation.checkInDate, actualCheckInDate)
+      : null;
+    const slotMatch = reservation
+      ? checkTimeSlotMatchVN(
+          reservation.checkInDate,
+          reservation.checkInTimeSlot,
+          actualCheckInDate
+        )
+      : null;
+    const outOfSlot = slotMatch ? !slotMatch.isWithinSlot : null;
+
+    const opHoursMatch = checkOperatingHoursMatchVN(
+      facility?.operatingHours,
+      actualCheckInDate
+    );
+    const outsideOperatingHours = !opHoursMatch.isWithinOperatingHours;
+
+    // Late check-in date adjustment [OPEN D6 & T2.7]
+    let finalStartDate = contract.startDate;
+    let finalEndDate = contract.endDate;
+    if (
+      startOfDayVN(actualCheckInDate).getTime() >
+      startOfDayVN(contract.startDate).getTime()
+    ) {
+      const leaseDurationMs =
+        contract.endDate.getTime() - contract.startDate.getTime();
+      finalStartDate = startOfDayVN(actualCheckInDate);
+      finalEndDate = new Date(finalStartDate.getTime() + leaseDurationMs);
+
+      // If customer has already signed DRAFT contract, date shift invalidates signature (T2.7 / OPEN D2):
+      // 1. Record customer signature in signatureHistory
+      // 2. Adjust dates and reset customerSigned = false, customerSignedAt = null
+      // 3. Throw MESSAGE_CODE_425 to require re-signing the updated draft
+      if (contract.customerSigned) {
+        const historyEntry: IContractSignatureHistory = {
+          party: 'customer',
+          signedAt: contract.customerSignedAt || now,
+          previousStartDate: contract.startDate,
+          previousEndDate: contract.endDate,
+          resetAt: now,
+          resetReason: `Check-in date shifted from ${contract.startDate.toISOString()} to ${finalStartDate.toISOString()}`,
+        };
+
+        const updatedDraft = await this.contractRepository.update(id, {
+          $set: {
+            startDate: finalStartDate,
+            endDate: finalEndDate,
+            customerSigned: false,
+            customerSignedAt: null,
+          },
+          $push: { signatureHistory: historyEntry },
+        } as unknown as Partial<IContract>);
+
+        this.auditLogService?.record({
+          action: AuditActionEnum.UPDATE,
+          resourceType: AuditResourceEnum.CONTRACT,
+          resourceId: id,
+          before: this.formatContract(contract),
+          after: this.formatContract(updatedDraft || contract),
+          metadata: {
+            reason:
+              'Check-in date shifted. Customer signature reset for re-signing.',
+            previousStartDate: contract.startDate,
+            newStartDate: finalStartDate,
+          },
+        });
+
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_425);
+      }
+    }
     const bothSigned = Boolean(contract.customerSigned);
 
     if (bothSigned) {
@@ -516,7 +715,11 @@ export class ContractService {
         await this.reservationRepository.atomicUpdateStatus(
           String(contract.reservationId),
           [ReservationStatusEnum.CONFIRMED, ReservationStatusEnum.OVERDUE],
-          { status: ReservationStatusEnum.COMPLETED },
+          {
+            status: ReservationStatusEnum.COMPLETED,
+            earlyCheckIn,
+            outOfSlot,
+          },
           session
         );
       }
@@ -530,7 +733,11 @@ export class ContractService {
         status: bothSigned
           ? ContractStatusEnum.ACTIVE
           : ContractStatusEnum.DRAFT,
+        startDate: finalStartDate,
+        endDate: finalEndDate,
         actualCheckInDate,
+        earlyCheckIn,
+        outOfSlot,
         termsAccepted: bothSigned ? true : contract.termsAccepted,
         notes: data.notes || contract.notes,
         assignedStaffId:
@@ -548,7 +755,14 @@ export class ContractService {
       resourceId: id,
       before: this.formatContract(contract),
       after: formatted,
-      metadata: { party: 'staff', activated: bothSigned },
+      metadata: {
+        party: 'staff',
+        activated: bothSigned,
+        earlyCheckIn,
+        outOfSlot,
+        outsideOperatingHours,
+        notes: data.notes || undefined,
+      },
     });
 
     return validateResponse(contractResponseSchema, formatted);
@@ -580,6 +794,7 @@ export class ContractService {
       {
         depositPaidAt: paymentInfo.paidAt,
         depositPaymentId: new Types.ObjectId(paymentInfo.paymentId),
+        depositStatus: ContractDepositStatusEnum.HELD,
       },
       session
     );
@@ -603,12 +818,16 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 3. Cancel contract (DRAFT -> CANCELLED) with 100% deposit forfeiture
+  // Mark contract first period rent as paid (from Payment service or SePay Webhook)
   @Transactional()
-  async cancelContract(
+  async markFirstPeriodRentPaid(
     id: string,
-    actorId: string,
-    data: CancelContractRequest,
+    paymentInfo: {
+      paymentId: string;
+      paidAmount: number;
+      paidAt: Date;
+      referenceCode?: string | null;
+    },
     session?: ClientSession
   ): Promise<ContractResponse> {
     const contract = await this.contractRepository.findById(id, session);
@@ -620,19 +839,44 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
-    const storageUnitId =
-      contract.storageUnitId && typeof contract.storageUnitId === 'object'
-        ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
-        : String(contract.storageUnitId);
+    if (!contract.depositPaidAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_520);
+    }
 
-    // Release storage unit back to AVAILABLE
-    await this.storageUnitRepository.updateById(
-      storageUnitId,
-      { status: StorageUnitStatusEnum.AVAILABLE },
+    const updated = await this.contractRepository.update(
+      id,
+      {
+        firstPeriodPaidAt: paymentInfo.paidAt,
+        firstPeriodPaymentId: new Types.ObjectId(paymentInfo.paymentId),
+      },
       session
     );
 
-    // Release amenity inventory
+    const populated = await this.contractRepository.findById(id, session);
+    const formatted = this.formatContract(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.RECEIVE_PAYMENT,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: id,
+      before: this.formatContract(contract),
+      after: formatted,
+      metadata: {
+        paymentId: paymentInfo.paymentId,
+        paidAmount: paymentInfo.paidAmount,
+        purpose: 'RENT_FIRST_PERIOD',
+        referenceCode: paymentInfo.referenceCode ?? null,
+      },
+    });
+
+    return validateResponse(contractResponseSchema, formatted);
+  }
+
+  private async releaseContractAmenities(
+    contract: IContract,
+    session?: ClientSession
+  ): Promise<void> {
+    if (!contract.amenities || contract.amenities.length === 0) return;
     for (const a of contract.amenities) {
       const offeringId = String(
         (a.facilityAmenityOfferingId as unknown as { _id: Types.ObjectId })
@@ -650,69 +894,23 @@ export class ContractService {
           (offering.amenityId as { type?: string }).type === 'service';
 
         if (!isService) {
-          const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
-          await this.amenityOfferingRepository.updateById(
+          await this.amenityOfferingRepository.releaseAmenityQuantityAtomic(
             offeringId,
-            { inUseQuantity: newInUse },
+            a.quantity,
             session
           );
         }
       }
     }
-
-    // If contract was created from Reservation, cancel the reservation (deposit forfeited)
-    if (contract.reservationId) {
-      await this.reservationRepository.atomicUpdateStatus(
-        String(contract.reservationId),
-        [ReservationStatusEnum.CONFIRMED, ReservationStatusEnum.OVERDUE],
-        {
-          status: ReservationStatusEnum.CANCELLED,
-          cancellationReason:
-            'Hợp đồng khởi tạo từ đơn đặt chỗ đã bị huỷ (mất 100% tiền cọc)',
-          cancelledAt: new Date(),
-          cancelledBy: new Types.ObjectId(actorId),
-          cancellationSource: ReservationCancelSourceEnum.SYSTEM,
-          refundAmount: 0,
-          refundStatus: RefundStatusEnum.NONE,
-        },
-        session
-      );
-    }
-
-    // Deposit is forfeited (refundAmount = 0)
-    const updated = await this.contractRepository.update(
-      id,
-      {
-        status: ContractStatusEnum.CANCELLED,
-        cancellationReason: data.cancellationReason,
-        cancelledBy: new Types.ObjectId(actorId),
-        cancelledAt: new Date(),
-        refundAmount: 0,
-      },
-      session
-    );
-
-    const populated = await this.contractRepository.findById(id, session);
-    const formatted = this.formatContract(populated || updated!);
-
-    this.auditLogService?.record({
-      action: AuditActionEnum.CANCEL,
-      resourceType: AuditResourceEnum.CONTRACT,
-      resourceId: id,
-      before: this.formatContract(contract),
-      after: formatted,
-      metadata: { depositForfeited: contract.depositAmount },
-    });
-
-    return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 4. Renew contract (Extend endDate on ACTIVE or OVERDUE)
+  // 3. Cancel or VOID contract (DRAFT -> CANCELLED)
   @Transactional()
-  async renewContract(
+  async cancelContract(
     id: string,
     actorId: string,
-    data: RenewContractRequest,
+    actorRole: string,
+    data: CancelContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
     const contract = await this.contractRepository.findById(id, session);
@@ -720,56 +918,298 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    if (
-      contract.status !== ContractStatusEnum.ACTIVE &&
-      contract.status !== ContractStatusEnum.OVERDUE
-    ) {
+    const cancellationType =
+      data.cancellationType || ContractCancellationTypeEnum.CANCEL;
+
+    // Role and scope authorization
+    const customerIdStr = this.extractIdStr(contract.customerId);
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+
+    if (cancellationType === ContractCancellationTypeEnum.VOID) {
+      // Q2: Only STAFF, MANAGER, OPS, ADMIN of facility can VOID (staff mistake correction)
+      if (actorRole === RoleEnum.CUSTOMER) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+    } else {
+      // CANCEL: CUSTOMER can cancel own contract; STAFF/MANAGER of facility can cancel
+      if (actorRole === RoleEnum.CUSTOMER) {
+        if (customerIdStr !== actorId) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        }
+      } else if (
+        actorRole === RoleEnum.FACILITY_STAFF ||
+        actorRole === RoleEnum.FACILITY_MANAGER ||
+        actorRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+        actorRole === RoleEnum.SYSTEM_ADMIN
+      ) {
+        await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+      } else {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    if (contract.status !== ContractStatusEnum.DRAFT) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
-    const newEndDate = new Date(data.newEndDate);
-    if (newEndDate <= new Date(contract.endDate)) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_404);
+    const storageUnitId =
+      contract.storageUnitId && typeof contract.storageUnitId === 'object'
+        ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
+        : String(contract.storageUnitId);
+
+    let contractRefundAmount: number;
+    let contractForfeitedAmount: number;
+    let contractDepositStatus: ContractDepositStatusEnum | null =
+      contract.depositStatus || null;
+
+    if (cancellationType === ContractCancellationTypeEnum.VOID) {
+      // ==========================================
+      // VOID FLOW: Erroneous staff draft creation
+      // ==========================================
+      if (contract.reservationId) {
+        const reservation = await this.reservationRepository.findById(
+          String(contract.reservationId),
+          session
+        );
+        if (
+          !reservation ||
+          (reservation.status !== ReservationStatusEnum.CONFIRMED &&
+            reservation.status !== ReservationStatusEnum.OVERDUE)
+        ) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_422);
+        }
+
+        // Reservation remains CONFIRMED or OVERDUE (Q3: preserve state, do not cancel)
+        // Storage unit and amenities remain RESERVED / inUse for the reservation
+        contractRefundAmount = 0;
+        contractForfeitedAmount = 0;
+        contractDepositStatus = ContractDepositStatusEnum.HELD;
+      } else {
+        // WALK_IN void: release storage unit and amenities
+        await this.storageUnitRepository.releaseReservedUnitAtomic(
+          storageUnitId,
+          StorageUnitStatusEnum.AVAILABLE,
+          session
+        );
+        await this.releaseContractAmenities(contract, session);
+
+        // If deposit was paid, refund full deposit via RefundRequest (A2)
+        if (contract.depositPaidAt && contract.depositAmount > 0) {
+          contractRefundAmount = contract.depositAmount;
+          contractForfeitedAmount = 0;
+          contractDepositStatus = ContractDepositStatusEnum.REFUNDED;
+
+          if (this.refundRequestService) {
+            await this.refundRequestService.createRefundRequestInternal(
+              actorId,
+              {
+                contractId: id,
+                paymentId: contract.depositPaymentId
+                  ? String(contract.depositPaymentId)
+                  : undefined,
+                facilityId: facilityIdStr,
+                customerId: customerIdStr,
+                amount: contract.depositAmount,
+                reason: RefundReasonEnum.FACILITY_CANCEL,
+                note: data.cancellationReason || 'Huỷ void hợp đồng walk-in',
+                refundBankName: data.refundBankName,
+                refundAccountNumber: data.refundAccountNumber,
+                refundAccountHolder: data.refundAccountHolder,
+              },
+              session
+            );
+          }
+        } else {
+          contractRefundAmount = 0;
+          contractForfeitedAmount = 0;
+        }
+      }
+    } else {
+      // ==========================================
+      // CANCEL FLOW: Customer change of mind
+      // ==========================================
+      const isCustomer = actorRole === RoleEnum.CUSTOMER;
+      const cancellationSource = isCustomer
+        ? ReservationCancelSourceEnum.CUSTOMER
+        : ReservationCancelSourceEnum.FACILITY;
+
+      if (contract.reservationId) {
+        const reservation = await this.reservationRepository.findById(
+          String(contract.reservationId),
+          session
+        );
+
+        if (
+          reservation &&
+          reservation.status !== ReservationStatusEnum.CANCELLED &&
+          reservation.status !== ReservationStatusEnum.EXPIRED &&
+          reservation.status !== ReservationStatusEnum.COMPLETED
+        ) {
+          // Compute cancellation outcome based on reservation snapshot policy (A1)
+          const outcome = computeCancellationOutcome(reservation, new Date(), {
+            isCustomer: true,
+          });
+
+          // Cancel the reservation
+          const updatedRes =
+            await this.reservationRepository.atomicUpdateStatus(
+              String(contract.reservationId),
+              [ReservationStatusEnum.CONFIRMED, ReservationStatusEnum.OVERDUE],
+              {
+                status: ReservationStatusEnum.CANCELLED,
+                cancellationReason: data.cancellationReason,
+                cancelledAt: new Date(),
+                cancelledBy: new Types.ObjectId(actorId),
+                cancellationSource,
+                refundAmount: outcome.refundAmount,
+                forfeitedAmount: outcome.forfeitedAmount,
+                refundStatus: outcome.refundStatus,
+              },
+              session
+            );
+
+          if (updatedRes) {
+            // Release unit and amenities
+            await this.storageUnitRepository.releaseReservedUnitAtomic(
+              storageUnitId,
+              StorageUnitStatusEnum.AVAILABLE,
+              session
+            );
+            await this.releaseContractAmenities(contract, session);
+
+            // Create RefundRequest if there is refundable amount
+            if (outcome.refundAmount > 0 && this.refundRequestService) {
+              await this.refundRequestService.createRefundRequestInternal(
+                actorId,
+                {
+                  reservationId: String(contract.reservationId),
+                  paymentId: reservation.paymentId
+                    ? String(reservation.paymentId)
+                    : undefined,
+                  facilityId: facilityIdStr,
+                  customerId: customerIdStr,
+                  amount: outcome.refundAmount,
+                  reason: isCustomer
+                    ? RefundReasonEnum.CUSTOMER_CANCEL
+                    : RefundReasonEnum.FACILITY_CANCEL,
+                  note: data.cancellationReason,
+                  refundBankName: data.refundBankName,
+                  refundAccountNumber: data.refundAccountNumber,
+                  refundAccountHolder: data.refundAccountHolder,
+                },
+                session
+              );
+            }
+          }
+
+          contractRefundAmount = outcome.refundAmount;
+          contractForfeitedAmount = outcome.forfeitedAmount;
+          contractDepositStatus = outcome.isFreeCancellation
+            ? ContractDepositStatusEnum.REFUNDED
+            : outcome.refundAmount > 0
+              ? ContractDepositStatusEnum.PARTIALLY_REFUNDED
+              : ContractDepositStatusEnum.FORFEITED;
+        } else {
+          // Linked reservation is already closed or missing
+          contractForfeitedAmount = contract.depositAmount || 0;
+          contractRefundAmount = 0;
+          contractDepositStatus = ContractDepositStatusEnum.FORFEITED;
+
+          await this.storageUnitRepository.releaseReservedUnitAtomic(
+            storageUnitId,
+            StorageUnitStatusEnum.AVAILABLE,
+            session
+          );
+          await this.releaseContractAmenities(contract, session);
+        }
+      } else {
+        // WALK_IN cancel: release unit and amenities
+        await this.storageUnitRepository.releaseReservedUnitAtomic(
+          storageUnitId,
+          StorageUnitStatusEnum.AVAILABLE,
+          session
+        );
+        await this.releaseContractAmenities(contract, session);
+
+        // Q1: When deposit was paid, forfeit 100%
+        if (contract.depositPaidAt && contract.depositAmount > 0) {
+          contractForfeitedAmount = contract.depositAmount;
+          contractRefundAmount = 0;
+          contractDepositStatus = ContractDepositStatusEnum.FORFEITED;
+        } else {
+          contractForfeitedAmount = 0;
+          contractRefundAmount = 0;
+        }
+      }
     }
 
-    const renewalEntry: IContractRenewal = {
-      previousEndDate: new Date(contract.endDate),
-      newEndDate,
-      renewedAt: new Date(),
-      renewedBy: new Types.ObjectId(actorId),
-      note: data.note || null,
-    };
-
-    const updated = await this.contractRepository.update(
+    // Atomic status update on Contract
+    const updated = await this.contractRepository.atomicUpdateStatus(
       id,
+      ContractStatusEnum.DRAFT,
       {
-        endDate: newEndDate,
-        status: ContractStatusEnum.ACTIVE,
-        renewalCount: contract.renewalCount + 1,
-        renewals: [...contract.renewals, renewalEntry],
+        status: ContractStatusEnum.CANCELLED,
+        cancellationType,
+        cancellationReason: data.cancellationReason,
+        cancelledBy: new Types.ObjectId(actorId),
+        cancelledAt: new Date(),
+        refundAmount: contractRefundAmount,
+        forfeitedAmount: contractForfeitedAmount,
+        depositStatus: contractDepositStatus,
       },
       session
     );
 
+    if (!updated) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
     const populated = await this.contractRepository.findById(id, session);
-    const formatted = this.formatContract(populated || updated!);
+    const formatted = this.formatContract(populated || updated);
 
     this.auditLogService?.record({
-      action: AuditActionEnum.RENEW,
+      action:
+        cancellationType === ContractCancellationTypeEnum.VOID
+          ? AuditActionEnum.VOID
+          : AuditActionEnum.CANCEL,
       resourceType: AuditResourceEnum.CONTRACT,
       resourceId: id,
       before: this.formatContract(contract),
       after: formatted,
+      metadata: {
+        cancellationType,
+        depositForfeited: contractForfeitedAmount,
+        refundAmount: contractRefundAmount,
+        reservationId: contract.reservationId
+          ? String(contract.reservationId)
+          : null,
+      },
     });
 
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 5a. Customer requests to add or remove amenities (Creates Addendum in PENDING_APPROVAL)
+  // 4. Renew contract (DEPRECATED & DISABLED - Replaced by Contract Addendum RENEW)
+  async renewContract(
+    id?: string,
+    actorId?: string,
+    data?: RenewContractRequest,
+    session?: ClientSession
+  ): Promise<ContractResponse> {
+    void id;
+    void actorId;
+    void data;
+    void session;
+    throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_416);
+  }
+
+  // 5a. Request contract addendum (RENEW or UNIT_CHANGE)
   @Transactional()
   async createAddendum(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CreateContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -778,196 +1218,182 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    const now = new Date();
+
+    if (data.type === ContractAddendumTypeEnum.RENEW) {
+      if (
+        actorRole !== RoleEnum.CUSTOMER &&
+        actorRole !== RoleEnum.FACILITY_MANAGER &&
+        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        actorRole !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+
+      if (actorRole === RoleEnum.CUSTOMER) {
+        const customerIdStr = this.extractIdStr(contract.customerId);
+        if (customerIdStr !== actorId) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        }
+      } else {
+        await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+      }
+
+      if (
+        contract.status !== ContractStatusEnum.ACTIVE &&
+        contract.status !== ContractStatusEnum.OVERDUE
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+      }
+
+      if (!data.newEndDate) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+          'newEndDate is required for RENEW addendum',
+        ]);
+      }
+
+      const newEndDate = new Date(data.newEndDate);
+      const currentEndDate = new Date(contract.endDate);
+      if (newEndDate <= currentEndDate) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_404);
+      }
+
+      const isCreatedByManagerOrAbove = actorRole !== RoleEnum.CUSTOMER;
+      const initialStatus = isCreatedByManagerOrAbove
+        ? ContractAddendumStatusEnum.DRAFT
+        : ContractAddendumStatusEnum.PENDING_APPROVAL;
+
+      const newAddendum: IContractAddendum = {
+        _id: new Types.ObjectId(),
+        addendumCode: this.generateAddendumCode(),
+        type: ContractAddendumTypeEnum.RENEW,
+        previousEndDate: currentEndDate,
+        newEndDate,
+        previousStorageUnitId: null,
+        newStorageUnitId: null,
+        amenities: [],
+        totalPeriodicPrice: 0,
+        damageFee: 0,
+        status: initialStatus,
+        requestedBy: new Types.ObjectId(actorId),
+        requestedAt: now,
+        approvedBy: isCreatedByManagerOrAbove
+          ? new Types.ObjectId(actorId)
+          : null,
+        approvedAt: isCreatedByManagerOrAbove ? now : null,
+        assignedStaffId: null,
+        customerSigned: false,
+        customerSignedAt: null,
+        staffSigned: false,
+        staffSignedAt: null,
+        completedAt: null,
+        rejectionReason: null,
+        rejectedBy: null,
+        rejectedAt: null,
+        cancellationReason: null,
+        cancelledBy: null,
+        cancelledAt: null,
+        notes: data.notes || null,
+      };
+
+      const updated = await this.contractRepository.update(
+        id,
+        {
+          addendums: [...(contract.addendums || []), newAddendum],
+        },
+        session
+      );
+
+      const populated = await this.contractRepository.findById(id, session);
+      const formatted = this.formatContract(populated || updated!);
+
+      this.auditLogService?.record({
+        action: AuditActionEnum.CREATE_ADDENDUM,
+        resourceType: AuditResourceEnum.CONTRACT,
+        resourceId: id,
+        before: this.formatContract(contract),
+        after: formatted,
+        metadata: {
+          addendumCode: newAddendum.addendumCode,
+          type: newAddendum.type,
+          status: newAddendum.status,
+        },
+      });
+
+      return validateResponse(contractResponseSchema, formatted);
+    }
+
+    // data.type === ContractAddendumTypeEnum.UNIT_CHANGE
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
     if (contract.status !== ContractStatusEnum.ACTIVE) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
-    const facilityId =
-      contract.facilityId && typeof contract.facilityId === 'object'
-        ? String((contract.facilityId as { _id: Types.ObjectId })._id)
-        : String(contract.facilityId);
-
-    const addendumAmenities: IContractAmenity[] = [];
-    const seenOfferingIds = new Set<string>();
-
-    for (const item of data.amenities) {
-      if (seenOfferingIds.has(item.facilityAmenityOfferingId)) {
-        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-          'Duplicate amenity offering in addendum request',
-        ]);
-      }
-      seenOfferingIds.add(item.facilityAmenityOfferingId);
-
-      if (data.type === ContractAddendumTypeEnum.ADD) {
-        const offering = await this.amenityOfferingRepository.findById(
-          item.facilityAmenityOfferingId,
-          session
-        );
-        if (!offering) {
-          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
-            'Facility Amenity Offering',
-          ]);
-        }
-
-        const offeringFacilityId =
-          offering.facilityId && typeof offering.facilityId === 'object'
-            ? String((offering.facilityId as { _id: Types.ObjectId })._id)
-            : String(offering.facilityId);
-
-        if (facilityId !== offeringFacilityId) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-            'Amenity offering does not belong to the contract facility',
-          ]);
-        }
-
-        const isService =
-          offering.amenityId &&
-          typeof offering.amenityId === 'object' &&
-          'type' in offering.amenityId &&
-          (offering.amenityId as { type?: string }).type === 'service';
-
-        if (!isService) {
-          const total = offering.totalQuantity ?? 0;
-          const available = total - offering.inUseQuantity;
-          if (total > 0 && available < item.quantity) {
-            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_408);
-          }
-
-          // Lock inventory
-          await this.amenityOfferingRepository.updateById(
-            String(offering._id),
-            { inUseQuantity: offering.inUseQuantity + item.quantity },
-            session
-          );
-        }
-
-        const amenityName =
-          offering.amenityId &&
-          typeof offering.amenityId === 'object' &&
-          'name' in offering.amenityId
-            ? String(offering.amenityId.name)
-            : 'Amenity';
-
-        const amenityId =
-          offering.amenityId &&
-          typeof offering.amenityId === 'object' &&
-          '_id' in offering.amenityId
-            ? (offering.amenityId as { _id: Types.ObjectId })._id
-            : (offering.amenityId as Types.ObjectId);
-
-        const totalPrice = item.quantity * offering.pricePerUnit;
-        addendumAmenities.push({
-          facilityAmenityOfferingId: offering._id,
-          amenityId,
-          name: amenityName,
-          quantity: item.quantity,
-          pricePerUnit: offering.pricePerUnit,
-          billingUnit: offering.billingUnit,
-          totalPrice,
-          addedAt: new Date(),
-        });
-      } else {
-        // data.type === ContractAddendumTypeEnum.REMOVE
-        const contractedItem = contract.amenities.find(
-          (ca) =>
-            String(
-              (
-                ca.facilityAmenityOfferingId as unknown as {
-                  _id: Types.ObjectId;
-                }
-              )._id || ca.facilityAmenityOfferingId
-            ) === item.facilityAmenityOfferingId
-        );
-
-        if (!contractedItem) {
-          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
-            'Amenity in contract',
-          ]);
-        }
-
-        // Calculate quantity already requested for removal in other pending/draft REMOVE addendums
-        const pendingRemoveQty = (contract.addendums || [])
-          .filter(
-            (ad) =>
-              ad.type === ContractAddendumTypeEnum.REMOVE &&
-              (ad.status === ContractAddendumStatusEnum.PENDING_APPROVAL ||
-                ad.status === ContractAddendumStatusEnum.DRAFT)
-          )
-          .reduce((sum, ad) => {
-            const matched = (ad.amenities || []).find(
-              (a) =>
-                String(
-                  (
-                    a.facilityAmenityOfferingId as unknown as {
-                      _id: Types.ObjectId;
-                    }
-                  )._id || a.facilityAmenityOfferingId
-                ) === item.facilityAmenityOfferingId
-            );
-            return sum + (matched ? matched.quantity : 0);
-          }, 0);
-
-        const removableQuantity = contractedItem.quantity - pendingRemoveQty;
-        if (item.quantity > removableQuantity) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_413);
-        }
-
-        const offeringIdObj =
-          contractedItem.facilityAmenityOfferingId &&
-          typeof contractedItem.facilityAmenityOfferingId === 'object' &&
-          '_id' in
-            (contractedItem.facilityAmenityOfferingId as unknown as Record<
-              string,
-              unknown
-            >)
-            ? (
-                contractedItem.facilityAmenityOfferingId as unknown as {
-                  _id: Types.ObjectId;
-                }
-              )._id
-            : (contractedItem.facilityAmenityOfferingId as Types.ObjectId);
-
-        const amenityIdObj =
-          contractedItem.amenityId &&
-          typeof contractedItem.amenityId === 'object' &&
-          '_id' in
-            (contractedItem.amenityId as unknown as Record<string, unknown>)
-            ? (contractedItem.amenityId as unknown as { _id: Types.ObjectId })
-                ._id
-            : (contractedItem.amenityId as Types.ObjectId);
-
-        const totalPrice = item.quantity * contractedItem.pricePerUnit;
-        addendumAmenities.push({
-          facilityAmenityOfferingId: offeringIdObj,
-          amenityId: amenityIdObj,
-          name: contractedItem.name,
-          quantity: item.quantity,
-          pricePerUnit: contractedItem.pricePerUnit,
-          billingUnit: contractedItem.billingUnit,
-          totalPrice,
-          addedAt: new Date(),
-        });
-      }
+    if (!data.newStorageUnitId) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+        'newStorageUnitId is required for UNIT_CHANGE addendum',
+      ]);
     }
 
-    const addendumTotalPeriodicPrice = addendumAmenities.reduce(
-      (sum, a) => sum + a.totalPrice,
-      0
+    const currentStorageUnitIdStr = this.extractIdStr(contract.storageUnitId);
+    if (data.newStorageUnitId === currentStorageUnitIdStr) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+        'New storage unit must be different from current storage unit',
+      ]);
+    }
+
+    const newUnit = await this.storageUnitRepository.findById(
+      data.newStorageUnitId,
+      session
     );
+    if (!newUnit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+
+    const newUnitFacilityIdStr = this.extractIdStr(newUnit.facilityId);
+    if (newUnitFacilityIdStr !== facilityIdStr) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
+    }
+
+    const reservedUnit =
+      await this.storageUnitRepository.findAndReserveUnitAtomic(
+        data.newStorageUnitId,
+        facilityIdStr,
+        session
+      );
+    if (!reservedUnit) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_402);
+    }
 
     const newAddendum: IContractAddendum = {
       _id: new Types.ObjectId(),
       addendumCode: this.generateAddendumCode(),
-      type: data.type,
-      amenities: addendumAmenities,
-      totalPeriodicPrice: addendumTotalPeriodicPrice,
+      type: ContractAddendumTypeEnum.UNIT_CHANGE,
+      previousEndDate: null,
+      newEndDate: null,
+      previousStorageUnitId: new Types.ObjectId(currentStorageUnitIdStr),
+      newStorageUnitId: new Types.ObjectId(data.newStorageUnitId),
+      amenities: [],
+      totalPeriodicPrice: 0,
       damageFee: 0,
-      status: ContractAddendumStatusEnum.PENDING_APPROVAL,
+      status: ContractAddendumStatusEnum.DRAFT,
       requestedBy: new Types.ObjectId(actorId),
-      requestedAt: new Date(),
-      approvedBy: null,
-      approvedAt: null,
-      assignedStaffId: null,
+      requestedAt: now,
+      approvedBy: new Types.ObjectId(actorId),
+      approvedAt: now,
+      assignedStaffId: new Types.ObjectId(actorId),
       customerSigned: false,
       customerSignedAt: null,
       staffSigned: false,
@@ -1002,18 +1428,21 @@ export class ContractService {
       metadata: {
         addendumCode: newAddendum.addendumCode,
         type: newAddendum.type,
+        previousStorageUnitId: currentStorageUnitIdStr,
+        newStorageUnitId: data.newStorageUnitId,
       },
     });
 
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 5b. Manager approves addendum request & assigns staff for handover (PENDING_APPROVAL -> DRAFT)
+  // 5b. Manager approves addendum request (PENDING_APPROVAL -> DRAFT)
   @Transactional()
   async approveAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: ApproveContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1022,7 +1451,23 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    if (contract.status !== ContractStatusEnum.ACTIVE) {
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
+    if (
+      contract.status !== ContractStatusEnum.ACTIVE &&
+      contract.status !== ContractStatusEnum.OVERDUE
+    ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
@@ -1037,6 +1482,20 @@ export class ContractService {
     const target = addendums[index];
     if (target.status !== ContractAddendumStatusEnum.PENDING_APPROVAL) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_410);
+    }
+
+    if (data.assignedStaffId) {
+      const staffUser = await this.userRepository.findById(
+        data.assignedStaffId
+      );
+      if (!staffUser) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Staff']);
+      }
+      await this.assertFacilityAccess(
+        data.assignedStaffId,
+        staffUser.role,
+        facilityIdStr
+      );
     }
 
     const defaultStaffId = contract.assignedStaffId
@@ -1084,12 +1543,13 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 5c. Manager rejects addendum request (PENDING_APPROVAL -> REJECTED) & releases locked inventory if ADD
+  // 5c. Manager rejects addendum request (PENDING_APPROVAL -> REJECTED)
   @Transactional()
   async rejectAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: RejectContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1097,6 +1557,19 @@ export class ContractService {
     if (!contract) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
+
+    if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
 
     const addendums = [...(contract.addendums || [])];
     const index = addendums.findIndex(
@@ -1111,12 +1584,15 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_410);
     }
 
-    // Release locked amenity inventory only for ADD addendums
     if (
-      (target.type || ContractAddendumTypeEnum.ADD) ===
-      ContractAddendumTypeEnum.ADD
+      target.type === ContractAddendumTypeEnum.UNIT_CHANGE &&
+      target.newStorageUnitId
     ) {
-      await this.releaseAddendumAmenitiesInventory(target.amenities, session);
+      await this.storageUnitRepository.releaseReservedUnitAtomic(
+        this.extractIdStr(target.newStorageUnitId),
+        StorageUnitStatusEnum.AVAILABLE,
+        session
+      );
     }
 
     addendums[index] = {
@@ -1153,12 +1629,13 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 5d. Customer signs addendum on Mobile (Two-party signing: Customer side)
+  // 5d. Customer signs addendum on Mobile (First signing step: Customer side)
   @Transactional()
   async customerSignAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: SignContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1166,18 +1643,20 @@ export class ContractService {
       id,
       addendumId,
       actorId,
+      actorRole,
       'customer',
       data,
       session
     );
   }
 
-  // 5e. Staff signs addendum after physical handover/uninstall on Web (Two-party signing: Staff side)
+  // 5e. Facility Manager signs addendum & activates changes (Second signing step: Facility side)
   @Transactional()
   async staffSignAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: SignContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1185,24 +1664,45 @@ export class ContractService {
       id,
       addendumId,
       actorId,
+      actorRole,
       'staff',
       data,
       session
     );
   }
 
-  // 5f. Cancel addendum (PENDING_APPROVAL or DRAFT -> CANCELLED) & release locked inventory if ADD
+  // 5f. Cancel addendum (PENDING_APPROVAL or DRAFT -> CANCELLED) & release locked unit if UNIT_CHANGE
   @Transactional()
   async cancelAddendum(
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     data: CancelContractAddendumRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
     const contract = await this.contractRepository.findById(id, session);
     if (!contract) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    if (
+      actorRole !== RoleEnum.CUSTOMER &&
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    if (actorRole === RoleEnum.CUSTOMER) {
+      const customerIdStr = this.extractIdStr(contract.customerId);
+      if (customerIdStr !== actorId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else {
+      await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
     }
 
     const addendums = [...(contract.addendums || [])];
@@ -1221,12 +1721,16 @@ export class ContractService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_410);
     }
 
-    // Release locked amenity inventory only for ADD addendums
+    // Release reserved replacement storage unit for UNIT_CHANGE addendums
     if (
-      (target.type || ContractAddendumTypeEnum.ADD) ===
-      ContractAddendumTypeEnum.ADD
+      target.type === ContractAddendumTypeEnum.UNIT_CHANGE &&
+      target.newStorageUnitId
     ) {
-      await this.releaseAddendumAmenitiesInventory(target.amenities, session);
+      await this.storageUnitRepository.releaseReservedUnitAtomic(
+        this.extractIdStr(target.newStorageUnitId),
+        StorageUnitStatusEnum.AVAILABLE,
+        session
+      );
     }
 
     addendums[index] = {
@@ -1268,6 +1772,7 @@ export class ContractService {
   async checkOutContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: CheckOutContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1277,33 +1782,59 @@ export class ContractService {
     }
 
     if (
+      actorRole !== RoleEnum.FACILITY_STAFF &&
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
+    if (
       contract.status !== ContractStatusEnum.ACTIVE &&
       contract.status !== ContractStatusEnum.OVERDUE
     ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
+    // Block normal check-out if customer inventory still remains on this contract
+    if (this.customerInventoryRepository) {
+      const remainingItems =
+        await this.customerInventoryRepository.countRemainingByContract(
+          id,
+          session
+        );
+      if (remainingItems > 0) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_420);
+      }
+    }
+
+    // Block normal check-out if contract still has open (unclosed/uncancelled) incidents ([CHỐT Q3] / X5)
+    if (this.incidentRepository) {
+      const openIncidents = await this.incidentRepository.countOpenByContractId(
+        id,
+        session
+      );
+      if (openIncidents > 0) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_421);
+      }
+    }
+
     const actualCheckOutDate = data.actualCheckOutDate
       ? new Date(data.actualCheckOutDate)
       : new Date();
 
-    // Overdue fee calculation
-    let overdueFee = 0;
-    const endDate = new Date(contract.endDate);
-    if (actualCheckOutDate.getTime() > endDate.getTime()) {
-      const diffMs = actualCheckOutDate.getTime() - endDate.getTime();
-      const overdueDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-      // Calculate approximate daily rate
-      let dailyRate = contract.rentalPrice;
-      if (contract.billingUnit === BillingUnitEnum.MONTH) {
-        dailyRate = Math.round(contract.rentalPrice / 30);
-      }
-
-      // Penalty multiplier = 1.5x daily rate
-      const penaltyDailyRate = Math.round(dailyRate * 1.5);
-      overdueFee = overdueDays * penaltyDailyRate;
-    }
+    // Overdue fee calculation using pure function [OPEN D8]
+    const overdueResult = calculateContractOverdueFee({
+      endDate: contract.endDate,
+      actualCheckOutDate,
+      rentalPrice: contract.rentalPrice,
+      billingUnit: contract.billingUnit,
+    });
+    const overdueFee = overdueResult.overdueFee;
 
     const damageFee = (contract.damageFee || 0) + (data.damageFee || 0);
     const totalDeductions = damageFee + overdueFee;
@@ -1313,6 +1844,36 @@ export class ContractService {
       0,
       totalDeductions - contract.depositAmount
     );
+
+    let depositStatus: ContractDepositStatusEnum;
+    if (refundAmount === contract.depositAmount) {
+      depositStatus = ContractDepositStatusEnum.REFUNDED;
+    } else if (refundAmount > 0) {
+      depositStatus = ContractDepositStatusEnum.PARTIALLY_REFUNDED;
+    } else {
+      depositStatus = ContractDepositStatusEnum.APPLIED;
+    }
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+
+    // If there is deposit refund, automatically create a RefundRequest
+    let refundRequestId: string | undefined;
+    if (refundAmount > 0 && this.refundRequestService) {
+      const refundDoc =
+        await this.refundRequestService.createRefundRequestInternal(
+          actorId,
+          {
+            contractId: id,
+            facilityId: facilityIdStr,
+            customerId: customerIdStr,
+            amount: refundAmount,
+            reason: RefundReasonEnum.DEPOSIT_SETTLEMENT,
+            note: `Quyết toán tiền cọc hợp đồng ${contract.contractCode} khi trả kho`,
+          },
+          session
+        );
+      refundRequestId = refundDoc.id;
+    }
 
     const storageUnitId =
       contract.storageUnitId && typeof contract.storageUnitId === 'object'
@@ -1362,6 +1923,13 @@ export class ContractService {
       session
     );
 
+    const mergedInspectionPhotos = Array.from(
+      new Set([
+        ...(contract.inspectionPhotos || []),
+        ...(data.inspectionPhotos || []),
+      ])
+    );
+
     const updated = await this.contractRepository.update(
       id,
       {
@@ -1373,6 +1941,8 @@ export class ContractService {
         refundAmount,
         additionalPaymentRequired,
         inspectionNotes: data.inspectionNotes || null,
+        inspectionPhotos: mergedInspectionPhotos,
+        depositStatus,
         addendums: cleanedAddendums,
       },
       session
@@ -1392,6 +1962,8 @@ export class ContractService {
         overdueFee,
         refundAmount,
         additionalPaymentRequired,
+        depositStatus,
+        refundRequestId: refundRequestId ?? null,
       },
     });
 
@@ -1403,6 +1975,7 @@ export class ContractService {
   async terminateContract(
     id: string,
     actorId: string,
+    actorRole: string,
     data: TerminateContractRequest,
     session?: ClientSession
   ): Promise<ContractResponse> {
@@ -1412,21 +1985,90 @@ export class ContractService {
     }
 
     if (
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.FACILITY_MANAGER,
+      ]);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
+    if (
       contract.status !== ContractStatusEnum.ACTIVE &&
       contract.status !== ContractStatusEnum.OVERDUE
     ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
+    const finalReason = data.reason || data.terminationReason;
+    if (!finalReason) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101);
+    }
+
+    if (
+      !data.reportFileUrls ||
+      data.reportFileUrls.length === 0 ||
+      !data.evidenceFileUrls ||
+      data.evidenceFileUrls.length === 0
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_426);
+    }
+
+    if (
+      data.terminationType === ContractTerminationTypeEnum.VIOLATION &&
+      !data.violationCategory
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_427);
+    }
+
+    // Anti-abuse check for OVERDUE_PAYMENT: must be OVERDUE status and exceed overdueTerminationGraceDays
+    if (data.violationCategory === ViolationCategoryEnum.OVERDUE_PAYMENT) {
+      if (contract.status !== ContractStatusEnum.OVERDUE) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_428);
+      }
+      const diffMs = Date.now() - new Date(contract.endDate).getTime();
+      const requiredGraceMs =
+        contractConfig.overdueTerminationGraceDays * 86400000;
+      if (diffMs < requiredGraceMs) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_428);
+      }
+    }
+
+    const now = new Date();
+    const mappedReportFiles: IContractTerminationFile[] =
+      data.reportFileUrls.map((url) => ({
+        url,
+        fileHash: crypto.createHash('sha256').update(url).digest('hex'),
+        uploadedAt: now,
+      }));
+
+    const mappedEvidenceFiles: IContractTerminationFile[] =
+      data.evidenceFileUrls.map((url) => ({
+        url,
+        fileHash: crypto.createHash('sha256').update(url).digest('hex'),
+        uploadedAt: now,
+      }));
+
     const storageUnitId =
       contract.storageUnitId && typeof contract.storageUnitId === 'object'
         ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
         : String(contract.storageUnitId);
 
-    // Transition storage unit to UNDER_MAINTENANCE
+    const remainingInventoryItems = this.customerInventoryRepository
+      ? await this.customerInventoryRepository.countRemainingByContract(
+          id,
+          session
+        )
+      : 0;
+
+    // Transition storage unit to PENDING_CLEARANCE [CHỐT D14]
     await this.storageUnitRepository.updateById(
       storageUnitId,
-      { status: StorageUnitStatusEnum.UNDER_MAINTENANCE },
+      { status: StorageUnitStatusEnum.PENDING_CLEARANCE },
       session
     );
 
@@ -1466,14 +2108,39 @@ export class ContractService {
       session
     );
 
+    const historyEntry: IContractTerminationHistory = {
+      terminationType: data.terminationType,
+      violationCategory: data.violationCategory || null,
+      reason: finalReason,
+      reportFiles: mappedReportFiles,
+      evidenceFiles: mappedEvidenceFiles,
+      terminatedBy: new Types.ObjectId(actorId),
+      terminatedAt: now,
+      storageUnitStatus: StorageUnitStatusEnum.PENDING_CLEARANCE,
+      depositStatus: ContractDepositStatusEnum.FORFEITED,
+      forfeitedAmount: contract.depositAmount,
+    };
+    const terminationHistory = [
+      ...(contract.terminationHistory || []),
+      historyEntry,
+    ];
+
     const updated = await this.contractRepository.update(
       id,
       {
         status: ContractStatusEnum.TERMINATED,
-        terminationReason: data.terminationReason,
+        terminationType: data.terminationType,
+        violationCategory: data.violationCategory || null,
+        terminationReason: finalReason,
         terminatedBy: new Types.ObjectId(actorId),
-        terminatedAt: new Date(),
-        actualCheckOutDate: new Date(),
+        terminatedAt: now,
+        actualCheckOutDate: now,
+        reportFiles: mappedReportFiles,
+        evidenceFiles: mappedEvidenceFiles,
+        terminationHistory,
+        depositStatus: ContractDepositStatusEnum.FORFEITED,
+        refundAmount: 0,
+        forfeitedAmount: contract.depositAmount,
         addendums: cleanedAddendums,
       },
       session
@@ -1488,13 +2155,152 @@ export class ContractService {
       resourceId: id,
       before: this.formatContract(contract),
       after: formatted,
+      metadata: {
+        remainingInventoryItems,
+        terminationType: data.terminationType,
+        violationCategory: data.violationCategory || null,
+        reportFilesCount: mappedReportFiles.length,
+        evidenceFilesCount: mappedEvidenceFiles.length,
+        forfeitedAmount: contract.depositAmount,
+      },
+    });
+
+    return validateResponse(contractResponseSchema, formatted);
+  }
+
+  // 8a. Customer confirms settlement after check-out
+  @Transactional()
+  async confirmSettlement(
+    id: string,
+    actorId: string,
+    actorRole: string,
+    session?: ClientSession
+  ): Promise<ContractResponse> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+    if (actorRole !== RoleEnum.CUSTOMER || customerIdStr !== actorId) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    if (contract.status !== ContractStatusEnum.COMPLETED) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (contract.settlementConfirmedAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_419);
+    }
+
+    const updated = await this.contractRepository.update(
+      id,
+      {
+        settlementConfirmedAt: new Date(),
+      },
+      session
+    );
+
+    const populated = await this.contractRepository.findById(id, session);
+    const formatted = this.formatContract(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CONFIRM_SETTLEMENT,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: id,
+      before: this.formatContract(contract),
+      after: formatted,
+    });
+
+    return validateResponse(contractResponseSchema, formatted);
+  }
+
+  // 8b. Customer disputes settlement after check-out
+  @Transactional()
+  async disputeSettlement(
+    id: string,
+    actorId: string,
+    actorRole: string,
+    data: DisputeSettlementRequest,
+    session?: ClientSession
+  ): Promise<ContractResponse> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+    if (actorRole !== RoleEnum.CUSTOMER || customerIdStr !== actorId) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    if (contract.status !== ContractStatusEnum.COMPLETED) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
+
+    if (contract.settlementConfirmedAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_419);
+    }
+
+    const updated = await this.contractRepository.update(
+      id,
+      {
+        depositStatus: ContractDepositStatusEnum.DISPUTED,
+        disputedAt: new Date(),
+        disputeReason: data.disputeReason,
+      },
+      session
+    );
+
+    const populated = await this.contractRepository.findById(id, session);
+    const formatted = this.formatContract(populated || updated!);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.DISPUTE_SETTLEMENT,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: id,
+      before: this.formatContract(contract),
+      after: formatted,
+      metadata: {
+        disputeReason: data.disputeReason,
+      },
     });
 
     return validateResponse(contractResponseSchema, formatted);
   }
 
   // 9. Batch process overdue contracts
-  async processOverdueContracts(): Promise<{ processedCount: number }> {
+  async processOverdueContracts(
+    actorId?: string,
+    actorRole?: string
+  ): Promise<{ processedCount: number }> {
+    if (actorId !== undefined || actorRole !== undefined) {
+      if (
+        actorRole !== RoleEnum.FACILITY_MANAGER &&
+        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        actorRole !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+          RoleEnum.FACILITY_MANAGER,
+        ]);
+      }
+
+      if (actorRole === RoleEnum.FACILITY_MANAGER) {
+        const user = actorId
+          ? await this.userRepository.findById(actorId)
+          : null;
+        if (!user) {
+          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+        }
+        if (!user.assignedFacilityId) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, [
+            'Assigned Facility',
+          ]);
+        }
+      }
+    }
+
     const overdueContracts =
       await this.contractRepository.findExpiredActiveContracts(new Date());
 
@@ -1520,15 +2326,22 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    // Role-based scoping: customer can only view own contract
+    // Role-based scoping: customer can only view own contract; staff/manager scoped by facility
     if (callerRole === RoleEnum.CUSTOMER) {
-      const customerIdStr = String(
-        (contract.customerId as unknown as { _id: Types.ObjectId })._id ||
-          contract.customerId
-      );
+      const customerIdStr = this.extractIdStr(contract.customerId);
       if (customerIdStr !== callerId) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
+    } else if (
+      callerRole === RoleEnum.FACILITY_STAFF ||
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+      callerRole === RoleEnum.SYSTEM_ADMIN
+    ) {
+      const facilityIdStr = this.extractIdStr(contract.facilityId);
+      await this.assertFacilityAccess(callerId, callerRole, facilityIdStr);
+    } else {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
     return validateResponse(
@@ -1545,9 +2358,25 @@ export class ContractService {
   ): Promise<PaginatedData<ContractResponse>> {
     const effectiveQuery = { ...query };
 
-    // Data scoping for customer
+    // Data scoping for customer and facility staff/manager
     if (callerRole === RoleEnum.CUSTOMER) {
       effectiveQuery.customerId = callerId;
+    } else if (
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.FACILITY_STAFF
+    ) {
+      const user = await this.userRepository.findById(callerId);
+      if (!user?.assignedFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, [
+          'Assigned Facility',
+        ]);
+      }
+      effectiveQuery.facilityId = String(user.assignedFacilityId);
+    } else if (
+      callerRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      callerRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
     const result = await this.contractRepository.findPaginated(effectiveQuery);
@@ -1561,6 +2390,45 @@ export class ContractService {
   // =========================================================================
   // HELPER METHODS
   // =========================================================================
+
+  private extractIdStr(ref: unknown): string {
+    if (ref && typeof ref === 'object' && '_id' in ref) {
+      return String((ref as { _id: unknown })._id);
+    }
+    return String(ref);
+  }
+
+  private async assertFacilityAccess(
+    userId: string,
+    userRole: string,
+    facilityId: string
+  ): Promise<void> {
+    if (
+      userRole === RoleEnum.SYSTEM_ADMIN ||
+      userRole === RoleEnum.BUSINESS_OPS_MANAGER
+    ) {
+      return;
+    }
+
+    if (
+      userRole !== RoleEnum.FACILITY_MANAGER &&
+      userRole !== RoleEnum.FACILITY_STAFF
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
+    }
+
+    if (
+      !user.assignedFacilityId ||
+      String(user.assignedFacilityId) !== facilityId
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, ['Facility']);
+    }
+  }
 
   private async generateContractCode(): Promise<string> {
     const today = new Date();
@@ -1583,38 +2451,6 @@ export class ContractService {
     return `ADD-${dateStr}-${randomPart}`;
   }
 
-  private async releaseAddendumAmenitiesInventory(
-    amenities: IContractAmenity[],
-    session?: ClientSession
-  ): Promise<void> {
-    for (const a of amenities) {
-      const offeringId = String(
-        (a.facilityAmenityOfferingId as unknown as { _id: Types.ObjectId })
-          ._id || a.facilityAmenityOfferingId
-      );
-      const offering = await this.amenityOfferingRepository.findById(
-        offeringId,
-        session
-      );
-      if (offering) {
-        const isService =
-          offering.amenityId &&
-          typeof offering.amenityId === 'object' &&
-          'type' in offering.amenityId &&
-          (offering.amenityId as { type?: string }).type === 'service';
-
-        if (!isService) {
-          const newInUse = Math.max(0, offering.inUseQuantity - a.quantity);
-          await this.amenityOfferingRepository.updateById(
-            offeringId,
-            { inUseQuantity: newInUse },
-            session
-          );
-        }
-      }
-    }
-  }
-
   private async cancelOpenAddendumsOnContractEnd(
     addendums: IContractAddendum[],
     actorId: string,
@@ -1634,11 +2470,12 @@ export class ContractService {
         rawAd.status === ContractAddendumStatusEnum.DRAFT
       ) {
         if (
-          (rawAd.type || ContractAddendumTypeEnum.ADD) ===
-          ContractAddendumTypeEnum.ADD
+          rawAd.type === ContractAddendumTypeEnum.UNIT_CHANGE &&
+          rawAd.newStorageUnitId
         ) {
-          await this.releaseAddendumAmenitiesInventory(
-            rawAd.amenities,
+          await this.storageUnitRepository.releaseReservedUnitAtomic(
+            this.extractIdStr(rawAd.newStorageUnitId),
+            StorageUnitStatusEnum.AVAILABLE,
             session
           );
         }
@@ -1660,6 +2497,7 @@ export class ContractService {
     id: string,
     addendumId: string,
     actorId: string,
+    actorRole: string,
     party: 'customer' | 'staff',
     data: SignContractAddendumRequest,
     session?: ClientSession
@@ -1669,7 +2507,30 @@ export class ContractService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    if (contract.status !== ContractStatusEnum.ACTIVE) {
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    const customerIdStr = this.extractIdStr(contract.customerId);
+
+    if (party === 'customer') {
+      if (actorRole !== RoleEnum.CUSTOMER || customerIdStr !== actorId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else {
+      if (
+        actorRole !== RoleEnum.FACILITY_MANAGER &&
+        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        actorRole !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+          RoleEnum.FACILITY_MANAGER,
+        ]);
+      }
+      await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+    }
+
+    if (
+      contract.status !== ContractStatusEnum.ACTIVE &&
+      contract.status !== ContractStatusEnum.OVERDUE
+    ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
     }
 
@@ -1699,7 +2560,20 @@ export class ContractService {
           ).toObject()
         : { ...target };
 
-    const addendumType = rawTarget.type || ContractAddendumTypeEnum.ADD;
+    if (party === 'customer' && rawTarget.customerSigned) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_412);
+    }
+
+    if (party === 'staff') {
+      if (!rawTarget.customerSigned) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_415);
+      }
+      if (rawTarget.staffSigned) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_412);
+      }
+    }
+
+    const addendumType = rawTarget.type || ContractAddendumTypeEnum.RENEW;
 
     const customerSigned =
       party === 'customer' ? true : Boolean(rawTarget.customerSigned);
@@ -1710,19 +2584,11 @@ export class ContractService {
     const staffSignedAt =
       party === 'staff' ? now : rawTarget.staffSignedAt || null;
 
-    const addendumDamageFee =
-      party === 'staff' &&
-      addendumType === ContractAddendumTypeEnum.REMOVE &&
-      typeof data.damageFee === 'number'
-        ? data.damageFee
-        : Number(rawTarget.damageFee || 0);
-
     const bothSigned = customerSigned && staffSigned;
 
     addendums[index] = {
       ...rawTarget,
       type: addendumType,
-      damageFee: addendumDamageFee,
       customerSigned,
       customerSignedAt,
       staffSigned,
@@ -1738,134 +2604,68 @@ export class ContractService {
       notes: data.notes || rawTarget.notes || null,
     };
 
-    // If both customer and staff have signed, apply addendum changes to contract
-    const updatedAmenities = [...contract.amenities];
-    let updatedContractDamageFee = Number(contract.damageFee || 0);
+    const updatePayload: Partial<IContract> = {
+      addendums,
+    };
 
     if (bothSigned) {
-      if (addendumType === ContractAddendumTypeEnum.ADD) {
-        for (const addItem of rawTarget.amenities) {
-          const addOfferingIdStr = String(
-            (
-              addItem.facilityAmenityOfferingId as unknown as {
-                _id: Types.ObjectId;
-              }
-            )._id || addItem.facilityAmenityOfferingId
-          );
-          const existingIdx = updatedAmenities.findIndex(
-            (ca) =>
-              String(
-                (
-                  ca.facilityAmenityOfferingId as unknown as {
-                    _id: Types.ObjectId;
-                  }
-                )._id || ca.facilityAmenityOfferingId
-              ) === addOfferingIdStr
-          );
+      if (addendumType === ContractAddendumTypeEnum.RENEW) {
+        const nextEndDate = rawTarget.newEndDate
+          ? new Date(rawTarget.newEndDate)
+          : new Date(contract.endDate);
+        const prevEndDate = rawTarget.previousEndDate
+          ? new Date(rawTarget.previousEndDate)
+          : new Date(contract.endDate);
 
-          if (existingIdx >= 0) {
-            const existing = updatedAmenities[existingIdx];
-            const rawExisting =
-              typeof (existing as { toObject?: () => IContractAmenity })
-                .toObject === 'function'
-                ? (
-                    existing as unknown as { toObject: () => IContractAmenity }
-                  ).toObject()
-                : { ...existing };
-            const newQty = rawExisting.quantity + addItem.quantity;
-            updatedAmenities[existingIdx] = {
-              ...rawExisting,
-              quantity: newQty,
-              totalPrice: newQty * rawExisting.pricePerUnit,
-            };
-          } else {
-            updatedAmenities.push({
-              facilityAmenityOfferingId: addItem.facilityAmenityOfferingId,
-              amenityId: addItem.amenityId,
-              name: addItem.name,
-              quantity: addItem.quantity,
-              pricePerUnit: addItem.pricePerUnit,
-              billingUnit: addItem.billingUnit,
-              totalPrice: addItem.totalPrice,
-              addedAt: now,
-            });
-          }
-        }
-      } else {
-        // addendumType === ContractAddendumTypeEnum.REMOVE
-        for (const remItem of rawTarget.amenities) {
-          const remOfferingIdStr = String(
-            (
-              remItem.facilityAmenityOfferingId as unknown as {
-                _id: Types.ObjectId;
-              }
-            )._id || remItem.facilityAmenityOfferingId
-          );
-          const existingIdx = updatedAmenities.findIndex(
-            (ca) =>
-              String(
-                (
-                  ca.facilityAmenityOfferingId as unknown as {
-                    _id: Types.ObjectId;
-                  }
-                )._id || ca.facilityAmenityOfferingId
-              ) === remOfferingIdStr
-          );
+        const renewalEntry: IContractRenewal = {
+          previousEndDate: prevEndDate,
+          newEndDate: nextEndDate,
+          renewedAt: now,
+          renewedBy: new Types.ObjectId(actorId),
+          note: rawTarget.notes || null,
+        };
 
-          if (existingIdx === -1) {
-            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_413);
-          }
+        updatePayload.endDate = nextEndDate;
+        updatePayload.status = ContractStatusEnum.ACTIVE;
+        updatePayload.renewalCount = (contract.renewalCount || 0) + 1;
+        updatePayload.renewals = [...(contract.renewals || []), renewalEntry];
+      } else if (addendumType === ContractAddendumTypeEnum.UNIT_CHANGE) {
+        const oldUnitIdStr = rawTarget.previousStorageUnitId
+          ? this.extractIdStr(rawTarget.previousStorageUnitId)
+          : this.extractIdStr(contract.storageUnitId);
+        const newUnitIdStr = this.extractIdStr(rawTarget.newStorageUnitId);
 
-          const existing = updatedAmenities[existingIdx];
-          const rawExisting =
-            typeof (existing as { toObject?: () => IContractAmenity })
-              .toObject === 'function'
-              ? (
-                  existing as unknown as { toObject: () => IContractAmenity }
-                ).toObject()
-              : { ...existing };
-
-          if (rawExisting.quantity < remItem.quantity) {
-            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_413);
-          }
-
-          const newQty = rawExisting.quantity - remItem.quantity;
-          if (newQty === 0) {
-            updatedAmenities.splice(existingIdx, 1);
-          } else {
-            updatedAmenities[existingIdx] = {
-              ...rawExisting,
-              quantity: newQty,
-              totalPrice: newQty * rawExisting.pricePerUnit,
-            };
+        // Block UNIT_CHANGE activation if old storage unit still contains customer inventory
+        // (Auto-migration of inventory across units is deferred to customer-inventory/7E)
+        if (this.customerInventoryRepository) {
+          const remainingInOldUnit =
+            await this.customerInventoryRepository.countRemainingByStorageUnit(
+              oldUnitIdStr,
+              session
+            );
+          if (remainingInOldUnit > 0) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
           }
         }
 
-        // Release facility inventory now that equipment has been physically uninstalled/returned
-        await this.releaseAddendumAmenitiesInventory(
-          rawTarget.amenities,
+        await this.storageUnitRepository.updateById(
+          oldUnitIdStr,
+          { status: StorageUnitStatusEnum.UNDER_MAINTENANCE },
+          session
+        );
+        await this.storageUnitRepository.updateById(
+          newUnitIdStr,
+          { status: StorageUnitStatusEnum.OCCUPIED },
           session
         );
 
-        // Accumulate any damage fee recorded during equipment uninstall inspection
-        updatedContractDamageFee += addendumDamageFee;
+        updatePayload.storageUnitId = new Types.ObjectId(newUnitIdStr);
       }
     }
 
-    const amenitiesTotal = updatedAmenities.reduce(
-      (sum, a) => sum + a.totalPrice,
-      0
-    );
-    const totalPeriodicPrice = contract.rentalPrice + amenitiesTotal;
-
     const updated = await this.contractRepository.update(
       id,
-      {
-        addendums,
-        amenities: updatedAmenities,
-        totalPeriodicPrice,
-        damageFee: updatedContractDamageFee,
-      },
+      updatePayload,
       session
     );
 
@@ -1883,7 +2683,6 @@ export class ContractService {
         type: addendumType,
         party,
         activated: bothSigned,
-        damageFee: addendumDamageFee,
       },
     });
 
@@ -1975,6 +2774,61 @@ export class ContractService {
       note: (r.note as string) ?? null,
     }));
 
+    const signatureHistory = (
+      (raw.signatureHistory as Array<Record<string, unknown>>) || []
+    ).map((h) => ({
+      party: (h.party as 'customer' | 'staff') || 'customer',
+      signedAt:
+        h.signedAt instanceof Date
+          ? h.signedAt.toISOString()
+          : new Date(String(h.signedAt)).toISOString(),
+      previousStartDate:
+        h.previousStartDate instanceof Date
+          ? h.previousStartDate.toISOString()
+          : new Date(String(h.previousStartDate)).toISOString(),
+      previousEndDate:
+        h.previousEndDate instanceof Date
+          ? h.previousEndDate.toISOString()
+          : new Date(String(h.previousEndDate)).toISOString(),
+      resetAt:
+        h.resetAt instanceof Date
+          ? h.resetAt.toISOString()
+          : new Date(String(h.resetAt || new Date())).toISOString(),
+      resetReason: String(h.resetReason || ''),
+    }));
+
+    const formatTerminationFiles = (list: unknown) =>
+      ((list as Array<Record<string, unknown>>) || []).map((f) => ({
+        url: String(f.url || ''),
+        fileHash: (f.fileHash as string) ?? null,
+        uploadedAt:
+          f.uploadedAt instanceof Date
+            ? f.uploadedAt.toISOString()
+            : new Date(String(f.uploadedAt || new Date())).toISOString(),
+      }));
+
+    const reportFiles = formatTerminationFiles(raw.reportFiles);
+    const evidenceFiles = formatTerminationFiles(raw.evidenceFiles);
+
+    const terminationHistory = (
+      (raw.terminationHistory as Array<Record<string, unknown>>) || []
+    ).map((th) => ({
+      terminationType: th.terminationType as ContractTerminationTypeEnum,
+      violationCategory:
+        (th.violationCategory as ViolationCategoryEnum) || null,
+      reason: String(th.reason || ''),
+      reportFiles: formatTerminationFiles(th.reportFiles),
+      evidenceFiles: formatTerminationFiles(th.evidenceFiles),
+      terminatedBy: formatUserSnap(th.terminatedBy),
+      terminatedAt:
+        th.terminatedAt instanceof Date
+          ? th.terminatedAt.toISOString()
+          : new Date(String(th.terminatedAt || new Date())).toISOString(),
+      storageUnitStatus: th.storageUnitStatus as StorageUnitStatusEnum,
+      depositStatus: th.depositStatus as ContractDepositStatusEnum,
+      forfeitedAmount: Number(th.forfeitedAmount || 0),
+    }));
+
     const formatAmenityList = (list: unknown) =>
       ((list as Array<Record<string, unknown>>) || []).map((a) => ({
         facilityAmenityOfferingId: String(
@@ -2014,11 +2868,40 @@ export class ContractService {
           : String(ad.assignedStaffId)
         : null;
 
+      const prevUnitIdStr = ad.previousStorageUnitId
+        ? typeof ad.previousStorageUnitId === 'object' &&
+          '_id' in (ad.previousStorageUnitId as Record<string, unknown>)
+          ? String((ad.previousStorageUnitId as Record<string, unknown>)._id)
+          : String(ad.previousStorageUnitId)
+        : null;
+
+      const nextUnitIdStr = ad.newStorageUnitId
+        ? typeof ad.newStorageUnitId === 'object' &&
+          '_id' in (ad.newStorageUnitId as Record<string, unknown>)
+          ? String((ad.newStorageUnitId as Record<string, unknown>)._id)
+          : String(ad.newStorageUnitId)
+        : null;
+
       return {
         id: String(ad._id || ad.id),
         addendumCode: String(ad.addendumCode),
         type:
-          (ad.type as ContractAddendumTypeEnum) || ContractAddendumTypeEnum.ADD,
+          (ad.type as ContractAddendumTypeEnum) ||
+          ContractAddendumTypeEnum.RENEW,
+        previousEndDate: ad.previousEndDate
+          ? ad.previousEndDate instanceof Date
+            ? ad.previousEndDate.toISOString()
+            : new Date(String(ad.previousEndDate)).toISOString()
+          : null,
+        newEndDate: ad.newEndDate
+          ? ad.newEndDate instanceof Date
+            ? ad.newEndDate.toISOString()
+            : new Date(String(ad.newEndDate)).toISOString()
+          : null,
+        previousStorageUnitId: prevUnitIdStr,
+        previousStorageUnit: formatStorageUnitSnap(ad.previousStorageUnitId),
+        newStorageUnitId: nextUnitIdStr,
+        newStorageUnit: formatStorageUnitSnap(ad.newStorageUnitId),
         amenities: formatAmenityList(ad.amenities),
         totalPeriodicPrice: Number(ad.totalPeriodicPrice || 0),
         damageFee: Number(ad.damageFee || 0),
@@ -2131,6 +3014,14 @@ export class ContractService {
           ? raw.actualCheckInDate.toISOString()
           : new Date(String(raw.actualCheckInDate)).toISOString()
         : null,
+      earlyCheckIn:
+        raw.earlyCheckIn !== undefined && raw.earlyCheckIn !== null
+          ? Boolean(raw.earlyCheckIn)
+          : null,
+      outOfSlot:
+        raw.outOfSlot !== undefined && raw.outOfSlot !== null
+          ? Boolean(raw.outOfSlot)
+          : null,
       actualCheckOutDate: raw.actualCheckOutDate
         ? raw.actualCheckOutDate instanceof Date
           ? raw.actualCheckOutDate.toISOString()
@@ -2147,6 +3038,14 @@ export class ContractService {
       depositPaymentId: raw.depositPaymentId
         ? String(raw.depositPaymentId)
         : null,
+      firstPeriodPaidAt: raw.firstPeriodPaidAt
+        ? raw.firstPeriodPaidAt instanceof Date
+          ? raw.firstPeriodPaidAt.toISOString()
+          : new Date(String(raw.firstPeriodPaidAt)).toISOString()
+        : null,
+      firstPeriodPaymentId: raw.firstPeriodPaymentId
+        ? String(raw.firstPeriodPaymentId)
+        : null,
       totalPeriodicPrice: Number(raw.totalPeriodicPrice),
       amenities,
       addendums,
@@ -2156,8 +3055,24 @@ export class ContractService {
       damageFee: Number(raw.damageFee || 0),
       overdueFee: Number(raw.overdueFee || 0),
       refundAmount: Number(raw.refundAmount || 0),
+      forfeitedAmount: Number(raw.forfeitedAmount || 0),
       additionalPaymentRequired: Number(raw.additionalPaymentRequired || 0),
       inspectionNotes: (raw.inspectionNotes as string) ?? null,
+      inspectionPhotos: (raw.inspectionPhotos as string[]) || [],
+      depositStatus: (raw.depositStatus as ContractDepositStatusEnum) || null,
+      settlementConfirmedAt: raw.settlementConfirmedAt
+        ? raw.settlementConfirmedAt instanceof Date
+          ? raw.settlementConfirmedAt.toISOString()
+          : new Date(String(raw.settlementConfirmedAt)).toISOString()
+        : null,
+      disputedAt: raw.disputedAt
+        ? raw.disputedAt instanceof Date
+          ? raw.disputedAt.toISOString()
+          : new Date(String(raw.disputedAt)).toISOString()
+        : null,
+      disputeReason: (raw.disputeReason as string) ?? null,
+      cancellationType:
+        (raw.cancellationType as ContractCancellationTypeEnum) || null,
       cancellationReason: (raw.cancellationReason as string) ?? null,
       cancelledBy,
       cancelledAt: raw.cancelledAt
@@ -2165,6 +3080,10 @@ export class ContractService {
           ? raw.cancelledAt.toISOString()
           : new Date(String(raw.cancelledAt)).toISOString()
         : null,
+      terminationType:
+        (raw.terminationType as ContractTerminationTypeEnum) || null,
+      violationCategory:
+        (raw.violationCategory as ViolationCategoryEnum) || null,
       terminationReason: (raw.terminationReason as string) ?? null,
       terminatedBy,
       terminatedAt: raw.terminatedAt
@@ -2172,6 +3091,9 @@ export class ContractService {
           ? raw.terminatedAt.toISOString()
           : new Date(String(raw.terminatedAt)).toISOString()
         : null,
+      reportFiles,
+      evidenceFiles,
+      terminationHistory,
       status: raw.status as ContractStatusEnum,
       termsAccepted: Boolean(raw.termsAccepted),
       customerSigned: Boolean(raw.customerSigned),
@@ -2186,6 +3108,7 @@ export class ContractService {
           ? raw.staffSignedAt.toISOString()
           : new Date(String(raw.staffSignedAt)).toISOString()
         : null,
+      signatureHistory,
       notes: (raw.notes as string) ?? null,
       customer,
       facility,

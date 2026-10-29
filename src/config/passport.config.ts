@@ -64,7 +64,7 @@ passport.use(
         await UserProfile.findOneAndUpdate(
           { userId: user._id },
           {},
-          { upsert: true, new: true, setDefaultsOnInsert: true }
+          { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
         );
 
         auditLogService.record({

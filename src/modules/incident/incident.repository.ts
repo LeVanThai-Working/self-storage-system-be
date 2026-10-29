@@ -252,4 +252,28 @@ export class IncidentRepository {
     if (session) q.session(session);
     return q.exec();
   }
+
+  /**
+   * Count all open (non-terminal) incidents linked to a contract.
+   * Terminal statuses are CLOSED and CANCELLED.
+   */
+  async countOpenByContractId(
+    contractId: string | Types.ObjectId,
+    session?: ClientSession
+  ): Promise<number> {
+    if (typeof contractId === 'string' && !Types.ObjectId.isValid(contractId)) {
+      return 0;
+    }
+
+    const q = this.model.countDocuments({
+      contractId: new Types.ObjectId(contractId),
+      status: {
+        $nin: [IncidentStatusEnum.CLOSED, IncidentStatusEnum.CANCELLED],
+      },
+      deleted: false,
+    });
+
+    if (session) q.session(session);
+    return q.exec();
+  }
 }

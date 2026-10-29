@@ -13,6 +13,7 @@ import {
   RackStatusEnum,
   RackTierStatusEnum,
 } from '../../common/enums/storageRack.enum.ts';
+import { INVENTORY_OPS_BY_CONTRACT_STATUS } from '../../config/contract.config.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -221,6 +222,7 @@ export class CustomerInventoryService {
     skuId: string,
     rackTierId: string | null | undefined,
     caller: CallerContext,
+    op: MovementTypeEnum,
     session?: ClientSession
   ) {
     // 1. Verify Contract
@@ -232,9 +234,13 @@ export class CustomerInventoryService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
     }
 
-    // Contract must be ACTIVE
-    if (contract.status !== ContractStatusEnum.ACTIVE) {
+    // Check contract status against allowed inventory operations matrix
+    const allowedOps = INVENTORY_OPS_BY_CONTRACT_STATUS[contract.status] ?? [];
+    if (allowedOps.length === 0) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_622);
+    }
+    if (!allowedOps.includes(op)) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
     }
 
     // Check contract ownership if caller is CUSTOMER
@@ -310,6 +316,25 @@ export class CustomerInventoryService {
       }
     }
 
+    // 5. Atomically touch contract in session to prevent write-skew with concurrent contract status transitions
+    const allowedStatusesForOp = (
+      Object.entries(INVENTORY_OPS_BY_CONTRACT_STATUS) as [
+        ContractStatusEnum,
+        readonly MovementTypeEnum[],
+      ][]
+    )
+      .filter(([, ops]) => ops.includes(op))
+      .map(([status]) => status);
+
+    const touched = await this.contractRepository.touchIfStatusAtomic(
+      contractId,
+      allowedStatusesForOp,
+      session
+    );
+    if (!touched) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_622);
+    }
+
     return {
       contract,
       sku,
@@ -337,6 +362,7 @@ export class CustomerInventoryService {
         data.skuId,
         data.rackTierId,
         caller,
+        MovementTypeEnum.IN,
         session
       );
 
@@ -462,6 +488,7 @@ export class CustomerInventoryService {
         data.skuId,
         data.rackTierId,
         caller,
+        MovementTypeEnum.OUT,
         session
       );
 
@@ -479,7 +506,7 @@ export class CustomerInventoryService {
 
     // Operation Guard: Item must be in NORMAL status to be stocked out
     if (existing.status && existing.status !== InventoryItemStatusEnum.NORMAL) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
     }
 
     const inventoryId = String(existing._id);
@@ -593,6 +620,7 @@ export class CustomerInventoryService {
         data.skuId,
         fromTierId,
         caller,
+        MovementTypeEnum.MOVE,
         session
       );
 
@@ -668,7 +696,7 @@ export class CustomerInventoryService {
       sourceInventory.status === InventoryItemStatusEnum.DAMAGED ||
       sourceInventory.status === InventoryItemStatusEnum.DISPUTED
     ) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
     }
 
     const fromPrev = sourceInventory.quantity;
@@ -825,6 +853,7 @@ export class CustomerInventoryService {
         data.skuId,
         data.rackTierId,
         caller,
+        MovementTypeEnum.ADJUST,
         session
       );
 
@@ -1046,7 +1075,7 @@ export class CustomerInventoryService {
     }
 
     const contract =
-      await this.contractRepository.findActiveByStorageUnitId(storageUnitId);
+      await this.contractRepository.findCurrentByStorageUnitId(storageUnitId);
 
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
     if (isCustomer) {
@@ -2021,7 +2050,7 @@ export class CustomerInventoryService {
     }
 
     if (!data.emergencyReason || data.emergencyReason.trim().length < 10) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_646);
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_647);
     }
 
     const items = await this.inventoryRepository.findActiveByRackId(

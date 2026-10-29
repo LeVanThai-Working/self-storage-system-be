@@ -14,6 +14,7 @@ const SENSITIVE_KEYS = new Set([
   'accesstoken',
   'refreshtoken',
   'googleid',
+  'acceptedip',
 ]);
 
 /** Technical keys that carry no audit value in a diff. */

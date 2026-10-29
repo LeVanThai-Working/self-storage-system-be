@@ -10,6 +10,7 @@ import {
   IncidentStatusEnum,
 } from '../../common/enums/incident.enum.ts';
 import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
+import { ContractStatusEnum } from '../../common/enums/contract.enum.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -25,6 +26,7 @@ import type { StorageUnitRepository } from '../storageUnit/storageUnit.repositor
 import type { ContractRepository } from '../contract/contract.repository.ts';
 import type { UserRepository } from '../user/user.repository.ts';
 import type { NotificationService } from '../notification/notification.service.ts';
+import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
 import type { IIncident } from './incident.model.ts';
 import {
   incidentResponseSchema,
@@ -62,7 +64,8 @@ export class IncidentService {
     private readonly contractRepository?: ContractRepository,
     private readonly userRepository?: UserRepository,
     private readonly notificationService?: NotificationService,
-    private readonly auditLogService?: AuditLogService
+    private readonly auditLogService?: AuditLogService,
+    private readonly customerInventoryRepository?: CustomerInventoryRepository
   ) {}
 
   private async resolveCallerAssignedFacilityId(
@@ -101,7 +104,11 @@ export class IncidentService {
         return { id: String(ref) };
       }
       if (typeof ref === 'object') {
-        const obj = ref as Record<string, unknown>;
+        const obj =
+          typeof (ref as { toObject?: () => Record<string, unknown> })
+            .toObject === 'function'
+            ? (ref as { toObject: () => Record<string, unknown> }).toObject()
+            : (ref as Record<string, unknown>);
         const rawId = obj.id || obj._id;
         const res: Record<string, unknown> = {
           ...obj,
@@ -109,6 +116,12 @@ export class IncidentService {
         };
         if (res._id) {
           res._id = String(res._id);
+        }
+        if (res.startDate instanceof Date) {
+          res.startDate = res.startDate.toISOString();
+        }
+        if (res.endDate instanceof Date) {
+          res.endDate = res.endDate.toISOString();
         }
         return res;
       }
@@ -183,24 +196,9 @@ export class IncidentService {
     const callerRole = (caller.role || RoleEnum.CUSTOMER) as RoleEnum;
     let reporterRole = callerRole;
 
-    // A. Validate Customer Scope
+    // A. Validate Caller Scope
     if (callerRole === RoleEnum.CUSTOMER) {
       reporterRole = RoleEnum.CUSTOMER;
-      if (data.contractId && this.contractRepository) {
-        const contract = await this.contractRepository.findById(
-          data.contractId,
-          session
-        );
-        if (!contract || contract.deleted) {
-          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
-        }
-        if (toId(contract.customerId) !== caller.id) {
-          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-        }
-        if (toId(contract.facilityId) !== data.facilityId) {
-          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
-        }
-      }
     } else if (
       callerRole === RoleEnum.FACILITY_STAFF ||
       callerRole === RoleEnum.FACILITY_MANAGER
@@ -210,6 +208,36 @@ export class IncidentService {
         await this.resolveCallerAssignedFacilityId(caller);
       if (!assignedFacilityId || assignedFacilityId !== data.facilityId) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, ['Facility']);
+      }
+    }
+
+    // B2. Validate linked Contract (existence, facility match, customer ownership, and anti-write-skew touch)
+    if (data.contractId && this.contractRepository) {
+      const contract = await this.contractRepository.findById(
+        data.contractId,
+        session
+      );
+      if (!contract || contract.deleted) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+      }
+      if (
+        callerRole === RoleEnum.CUSTOMER &&
+        toId(contract.customerId) !== caller.id
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      if (toId(contract.facilityId) !== data.facilityId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
+      }
+      if (
+        contract.status === ContractStatusEnum.ACTIVE ||
+        contract.status === ContractStatusEnum.OVERDUE
+      ) {
+        await this.contractRepository.touchIfStatusAtomic(
+          data.contractId,
+          [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE],
+          session
+        );
       }
     }
 
@@ -530,14 +558,23 @@ export class IncidentService {
       incident.storageUnitId &&
       this.storageUnitRepository
     ) {
-      const unit = await this.storageUnitRepository.findById(
-        toId(incident.storageUnitId),
-        session
-      );
+      const unitId = toId(incident.storageUnitId);
+      const unit = await this.storageUnitRepository.findById(unitId, session);
       if (unit && unit.status === StorageUnitStatusEnum.UNDER_MAINTENANCE) {
-        await this.storageUnitRepository.updateById(
-          toId(incident.storageUnitId),
-          { status: StorageUnitStatusEnum.AVAILABLE },
+        if (this.customerInventoryRepository) {
+          const remainingItems =
+            await this.customerInventoryRepository.countRemainingByStorageUnit(
+              unitId,
+              session
+            );
+          if (remainingItems > 0) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+          }
+        }
+        await this.storageUnitRepository.transitionStatusAtomic(
+          unitId,
+          [StorageUnitStatusEnum.UNDER_MAINTENANCE],
+          StorageUnitStatusEnum.AVAILABLE,
           session
         );
       }
@@ -623,26 +660,54 @@ export class IncidentService {
   /**
    * 5. Close Incident (Customer or FM)
    */
+  @Transactional()
   async closeIncident(
     caller: CallerContext,
     id: string,
     data?: CloseIncidentRequest,
     session?: ClientSession
   ): Promise<IncidentResponse> {
-    const incident = await this.incidentRepository.findById(id, session);
+    let effectiveSession = session;
+    let effectiveData = data;
+    if (
+      !effectiveSession &&
+      effectiveData &&
+      typeof (effectiveData as unknown as ClientSession).withTransaction ===
+        'function'
+    ) {
+      effectiveSession = effectiveData as unknown as ClientSession;
+      effectiveData = undefined;
+    }
+
+    const incident = await this.incidentRepository.findById(
+      id,
+      effectiveSession
+    );
     if (!incident || incident.deleted) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_700);
     }
 
-    // Scope check: Customer who reported, FM of facility, or Ops/Admin
+    // Scope check: Customer (reporter or owner of linked contract), FM of facility, or Ops/Admin.
+    // FACILITY_STAFF is explicitly barred from closing incidents (Maker-Checker).
     if (caller.role === RoleEnum.CUSTOMER) {
-      if (toId(incident.reporterId) !== caller.id) {
+      let isAuthorizedCustomer = toId(incident.reporterId) === caller.id;
+      if (
+        !isAuthorizedCustomer &&
+        incident.contractId &&
+        this.contractRepository
+      ) {
+        const linkedContract = await this.contractRepository.findById(
+          toId(incident.contractId),
+          effectiveSession
+        );
+        if (linkedContract && toId(linkedContract.customerId) === caller.id) {
+          isAuthorizedCustomer = true;
+        }
+      }
+      if (!isAuthorizedCustomer) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
-    } else if (
-      caller.role === RoleEnum.FACILITY_MANAGER ||
-      caller.role === RoleEnum.FACILITY_STAFF
-    ) {
+    } else if (caller.role === RoleEnum.FACILITY_MANAGER) {
       const assignedFacilityId =
         await this.resolveCallerAssignedFacilityId(caller);
       if (
@@ -651,6 +716,11 @@ export class IncidentService {
       ) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, ['Facility']);
       }
+    } else if (
+      caller.role !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      caller.role !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
     const updated = await this.incidentRepository.atomicUpdateStatus(
@@ -662,11 +732,57 @@ export class IncidentService {
           closedAt: new Date(),
         },
       },
-      session
+      effectiveSession
     );
 
     if (!updated) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_701);
+    }
+
+    // Sync customer-liable damageFee & staffEvidenceImages onto Contract when Incident closes ([CHỐT Q3])
+    const resolution = incident.resolution;
+    if (
+      incident.contractId &&
+      resolution?.liableParty === IncidentLiablePartyEnum.CUSTOMER &&
+      (resolution.damageFee ?? 0) > 0
+    ) {
+      if (!this.contractRepository) {
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106);
+      }
+      const contractIdStr = toId(incident.contractId);
+      const oldContract = await this.contractRepository.findById(
+        contractIdStr,
+        effectiveSession
+      );
+      if (!oldContract || oldContract.deleted) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+      }
+
+      const updatedContract =
+        await this.contractRepository.accumulateIncidentDamageAtomic(
+          contractIdStr,
+          resolution.damageFee,
+          resolution.staffEvidenceImages || [],
+          effectiveSession
+        );
+
+      if (!updatedContract) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+      }
+
+      this.auditLogService?.record({
+        action: AuditActionEnum.UPDATE,
+        resourceType: AuditResourceEnum.CONTRACT,
+        resourceId: contractIdStr,
+        before: oldContract,
+        after: updatedContract,
+        metadata: {
+          incidentId: id,
+          incidentCode: incident.incidentCode,
+          addedDamageFee: resolution.damageFee,
+          totalDamageFee: updatedContract.damageFee,
+        },
+      });
     }
 
     // Audit Log
@@ -676,6 +792,9 @@ export class IncidentService {
       resourceId: id,
       before: incident,
       after: updated,
+      metadata: effectiveData?.notes
+        ? { notes: effectiveData.notes }
+        : undefined,
     });
 
     // Notify assigned staff if present
@@ -786,7 +905,20 @@ export class IncidentService {
 
     // Scope check:
     if (caller.role === RoleEnum.CUSTOMER) {
-      if (toId(incident.reporterId) !== caller.id) {
+      let isAuthorizedCustomer = toId(incident.reporterId) === caller.id;
+      if (
+        !isAuthorizedCustomer &&
+        incident.contractId &&
+        this.contractRepository
+      ) {
+        const linkedContract = await this.contractRepository.findById(
+          toId(incident.contractId)
+        );
+        if (linkedContract && toId(linkedContract.customerId) === caller.id) {
+          isAuthorizedCustomer = true;
+        }
+      }
+      if (!isAuthorizedCustomer) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
     } else if (
