@@ -1,4 +1,37 @@
 import 'dotenv/config';
+import { vi } from 'vitest';
+
+// Mock BullMQ across all tests so unit/integration tests do not require a live Redis instance
+vi.mock('bullmq', () => {
+  return {
+    Queue: class MockQueue {
+      name: string;
+      constructor(name: string) {
+        this.name = name;
+      }
+      on() {
+        return this;
+      }
+      add = vi.fn().mockResolvedValue({ id: 'mock-job-id' });
+      getJob = vi.fn().mockResolvedValue({
+        id: 'mock-job-id',
+        remove: vi.fn().mockResolvedValue(true),
+      });
+      upsertJobScheduler = vi.fn().mockResolvedValue(undefined);
+      close = vi.fn().mockResolvedValue(undefined);
+    },
+    Worker: class MockWorker {
+      name: string;
+      constructor(name: string) {
+        this.name = name;
+      }
+      on() {
+        return this;
+      }
+      close = vi.fn().mockResolvedValue(undefined);
+    },
+  };
+});
 
 // Ensure required environment variables for test execution
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';

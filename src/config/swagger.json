@@ -19102,7 +19102,7 @@
 						}
 					}
 				},
-				"description": "Create a new physical storage unit\n\n//",
+				"description": "Create a new physical storage unit\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -19334,7 +19334,7 @@
 						}
 					}
 				},
-				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\n\n//",
+				"description": "Update storage unit information (unitNumber, floor, zone, notes, unitTypeId)\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -19394,7 +19394,7 @@
 						}
 					}
 				},
-				"description": "Soft-delete storage unit\n\n//",
+				"description": "Soft-delete storage unit\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -19446,7 +19446,7 @@
 						}
 					}
 				},
-				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\nTurning maintenance off is rejected (MESSAGE_CODE_629) while customer goods remain inside the unit.\n\n//",
+				"description": "Toggle maintenance status for storage unit (AVAILABLE <-> UNDER_MAINTENANCE)\r\nTurning maintenance off is rejected (MESSAGE_CODE_629) while customer goods remain inside the unit.\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -19508,7 +19508,7 @@
 						}
 					}
 				},
-				"description": "Restore soft-deleted storage unit\n\n//",
+				"description": "Restore soft-deleted storage unit\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -19560,7 +19560,7 @@
 						}
 					}
 				},
-				"description": "Reconcile orphan RESERVED storage units that have no active Reservation or Contract.\n\n//",
+				"description": "Reconcile orphan RESERVED storage units that have no active Reservation or Contract.\r\n\r\n//",
 				"tags": [
 					"Storage Units"
 				],
@@ -20371,7 +20371,7 @@
 						}
 					}
 				},
-				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).\nEnforces minimum same-day preparation lead time (sameDayLeadMinutes, 400 MESSAGE_CODE_328),\nmaximum startDate offset from checkInDate (maxStartDateOffsetDays, 400 MESSAGE_CODE_329),\nand flags immediateForfeitWarning when booking is within 24 hours of check-in.",
+				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).\r\nEnforces minimum same-day preparation lead time (sameDayLeadMinutes, 400 MESSAGE_CODE_328),\r\nmaximum startDate offset from checkInDate (maxStartDateOffsetDays, 400 MESSAGE_CODE_329),\r\nand flags immediateForfeitWarning when booking is within 24 hours of check-in.",
 				"tags": [
 					"Reservations"
 				],
@@ -20777,7 +20777,7 @@
 						}
 					}
 				},
-				"description": "Customer or Staff responds to a pending unit reassign proposal (accept or reject) [CHỐT D4].\n- Accept: applies new unit, updates basePrice to upgraded price tier, frees old unit.\n- Reject: cancels reservation as FACILITY_FAULT, releases both units, creates 100% deposit refund request.",
+				"description": "Customer or Staff responds to a pending unit reassign proposal (accept or reject) [CHỐT D4].\r\n- Accept: applies new unit, updates basePrice to upgraded price tier, frees old unit.\r\n- Reject: cancels reservation as FACILITY_FAULT, releases both units, creates 100% deposit refund request.",
 				"tags": [
 					"Reservations"
 				],
@@ -28303,7 +28303,7 @@
 						}
 					}
 				},
-				"description": "Create a new contract (From Reservation or Walk-in).\nStatus will be DRAFT.",
+				"description": "Create a new contract (From Reservation or Walk-in).\r\nStatus will be DRAFT.",
 				"tags": [
 					"Contracts"
 				],
@@ -28727,7 +28727,7 @@
 						}
 					}
 				},
-				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\nContract remains DRAFT until Facility Manager completes check-in.",
+				"description": "Customer signs contract terms on Mobile (Two-party signing: Customer side).\r\nContract remains DRAFT until Facility Manager completes check-in.",
 				"tags": [
 					"Contracts"
 				],
@@ -28809,7 +28809,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).\nRequires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.\nIf actualCheckInDate shifts contract dates and customer had already signed, saves previous signature\nin signatureHistory, resets customerSigned to false, and rejects with 400 MESSAGE_CODE_425\nrequiring customer re-signing before check-in can be finalized.",
+				"description": "Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).\r\nRequires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.\r\nIf actualCheckInDate shifts contract dates and customer had already signed, saves previous signature\r\nin signatureHistory, resets customerSigned to false, and rejects with 400 MESSAGE_CODE_425\r\nrequiring customer re-signing before check-in can be finalized.",
 				"tags": [
 					"Contracts"
 				],
@@ -28891,7 +28891,7 @@
 						}
 					}
 				},
-				"description": "Cancel or Void DRAFT contract.\n- cancellationType = 'cancel': Cancel contract. If sourced from reservation, forfeiture / refund is calculated based on policy snapshot. If walk-in, deposit is 100% forfeited.\n- cancellationType = 'void': Void invalid draft contract (Staff/Manager/Ops/Admin only). If sourced from reservation, reservation and unit hold are preserved. If walk-in, deposit is 100% refunded.",
+				"description": "Cancel or Void DRAFT contract.\r\n- cancellationType = 'cancel': Cancel contract. If sourced from reservation, forfeiture / refund is calculated based on policy snapshot. If walk-in, deposit is 100% forfeited.\r\n- cancellationType = 'void': Void invalid draft contract (Staff/Manager/Ops/Admin only). If sourced from reservation, reservation and unit hold are preserved. If walk-in, deposit is 100% refunded.",
 				"tags": [
 					"Contracts"
 				],
@@ -29026,7 +29026,7 @@
 						}
 					}
 				},
-				"description": "Create a Contract Addendum (RENEW or UNIT_CHANGE).\n- RENEW: CUSTOMER creates in PENDING_APPROVAL; FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT.\n- UNIT_CHANGE: Only FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT and reserves the replacement unit.",
+				"description": "Create a Contract Addendum (RENEW or UNIT_CHANGE).\r\n- RENEW: CUSTOMER creates in PENDING_APPROVAL; FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT.\r\n- UNIT_CHANGE: Only FACILITY_MANAGER / BUSINESS_OPS_MANAGER / SYSTEM_ADMIN creates in DRAFT and reserves the replacement unit.",
 				"tags": [
 					"Contracts"
 				],
@@ -29258,7 +29258,7 @@
 						}
 					}
 				},
-				"description": "Customer signs addendum (First signing step: Customer side).\nAddendum remains in DRAFT awaiting Facility Manager signature.",
+				"description": "Customer signs addendum (First signing step: Customer side).\r\nAddendum remains in DRAFT awaiting Facility Manager signature.",
 				"tags": [
 					"Contracts"
 				],
@@ -29338,7 +29338,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).\nTransitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.\nFor UNIT_CHANGE addendums, returns 400 MESSAGE_CODE_629 if the previous storage unit still contains customer inventory.",
+				"description": "Facility Manager signs addendum after Customer has signed (Second signing step: Facility side).\r\nTransitions addendum to ACTIVE and applies RENEW or UNIT_CHANGE changes to the contract.\r\nFor UNIT_CHANGE addendums, returns 400 MESSAGE_CODE_629 if the previous storage unit still contains customer inventory.",
 				"tags": [
 					"Contracts"
 				],
@@ -29508,7 +29508,7 @@
 						}
 					}
 				},
-				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.\nReturns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract,\nor 400 MESSAGE_CODE_421 if open (unclosed) incidents still exist on this contract.",
+				"description": "Check-out & Liquidate contract.\r\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\r\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.\r\nReturns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract,\r\nor 400 MESSAGE_CODE_421 if open (unclosed) incidents still exist on this contract.",
 				"tags": [
 					"Contracts"
 				],
@@ -29590,7 +29590,7 @@
 						}
 					}
 				},
-				"description": "Terminate contract early due to terms violation.\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
+				"description": "Terminate contract early due to terms violation.\r\nMoves storage unit to UNDER_MAINTENANCE and releases amenities.",
 				"tags": [
 					"Contracts"
 				],
@@ -29816,7 +29816,7 @@
 						}
 					}
 				},
-				"description": "Scan and transition expired ACTIVE contracts to OVERDUE status.\nCalculates overdue penalty fees and isolates failures per contract.",
+				"description": "Scan and transition expired ACTIVE contracts to OVERDUE status.\r\nCalculates overdue penalty fees and isolates failures per contract.",
 				"tags": [
 					"Contracts"
 				],
