@@ -34,6 +34,14 @@
   - `MOVE` (Chuyển vị trí): Dời hàng từ tầng kệ này sang tầng kệ khác trong cùng phòng kho mà không thay đổi tổng số lượng tồn của khách.
   - `ADJUST` (Điều chỉnh kiểm kê): Cân bằng lại số lượng tồn thực tế sau khi khách hàng tự kiểm đếm hàng trong kho (bắt buộc nhập lý do chênh lệch).
 
+### 4. Trạng thái Mặt hàng Tồn kho (`InventoryItemStatusEnum`)
+
+- **Các trạng thái mặt hàng (`CustomerInventory.status`):**
+  - `NORMAL` (Mặc định): Hàng hóa lưu trữ ổn định, sẵn sàng xuất kho hoặc bốc dời.
+  - `TEMPORARY_HOLDING`: Hàng hóa vừa được hạ khẩn cấp từ kệ hỏng xuống sàn/khu lưu tạm, đang chờ khách ký phụ lục đổi kệ mới. **Bị khóa không cho xuất kho.**
+  - `DAMAGED`: Hàng hóa bị phát hiện hư hỏng vật lý (ẩm ướt, móp vỡ), liên kết với mã sự cố `relatedIncidentId`. **Khóa tuyệt đối xuất kho và bốc dời** để bảo toàn hiện trường bồi thường.
+  - `DISPUTED`: Hàng bị phong tỏa do tranh chấp hoặc hợp đồng quá hạn nợ cước (`OVERDUE`). Đóng băng toàn bộ thao tác.
+
 ---
 
 ## II. Phân loại Phòng kho, Cấu trúc Mã Định danh & Tự động sinh Kệ tầng
@@ -42,10 +50,10 @@
 
 Hệ thống Self-Storage phân chia thành 4 nhóm kích thước phòng kho chuẩn:
 
-1. `LOCKER`: Tủ gửi đồ cá nhân nhỏ ($S < 1.5\,\text{m}^2$, $V < 2.0\,\text{m}^3$). Không dùng kệ (`defaultRackConfig: null`).
-2. `SMALL`: Phòng kho nhỏ ($1.5\,\text{m}^2 \le S < 6\,\text{m}^2$, $3.5\,\text{m}^3 \le V < 15\,\text{m}^3$). Chứa đồ gia dụng, đồ phòng trọ nguyên phòng, để sàn, không dùng kệ (`defaultRackConfig: null`).
-3. `LARGE`: Phòng kho lớn ($6.0\,\text{m}^2 \le S < 15\,\text{m}^2$, $15\,\text{m}^3 \le V < 40\,\text{m}^3$). Chứa nội thất căn hộ gia đình, đồ kích thước lớn, không kệ (`defaultRackConfig: null`).
-4. `WAREHOUSE_RACK`: Kho hàng hóa diện tích lớn ($S \ge 15.0\,\text{m}^2$, $V \ge 45.0\,\text{m}^3$). **Có sẵn hệ thống Kệ & Tầng** tiêu chuẩn (`defaultRackConfig` mặc định: 3 kệ $\times$ 4 tầng = 12 tầng), cho phép khách hàng tự quản lý danh mục SKU và theo dõi vị trí chính xác đến từng tầng kệ.
+1. `LOCKER`: Tủ gửi đồ cá nhân nhỏ ($S < 1.5\,\text{m}^2$, $V < 2.0\,\text{m}^3$). Khách thuê nguyên tủ tự quản lý đồ cá nhân, **không dùng hệ thống quản lý SKU**.
+2. `SMALL`: Phòng kho nhỏ ($1.5\,\text{m}^2 \le S < 6\,\text{m}^2$, $3.5\,\text{m}^3 \le V < 15\,\text{m}^3$). Khách thuê nguyên phòng tự quản lý đồ gia dụng/phòng trọ, **không dùng hệ thống quản lý SKU**.
+3. `LARGE`: Phòng kho lớn ($6.0\,\text{m}^2 \le S < 15\,\text{m}^2$, $15\,\text{m}^3 \le V < 40\,\text{m}^3$). Khách thuê nguyên phòng tự quản lý nội thất/đồ kích thước lớn, **không dùng hệ thống quản lý SKU**.
+4. `WAREHOUSE_RACK`: Kho hàng hóa diện tích lớn ($S \ge 15.0\,\text{m}^2$, $V \ge 45.0\,\text{m}^3$) được trang bị hệ thống Kệ & Tầng công nghiệp. **Toàn bộ phân hệ quản lý danh mục SKU và vị trí tồn kho (`CustomerInventory`, `CustomerSku`, `StorageRack`, `RackTier`) CHỈ DÀNH RIÊNG CHO MÔ HÌNH NÀY.** Khách hàng thuê theo Kệ (`rentedRackIds`), và **100% hàng hóa bắt buộc phải được lưu trữ trên Kệ tầng**. Không có khái niệm hàng để sàn tự do trong vận hành bình thường.
 
 ### 2. Cấu trúc Mã Định danh Phân tầng & Nhãn Vị trí Chuẩn (`HN01-A101-R2-T1`)
 
@@ -120,28 +128,46 @@ Tất cả 4 thao tác đều chạy nguyên tử trong một `@Transactional()`
    - Ghi nhận 1 dòng sổ cái `InventoryMovement` loại `OUT`.
    - **Tự động nhả tầng kệ:** Hệ thống kiểm tra tổng tồn kho của toàn bộ các SKU còn lại trên tầng kệ đó. Nếu tổng số lượng $= 0$, tầng kệ tự động chuyển trạng thái về `AVAILABLE`.
 3. **Chuyển vị trí nội bộ (`POST /customer-inventories/move`):**
-   - Áp dụng khi khách dời hàng giữa 2 tầng kệ hoặc giữa sàn và kệ trong cùng phòng kho.
+   - **Phân quyền thực tế:** Do **Nhân viên kho (`FACILITY_STAFF`, `FACILITY_MANAGER`)** hoặc Quản lý (`OPS`, `ADMIN`) thực hiện sau khi đã bốc xếp thực tế ngoài kho. **Khách hàng bị chặn (`403 MESSAGE_CODE_103`)** để chống dữ liệu ảo (khách không vào kho bốc vác).
+   - Staff phải thuộc cơ sở của hợp đồng (`assignedFacilityId`).
+   - Bắt buộc phải có lý do điều chuyển (`reason` tối thiểu 5 ký tự, ví dụ: _"Theo ticket hỗ trợ SUP-261029-001"_ hoặc _"Dồn chỗ tối ưu kệ"_).
    - Kiểm tra vị trí đích (`toRackTierId`) phải khác vị trí nguồn (`fromRackTierId`).
    - Giảm tồn kho tại vị trí nguồn và tăng tồn kho tương ứng tại vị trí đích.
    - Đồng bộ trạng thái cả 2 tầng kệ: tầng nguồn có thể về `AVAILABLE` nếu hết hàng, tầng đích chuyển sang `OCCUPIED`.
-   - Ghi nhận 1 dòng sổ cái `InventoryMovement` loại `MOVE`.
+   - **Tự động phục hồi trạng thái:** Nếu hàng nguồn đang ở trạng thái `TEMPORARY_HOLDING`, khi được xếp lên Kệ tầng đích mới sẽ tự động chuyển về `NORMAL`.
+   - Ghi nhận 1 dòng sổ cái `InventoryMovement` loại `MOVE` với `performedBy: staffId`.
 4. **Kiểm kê / Điều chỉnh tồn kho (`POST /customer-inventories/adjust`):**
    - Cho phép khách hàng cập nhật số lượng tồn thực tế (`newQuantity`) sau khi tự đếm hàng.
    - Bắt buộc phải có lý do điều chỉnh (`reason` tối thiểu 3 ký tự, ví dụ: "Hao hụt vận chuyển", "Đếm lại sau khi đóng thùng").
    - Tính toán lượng delta chênh lệch, cập nhật bản ghi tồn kho và ghi sổ cái loại `ADJUST`.
 
-### 3. Quy tắc Quản lý Hàng để sàn & Phòng kho không kệ (Unracked Items — `[D6.2]`)
+### 3. Luồng Hạ Hàng Khẩn Cấp Xuống Khu Lưu Tạm (`POST /customer-inventories/racks/evacuate-to-holding`)
 
-- **Bản chất nghiệp vụ:** Khách hàng thuê bất kỳ loại phòng kho nào (kể cả phòng lớn không kệ `LARGE`, phòng nhỏ `SMALL`, hoặc phòng có kệ `WAREHOUSE_RACK`) đều có thể tự quản lý danh mục SKU và xuất nhập tồn.
-- **Hàng để sàn (Unracked Floor Items):**
-  - Áp dụng cho:
-    1. Phòng kho không trang bị kệ tầng.
-    2. Các kiện hàng cồng kềnh, quá tải trọng, pallet lớn để trực tiếp dưới sàn phòng kho có kệ.
-  - Khi thao tác Nhập/Xuất/Chuyển/Kiểm kê: Request truyền `rackTierId: null` (với Move thì `fromRackTierId: null` hoặc `toRackTierId: null`).
-  - **Bỏ qua State Machine tầng kệ:** Vì không gắn với tầng kệ vật lý nào, hệ thống bỏ qua việc chuyển trạng thái `OCCUPIED` / `AVAILABLE`.
-  - **Hiển thị trên Sơ đồ Cây:** Các mặt hàng này được gom vào mảng `unrackedItems` của API `GET /customer-inventories/unit/{storageUnitId}/tree`.
+- Áp dụng khi kệ gặp sự cố kỹ thuật khẩn cấp (kệ nứt, rỉ nước) nhưng kho **không còn kệ cùng loại** để dời 1-Click (Task 7E).
+- Thao tác trong transaction:
+  - Hạ toàn bộ hàng trên kệ cũ xuống sàn (`rackTierId: null`, `storageRackId: null`).
+  - Đổi trạng thái hàng hóa từ `NORMAL` sang `TEMPORARY_HOLDING`.
+  - Chuyển Kệ cũ sang `MAINTENANCE` để phong tỏa bảo trì.
+  - Giải phóng toàn bộ các Tầng kệ cũ về `AVAILABLE`.
+  - Sinh $N$ bản ghi sổ cái `InventoryMovement` loại `MOVE` với lý do khẩn cấp.
+- Sau khi khách hàng ký Phụ lục hợp đồng mới, nhân viên dùng API `move` xếp hàng lên Kệ mới và hàng tự động trở lại `NORMAL`.
 
-### 4. Quy tắc Bảng Điều khiển Tổng hợp Tồn kho (`GET /customer-inventories/summary`)
+### 4. Luồng Cập Nhật Trạng Thái Mặt Hàng (`PATCH /customer-inventories/{id}/status`)
+
+- Dành cho Staff/FM cơ sở và Ops/Admin:
+  - Cho phép đánh dấu hàng bị `DAMAGED` (khi phát hiện hư hỏng, bắt buộc kèm `incidentId`).
+  - Hoặc chuyển hàng sang `DISPUTED` (khi tranh chấp/quá hạn nợ).
+  - Hoặc phục hồi về `NORMAL` khi sự cố đã bồi thường xong.
+
+### 5. Quy tắc Vị trí Tồn kho trong Kho Kệ (`WAREHOUSE_RACK`)
+
+- **Bắt buộc ở trên Kệ tầng:** Trong điều kiện vận hành bình thường, mọi mặt hàng tồn kho `CustomerInventory` bắt buộc phải có `storageRackId` và `rackTierId` hợp lệ, thuộc danh sách Kệ mà hợp đồng khách đang thuê (`contract.rentedRackIds`). Trạng thái hàng là `NORMAL`.
+- **Trường hợp duy nhất không gắn tầng kệ (`rackTierId: null`):**
+  - Chỉ xảy ra khi Kệ bị sự cố kỹ thuật khẩn cấp và toàn bộ hàng được sơ tán xuống Khu vực lưu tạm của cơ sở (`POST /customer-inventories/racks/evacuate-to-holding`).
+  - Khi đó, hàng mang trạng thái `TEMPORARY_HOLDING`, tạm mất vị trí kệ tầng và **bị khóa tuyệt đối không cho phép xuất kho** cho đến khi nhân viên bốc hàng lên Kệ mới và phục hồi về `NORMAL`.
+  - Không có hàng để sàn tự do hay tồn kho không kệ trong vận hành thông thường.
+
+### 6. Quy tắc Bảng Điều khiển Tổng hợp Tồn kho (`GET /customer-inventories/summary`)
 
 - **Mục đích:** Cung cấp số liệu tổng quan về tồn kho cá nhân (tổng số SKU, tổng số lượng kiện hàng, số hợp đồng active, số phòng đang thuê, cơ cấu ngành hàng, và 5 biến động gần nhất).
 - **Phân quyền truy xuất theo Caller:**
@@ -154,20 +180,22 @@ Tất cả 4 thao tác đều chạy nguyên tử trong một `@Transactional()`
 
 ## V. Ma trận Phân quyền & Bảo mật Nghiệp vụ
 
-| Thao tác / Endpoint                                |      CUSTOMER (Chủ kho)       |  FACILITY_STAFF  |      FACILITY_MANAGER       |   OPS_MANAGER / ADMIN    |
-| :------------------------------------------------- | :---------------------------: | :--------------: | :-------------------------: | :----------------------: |
-| `POST /customer-skus` (Tạo SKU)                    |      ✅ Chỉ tạo của mình      | ❌ 403 Forbidden |      ❌ 403 Forbidden       |     ❌ Chỉ khách tạo     |
-| `GET /customer-skus` (Xem danh sách SKU)           |        ✅ Xem của mình        | ❌ 403 Forbidden |  👁️ Chỉ khách thuộc cơ sở   |      ✅ Toàn quyền       |
-| `PATCH / DELETE /customer-skus/:id`                |    ✅ Chỉ sửa/xóa của mình    | ❌ 403 Forbidden |      ❌ 403 Forbidden       |     ❌ 403 Forbidden     |
-| `POST /customer-inventories/in` (Nhập hàng)        | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
-| `POST /customer-inventories/out` (Xuất hàng)       | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
-| `POST /customer-inventories/move` (Chuyển kệ)      | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
-| `POST /customer-inventories/adjust` (Kiểm kê)      | ✅ Thao tác hợp đồng của mình | ❌ 403 Forbidden |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
-| `GET /customer-inventories` (Tra cứu tồn kho)      |    ✅ Tự động lọc của mình    | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
-| `GET /customer-inventories/movements` (Sổ cái)     |    ✅ Tự động lọc của mình    | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
-| `GET /customer-inventories/unit/:id/tree` (6D)     |   ✅ Xem kho mình đang thuê   | ❌ 403 Forbidden | 👁️ Xem kho thuộc cơ sở mình |      ✅ Toàn quyền       |
-| `GET /customer-inventories/sku/:id/locations` (6D) |  ✅ Xem vị trí SKU của mình   | ❌ 403 Forbidden |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
-| `GET /customer-inventories/summary` (6D)           |        ✅ Xem của mình        | ❌ 403 Forbidden |      ❌ 403 Forbidden       | ✅ Xem theo `customerId` |
+| Thao tác / Endpoint                                    |      CUSTOMER (Chủ kho)       |    FACILITY_STAFF     |      FACILITY_MANAGER       |   OPS_MANAGER / ADMIN    |
+| :----------------------------------------------------- | :---------------------------: | :-------------------: | :-------------------------: | :----------------------: |
+| `POST /customer-skus` (Tạo SKU)                        |      ✅ Chỉ tạo của mình      |  👁️ Hỗ trợ tạo quầy   |     👁️ Hỗ trợ tạo quầy      |     ❌ Chỉ khách tạo     |
+| `GET /customer-skus` (Xem danh sách SKU)               |        ✅ Xem của mình        | 👁️ Khách thuộc cơ sở  |  👁️ Chỉ khách thuộc cơ sở   |      ✅ Toàn quyền       |
+| `PATCH / DELETE /customer-skus/:id`                    |    ✅ Chỉ sửa/xóa của mình    |  👁️ Hỗ trợ sửa quầy   |     👁️ Hỗ trợ sửa quầy      |      ✅ Toàn quyền       |
+| `POST /customer-inventories/in` (Nhập hàng)            | ✅ Thao tác hợp đồng của mình |   ❌ 403 Forbidden    |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
+| `POST /customer-inventories/out` (Xuất hàng)           | ✅ Thao tác hợp đồng của mình |   ❌ 403 Forbidden    |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
+| `POST /customer-inventories/move` (Chuyển kệ)          |  ❌ **403 Chống dữ liệu ảo**  | ✅ **Bốc dời cơ sở**  |    ✅ **Bốc dời cơ sở**     |      ✅ Toàn quyền       |
+| `POST /customer-inventories/adjust` (Kiểm kê)          | ✅ Thao tác hợp đồng của mình |   ❌ 403 Forbidden    |      ❌ 403 Forbidden       |      ✅ Toàn quyền       |
+| `POST /customer-inventories/racks/evacuate-to-holding` |       ❌ 403 Forbidden        | ✅ **Hạ hàng cơ sở**  |    ✅ **Hạ hàng cơ sở**     |      ✅ Toàn quyền       |
+| `PATCH /customer-inventories/:id/status`               |       ❌ 403 Forbidden        | ✅ **Đổi trạng thái** |    ✅ **Đổi trạng thái**    |      ✅ Toàn quyền       |
+| `GET /customer-inventories` (Tra cứu tồn kho)          |    ✅ Tự động lọc của mình    | 👁️ Khách thuộc cơ sở  |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
+| `GET /customer-inventories/movements` (Sổ cái)         |    ✅ Tự động lọc của mình    | 👁️ Khách thuộc cơ sở  |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
+| `GET /customer-inventories/unit/:id/tree` (6D)         |   ✅ Xem kho mình đang thuê   |   ❌ 403 Forbidden    | 👁️ Xem kho thuộc cơ sở mình |      ✅ Toàn quyền       |
+| `GET /customer-inventories/sku/:id/locations` (6D)     |  ✅ Xem vị trí SKU của mình   |   ❌ 403 Forbidden    |  👁️ Xem khách thuộc cơ sở   |      ✅ Toàn quyền       |
+| `GET /customer-inventories/summary` (6D)               |        ✅ Xem của mình        |   ❌ 403 Forbidden    |      ❌ 403 Forbidden       | ✅ Xem theo `customerId` |
 
 ---
 

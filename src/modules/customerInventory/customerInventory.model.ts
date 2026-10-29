@@ -3,6 +3,7 @@ import MongooseDelete, {
   type SoftDeleteDocument,
   type SoftDeleteModel,
 } from 'mongoose-delete';
+import { InventoryItemStatusEnum } from '../../common/enums/customerInventory.enum.ts';
 
 export interface ICustomerInventory extends SoftDeleteDocument {
   customerId: Types.ObjectId;
@@ -13,6 +14,9 @@ export interface ICustomerInventory extends SoftDeleteDocument {
   rackTierId?: Types.ObjectId | null;
   skuId: Types.ObjectId;
   quantity: number;
+  status: InventoryItemStatusEnum;
+  holdingReason?: string | null;
+  relatedIncidentId?: Types.ObjectId | null;
   lastMovementAt: Date;
   notes?: string | null;
   createdAt: Date;
@@ -69,6 +73,23 @@ const customerInventorySchema = new Schema<ICustomerInventory>(
       required: true,
       min: 0,
       default: 0,
+    },
+    status: {
+      type: String,
+      enum: Object.values(InventoryItemStatusEnum),
+      default: InventoryItemStatusEnum.NORMAL,
+      index: true,
+    },
+    holdingReason: {
+      type: String,
+      maxlength: 1000,
+      trim: true,
+      default: null,
+    },
+    relatedIncidentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Incident',
+      default: null,
     },
     lastMovementAt: {
       type: Date,

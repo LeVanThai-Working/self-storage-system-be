@@ -15,6 +15,7 @@ export interface CustomerInventoryQueryFilter {
   storageRackId?: string;
   rackTierId?: string;
   skuId?: string;
+  status?: string;
   minQuantity?: number;
 }
 
@@ -102,6 +103,36 @@ export class CustomerInventoryRepository {
           lastMovementAt: new Date(),
         },
       },
+      { returnDocument: 'after' }
+    );
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  async updateItemStatus(
+    id: string,
+    status: string,
+    holdingReason?: string | null,
+    relatedIncidentId?: string | Types.ObjectId | null,
+    session?: ClientSession
+  ) {
+    const updateData: Record<string, unknown> = {
+      status,
+      lastMovementAt: new Date(),
+    };
+    if (holdingReason !== undefined) {
+      updateData.holdingReason = holdingReason;
+    }
+    if (relatedIncidentId !== undefined) {
+      updateData.relatedIncidentId = relatedIncidentId
+        ? new Types.ObjectId(relatedIncidentId)
+        : null;
+    }
+    const query = this.inventory.findByIdAndUpdate(
+      id,
+      { $set: updateData },
       { returnDocument: 'after' }
     );
     if (session) {
@@ -287,6 +318,7 @@ export class CustomerInventoryRepository {
     if (query.storageRackId) filter.storageRackId = query.storageRackId;
     if (query.rackTierId) filter.rackTierId = query.rackTierId;
     if (query.skuId) filter.skuId = query.skuId;
+    if (query.status) filter.status = query.status;
     if (query.minQuantity !== undefined) {
       filter.quantity = { $gte: query.minQuantity };
     } else {

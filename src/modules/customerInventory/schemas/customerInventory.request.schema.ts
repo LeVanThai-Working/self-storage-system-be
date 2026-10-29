@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { paginationQuerySchema } from '../../../common/schemas/pagination.schema.ts';
-import { MovementTypeEnum } from '../../../common/enums/customerInventory.enum.ts';
+import {
+  MovementTypeEnum,
+  InventoryItemStatusEnum,
+} from '../../../common/enums/customerInventory.enum.ts';
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
@@ -55,7 +58,11 @@ export const stockMoveRequestSchema = z
       .number()
       .int('Quantity must be an integer')
       .min(1, 'Quantity must be at least 1'),
-    reason: z.string().trim().max(1000).optional(),
+    reason: z
+      .string()
+      .trim()
+      .min(5, 'Reason must be at least 5 characters')
+      .max(1000),
     notes: z.string().trim().max(1000).optional(),
   })
   .refine(
@@ -98,6 +105,7 @@ export const customerInventoryQuerySchema = paginationQuerySchema.extend({
   rackTierId: z.string().regex(objectIdRegex).optional(),
   skuId: z.string().regex(objectIdRegex).optional(),
   customerId: z.string().regex(objectIdRegex).optional(),
+  status: z.nativeEnum(InventoryItemStatusEnum).optional(),
   minQuantity: z.coerce.number().int().min(0).optional(),
   sortBy: z
     .enum(['quantity', 'lastMovementAt', 'createdAt'])
@@ -242,4 +250,53 @@ export const batchMigrateRackRequestSchema = z
 
 export type BatchMigrateRackRequest = z.infer<
   typeof batchMigrateRackRequestSchema
+>;
+
+export const evacuateRackToHoldingRequestSchema = z
+  .object({
+    fromRackId: z.string().regex(objectIdRegex, 'Invalid fromRackId format'),
+    emergencyReason: z.string().trim().max(1000).optional(),
+    incidentId: z
+      .string()
+      .regex(objectIdRegex, 'Invalid incidentId format')
+      .optional(),
+    notes: z.string().trim().max(1000).optional(),
+  })
+  .refine(
+    (data) => {
+      const hasReason = Boolean(
+        data.emergencyReason && data.emergencyReason.trim().length >= 10
+      );
+      const hasIncident = Boolean(
+        data.incidentId && data.incidentId.trim().length > 0
+      );
+      return hasReason || hasIncident;
+    },
+    {
+      message:
+        'Either emergencyReason (minimum 10 characters) or valid incidentId is required',
+      path: ['emergencyReason'],
+    }
+  );
+
+export type EvacuateRackToHoldingRequest = z.infer<
+  typeof evacuateRackToHoldingRequestSchema
+>;
+
+export const updateInventoryStatusRequestSchema = z.object({
+  status: z.nativeEnum(InventoryItemStatusEnum),
+  reason: z
+    .string()
+    .trim()
+    .min(5, 'Reason must be at least 5 characters')
+    .max(1000),
+  incidentId: z
+    .string()
+    .regex(objectIdRegex, 'Invalid incidentId format')
+    .optional(),
+  holdingReason: z.string().trim().max(1000).optional(),
+});
+
+export type UpdateInventoryStatusRequest = z.infer<
+  typeof updateInventoryStatusRequestSchema
 >;

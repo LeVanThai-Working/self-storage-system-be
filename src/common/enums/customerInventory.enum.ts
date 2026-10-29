@@ -20,3 +20,10 @@ export enum InventoryRequestStatusEnum {
   CANCELLED = 'cancelled',
   EXPIRED = 'expired',
 }
+
+export enum InventoryItemStatusEnum {
+  NORMAL = 'normal',
+  TEMPORARY_HOLDING = 'temporary_holding',
+  DAMAGED = 'damaged',
+  DISPUTED = 'disputed',
+}
