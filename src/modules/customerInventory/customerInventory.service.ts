@@ -5,7 +5,10 @@ import { validateResponse } from '../../utils/validateReponse.util.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
 import { RoleEnum } from '../../common/enums/user.enum.ts';
 import { ContractStatusEnum } from '../../common/enums/contract.enum.ts';
-import { MovementTypeEnum } from '../../common/enums/customerInventory.enum.ts';
+import {
+  MovementTypeEnum,
+  InventoryItemStatusEnum,
+} from '../../common/enums/customerInventory.enum.ts';
 import {
   RackStatusEnum,
   RackTierStatusEnum,
@@ -38,6 +41,7 @@ import {
   skuLocationsResponseSchema,
   customerInventorySummaryResponseSchema,
   batchMigrateRackResponseSchema,
+  evacuateRackResponseSchema,
   type CustomerInventoryResponse,
   type PaginatedCustomerInventoryResponse,
   type PaginatedInventoryMovementResponse,
@@ -45,6 +49,7 @@ import {
   type SkuLocationsResponse,
   type CustomerInventorySummaryResponse,
   type BatchMigrateRackResponse,
+  type EvacuateRackResponse,
   type TreeTierItem,
   type TreeRack,
   type TreeTier,
@@ -58,6 +63,8 @@ import type {
   StockMoveRequest,
   StockOutRequest,
   BatchMigrateRackRequest,
+  EvacuateRackToHoldingRequest,
+  UpdateInventoryStatusRequest,
 } from './schemas/customerInventory.request.schema.ts';
 
 export interface CallerContext {
@@ -103,6 +110,9 @@ interface FormattableInventory {
   rackTierId?: PopulatedRef | Types.ObjectId | string | null;
   skuId: PopulatedRef | Types.ObjectId | string;
   quantity: number;
+  status?: InventoryItemStatusEnum | string;
+  holdingReason?: string | null;
+  relatedIncidentId?: PopulatedRef | Types.ObjectId | string | null;
   lastMovementAt: Date | string;
   notes?: string | null;
   createdAt: Date | string;
@@ -178,6 +188,29 @@ export class CustomerInventoryService {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
     }
+  }
+
+  /**
+   * Helper to validate and automatically populate assignedFacilityId from database if missing in token
+   */
+  private async resolveCallerAssignedFacilityId(
+    caller: CallerContext
+  ): Promise<string | undefined> {
+    if (caller.assignedFacilityId) {
+      return caller.assignedFacilityId;
+    }
+    if (
+      (caller.role === RoleEnum.FACILITY_STAFF ||
+        caller.role === RoleEnum.FACILITY_MANAGER) &&
+      this.userRepository
+    ) {
+      const user = await this.userRepository.findById(caller.id);
+      if (user?.assignedFacilityId) {
+        caller.assignedFacilityId = toId(user.assignedFacilityId);
+        return caller.assignedFacilityId;
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -444,6 +477,11 @@ export class CustomerInventoryService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
     }
 
+    // Operation Guard: Item must be in NORMAL status to be stocked out
+    if (existing.status && existing.status !== InventoryItemStatusEnum.NORMAL) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
+    }
+
     const inventoryId = String(existing._id);
     const previousQuantity = existing.quantity;
     const newQuantity = existing.quantity - data.quantity;
@@ -535,7 +573,11 @@ export class CustomerInventoryService {
     caller: CallerContext,
     session?: ClientSession
   ): Promise<CustomerInventoryResponse> {
-    this.validatePrivacy(caller, true);
+    // Rule D7G.1: Block CUSTOMER to prevent virtual data moves; only STAFF, FM, OPS, ADMIN are allowed
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
 
     const fromTierId = data.fromRackTierId || null;
     const toTierId = data.toRackTierId || null;
@@ -553,6 +595,18 @@ export class CustomerInventoryService {
         caller,
         session
       );
+
+    // Facility Scope check for Staff/FM
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId || String(staffFacilityId) !== String(facilityId)) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
 
     // Validate destination tier if specified
     let toStorageRackId: string | null = null;
@@ -609,6 +663,14 @@ export class CustomerInventoryService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
     }
 
+    // Operation Guard: Cannot move DAMAGED or DISPUTED items
+    if (
+      sourceInventory.status === InventoryItemStatusEnum.DAMAGED ||
+      sourceInventory.status === InventoryItemStatusEnum.DISPUTED
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
+    }
+
     const fromPrev = sourceInventory.quantity;
     const fromNew = sourceInventory.quantity - data.quantity;
 
@@ -645,6 +707,9 @@ export class CustomerInventoryService {
           rackTierId: toTierId ? new Types.ObjectId(toTierId) : null,
           skuId: new Types.ObjectId(data.skuId),
           quantity: data.quantity,
+          status: InventoryItemStatusEnum.NORMAL,
+          holdingReason: null,
+          relatedIncidentId: null,
           lastMovementAt: new Date(),
           notes: data.notes?.trim() || null,
         },
@@ -658,6 +723,16 @@ export class CustomerInventoryService {
         data.quantity,
         session
       );
+      // Restore status to NORMAL when placing item onto rack tier
+      if (toTierId && destInventory.status !== InventoryItemStatusEnum.NORMAL) {
+        await this.inventoryRepository.updateItemStatus(
+          destInventoryId,
+          InventoryItemStatusEnum.NORMAL,
+          null,
+          null,
+          session
+        );
+      }
     }
 
     // 3. Record in InventoryMovement ledger
@@ -1362,6 +1437,13 @@ export class CustomerInventoryService {
       rackTierId: doc.rackTierId ? toId(doc.rackTierId) : null,
       skuId: toId(doc.skuId),
       quantity: doc.quantity,
+      status:
+        (doc.status as InventoryItemStatusEnum) ||
+        InventoryItemStatusEnum.NORMAL,
+      holdingReason: doc.holdingReason || null,
+      relatedIncidentId: doc.relatedIncidentId
+        ? toId(doc.relatedIncidentId)
+        : null,
       lastMovementAt: doc.lastMovementAt,
       notes: doc.notes || null,
       customer: cust
@@ -1868,5 +1950,276 @@ export class CustomerInventoryService {
       movementsGenerated,
       message: `Batch migrated ${sourceInventories.length} items (${totalQuantityMigrated} total quantity) from rack ${fromRack.rackCode} to rack ${toRack.rackCode} successfully`,
     });
+  }
+
+  /**
+   * 13. Evacuate Rack To Holding Area (Task 7G)
+   * When a rack suffers technical/structural breakdown and no compatible rack exists,
+   * emergency evacuation moves all items on the rack to holding area (rackTierId: null, status: TEMPORARY_HOLDING)
+   * and sets rack status to MAINTENANCE.
+   */
+  @Transactional()
+  async evacuateRackToHolding(
+    data: EvacuateRackToHoldingRequest,
+    caller: CallerContext,
+    session?: ClientSession
+  ): Promise<EvacuateRackResponse> {
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const fromRack = await this.storageRackRepository.findById(data.fromRackId);
+    if (!fromRack || (fromRack as unknown as { deleted?: boolean }).deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
+    }
+
+    const facilityId = toId(fromRack.facilityId);
+
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId || String(staffFacilityId) !== String(facilityId)) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    if (data.incidentId) {
+      if (!this.incidentRepository) {
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106, [
+          'IncidentRepository not injected',
+        ]);
+      }
+      const incident = await this.incidentRepository.findById(
+        data.incidentId,
+        session
+      );
+      if (!incident || incident.deleted) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_700);
+      }
+      if (
+        incident.status === IncidentStatusEnum.CLOSED ||
+        incident.status === IncidentStatusEnum.CANCELLED
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_643);
+      }
+      if (toId(incident.facilityId) !== facilityId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_643);
+      }
+      if (
+        incident.storageRackId &&
+        toId(incident.storageRackId) !== data.fromRackId
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_643);
+      }
+      if (!data.emergencyReason) {
+        data.emergencyReason = `Hạ hàng khẩn cấp theo Sự cố [${incident.incidentCode}]: ${incident.title}`;
+      }
+    }
+
+    if (!data.emergencyReason || data.emergencyReason.trim().length < 10) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_646);
+    }
+
+    const items = await this.inventoryRepository.findActiveByRackId(
+      data.fromRackId,
+      session
+    );
+    if (items.length === 0) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_638);
+    }
+
+    const movementsGenerated: string[] = [];
+    let totalQuantityEvacuated = 0;
+
+    for (const item of items) {
+      totalQuantityEvacuated += item.quantity;
+      const fromTierId = toId(item.rackTierId);
+
+      const existingHolding = await this.inventoryRepository.findByPosition(
+        toId(item.contractId),
+        toId(item.skuId),
+        toId(item.storageUnitId),
+        null,
+        session
+      );
+
+      let holdingInventoryId: string;
+      if (!existingHolding) {
+        const updated = await this.inventoryRepository.update(
+          String(item._id),
+          {
+            storageRackId: null,
+            rackTierId: null,
+            status: InventoryItemStatusEnum.TEMPORARY_HOLDING,
+            holdingReason: data.emergencyReason.trim(),
+            relatedIncidentId: data.incidentId
+              ? new Types.ObjectId(data.incidentId)
+              : null,
+          },
+          session
+        );
+        holdingInventoryId = String(updated!._id);
+      } else {
+        await this.inventoryRepository.incrementQuantity(
+          String(existingHolding._id),
+          item.quantity,
+          session
+        );
+        await this.inventoryRepository.update(
+          String(existingHolding._id),
+          {
+            status: InventoryItemStatusEnum.TEMPORARY_HOLDING,
+            holdingReason: data.emergencyReason.trim(),
+            relatedIncidentId: data.incidentId
+              ? new Types.ObjectId(data.incidentId)
+              : null,
+          },
+          session
+        );
+        await this.inventoryRepository.updateQuantity(
+          String(item._id),
+          0,
+          session
+        );
+        holdingInventoryId = String(existingHolding._id);
+      }
+
+      const movementCode =
+        await this.movementRepository.generateMovementCode(session);
+      await this.movementRepository.create(
+        {
+          movementCode,
+          type: MovementTypeEnum.MOVE,
+          customerInventoryId: new Types.ObjectId(holdingInventoryId),
+          customerId: item.customerId as unknown as Types.ObjectId,
+          contractId: item.contractId as unknown as Types.ObjectId,
+          facilityId: item.facilityId as unknown as Types.ObjectId,
+          storageUnitId: item.storageUnitId as unknown as Types.ObjectId,
+          skuId: item.skuId as unknown as Types.ObjectId,
+          fromRackTierId: fromTierId ? new Types.ObjectId(fromTierId) : null,
+          toRackTierId: null,
+          quantity: item.quantity,
+          previousQuantity: item.quantity,
+          newQuantity: item.quantity,
+          performedBy: new Types.ObjectId(caller.id),
+          reason: data.emergencyReason.trim(),
+          notes: data.notes?.trim() || null,
+        },
+        session
+      );
+      movementsGenerated.push(movementCode);
+    }
+
+    const tiers = await this.rackTierRepository.findByRackId(data.fromRackId);
+    for (const t of tiers) {
+      await this.rackTierRepository.update(
+        String(t._id),
+        { status: RackTierStatusEnum.AVAILABLE },
+        session
+      );
+    }
+
+    await this.storageRackRepository.update(
+      data.fromRackId,
+      { status: RackStatusEnum.MAINTENANCE },
+      session
+    );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.EVACUATE_RACK_TO_HOLDING,
+      resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
+      resourceId: data.fromRackId,
+      after: {
+        fromRackId: data.fromRackId,
+        fromRackCode: fromRack.rackCode,
+        evacuatedItemsCount: items.length,
+        totalQuantityEvacuated,
+        emergencyReason: data.emergencyReason,
+        incidentId: data.incidentId || null,
+      },
+    });
+
+    return validateResponse(evacuateRackResponseSchema, {
+      fromRackId: data.fromRackId,
+      fromRackCode: fromRack.rackCode || '',
+      rackStatus: RackStatusEnum.MAINTENANCE,
+      evacuatedItemsCount: items.length,
+      totalQuantityEvacuated,
+      movementsGenerated,
+      message: 'Hạ hàng xuống khu lưu tạm khẩn cấp thành công',
+    });
+  }
+
+  /**
+   * 14. Update Inventory Item Status (Task 7G)
+   * Allows Staff/FM/Ops/Admin to mark item as DAMAGED, DISPUTED, or restore to NORMAL.
+   */
+  @Transactional()
+  async updateInventoryStatus(
+    id: string,
+    data: UpdateInventoryStatusRequest,
+    caller: CallerContext,
+    session?: ClientSession
+  ): Promise<CustomerInventoryResponse> {
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const inventory = await this.inventoryRepository.findById(id, session);
+    if (!inventory || (inventory as unknown as { deleted?: boolean }).deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_620);
+    }
+
+    const facilityId = toId(inventory.facilityId);
+
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId || String(staffFacilityId) !== String(facilityId)) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    if (data.status === InventoryItemStatusEnum.DAMAGED && data.incidentId) {
+      if (this.incidentRepository) {
+        const incident = await this.incidentRepository.findById(
+          data.incidentId,
+          session
+        );
+        if (!incident || incident.deleted) {
+          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_700);
+        }
+      }
+    }
+
+    const updated = await this.inventoryRepository.updateItemStatus(
+      id,
+      data.status,
+      data.holdingReason || data.reason,
+      data.incidentId,
+      session
+    );
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPDATE_INVENTORY_STATUS,
+      resourceType: AuditResourceEnum.CUSTOMER_INVENTORY,
+      resourceId: id,
+      before: inventory,
+      after: updated,
+    });
+
+    const populated = await this.inventoryRepository.findById(id, session);
+    return validateResponse(
+      customerInventoryResponseSchema,
+      this.formatInventory(populated || updated!)
+    );
   }
 }

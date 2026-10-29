@@ -242,6 +242,12 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_642: 'MESSAGE_CODE_642',
   // Incident Not Eligible For Emergency Rack Migration
   MESSAGE_CODE_643: 'MESSAGE_CODE_643',
+  // Inventory Item Status Does Not Allow This Operation
+  MESSAGE_CODE_644: 'MESSAGE_CODE_644',
+  // Invalid Inventory Item Status Transition
+  MESSAGE_CODE_645: 'MESSAGE_CODE_645',
+  // Emergency Reason Or Incident Required For Evacuation
+  MESSAGE_CODE_646: 'MESSAGE_CODE_646',
 
   // ==========================================
   // INCIDENT (700 - 709)
@@ -415,6 +421,9 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
     'Legal Basis, Incident Report Or Emergency Reason Required For Rack Migration',
   MESSAGE_CODE_642: 'Batch Rack Migration Requires Identical Rack Tier Count',
   MESSAGE_CODE_643: 'Incident Not Eligible For Emergency Rack Migration',
+  MESSAGE_CODE_644: 'Inventory Item Status Does Not Allow This Operation',
+  MESSAGE_CODE_645: 'Invalid Inventory Item Status Transition',
+  MESSAGE_CODE_646: 'Emergency Reason Or Incident Required For Evacuation',
 
   // Incident
   MESSAGE_CODE_700: 'Incident Not Found',

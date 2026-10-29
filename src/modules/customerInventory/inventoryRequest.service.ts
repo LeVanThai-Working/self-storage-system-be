@@ -10,6 +10,7 @@ import {
   InventoryRequestTypeEnum,
   InventoryRequestStatusEnum,
   MovementTypeEnum,
+  InventoryItemStatusEnum,
 } from '../../common/enums/customerInventory.enum.ts';
 import { RackTierStatusEnum } from '../../common/enums/storageRack.enum.ts';
 import {
@@ -138,6 +139,12 @@ export class InventoryRequestService {
       );
       if (!inventory || inventory.quantity < item.quantity) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
+      }
+      if (
+        inventory.status &&
+        inventory.status !== InventoryItemStatusEnum.NORMAL
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
       }
     }
 
@@ -364,6 +371,13 @@ export class InventoryRequestService {
           );
         if (!existingInv || existingInv.quantity < actualQty) {
           throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
+        }
+
+        if (
+          existingInv.status &&
+          existingInv.status !== InventoryItemStatusEnum.NORMAL
+        ) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_644);
         }
 
         // Atomic decrement guard (prevents negative stock)

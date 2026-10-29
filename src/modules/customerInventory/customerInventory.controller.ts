@@ -4,6 +4,7 @@ import {
   Tags,
   Get,
   Post,
+  Patch,
   Body,
   Queries,
   Path,
@@ -35,6 +36,8 @@ import {
   skuLocationsParamSchema,
   barcodeParamSchema,
   batchMigrateRackRequestSchema,
+  evacuateRackToHoldingRequestSchema,
+  updateInventoryStatusRequestSchema,
   type StockInRequest,
   type StockOutRequest,
   type StockMoveRequest,
@@ -43,6 +46,8 @@ import {
   type CustomerInventorySummaryQuery,
   type InventoryMovementQuery,
   type BatchMigrateRackRequest,
+  type EvacuateRackToHoldingRequest,
+  type UpdateInventoryStatusRequest,
 } from './schemas/customerInventory.request.schema.ts';
 import type {
   CustomerInventoryResponse,
@@ -51,6 +56,7 @@ import type {
   SkuLocationsResponse,
   CustomerInventorySummaryResponse,
   BatchMigrateRackResponse,
+  EvacuateRackResponse,
 } from './schemas/customerInventory.response.schema.ts';
 import type {
   ApiResponse,
@@ -199,11 +205,11 @@ export class CustomerInventoryController extends Controller {
 
   /**
    * 3. Internal Stock Move (Stock Move)
-   * Customer relocates items between locations in their unit.
+   * Internal warehouse operation: Staff/FM/Ops/Admin relocates items between locations or from holding area onto a rack tier.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('move')
   @Middlewares(validateRequest({ body: stockMoveRequestSchema }))
   @Response<ApiErrorResponse>(400, 'Bad Request')
@@ -485,6 +491,78 @@ export class CustomerInventoryController extends Controller {
   ): Promise<ApiResponse<BatchMigrateRackResponse>> {
     const caller = extractCaller(req);
     const data = await this.customerInventoryService.batchMigrateRack(
+      body,
+      caller
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * 12. Evacuate Rack To Holding Area (Task 7G)
+   * Emergency evacuation of all items from a damaged rack to the holding area (rackTierId: null, status: TEMPORARY_HOLDING)
+   * and setting rack status to MAINTENANCE.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Post('racks/evacuate-to-holding')
+  @Middlewares(validateRequest({ body: evacuateRackToHoldingRequestSchema }))
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async evacuateRackToHolding(
+    @Request() req: ExpressRequest,
+    @Body() body: EvacuateRackToHoldingRequest
+  ): Promise<ApiResponse<EvacuateRackResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.customerInventoryService.evacuateRackToHolding(
+      body,
+      caller
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * 13. Update Inventory Item Status (Task 7G)
+   * Update item status (e.g. DAMAGED, DISPUTED, or back to NORMAL).
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Patch('{id}/status')
+  @Middlewares(
+    validateRequest({
+      params: inventoryIdParamSchema,
+      body: updateInventoryStatusRequestSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async updateInventoryStatus(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: UpdateInventoryStatusRequest
+  ): Promise<ApiResponse<CustomerInventoryResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.customerInventoryService.updateInventoryStatus(
+      id,
       body,
       caller
     );

@@ -886,6 +886,8 @@
 					"putaway_inbound_request",
 					"cancel_inventory_request",
 					"batch_migrate_rack",
+					"evacuate_rack_to_holding",
+					"update_inventory_status",
 					"report_incident",
 					"assign_incident",
 					"investigate_incident",
@@ -9568,6 +9570,15 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"InventoryItemStatusEnum": {
+				"enum": [
+					"normal",
+					"temporary_holding",
+					"damaged",
+					"disputed"
+				],
+				"type": "string"
+			},
 			"infer_typeofcustomerInventoryResponseSchema_": {
 				"properties": {
 					"updatedAt": {
@@ -9757,11 +9768,20 @@
 					"lastMovementAt": {
 						"type": "string"
 					},
+					"relatedIncidentId": {
+						"type": "string"
+					},
+					"holdingReason": {
+						"type": "string"
+					},
 					"rackTierId": {
 						"type": "string"
 					},
 					"storageRackId": {
 						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/InventoryItemStatusEnum"
 					},
 					"quantity": {
 						"type": "number",
@@ -9787,6 +9807,7 @@
 					}
 				},
 				"required": [
+					"status",
 					"quantity",
 					"skuId",
 					"storageUnitId",
@@ -10425,6 +10446,9 @@
 					"minQuantity": {
 						"type": "number",
 						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/InventoryItemStatusEnum"
 					},
 					"customerId": {
 						"type": "string"
@@ -11647,6 +11671,125 @@
 			},
 			"BatchMigrateRackRequest": {
 				"$ref": "#/components/schemas/infer_typeofbatchMigrateRackRequestSchema_"
+			},
+			"infer_typeofevacuateRackResponseSchema_": {
+				"properties": {
+					"message": {
+						"type": "string"
+					},
+					"movementsGenerated": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"totalQuantityEvacuated": {
+						"type": "number",
+						"format": "double"
+					},
+					"evacuatedItemsCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"rackStatus": {
+						"type": "string"
+					},
+					"fromRackCode": {
+						"type": "string"
+					},
+					"fromRackId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"message",
+					"movementsGenerated",
+					"totalQuantityEvacuated",
+					"evacuatedItemsCount",
+					"rackStatus",
+					"fromRackCode",
+					"fromRackId"
+				],
+				"type": "object"
+			},
+			"EvacuateRackResponse": {
+				"$ref": "#/components/schemas/infer_typeofevacuateRackResponseSchema_"
+			},
+			"ApiResponse_EvacuateRackResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/EvacuateRackResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofevacuateRackToHoldingRequestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"incidentId": {
+						"type": "string"
+					},
+					"emergencyReason": {
+						"type": "string"
+					},
+					"fromRackId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"fromRackId"
+				],
+				"type": "object"
+			},
+			"EvacuateRackToHoldingRequest": {
+				"$ref": "#/components/schemas/infer_typeofevacuateRackToHoldingRequestSchema_"
+			},
+			"infer_typeofupdateInventoryStatusRequestSchema_": {
+				"properties": {
+					"holdingReason": {
+						"type": "string"
+					},
+					"incidentId": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/InventoryItemStatusEnum"
+					}
+				},
+				"required": [
+					"reason",
+					"status"
+				],
+				"type": "object"
+			},
+			"UpdateInventoryStatusRequest": {
+				"$ref": "#/components/schemas/infer_typeofupdateInventoryStatusRequestSchema_"
 			},
 			"ContractSourceEnum": {
 				"enum": [
@@ -22673,7 +22816,7 @@
 						}
 					}
 				},
-				"description": "3. Internal Stock Move (Stock Move)\nCustomer relocates items between locations in their unit.",
+				"description": "3. Internal Stock Move (Stock Move)\nInternal warehouse operation: Staff/FM/Ops/Admin relocates items between locations or from holding area onto a rack tier.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -22959,6 +23102,14 @@
 						"schema": {
 							"format": "double",
 							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/InventoryItemStatusEnum"
 						}
 					},
 					{
@@ -23446,6 +23597,161 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/BatchMigrateRackRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer-inventories/racks/evacuate-to-holding": {
+			"post": {
+				"operationId": "EvacuateRackToHolding",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_EvacuateRackResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "12. Evacuate Rack To Holding Area (Task 7G)\nEmergency evacuation of all items from a damaged rack to the holding area (rackTierId: null, status: TEMPORARY_HOLDING)\nand setting rack status to MAINTENANCE.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/EvacuateRackToHoldingRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/customer-inventories/{id}/status": {
+			"patch": {
+				"operationId": "UpdateInventoryStatus",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_CustomerInventoryResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "13. Update Inventory Item Status (Task 7G)\nUpdate item status (e.g. DAMAGED, DISPUTED, or back to NORMAL).",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateInventoryStatusRequest"
 							}
 						}
 					}
