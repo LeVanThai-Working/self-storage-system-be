@@ -33,3 +33,20 @@ export enum ContractDepositStatusEnum {
   FORFEITED = 'forfeited',
   DISPUTED = 'disputed',
 }
+
+export enum ContractCancellationTypeEnum {
+  VOID = 'void',
+  CANCEL = 'cancel',
+}
+
+export enum ContractTerminationTypeEnum {
+  MUTUAL = 'mutual',
+  CUSTOMER_REQUEST = 'customer_request',
+  VIOLATION = 'violation',
+}
+
+export enum ViolationCategoryEnum {
+  PROHIBITED_GOODS = 'prohibited_goods',
+  OVERDUE_PAYMENT = 'overdue_payment',
+  PROPERTY_DAMAGE = 'property_damage',
+}

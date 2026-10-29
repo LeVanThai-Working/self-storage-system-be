@@ -141,7 +141,7 @@ export class CustomerInventoryController extends Controller {
   /**
    * 1. Stock In (Stock In)
    * Customer stores new items into their unit or rack tier.
-   * Requires contract status to be ACTIVE (returns 400 MESSAGE_CODE_630 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).
+   * Requires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -150,7 +150,7 @@ export class CustomerInventoryController extends Controller {
   @Middlewares(validateRequest({ body: stockInRequestSchema }))
   @Response<ApiErrorResponse>(
     400,
-    'Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_630 if contract OVERDUE)'
+    'Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_644 if contract OVERDUE)'
   )
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')
@@ -235,7 +235,7 @@ export class CustomerInventoryController extends Controller {
   /**
    * 4. Stock Adjust (Stock Adjust)
    * Customer counts and updates physical inventory with mandatory reason.
-   * Requires contract status to be ACTIVE (returns 400 MESSAGE_CODE_630 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).
+   * Requires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -244,7 +244,7 @@ export class CustomerInventoryController extends Controller {
   @Middlewares(validateRequest({ body: stockAdjustRequestSchema }))
   @Response<ApiErrorResponse>(
     400,
-    'Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_630 if contract OVERDUE)'
+    'Bad Request (MESSAGE_CODE_622 if contract inactive, MESSAGE_CODE_644 if contract OVERDUE)'
   )
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')

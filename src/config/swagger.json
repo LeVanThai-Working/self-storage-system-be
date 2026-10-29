@@ -856,6 +856,8 @@
 					"approve",
 					"reject",
 					"cancel",
+					"force_cancel",
+					"void",
 					"check_in",
 					"check_out",
 					"renew",
@@ -875,8 +877,13 @@
 					"inventory_move",
 					"inventory_adjust",
 					"reassign_unit",
+					"propose_reassign_unit",
+					"accept_reassign_unit",
+					"reject_reassign_unit",
 					"expire",
 					"mark_overdue",
+					"mark_arrived",
+					"extend_grace",
 					"refund",
 					"approve_refund",
 					"reject_refund",
@@ -2323,7 +2330,8 @@
 					"reserved",
 					"occupied",
 					"under_maintenance",
-					"inactive"
+					"inactive",
+					"pending_clearance"
 				],
 				"type": "string"
 			},
@@ -3460,7 +3468,8 @@
 				"enum": [
 					"customer",
 					"facility",
-					"system"
+					"system",
+					"facility_fault"
 				],
 				"type": "string"
 			},
@@ -3587,6 +3596,172 @@
 					"notes": {
 						"type": "string"
 					},
+					"pendingUnitChange": {
+						"properties": {
+							"proposedBy": {
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"email",
+									"name",
+									"id"
+								],
+								"type": "object"
+							},
+							"priceDifference": {
+								"type": "number",
+								"format": "double"
+							},
+							"newOffering": {
+								"properties": {
+									"status": {
+										"type": "string"
+									},
+									"minRentalDays": {
+										"type": "number",
+										"format": "double"
+									},
+									"depositMultiplier": {
+										"type": "number",
+										"format": "double"
+									},
+									"unitTypeId": {
+										"type": "string"
+									},
+									"pricePerUnit": {
+										"type": "number",
+										"format": "double"
+									},
+									"billingUnit": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"pricePerUnit",
+									"billingUnit",
+									"id"
+								],
+								"type": "object"
+							},
+							"newStorageUnit": {
+								"properties": {
+									"zone": {
+										"type": "string"
+									},
+									"status": {
+										"type": "string"
+									},
+									"floor": {
+										"type": "number",
+										"format": "double"
+									},
+									"unitNumber": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"status",
+									"floor",
+									"unitNumber",
+									"id"
+								],
+								"type": "object"
+							},
+							"proposedAt": {
+								"type": "string"
+							},
+							"oldUnitStatus": {
+								"type": "string"
+							},
+							"reason": {
+								"type": "string"
+							},
+							"newPricePerUnit": {
+								"type": "number",
+								"format": "double"
+							},
+							"newFacilityUnitTypeOfferingId": {
+								"type": "string"
+							},
+							"newStorageUnitId": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"proposedAt",
+							"oldUnitStatus",
+							"reason",
+							"newPricePerUnit",
+							"newFacilityUnitTypeOfferingId",
+							"newStorageUnitId"
+						],
+						"type": "object"
+					},
+					"outOfSlot": {
+						"type": "boolean"
+					},
+					"earlyCheckIn": {
+						"type": "boolean"
+					},
+					"immediateForfeitWarning": {
+						"type": "boolean"
+					},
+					"policySnapshot": {
+						"properties": {
+							"cancellationMode": {
+								"type": "string",
+								"enum": [
+									"slot_start",
+									"calendar_day"
+								]
+							},
+							"noShowGraceHours": {
+								"type": "number",
+								"format": "double"
+							},
+							"forfeitPercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"freeCancelHours": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"noShowGraceHours",
+							"forfeitPercent",
+							"freeCancelHours"
+						],
+						"type": "object"
+					},
+					"acceptedAt": {
+						"type": "string"
+					},
+					"policyVersion": {
+						"type": "string"
+					},
 					"paymentId": {
 						"type": "string"
 					},
@@ -3629,6 +3804,96 @@
 						"type": "object"
 					},
 					"refundedAt": {
+						"type": "string"
+					},
+					"graceExtensionReason": {
+						"type": "string"
+					},
+					"graceExtendedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"graceExtendedAt": {
+						"type": "string"
+					},
+					"arrivedBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"arrivedAt": {
+						"type": "string"
+					},
+					"forceCancelledAt": {
+						"type": "string"
+					},
+					"forceCancelledBy": {
+						"properties": {
+							"role": {
+								"type": "string"
+							},
+							"phoneNumber": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"email",
+							"name",
+							"id"
+						],
+						"type": "object"
+					},
+					"incidentId": {
 						"type": "string"
 					},
 					"cancellationSource": {
@@ -3742,6 +4007,9 @@
 					"unitChangeHistory": {
 						"items": {
 							"properties": {
+								"changedAt": {
+									"type": "string"
+								},
 								"changedBy": {
 									"properties": {
 										"role": {
@@ -3766,6 +4034,87 @@
 										"id"
 									],
 									"type": "object"
+								},
+								"rejectReason": {
+									"type": "string"
+								},
+								"decisionAt": {
+									"type": "string"
+								},
+								"decisionBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"proposedAt": {
+									"type": "string"
+								},
+								"proposedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"status": {
+									"type": "string",
+									"enum": [
+										"pending",
+										"accepted",
+										"rejected"
+									]
+								},
+								"toPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"fromPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"toOfferingId": {
+									"type": "string"
+								},
+								"fromOfferingId": {
+									"type": "string"
 								},
 								"toUnit": {
 									"properties": {
@@ -3821,9 +4170,6 @@
 									],
 									"type": "object"
 								},
-								"changedAt": {
-									"type": "string"
-								},
 								"reason": {
 									"type": "string"
 								},
@@ -3835,7 +4181,6 @@
 								}
 							},
 							"required": [
-								"changedAt",
 								"reason",
 								"toUnitId",
 								"fromUnitId"
@@ -3843,6 +4188,9 @@
 							"type": "object"
 						},
 						"type": "array"
+					},
+					"termsAccepted": {
+						"type": "boolean"
 					},
 					"refundStatus": {
 						"$ref": "#/components/schemas/RefundStatusEnum"
@@ -3854,6 +4202,12 @@
 					"refundAmount": {
 						"type": "number",
 						"format": "double"
+					},
+					"evidenceImages": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
 					},
 					"status": {
 						"$ref": "#/components/schemas/ReservationStatusEnum"
@@ -3947,9 +4301,11 @@
 					"updatedAt",
 					"createdAt",
 					"unitChangeHistory",
+					"termsAccepted",
 					"refundStatus",
 					"forfeitedAmount",
 					"refundAmount",
+					"evidenceImages",
 					"status",
 					"totalAmount",
 					"amenities",
@@ -4002,6 +4358,9 @@
 			},
 			"infer_typeofcreateReservationSchema_": {
 				"properties": {
+					"termsAccepted": {
+						"type": "boolean"
+					},
 					"notes": {
 						"type": "string"
 					},
@@ -4278,6 +4637,9 @@
 							"available"
 						]
 					},
+					"customerAgreed": {
+						"type": "boolean"
+					},
 					"reason": {
 						"type": "string"
 					},
@@ -4286,6 +4648,7 @@
 					}
 				},
 				"required": [
+					"customerAgreed",
 					"reason",
 					"newStorageUnitId"
 				],
@@ -4293,6 +4656,27 @@
 			},
 			"ReassignStorageUnitRequest": {
 				"$ref": "#/components/schemas/infer_typeofreassignStorageUnitSchema_"
+			},
+			"infer_typeofrespondUnitReassignSchema_": {
+				"properties": {
+					"rejectReason": {
+						"type": "string"
+					},
+					"action": {
+						"type": "string",
+						"enum": [
+							"accept",
+							"reject"
+						]
+					}
+				},
+				"required": [
+					"action"
+				],
+				"type": "object"
+			},
+			"RespondUnitReassignRequest": {
+				"$ref": "#/components/schemas/infer_typeofrespondUnitReassignSchema_"
 			},
 			"infer_typeofconfirmReservationSchema_": {
 				"properties": {
@@ -4364,6 +4748,98 @@
 			},
 			"ConfirmRefundRequest": {
 				"$ref": "#/components/schemas/infer_typeofconfirmRefundSchema_"
+			},
+			"IncidentCategoryEnum": {
+				"enum": [
+					"structural",
+					"electrical",
+					"water_leak",
+					"security",
+					"cleanliness",
+					"other"
+				],
+				"type": "string"
+			},
+			"infer_typeofforceCancelReservationSchema_": {
+				"properties": {
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumber": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
+					"incidentDetails": {
+						"properties": {
+							"description": {
+								"type": "string"
+							},
+							"images": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"category": {
+								"$ref": "#/components/schemas/IncidentCategoryEnum"
+							},
+							"title": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"images",
+							"category",
+							"title"
+						],
+						"type": "object"
+					},
+					"incidentId": {
+						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"reason"
+				],
+				"type": "object"
+			},
+			"ForceCancelReservationRequest": {
+				"$ref": "#/components/schemas/infer_typeofforceCancelReservationSchema_"
+			},
+			"infer_typeofmarkCustomerArrivedSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"MarkCustomerArrivedRequest": {
+				"$ref": "#/components/schemas/infer_typeofmarkCustomerArrivedSchema_"
+			},
+			"infer_typeofextendGracePeriodSchema_": {
+				"properties": {
+					"reason": {
+						"type": "string"
+					},
+					"extensionHours": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"reason",
+					"extensionHours"
+				],
+				"type": "object"
+			},
+			"ExtendGracePeriodRequest": {
+				"$ref": "#/components/schemas/infer_typeofextendGracePeriodSchema_"
 			},
 			"RefundRequestReasonEnum": {
 				"enum": [
@@ -5973,17 +6449,6 @@
 				],
 				"type": "object",
 				"additionalProperties": false
-			},
-			"IncidentCategoryEnum": {
-				"enum": [
-					"structural",
-					"electrical",
-					"water_leak",
-					"security",
-					"cleanliness",
-					"other"
-				],
-				"type": "string"
 			},
 			"IncidentSeverityEnum": {
 				"enum": [
@@ -12451,14 +12916,11 @@
 				],
 				"type": "string"
 			},
-			"ContractStatusEnum": {
+			"ContractTerminationTypeEnum": {
 				"enum": [
-					"draft",
-					"active",
-					"overdue",
-					"completed",
-					"cancelled",
-					"terminated"
+					"mutual",
+					"customer_request",
+					"violation"
 				],
 				"type": "string"
 			},
@@ -12470,6 +12932,32 @@
 					"refunded",
 					"forfeited",
 					"disputed"
+				],
+				"type": "string"
+			},
+			"ViolationCategoryEnum": {
+				"enum": [
+					"prohibited_goods",
+					"overdue_payment",
+					"property_damage"
+				],
+				"type": "string"
+			},
+			"ContractStatusEnum": {
+				"enum": [
+					"draft",
+					"active",
+					"overdue",
+					"completed",
+					"cancelled",
+					"terminated"
+				],
+				"type": "string"
+			},
+			"ContractCancellationTypeEnum": {
+				"enum": [
+					"void",
+					"cancel"
 				],
 				"type": "string"
 			},
@@ -12621,6 +13109,12 @@
 					"notes": {
 						"type": "string"
 					},
+					"outOfSlot": {
+						"type": "boolean"
+					},
+					"earlyCheckIn": {
+						"type": "boolean"
+					},
 					"staffSignedAt": {
 						"type": "string"
 					},
@@ -12658,6 +13152,12 @@
 					"terminationReason": {
 						"type": "string"
 					},
+					"violationCategory": {
+						"$ref": "#/components/schemas/ViolationCategoryEnum"
+					},
+					"terminationType": {
+						"$ref": "#/components/schemas/ContractTerminationTypeEnum"
+					},
 					"cancelledAt": {
 						"type": "string"
 					},
@@ -12688,6 +13188,9 @@
 					},
 					"cancellationReason": {
 						"type": "string"
+					},
+					"cancellationType": {
+						"$ref": "#/components/schemas/ContractCancellationTypeEnum"
 					},
 					"disputeReason": {
 						"type": "string"
@@ -12759,6 +13262,44 @@
 					"createdAt": {
 						"type": "string"
 					},
+					"signatureHistory": {
+						"items": {
+							"properties": {
+								"resetReason": {
+									"type": "string"
+								},
+								"resetAt": {
+									"type": "string"
+								},
+								"previousEndDate": {
+									"type": "string"
+								},
+								"previousStartDate": {
+									"type": "string"
+								},
+								"signedAt": {
+									"type": "string"
+								},
+								"party": {
+									"type": "string",
+									"enum": [
+										"customer",
+										"staff"
+									]
+								}
+							},
+							"required": [
+								"resetReason",
+								"resetAt",
+								"previousEndDate",
+								"previousStartDate",
+								"signedAt",
+								"party"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
 					"staffSigned": {
 						"type": "boolean"
 					},
@@ -12771,6 +13312,155 @@
 					"status": {
 						"$ref": "#/components/schemas/ContractStatusEnum"
 					},
+					"terminationHistory": {
+						"items": {
+							"properties": {
+								"terminatedBy": {
+									"properties": {
+										"role": {
+											"type": "string"
+										},
+										"phoneNumber": {
+											"type": "string"
+										},
+										"email": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"email",
+										"name",
+										"id"
+									],
+									"type": "object"
+								},
+								"violationCategory": {
+									"$ref": "#/components/schemas/ViolationCategoryEnum"
+								},
+								"forfeitedAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"depositStatus": {
+									"$ref": "#/components/schemas/ContractDepositStatusEnum"
+								},
+								"storageUnitStatus": {
+									"$ref": "#/components/schemas/StorageUnitStatusEnum"
+								},
+								"terminatedAt": {
+									"type": "string"
+								},
+								"evidenceFiles": {
+									"items": {
+										"properties": {
+											"fileHash": {
+												"type": "string"
+											},
+											"uploadedAt": {
+												"type": "string"
+											},
+											"url": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"uploadedAt",
+											"url"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"reportFiles": {
+									"items": {
+										"properties": {
+											"fileHash": {
+												"type": "string"
+											},
+											"uploadedAt": {
+												"type": "string"
+											},
+											"url": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"uploadedAt",
+											"url"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"reason": {
+									"type": "string"
+								},
+								"terminationType": {
+									"$ref": "#/components/schemas/ContractTerminationTypeEnum"
+								}
+							},
+							"required": [
+								"forfeitedAmount",
+								"depositStatus",
+								"storageUnitStatus",
+								"terminatedAt",
+								"evidenceFiles",
+								"reportFiles",
+								"reason",
+								"terminationType"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"evidenceFiles": {
+						"items": {
+							"properties": {
+								"fileHash": {
+									"type": "string"
+								},
+								"uploadedAt": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"uploadedAt",
+								"url"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"reportFiles": {
+						"items": {
+							"properties": {
+								"fileHash": {
+									"type": "string"
+								},
+								"uploadedAt": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"uploadedAt",
+								"url"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
 					"inspectionPhotos": {
 						"items": {
 							"type": "string"
@@ -12778,6 +13468,10 @@
 						"type": "array"
 					},
 					"additionalPaymentRequired": {
+						"type": "number",
+						"format": "double"
+					},
+					"forfeitedAmount": {
 						"type": "number",
 						"format": "double"
 					},
@@ -13253,12 +13947,17 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
+					"signatureHistory",
 					"staffSigned",
 					"customerSigned",
 					"termsAccepted",
 					"status",
+					"terminationHistory",
+					"evidenceFiles",
+					"reportFiles",
 					"inspectionPhotos",
 					"additionalPaymentRequired",
+					"forfeitedAmount",
 					"refundAmount",
 					"overdueFee",
 					"damageFee",
@@ -13540,12 +14239,25 @@
 			},
 			"infer_typeofcancelContractSchema_": {
 				"properties": {
+					"refundAccountHolder": {
+						"type": "string"
+					},
+					"refundAccountNumber": {
+						"type": "string"
+					},
+					"refundBankName": {
+						"type": "string"
+					},
 					"cancellationReason": {
 						"type": "string"
+					},
+					"cancellationType": {
+						"$ref": "#/components/schemas/ContractCancellationTypeEnum"
 					}
 				},
 				"required": [
-					"cancellationReason"
+					"cancellationReason",
+					"cancellationType"
 				],
 				"type": "object"
 			},
@@ -13686,10 +14398,33 @@
 				"properties": {
 					"terminationReason": {
 						"type": "string"
+					},
+					"reason": {
+						"type": "string"
+					},
+					"violationCategory": {
+						"$ref": "#/components/schemas/ViolationCategoryEnum"
+					},
+					"evidenceFileUrls": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"reportFileUrls": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"terminationType": {
+						"$ref": "#/components/schemas/ContractTerminationTypeEnum"
 					}
 				},
 				"required": [
-					"terminationReason"
+					"evidenceFileUrls",
+					"reportFileUrls",
+					"terminationType"
 				],
 				"type": "object"
 			},
@@ -18021,7 +18756,7 @@
 						}
 					}
 				},
-				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).",
+				"description": "Create a new reservation in PENDING_PAYMENT status with hold timer (Customer).\nEnforces minimum same-day preparation lead time (sameDayLeadMinutes, 400 MESSAGE_CODE_328),\nmaximum startDate offset from checkInDate (maxStartDateOffsetDays, 400 MESSAGE_CODE_329),\nand flags immediateForfeitWarning when booking is within 24 hours of check-in.",
 				"tags": [
 					"Reservations"
 				],
@@ -18372,6 +19107,78 @@
 				}
 			}
 		},
+		"/reservations/{id}/respond-reassign": {
+			"post": {
+				"operationId": "RespondUnitReassign",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer or Staff responds to a pending unit reassign proposal (accept or reject) [CHỐT D4].\n- Accept: applies new unit, updates basePrice to upgraded price tier, frees old unit.\n- Reject: cancels reservation as FACILITY_FAULT, releases both units, creates 100% deposit refund request.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RespondUnitReassignRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/reservations/{id}/confirm": {
 			"post": {
 				"operationId": "ConfirmReservation",
@@ -18624,6 +19431,192 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/ConfirmRefundRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/force-cancel": {
+			"post": {
+				"operationId": "ForceCancelReservation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager / Business Ops Manager / System Admin force-cancels a reservation when storage unit is unavailable due to an incident.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ForceCancelReservationRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/mark-arrived": {
+			"post": {
+				"operationId": "MarkCustomerArrived",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Staff or Manager marks that customer has arrived at facility for check-in.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": false,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MarkCustomerArrivedRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/reservations/{id}/extend-grace": {
+			"post": {
+				"operationId": "ExtendGracePeriod",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ReservationResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Facility Manager, Business Ops Manager, or System Admin extends check-in grace period for customer.",
+				"tags": [
+					"Reservations"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ExtendGracePeriodRequest"
 							}
 						}
 					}
@@ -25548,7 +26541,7 @@
 						}
 					}
 				},
-				"description": "Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).\nRequires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.",
+				"description": "Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).\nRequires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.\nIf actualCheckInDate shifts contract dates and customer had already signed, saves previous signature\nin signatureHistory, resets customerSigned to false, and rejects with 400 MESSAGE_CODE_425\nrequiring customer re-signing before check-in can be finalized.",
 				"tags": [
 					"Contracts"
 				],
@@ -25630,7 +26623,7 @@
 						}
 					}
 				},
-				"description": "Cancel DRAFT contract.\nDeposit is forfeited (100% loss), storage unit and amenities are released.",
+				"description": "Cancel or Void DRAFT contract.\n- cancellationType = 'cancel': Cancel contract. If sourced from reservation, forfeiture / refund is calculated based on policy snapshot. If walk-in, deposit is 100% forfeited.\n- cancellationType = 'void': Void invalid draft contract (Staff/Manager/Ops/Admin only). If sourced from reservation, reservation and unit hold are preserved. If walk-in, deposit is 100% refunded.",
 				"tags": [
 					"Contracts"
 				],
@@ -26207,7 +27200,7 @@
 						}
 					},
 					"400": {
-						"description": "Bad Request (MESSAGE_CODE_401 if invalid contract status, MESSAGE_CODE_420 if customer inventory remains)",
+						"description": "Bad Request (MESSAGE_CODE_401 if invalid contract status, MESSAGE_CODE_420 if customer inventory remains, MESSAGE_CODE_421 if open incidents exist)",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -26247,7 +27240,7 @@
 						}
 					}
 				},
-				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.\nReturns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract.",
+				"description": "Check-out & Liquidate contract.\nChanges status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,\nvacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.\nReturns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract,\nor 400 MESSAGE_CODE_421 if open (unclosed) incidents still exist on this contract.",
 				"tags": [
 					"Contracts"
 				],

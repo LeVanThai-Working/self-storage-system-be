@@ -369,7 +369,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
       expect(afterOut.quantity).toBe(0);
     });
 
-    it('OVERDUE contract blocks IN and ADJUST with MESSAGE_CODE_630', async () => {
+    it('OVERDUE contract blocks IN and ADJUST with MESSAGE_CODE_644', async () => {
       const contract = await seedContract(ContractStatusEnum.OVERDUE);
       await seedStockOnTier1(contract._id, 5);
       const contractId = String(contract._id);
@@ -386,7 +386,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
         )
       ).rejects.toMatchObject({
         statusCode: 400,
-        messageCode: MESSAGE_CODE.MESSAGE_CODE_630,
+        messageCode: MESSAGE_CODE.MESSAGE_CODE_644,
       });
 
       await expect(
@@ -402,7 +402,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
         )
       ).rejects.toMatchObject({
         statusCode: 400,
-        messageCode: MESSAGE_CODE.MESSAGE_CODE_630,
+        messageCode: MESSAGE_CODE.MESSAGE_CODE_644,
       });
     });
 

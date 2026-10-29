@@ -29,9 +29,12 @@ import { RefundRequest } from '../src/modules/refundRequest/refundRequest.model.
 import { RefundRequestRepository } from '../src/modules/refundRequest/refundRequest.repository.ts';
 import { RefundRequestService } from '../src/modules/refundRequest/refundRequest.service.ts';
 import {
+  ContractCancellationTypeEnum,
   ContractDepositStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
+  ContractTerminationTypeEnum,
+  ViolationCategoryEnum,
 } from '../src/common/enums/contract.enum.ts';
 import { BillingUnitEnum } from '../src/common/enums/billing.enum.ts';
 import { StorageUnitStatusEnum } from '../src/common/enums/storageUnit.enum.ts';
@@ -115,7 +118,7 @@ describe('T1.5: Contract Deposit Lifecycle & Settlement Integration', () => {
       unitTypeId,
       unitNumber: 'A101',
       floor: 1,
-      status: StorageUnitStatusEnum.RENTED,
+      status: StorageUnitStatusEnum.OCCUPIED,
     });
   });
 
@@ -239,7 +242,11 @@ describe('T1.5: Contract Deposit Lifecycle & Settlement Integration', () => {
       TEST_USERS.managerFacilityA.id,
       RoleEnum.FACILITY_MANAGER,
       {
+        terminationType: ContractTerminationTypeEnum.VIOLATION,
+        violationCategory: ViolationCategoryEnum.PROHIBITED_GOODS,
         terminationReason: 'Vi pham quy dinh chua chat cam trong kho',
+        reportFileUrls: ['https://example.com/report.pdf'],
+        evidenceFileUrls: ['https://example.com/photo.jpg'],
       }
     );
 
@@ -281,6 +288,8 @@ describe('T1.5: Contract Deposit Lifecycle & Settlement Integration', () => {
 
     expect(res.status).toBe(ContractStatusEnum.CANCELLED);
     expect(res.depositStatus).toBe(ContractDepositStatusEnum.FORFEITED);
+    expect(res.cancellationType).toBe(ContractCancellationTypeEnum.CANCEL);
+    expect(res.forfeitedAmount).toBe(1_000_000);
   });
 
   it('Case 6: Customer confirms settlement -> settlementConfirmedAt is recorded', async () => {

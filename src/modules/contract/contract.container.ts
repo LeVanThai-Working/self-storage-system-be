@@ -16,6 +16,8 @@ import { User } from '../user/user.model.ts';
 import { UserRepository } from '../user/user.repository.ts';
 import { CustomerInventory } from '../customerInventory/customerInventory.model.ts';
 import { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
+import { Incident } from '../incident/incident.model.ts';
+import { IncidentRepository } from '../incident/incident.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
 
@@ -33,6 +35,7 @@ const userRepository = new UserRepository(User);
 const customerInventoryRepository = new CustomerInventoryRepository(
   CustomerInventory
 );
+const incidentRepository = new IncidentRepository(Incident);
 
 export const contractService = new ContractService(
   contractRepository,
@@ -44,7 +47,8 @@ export const contractService = new ContractService(
   userRepository,
   auditLogService,
   refundRequestService,
-  customerInventoryRepository
+  customerInventoryRepository,
+  incidentRepository
 );
 
 export const contractController = new ContractController(contractService);

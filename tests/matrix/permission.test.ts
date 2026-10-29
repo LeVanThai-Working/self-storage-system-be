@@ -91,6 +91,7 @@ describe('Shared Permission Matrix Suite (T0.5)', () => {
       amenities: [],
       totalAmount: 1500000,
       status: ReservationStatusEnum.PAYMENT_SUCCESSFUL,
+      termsAccepted: true,
     });
 
     // Seed Contract (Facility A, Customer 1)

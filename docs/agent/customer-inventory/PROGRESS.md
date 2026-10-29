@@ -52,4 +52,4 @@
 
 ## Phát hiện thêm ngoài phạm vi (Out of Scope Findings)
 
-- `CustomerInventoryService.getCustomerSummary` đang gọi `contractRepository.countActiveByUserId`, hàm này đếm cả hợp đồng ở trạng thái `DRAFT`, `ACTIVE`, và `OVERDUE`.
+- `CustomerInventoryService.getCustomerSummary`: Đã cập nhật `contractRepository.countActiveByUserId` loại bỏ trạng thái `DRAFT` (mặc định chỉ tính `ACTIVE` và `OVERDUE`) để phản ánh đúng số hợp đồng có quyền lưu kho thực tế.

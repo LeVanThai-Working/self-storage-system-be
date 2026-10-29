@@ -94,6 +94,26 @@ export class ContractRepository {
     return query.exec();
   }
 
+  /**
+   * Finds the latest active (non-cancelled) contract linked to a reservation.
+   * Used to allow creating a new contract after an earlier DRAFT contract was VOIDed.
+   */
+  async findActiveByReservationId(
+    reservationId: string,
+    session?: ClientSession
+  ) {
+    const query = this.contract
+      .findOne({
+        reservationId,
+        status: { $ne: ContractStatusEnum.CANCELLED },
+      })
+      .sort({ createdAt: -1 });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
   async findPaginated(
     query: ContractQueryFilter = {
       page: 1,
@@ -255,6 +275,50 @@ export class ContractRepository {
     return query.exec();
   }
 
+  /**
+   * Atomically accumulate customer-liable incident `damageFee` and `staffEvidenceImages`
+   * onto an operational contract (`ACTIVE` or `OVERDUE`).
+   * Returns `null` if the contract does not exist or is no longer in `ACTIVE`/`OVERDUE`.
+   */
+  async accumulateIncidentDamageAtomic(
+    id: string,
+    addedDamageFee: number,
+    evidenceImages: string[] = [],
+    session?: ClientSession
+  ) {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    const updateDoc: Record<string, unknown> = {
+      $inc: { damageFee: addedDamageFee },
+    };
+
+    if (evidenceImages.length > 0) {
+      updateDoc.$addToSet = {
+        inspectionPhotos: { $each: evidenceImages },
+      };
+    }
+
+    const query = this.contract.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(id),
+        status: {
+          $in: [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE],
+        },
+      },
+      updateDoc,
+      {
+        returnDocument: 'after',
+      }
+    );
+
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
   async findExpiredActiveContracts(
     now: Date = new Date(),
     session?: ClientSession
@@ -353,17 +417,25 @@ export class ContractRepository {
     return query.exec();
   }
 
-  async countActiveByUserId(userId: string, session?: ClientSession) {
+  async countActiveByUserId(
+    userId: string,
+    includeDraft: boolean = false,
+    session?: ClientSession
+  ) {
+    const statuses = includeDraft
+      ? [
+          ContractStatusEnum.DRAFT,
+          ContractStatusEnum.ACTIVE,
+          ContractStatusEnum.OVERDUE,
+        ]
+      : [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE];
+
     const query = this.contract.countDocuments({
       customerId: Types.ObjectId.isValid(userId)
         ? new Types.ObjectId(userId)
         : userId,
       status: {
-        $in: [
-          ContractStatusEnum.DRAFT,
-          ContractStatusEnum.ACTIVE,
-          ContractStatusEnum.OVERDUE,
-        ],
+        $in: statuses,
       },
     });
     if (session) {

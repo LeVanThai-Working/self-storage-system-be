@@ -2,10 +2,14 @@ import { z } from 'zod';
 import {
   ContractAddendumStatusEnum,
   ContractAddendumTypeEnum,
+  ContractCancellationTypeEnum,
   ContractDepositStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
+  ContractTerminationTypeEnum,
+  ViolationCategoryEnum,
 } from '../../../common/enums/contract.enum.ts';
+import { StorageUnitStatusEnum } from '../../../common/enums/storageUnit.enum.ts';
 import { BillingUnitEnum } from '../../../common/enums/billing.enum.ts';
 
 const userSnapshotSchema = z.object({
@@ -97,6 +101,34 @@ export const contractRenewalResponseSchema = z.object({
   note: z.string().optional().nullable(),
 });
 
+export const contractSignatureHistoryResponseSchema = z.object({
+  party: z.enum(['customer', 'staff']),
+  signedAt: z.string(),
+  previousStartDate: z.string(),
+  previousEndDate: z.string(),
+  resetAt: z.string(),
+  resetReason: z.string(),
+});
+
+export const contractTerminationFileResponseSchema = z.object({
+  url: z.string(),
+  fileHash: z.string().optional().nullable(),
+  uploadedAt: z.string(),
+});
+
+export const contractTerminationHistoryResponseSchema = z.object({
+  terminationType: z.enum(ContractTerminationTypeEnum),
+  violationCategory: z.enum(ViolationCategoryEnum).optional().nullable(),
+  reason: z.string(),
+  reportFiles: z.array(contractTerminationFileResponseSchema).default([]),
+  evidenceFiles: z.array(contractTerminationFileResponseSchema).default([]),
+  terminatedBy: userSnapshotSchema.optional().nullable(),
+  terminatedAt: z.string(),
+  storageUnitStatus: z.enum(StorageUnitStatusEnum),
+  depositStatus: z.enum(ContractDepositStatusEnum),
+  forfeitedAmount: z.number(),
+});
+
 export const contractResponseSchema = z.object({
   id: z.string(),
   contractCode: z.string(),
@@ -127,6 +159,7 @@ export const contractResponseSchema = z.object({
   damageFee: z.number(),
   overdueFee: z.number(),
   refundAmount: z.number(),
+  forfeitedAmount: z.number().default(0),
   additionalPaymentRequired: z.number(),
   inspectionNotes: z.string().optional().nullable(),
   inspectionPhotos: z.array(z.string()).default([]),
@@ -134,18 +167,29 @@ export const contractResponseSchema = z.object({
   settlementConfirmedAt: z.string().optional().nullable(),
   disputedAt: z.string().optional().nullable(),
   disputeReason: z.string().optional().nullable(),
+  cancellationType: z.enum(ContractCancellationTypeEnum).optional().nullable(),
   cancellationReason: z.string().optional().nullable(),
   cancelledBy: userSnapshotSchema.optional().nullable(),
   cancelledAt: z.string().optional().nullable(),
+  terminationType: z.enum(ContractTerminationTypeEnum).optional().nullable(),
+  violationCategory: z.enum(ViolationCategoryEnum).optional().nullable(),
   terminationReason: z.string().optional().nullable(),
   terminatedBy: userSnapshotSchema.optional().nullable(),
   terminatedAt: z.string().optional().nullable(),
+  reportFiles: z.array(contractTerminationFileResponseSchema).default([]),
+  evidenceFiles: z.array(contractTerminationFileResponseSchema).default([]),
+  terminationHistory: z
+    .array(contractTerminationHistoryResponseSchema)
+    .default([]),
   status: z.enum(ContractStatusEnum),
   termsAccepted: z.boolean(),
   customerSigned: z.boolean(),
   customerSignedAt: z.string().optional().nullable(),
   staffSigned: z.boolean(),
   staffSignedAt: z.string().optional().nullable(),
+  signatureHistory: z.array(contractSignatureHistoryResponseSchema).default([]),
+  earlyCheckIn: z.boolean().optional().nullable(),
+  outOfSlot: z.boolean().optional().nullable(),
   notes: z.string().optional().nullable(),
   customer: userSnapshotSchema.optional().nullable(),
   facility: facilitySnapshotSchema.optional().nullable(),
@@ -166,6 +210,15 @@ export type ContractAddendumResponse = z.infer<
 >;
 export type ContractRenewalResponse = z.infer<
   typeof contractRenewalResponseSchema
+>;
+export type ContractSignatureHistoryResponse = z.infer<
+  typeof contractSignatureHistoryResponseSchema
+>;
+export type ContractTerminationFileResponse = z.infer<
+  typeof contractTerminationFileResponseSchema
+>;
+export type ContractTerminationHistoryResponse = z.infer<
+  typeof contractTerminationHistoryResponseSchema
 >;
 export type ContractResponse = z.infer<typeof contractResponseSchema>;
 export type ContractListResponse = z.infer<typeof contractListResponseSchema>;

@@ -112,6 +112,26 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_320: 'MESSAGE_CODE_320',
   // Demo Refund Simulation Disabled
   MESSAGE_CODE_321: 'MESSAGE_CODE_321',
+  // Reservation Terms Must Be Accepted
+  MESSAGE_CODE_322: 'MESSAGE_CODE_322',
+  // Force Cancellation Requires Incident Details Or Incident ID
+  MESSAGE_CODE_323: 'MESSAGE_CODE_323',
+  // Reservation Cannot Be Force Cancelled In Current Status
+  MESSAGE_CODE_324: 'MESSAGE_CODE_324',
+  // Reservation Cannot Be Marked As Arrived In Current Status
+  MESSAGE_CODE_325: 'MESSAGE_CODE_325',
+  // Customer Has Already Been Marked As Arrived
+  MESSAGE_CODE_326: 'MESSAGE_CODE_326',
+  // Reservation Grace Period Cannot Be Extended In Current Status
+  MESSAGE_CODE_327: 'MESSAGE_CODE_327',
+  // Check-in Time Slot Requires Preparation Lead Time
+  MESSAGE_CODE_328: 'MESSAGE_CODE_328',
+  // Start Date Cannot Exceed Check-in Date By More Than Limit
+  MESSAGE_CODE_329: 'MESSAGE_CODE_329',
+  // No Pending Unit Reassign Proposal Found
+  MESSAGE_CODE_330: 'MESSAGE_CODE_330',
+  // Another Unit Reassign Proposal Is Already Pending
+  MESSAGE_CODE_331: 'MESSAGE_CODE_331',
 
   // ==========================================
   // CONTRACT (400 - 408)
@@ -158,6 +178,22 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_419: 'MESSAGE_CODE_419',
   // Cannot Check Out Contract While Customer Inventory Remains
   MESSAGE_CODE_420: 'MESSAGE_CODE_420',
+  // Cannot Check Out Contract While Open Incidents Exist
+  MESSAGE_CODE_421: 'MESSAGE_CODE_421',
+  // Cannot Void Contract: Linked Reservation Is No Longer Active
+  MESSAGE_CODE_422: 'MESSAGE_CODE_422',
+  // Cannot Create Contract Draft Before Check-In Date Unless Customer Has Arrived
+  MESSAGE_CODE_423: 'MESSAGE_CODE_423',
+  // Reservation Check-In Deadline Has Expired
+  MESSAGE_CODE_424: 'MESSAGE_CODE_424',
+  // Contract Dates Shifted And Customer Must Resign Updated Draft
+  MESSAGE_CODE_425: 'MESSAGE_CODE_425',
+  // Contract Termination Requires Report File And Evidence Photos
+  MESSAGE_CODE_426: 'MESSAGE_CODE_426',
+  // Violation Termination Requires Violation Category
+  MESSAGE_CODE_427: 'MESSAGE_CODE_427',
+  // Overdue Payment Termination Requires Overdue Grace Period Exceeded
+  MESSAGE_CODE_428: 'MESSAGE_CODE_428',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -397,6 +433,19 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_320:
     'Refund Confirmer Must Be Different From Payment Confirmer (Maker-Checker Violation)',
   MESSAGE_CODE_321: 'Demo Refund Simulation Is Disabled In This Environment',
+  MESSAGE_CODE_322: 'Reservation Terms Must Be Accepted',
+  MESSAGE_CODE_323:
+    'Force Cancellation Requires Incident Details Or Incident ID',
+  MESSAGE_CODE_324: 'Reservation Cannot Be Force Cancelled In Current Status',
+  MESSAGE_CODE_325: 'Reservation Cannot Be Marked As Arrived In Current Status',
+  MESSAGE_CODE_326: 'Customer Has Already Been Marked As Arrived',
+  MESSAGE_CODE_327:
+    'Reservation Grace Period Cannot Be Extended In Current Status',
+  MESSAGE_CODE_328:
+    'Check-in time slot requires at least {0} minutes preparation lead time',
+  MESSAGE_CODE_329: 'Start date cannot exceed {0} days after check-in date',
+  MESSAGE_CODE_330: 'No Pending Unit Reassign Proposal Found',
+  MESSAGE_CODE_331: 'Another Unit Reassign Proposal Is Already Pending',
 
   // Contract
   MESSAGE_CODE_400: 'Contract Not Found',
@@ -424,6 +473,19 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_419: 'Deposit Settlement Already Confirmed',
   MESSAGE_CODE_420:
     'Cannot Check Out Contract While Customer Inventory Remains',
+  MESSAGE_CODE_421: 'Cannot Check Out Contract While Open Incidents Exist',
+  MESSAGE_CODE_422:
+    'Cannot Void Contract: Linked Reservation Is No Longer Active',
+  MESSAGE_CODE_423:
+    'Cannot Create Contract Draft Before Check-In Date Unless Customer Has Arrived',
+  MESSAGE_CODE_424: 'Reservation Check-In Deadline Has Expired',
+  MESSAGE_CODE_425:
+    'Contract dates were adjusted. Customer must re-sign the updated draft before check-in',
+  MESSAGE_CODE_426:
+    'Contract Termination Requires At Least One Report File And One Evidence Photo',
+  MESSAGE_CODE_427: 'Violation Termination Requires Violation Category',
+  MESSAGE_CODE_428:
+    'Overdue Payment Termination Requires Overdue Grace Period Exceeded (At Least 5 Days Overdue)',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',

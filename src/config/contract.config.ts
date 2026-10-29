@@ -4,6 +4,12 @@ import { MovementTypeEnum } from '../common/enums/customerInventory.enum.ts';
 export interface ContractConfig {
   overduePenaltyMultiplier: number;
   standardDaysPerMonth: number;
+  /**
+   * Minimum overdue duration (in days) required before a manager
+   * can terminate a contract with violationCategory = OVERDUE_PAYMENT.
+   * Defaults to 5 days.
+   */
+  overdueTerminationGraceDays: number;
 }
 
 /**
@@ -30,6 +36,7 @@ export const INVENTORY_OPS_BY_CONTRACT_STATUS: Readonly<
 
 const DEFAULT_OVERDUE_PENALTY_MULTIPLIER = 1.5;
 const DEFAULT_STANDARD_DAYS_PER_MONTH = 30;
+const DEFAULT_OVERDUE_TERMINATION_GRACE_DAYS = 5;
 
 export function getContractConfig(): ContractConfig {
   const rawMultiplier = Number(process.env.CONTRACT_OVERDUE_PENALTY_MULTIPLIER);
@@ -44,8 +51,19 @@ export function getContractConfig(): ContractConfig {
       ? rawStandardDays
       : DEFAULT_STANDARD_DAYS_PER_MONTH;
 
+  const rawGraceDays = Number(
+    process.env.CONTRACT_OVERDUE_TERMINATION_GRACE_DAYS
+  );
+  const overdueTerminationGraceDays =
+    Number.isInteger(rawGraceDays) && rawGraceDays > 0
+      ? rawGraceDays
+      : DEFAULT_OVERDUE_TERMINATION_GRACE_DAYS;
+
   return {
     overduePenaltyMultiplier,
     standardDaysPerMonth,
+    overdueTerminationGraceDays,
   };
 }
+
+export const contractConfig: ContractConfig = getContractConfig();

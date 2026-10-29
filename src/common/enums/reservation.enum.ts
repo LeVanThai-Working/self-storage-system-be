@@ -18,4 +18,5 @@ export enum ReservationCancelSourceEnum {
   CUSTOMER = 'customer',
   FACILITY = 'facility',
   SYSTEM = 'system',
+  FACILITY_FAULT = 'facility_fault',
 }

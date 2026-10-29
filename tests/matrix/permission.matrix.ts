@@ -238,7 +238,10 @@ export const PERMISSION_MATRIX: PermissionMatrixItem[] = [
     disallowedRoles: [RoleEnum.CUSTOMER, RoleEnum.FACILITY_STAFF],
     requiresFacilityMatch: true,
     getBody: () => ({
-      terminationReason: 'Customer requested early termination due to moving',
+      terminationType: 'mutual',
+      reason: 'Customer requested early termination due to moving',
+      reportFileUrls: ['https://example.com/matrix_report.pdf'],
+      evidenceFileUrls: ['https://example.com/matrix_photo.jpg'],
     }),
   },
 

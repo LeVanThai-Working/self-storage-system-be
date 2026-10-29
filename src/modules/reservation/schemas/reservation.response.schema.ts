@@ -42,14 +42,37 @@ const storageUnitSnapshotSchema = z.object({
   status: z.string(),
 });
 
+export const reservationPendingUnitChangeResponseSchema = z.object({
+  newStorageUnitId: z.string(),
+  newStorageUnit: storageUnitSnapshotSchema.optional().nullable(),
+  newFacilityUnitTypeOfferingId: z.string(),
+  newOffering: offeringSnapshotSchema.optional().nullable(),
+  newPricePerUnit: z.number(),
+  priceDifference: z.number().optional().nullable(),
+  reason: z.string(),
+  oldUnitStatus: z.string(),
+  proposedBy: userSnapshotSchema.optional().nullable(),
+  proposedAt: z.string(),
+});
+
 export const reservationUnitChangeResponseSchema = z.object({
   fromUnitId: z.string(),
   toUnitId: z.string(),
   fromUnit: storageUnitSnapshotSchema.optional().nullable(),
   toUnit: storageUnitSnapshotSchema.optional().nullable(),
+  fromOfferingId: z.string().optional().nullable(),
+  toOfferingId: z.string().optional().nullable(),
+  fromPrice: z.number().optional().nullable(),
+  toPrice: z.number().optional().nullable(),
   reason: z.string(),
+  status: z.enum(['pending', 'accepted', 'rejected']).optional().nullable(),
+  proposedBy: userSnapshotSchema.optional().nullable(),
+  proposedAt: z.string().optional().nullable(),
+  decisionBy: userSnapshotSchema.optional().nullable(),
+  decisionAt: z.string().optional().nullable(),
+  rejectReason: z.string().optional().nullable(),
   changedBy: userSnapshotSchema.optional().nullable(),
-  changedAt: z.string(),
+  changedAt: z.string().optional().nullable(),
 });
 
 export const reservationAmenityResponseSchema = z.object({
@@ -60,6 +83,16 @@ export const reservationAmenityResponseSchema = z.object({
   pricePerUnit: z.number(),
   billingUnit: z.enum(BillingUnitEnum),
   totalPrice: z.number(),
+});
+
+export const reservationPolicySnapshotResponseSchema = z.object({
+  freeCancelHours: z.number(),
+  forfeitPercent: z.number(),
+  noShowGraceHours: z.number(),
+  cancellationMode: z
+    .enum(['slot_start', 'calendar_day'])
+    .optional()
+    .nullable(),
 });
 
 export const reservationResponseSchema = z.object({
@@ -90,6 +123,15 @@ export const reservationResponseSchema = z.object({
   cancelledBy: userSnapshotSchema.optional().nullable(),
   cancelledAt: z.string().optional().nullable(),
   cancellationSource: z.enum(ReservationCancelSourceEnum).optional().nullable(),
+  incidentId: z.string().optional().nullable(),
+  evidenceImages: z.array(z.string()).optional().default([]),
+  forceCancelledBy: userSnapshotSchema.optional().nullable(),
+  forceCancelledAt: z.string().optional().nullable(),
+  arrivedAt: z.string().optional().nullable(),
+  arrivedBy: userSnapshotSchema.optional().nullable(),
+  graceExtendedAt: z.string().optional().nullable(),
+  graceExtendedBy: userSnapshotSchema.optional().nullable(),
+  graceExtensionReason: z.string().optional().nullable(),
   refundAmount: z.number(),
   forfeitedAmount: z.number().default(0),
   refundStatus: z.enum(RefundStatusEnum),
@@ -100,6 +142,16 @@ export const reservationResponseSchema = z.object({
   paidAt: z.string().optional().nullable(),
   paidAmount: z.number().optional().nullable(),
   paymentId: z.string().optional().nullable(),
+  termsAccepted: z.boolean().default(false),
+  policyVersion: z.string().optional().nullable(),
+  acceptedAt: z.string().optional().nullable(),
+  policySnapshot: reservationPolicySnapshotResponseSchema.optional().nullable(),
+  immediateForfeitWarning: z.boolean().optional().nullable(),
+  earlyCheckIn: z.boolean().optional().nullable(),
+  outOfSlot: z.boolean().optional().nullable(),
+  pendingUnitChange: reservationPendingUnitChangeResponseSchema
+    .optional()
+    .nullable(),
   unitChangeHistory: z.array(reservationUnitChangeResponseSchema).default([]),
   notes: z.string().optional().nullable(),
   customer: userSnapshotSchema.optional().nullable(),
@@ -115,8 +167,14 @@ export const reservationListResponseSchema = z.array(reservationResponseSchema);
 export type ReservationAmenityResponse = z.infer<
   typeof reservationAmenityResponseSchema
 >;
+export type ReservationPendingUnitChangeResponse = z.infer<
+  typeof reservationPendingUnitChangeResponseSchema
+>;
 export type ReservationUnitChangeResponse = z.infer<
   typeof reservationUnitChangeResponseSchema
+>;
+export type ReservationPolicySnapshotResponse = z.infer<
+  typeof reservationPolicySnapshotResponseSchema
 >;
 export type ReservationResponse = z.infer<typeof reservationResponseSchema>;
 export type ReservationListResponse = z.infer<

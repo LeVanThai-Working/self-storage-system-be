@@ -27,6 +27,8 @@ import {
   ContractDepositStatusEnum,
   ContractSourceEnum,
   ContractStatusEnum,
+  ContractTerminationTypeEnum,
+  ViolationCategoryEnum,
 } from '../src/common/enums/contract.enum.ts';
 import { BillingUnitEnum } from '../src/common/enums/billing.enum.ts';
 import { CustomerSkuStatusEnum } from '../src/common/enums/customerSku.enum.ts';
@@ -279,15 +281,21 @@ describe('X3: Contract Check-out & Terminate with Remaining Customer Inventory',
         String(contract._id),
         String(managerId),
         RoleEnum.FACILITY_MANAGER,
-        { terminationReason: 'Overdue beyond threshold with goods inside' }
+        {
+          terminationType: ContractTerminationTypeEnum.VIOLATION,
+          violationCategory: ViolationCategoryEnum.PROHIBITED_GOODS,
+          terminationReason: 'Overdue beyond threshold with goods inside',
+          reportFileUrls: ['https://example.com/reports/inv_term.pdf'],
+          evidenceFileUrls: ['https://example.com/photos/inv_term.jpg'],
+        }
       );
 
       expect(terminated.status).toBe(ContractStatusEnum.TERMINATED);
 
-      // Storage unit is placed in UNDER_MAINTENANCE (until T2.10 introduces PENDING_CLEARANCE)
+      // Storage unit is placed in PENDING_CLEARANCE [CHỐT D14]
       const unitAfterTerminate = await StorageUnit.findById(storageUnitId);
       expect(unitAfterTerminate?.status).toBe(
-        StorageUnitStatusEnum.UNDER_MAINTENANCE
+        StorageUnitStatusEnum.PENDING_CLEARANCE
       );
 
       // Wait briefly for fire-and-forget audit log buffer flush after transaction commit
@@ -302,25 +310,35 @@ describe('X3: Contract Check-out & Terminate with Remaining Customer Inventory',
           ?.remainingInventoryItems
       ).toBe(1);
 
-      // Attempting to turn off maintenance while goods remain is blocked by X1 guard (MESSAGE_CODE_629)
+      // Direct turn-off from PENDING_CLEARANCE is rejected
       await expect(
         storageUnitService.toggleMaintenance(String(storageUnitId), {
           isUnderMaintenance: false,
         })
       ).rejects.toThrow(AppError);
 
+      // Transition to UNDER_MAINTENANCE while goods remain is blocked by MESSAGE_CODE_629
       await expect(
         storageUnitService.toggleMaintenance(String(storageUnitId), {
-          isUnderMaintenance: false,
+          isUnderMaintenance: true,
         })
       ).rejects.toMatchObject({
         statusCode: 400,
         messageCode: MESSAGE_CODE.MESSAGE_CODE_629,
       });
 
-      // Once goods are cleared from the unit, turning maintenance off succeeds -> AVAILABLE
+      // Once goods are cleared from the unit, moving to maintenance succeeds
       await CustomerInventory.findByIdAndUpdate(inv._id, { quantity: 0 });
 
+      const unitInMaintenance = await storageUnitService.toggleMaintenance(
+        String(storageUnitId),
+        { isUnderMaintenance: true }
+      );
+      expect(unitInMaintenance.status).toBe(
+        StorageUnitStatusEnum.UNDER_MAINTENANCE
+      );
+
+      // Then turning maintenance off succeeds -> AVAILABLE
       const releasedUnit = await storageUnitService.toggleMaintenance(
         String(storageUnitId),
         { isUnderMaintenance: false }

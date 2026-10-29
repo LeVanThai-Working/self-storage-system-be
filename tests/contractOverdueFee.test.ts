@@ -341,7 +341,7 @@ describe('T1.7: Overdue Fee Calculation Pure Function & Integration [OPEN D8]', 
         unitTypeId,
         unitNumber: 'A101',
         floor: 1,
-        status: StorageUnitStatusEnum.RENTED,
+        status: StorageUnitStatusEnum.OCCUPIED,
       });
     });
 

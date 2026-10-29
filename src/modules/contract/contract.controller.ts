@@ -306,6 +306,9 @@ export class ContractController extends Controller {
   /**
    * Facility Manager confirms handover & signs contract on Web (Two-party signing: Facility side).
    * Requires customerSigned === true; transitions contract to ACTIVE and storage unit to OCCUPIED.
+   * If actualCheckInDate shifts contract dates and customer had already signed, saves previous signature
+   * in signatureHistory, resets customerSigned to false, and rejects with 400 MESSAGE_CODE_425
+   * requiring customer re-signing before check-in can be finalized.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -345,12 +348,13 @@ export class ContractController extends Controller {
   }
 
   /**
-   * Cancel DRAFT contract.
-   * Deposit is forfeited (100% loss), storage unit and amenities are released.
+   * Cancel or Void DRAFT contract.
+   * - cancellationType = 'cancel': Cancel contract. If sourced from reservation, forfeiture / refund is calculated based on policy snapshot. If walk-in, deposit is 100% forfeited.
+   * - cancellationType = 'void': Void invalid draft contract (Staff/Manager/Ops/Admin only). If sourced from reservation, reservation and unit hold are preserved. If walk-in, deposit is 100% refunded.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER (cancel only), FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/cancel')
   @Middlewares(
     validateRequest({
@@ -692,7 +696,8 @@ export class ContractController extends Controller {
    * Check-out & Liquidate contract.
    * Changes status to COMPLETED, assesses damageFee and overdueFee, calculates deposit refund,
    * vacates storage unit into UNDER_MAINTENANCE for inspection/cleaning.
-   * Returns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract.
+   * Returns 400 MESSAGE_CODE_420 if customer inventory still remains on this contract,
+   * or 400 MESSAGE_CODE_421 if open (unclosed) incidents still exist on this contract.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -707,7 +712,7 @@ export class ContractController extends Controller {
   @SuccessResponse(200, 'Success')
   @Response<ApiErrorResponse>(
     400,
-    'Bad Request (MESSAGE_CODE_401 if invalid contract status, MESSAGE_CODE_420 if customer inventory remains)'
+    'Bad Request (MESSAGE_CODE_401 if invalid contract status, MESSAGE_CODE_420 if customer inventory remains, MESSAGE_CODE_421 if open incidents exist)'
   )
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')

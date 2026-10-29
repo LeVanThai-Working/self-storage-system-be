@@ -4,4 +4,5 @@ export enum StorageUnitStatusEnum {
   OCCUPIED = 'occupied',
   UNDER_MAINTENANCE = 'under_maintenance',
   INACTIVE = 'inactive',
+  PENDING_CLEARANCE = 'pending_clearance',
 }

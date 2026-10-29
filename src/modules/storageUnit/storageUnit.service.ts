@@ -329,6 +329,18 @@ export class StorageUnitService {
 
     let updated;
     if (data.isUnderMaintenance) {
+      // If currently PENDING_CLEARANCE, ensure customer goods have been cleared before maintenance begins
+      if (unit.status === StorageUnitStatusEnum.PENDING_CLEARANCE) {
+        const remainingItems =
+          await this.customerInventoryRepository.countRemainingByStorageUnit(
+            id,
+            session
+          );
+        if (remainingItems > 0) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_629);
+        }
+      }
+
       // Put under maintenance: Block if currently RESERVED or OCCUPIED
       const allowedFrom = Object.values(StorageUnitStatusEnum).filter(
         (s) =>

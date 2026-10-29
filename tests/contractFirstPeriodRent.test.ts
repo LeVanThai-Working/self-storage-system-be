@@ -366,6 +366,31 @@ describe('T1.6: First Period Rent Collection & Late Check-in Date Adjustment [OP
     const expectedStartDate = startOfDayVN(lateCheckIn);
     const expectedEndDate = new Date(expectedStartDate.getTime() + durationMs);
 
+    // 1st attempt: check-in late triggers date adjustment and signature reset (MESSAGE_CODE_425) per T2.7 / OPEN D2
+    await expect(
+      contractService.checkInContract(
+        String(contract._id),
+        TEST_USERS.managerFacilityA.id,
+        RoleEnum.FACILITY_MANAGER,
+        {
+          termsAccepted: true,
+          actualCheckInDate: lateCheckIn,
+        }
+      )
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_425,
+    });
+
+    // Customer re-signs updated draft with new dates
+    await contractService.customerSignContract(
+      String(contract._id),
+      String(customerId),
+      RoleEnum.CUSTOMER,
+      { termsAccepted: true }
+    );
+
+    // 2nd attempt: check-in succeeds now that customer has re-signed
     const checkedIn = await contractService.checkInContract(
       String(contract._id),
       TEST_USERS.managerFacilityA.id,

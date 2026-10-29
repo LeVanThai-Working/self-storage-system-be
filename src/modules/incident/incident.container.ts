@@ -7,6 +7,7 @@ import { contractRepository } from '../contract/contract.container.ts';
 import { userRepository } from '../user/user.container.ts';
 import { notificationService } from '../notification/notification.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
+import { customerInventoryRepository } from '../customerInventory/customerInventory.container.ts';
 
 const incidentRepository = new IncidentRepository(Incident);
 
@@ -16,7 +17,8 @@ export const incidentService = new IncidentService(
   contractRepository,
   userRepository,
   notificationService,
-  auditLogService
+  auditLogService,
+  customerInventoryRepository
 );
 
 export const incidentController = new IncidentController(incidentService);
