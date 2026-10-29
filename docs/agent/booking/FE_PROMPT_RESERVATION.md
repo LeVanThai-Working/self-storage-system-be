@@ -434,7 +434,7 @@ export const cancelDraftContractSchema = z.object({
 });
 ```
 
-### 4. Discovery Lookup Query Schemas
+### 4. Discovery Lookup Query Schemas (Tra cứu Tiện ích, Ca hẹn, Gói giá & Kho)
 
 ```ts
 export const availableTimeSlotsQuerySchema = z.object({
@@ -450,6 +450,35 @@ export const availableStorageUnitQuerySchema = z.object({
     .optional(),
   floor: z.coerce.number().int().optional(),
   zone: z.string().trim().optional(),
+});
+
+export const offeringQuerySchema = paginationQuerySchema.extend({
+  facilityId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid facility ID format')
+    .optional(),
+  unitTypeId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid unit type ID format')
+    .optional(),
+  status: z.enum(['active', 'inactive']).optional(),
+  billingUnit: z.enum(['day', 'month', 'year']).optional(),
+  sortBy: z
+    .enum(['pricePerUnit', 'createdAt', 'updatedAt'])
+    .default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export const facilityAmenityOfferingQuerySchema = paginationQuerySchema.extend({
+  facilityId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid facility ID format')
+    .optional(),
+  amenityId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid amenity ID format')
+    .optional(),
+  status: z.enum(['active', 'inactive']).optional(),
 });
 ```
 
@@ -675,13 +704,78 @@ export interface PaymentResponse {
 ```ts
 export interface AvailableTimeSlotItemResponse {
   id: string;
+  facilityId: string;
   slotName: string;
   startTime: string; // VD: "08:00"
   endTime: string; // VD: "10:00"
   maxCapacity: number;
   bookedCount: number;
-  remainingCapacity: number;
+  availableCapacity: number; // Sức chứa còn lại
+  remainingCapacity?: number; // Alias tương thích
   isAvailable: boolean;
+}
+```
+
+### 4. `FacilityUnitTypeOfferingResponse` & `FacilityAmenityOfferingResponse` (Gói giá & Tiện ích đi kèm)
+
+```ts
+export interface FacilityUnitTypeOfferingResponse {
+  id: string;
+  facility: {
+    id: string;
+    name: string;
+    city: string;
+    address: string;
+    status: 'active' | 'inactive' | 'under_maintenance';
+  };
+  unitType: {
+    id: string;
+    name: string;
+    category?:
+      'locker' | 'closet' | 'room' | 'container' | 'warehouse_rack' | null;
+    area: number;
+    volume: number;
+    status: 'active' | 'inactive';
+    dimensions: {
+      length: number;
+      width: number;
+      height: number;
+    };
+  };
+  billingUnit: 'day' | 'month' | 'year';
+  pricePerUnit: number; // Đơn giá thuê cơ bản
+  rackZonePricing?: {
+    PRIME: number;
+    STANDARD: number;
+    ECONOMY: number;
+  } | null;
+  depositMultiplier: number; // Hệ số cọc (thường là 1)
+  minRentalDays: number; // Số ngày thuê tối thiểu
+  status: 'active' | 'inactive';
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FacilityAmenityOfferingResponse {
+  id: string;
+  facilityId: string;
+  amenityId: string;
+  amenity?: {
+    id: string;
+    name: string;
+    type: 'service' | 'equipment' | 'security' | 'climate' | 'logistics';
+    description?: string | null;
+    images?: string[];
+  } | null;
+  price: number;
+  billingUnit: 'per_use' | 'per_day' | 'per_month';
+  totalQuantity: number;
+  inUseQuantity: number;
+  availableQuantity: number; // totalQuantity - inUseQuantity
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
 }
 ```
 
@@ -765,6 +859,17 @@ export enum ContractStatusEnum {
 export enum ContractCancellationTypeEnum {
   VOID = 'void', // Hủy bản nháp do nhân viên nhập sai; BẢO TOÀN reservation để tạo lại
   CANCEL = 'cancel', // Khách đổi ý không thuê tại quầy; hủy luôn reservation và tính phạt cọc
+}
+
+export enum BillingUnitEnum {
+  DAY = 'day',
+  MONTH = 'month',
+  YEAR = 'year',
+}
+
+export enum FacilityUnitTypeOfferingStatusEnum {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
 }
 ```
 

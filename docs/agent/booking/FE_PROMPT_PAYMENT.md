@@ -37,6 +37,7 @@ Quản lý toàn bộ giao dịch thanh toán trong hệ thống kho tự quản
 | GET    | /payments/{id}                     | Chi tiết đơn thanh toán (dùng để polling kiểm tra trạng thái và lấy link QR)                | customer, facility_staff, facility_manager, business_ops_manager, system_admin | —          |
 | POST   | /payments/{id}/cancel              | Hủy đơn thanh toán khi còn ở trạng thái `pending`                                           | customer, facility_staff, facility_manager, business_ops_manager, system_admin | —          |
 | POST   | /payments/{id}/confirm-manual      | Xác nhận thanh toán trực tiếp tại quầy bằng tiền mặt/chuyển khoản (kèm ảnh biên lai)        | facility_staff, facility_manager, business_ops_manager, system_admin           | —          |
+| POST   | /upload/signature                  | **[Upload Biên lai]** Tạo chữ ký tải ảnh biên lai chuyển khoản/tiền mặt lên Cloudinary      | facility_staff, facility_manager, business_ops_manager, system_admin           | —          |
 
 Query cho API danh sách đơn thanh toán (`GET /payments`):
 
@@ -210,6 +211,27 @@ export type UnmatchedTransactionQuery = z.infer<
 >;
 ```
 
+### `src/modules/upload/schemas/upload.request.schema.ts` (API Upload Ảnh Biên lai Thanh toán)
+
+```ts
+export const cloudinarySignatureRequestSchema = z.object({
+  folder: z
+    .string()
+    .trim()
+    .min(1, 'Folder cannot be empty')
+    .regex(
+      /^[\w\-/]+$/,
+      'Folder can only contain alphanumeric characters, hyphens, underscores and slashes'
+    )
+    .default('self-storage/general')
+    .optional(),
+});
+
+export type CloudinarySignatureRequest = z.infer<
+  typeof cloudinarySignatureRequestSchema
+>;
+```
+
 ### Shared Pagination Schema (`src/common/schemas/pagination.schema.ts`)
 
 ```ts
@@ -320,6 +342,25 @@ export interface PaymentTransactionResponse {
   - Decimal: Không có Decimal thô, toàn bộ số tiền đều được làm tròn số nguyên VND.
 - **Dạng phân trang:** Dạng 1 (`ApiResponse<PaginatedData<T>>`), trong đó `response.data.data` là `{ items: T[], pagination: PaginationMeta }`.
 
+### `CloudinarySignatureResponse` (File BE: `src/modules/upload/schemas/upload.response.schema.ts`)
+
+```ts
+export interface CloudinarySignatureResponse {
+  signature: string;
+  timestamp: number;
+  apiKey: string;
+  cloudName: string;
+  folder: string;
+}
+```
+
+> **⚡ QUY TRÌNH UPLOAD ẢNH BIÊN LAI THỦ CÔNG (`proofImageUrl`):**
+>
+> 1. Gọi `POST /upload/signature` với `{ folder: 'self-storage/general' }`.
+> 2. Gửi file ảnh biên lai trực tiếp lên Cloudinary: `POST https://api.cloudinary.com/v1_1/${cloudName}/auto/upload` với `FormData` (`file`, `api_key`, `timestamp`, `signature`, `folder`).
+> 3. Cloudinary trả về `{ secure_url: string }`.
+> 4. Gửi `proofImageUrl: secure_url` vào payload `POST /payments/:id/confirm-manual`.
+
 ---
 
 ## Enums (cập nhật `packages/shared/src/enums/`)
@@ -369,6 +410,17 @@ export enum PaymentTransactionResultEnum {
   AMOUNT_MISMATCH = 'amount_mismatch',
   LATE = 'late',
   IGNORED = 'ignored',
+}
+```
+
+---
+
+### `CloudinaryFolderEnum` (File BE: `src/common/enums/upload.enum.ts`)
+
+```ts
+export enum CloudinaryFolderEnum {
+  GENERAL = 'self-storage/general',
+  CONTRACTS = 'self-storage/contracts',
 }
 ```
 

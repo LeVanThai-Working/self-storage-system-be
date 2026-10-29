@@ -29,38 +29,39 @@ Quản lý toàn bộ vòng đời hợp đồng thuê kho và phụ lục hợp
 
 ## Endpoints
 
-| Method | Path                                                 | Mô tả                                                      | Role                                                                                        | Phân trang |
-| :----- | :--------------------------------------------------- | :--------------------------------------------------------- | :------------------------------------------------------------------------------------------ | :--------- |
-| POST   | /contracts                                           | Tạo hợp đồng nháp DRAFT (từ Reservation hoặc Walk-in)      | facility_staff, facility_manager, business_ops_manager, system_admin                        | —          |
-| GET    | /contracts                                           | Danh sách hợp đồng có bộ lọc theo cơ sở & phân trang       | customer, facility_staff, facility_manager, business_ops_manager, system_admin              | Dạng 1     |
-| GET    | /contracts/{id}                                      | Chi tiết hợp đồng kèm tiện ích, phụ lục và lịch sử         | customer, facility_staff, facility_manager, business_ops_manager, system_admin              | —          |
-| POST   | /contracts/{id}/customer-sign                        | Khách hàng ký hợp đồng nháp (Bước ký 1 trên Mobile)        | customer (chủ hợp đồng)                                                                     | —          |
-| POST   | /contracts/{id}/check-in                             | Quản lý ký bàn giao kho & kích hoạt ACTIVE (Bước ký 2)     | facility_manager, business_ops_manager, system_admin                                        | —          |
-| POST   | /contracts/{id}/cancel                               | Hủy hợp đồng DRAFT (hỗ trợ luồng CANCEL hoặc VOID)         | customer (chỉ cancel), facility_staff, facility_manager, business_ops_manager, system_admin | —          |
-| POST   | /contracts/{id}/renew                                | **@deprecated** Vô hiệu hóa (trả 400 MESSAGE_CODE_416)     | —                                                                                           | —          |
-| POST   | /contracts/{id}/addendums                            | Tạo yêu cầu phụ lục (RENEW hoặc UNIT_CHANGE)               | customer (chỉ RENEW), facility_manager, business_ops_manager, system_admin                  | —          |
-| POST   | /contracts/{id}/addendums/{addendumId}/approve       | Quản lý duyệt phụ lục PENDING_APPROVAL -> DRAFT            | facility_manager, business_ops_manager, system_admin                                        | —          |
-| POST   | /contracts/{id}/addendums/{addendumId}/reject        | Quản lý từ chối yêu cầu phụ lục                            | facility_manager, business_ops_manager, system_admin                                        | —          |
-| POST   | /contracts/{id}/addendums/{addendumId}/customer-sign | Khách hàng ký phụ lục DRAFT (Bước ký 1 trên Mobile)        | customer (chủ hợp đồng)                                                                     | —          |
-| POST   | /contracts/{id}/addendums/{addendumId}/staff-sign    | Quản lý ký phụ lục DRAFT & áp dụng hiệu lực (Bước ký 2)    | facility_manager, business_ops_manager, system_admin                                        | —          |
-| POST   | /contracts/{id}/addendums/{addendumId}/cancel        | Hủy phụ lục (giải phóng kho mới nếu UNIT_CHANGE)           | customer, facility_manager, business_ops_manager, system_admin                              | —          |
-| POST   | /contracts/{id}/check-out                            | Nghiệm thu trả kho & quyết toán thanh lý hợp đồng          | facility_staff, facility_manager, business_ops_manager, system_admin                        | —          |
-| POST   | /contracts/{id}/terminate                            | Chấm dứt hợp đồng an toàn (kèm biên bản & ảnh hiện trường) | facility_manager, business_ops_manager, system_admin                                        | —          |
-| POST   | /contracts/{id}/settlement/confirm                   | Khách hàng đồng ý quyết toán cọc sau check-out             | customer (chủ hợp đồng)                                                                     | —          |
-| POST   | /contracts/{id}/settlement/dispute                   | Khách hàng khiếu nại tranh chấp phí bồi thường hư hại cọc  | customer (chủ hợp đồng)                                                                     | —          |
-| POST   | /contracts/walk-in                                   | Tạo hợp đồng khách vãng lai tại quầy (inline KYC)          | facility_staff, facility_manager, business_ops_manager, system_admin                        | —          |
-| GET    | /contracts/{id}/draft-pdf                            | Xuất bản in PDF/HTML nháp cho 2 bên ký sống                | customer, facility_staff, facility_manager, business_ops_manager, system_admin              | —          |
-| POST   | /contracts/process-overdue                           | Quét hàng loạt hợp đồng quá hạn endDate sang OVERDUE       | facility_manager, business_ops_manager, system_admin                                        | —          |
-| POST   | /legal-entities                                      | Tạo mới pháp nhân doanh nghiệp                             | business_ops_manager, system_admin                                                          | —          |
-| GET    | /legal-entities                                      | Danh sách pháp nhân doanh nghiệp (phân trang)              | facility_manager, business_ops_manager, system_admin                                        | Dạng 1     |
-| GET    | /legal-entities/{id}                                 | Chi tiết pháp nhân doanh nghiệp                            | facility_manager, business_ops_manager, system_admin                                        | —          |
-| PATCH  | /legal-entities/{id}                                 | Cập nhật thông tin pháp nhân                               | business_ops_manager, system_admin                                                          | —          |
-| DELETE | /legal-entities/{id}                                 | Xóa mềm pháp nhân                                          | system_admin                                                                                | —          |
-| POST   | /signing-authorizations                              | Cấp văn bản ủy quyền ký cho Quản lý cơ sở                  | business_ops_manager, system_admin                                                          | —          |
-| GET    | /signing-authorizations                              | Danh sách văn bản ủy quyền ký (phân trang)                 | facility_manager, business_ops_manager, system_admin                                        | Dạng 1     |
-| GET    | /signing-authorizations/{id}                         | Chi tiết văn bản ủy quyền ký                               | facility_manager, business_ops_manager, system_admin                                        | —          |
-| PATCH  | /signing-authorizations/{id}                         | Cập nhật văn bản ủy quyền ký                               | business_ops_manager, system_admin                                                          | —          |
-| POST   | /signing-authorizations/{id}/revoke                  | Thu hồi hiệu lực văn bản ủy quyền ký                       | business_ops_manager, system_admin                                                          | —          |
+| Method | Path                                                 | Mô tả                                                         | Role                                                                                        | Phân trang |
+| :----- | :--------------------------------------------------- | :------------------------------------------------------------ | :------------------------------------------------------------------------------------------ | :--------- |
+| POST   | /contracts                                           | Tạo hợp đồng nháp DRAFT (từ Reservation hoặc Walk-in)         | facility_staff, facility_manager, business_ops_manager, system_admin                        | —          |
+| GET    | /contracts                                           | Danh sách hợp đồng có bộ lọc theo cơ sở & phân trang          | customer, facility_staff, facility_manager, business_ops_manager, system_admin              | Dạng 1     |
+| GET    | /contracts/{id}                                      | Chi tiết hợp đồng kèm tiện ích, phụ lục và lịch sử            | customer, facility_staff, facility_manager, business_ops_manager, system_admin              | —          |
+| POST   | /contracts/{id}/customer-sign                        | Khách hàng ký hợp đồng nháp (Bước ký 1 trên Mobile)           | customer (chủ hợp đồng)                                                                     | —          |
+| POST   | /contracts/{id}/check-in                             | Quản lý ký bàn giao kho & kích hoạt ACTIVE (Bước ký 2)        | facility_manager, business_ops_manager, system_admin                                        | —          |
+| POST   | /contracts/{id}/cancel                               | Hủy hợp đồng DRAFT (hỗ trợ luồng CANCEL hoặc VOID)            | customer (chỉ cancel), facility_staff, facility_manager, business_ops_manager, system_admin | —          |
+| POST   | /contracts/{id}/renew                                | **@deprecated** Vô hiệu hóa (trả 400 MESSAGE_CODE_416)        | —                                                                                           | —          |
+| POST   | /contracts/{id}/addendums                            | Tạo yêu cầu phụ lục (RENEW hoặc UNIT_CHANGE)                  | customer (chỉ RENEW), facility_manager, business_ops_manager, system_admin                  | —          |
+| POST   | /contracts/{id}/addendums/{addendumId}/approve       | Quản lý duyệt phụ lục PENDING_APPROVAL -> DRAFT               | facility_manager, business_ops_manager, system_admin                                        | —          |
+| POST   | /contracts/{id}/addendums/{addendumId}/reject        | Quản lý từ chối yêu cầu phụ lục                               | facility_manager, business_ops_manager, system_admin                                        | —          |
+| POST   | /contracts/{id}/addendums/{addendumId}/customer-sign | Khách hàng ký phụ lục DRAFT (Bước ký 1 trên Mobile)           | customer (chủ hợp đồng)                                                                     | —          |
+| POST   | /contracts/{id}/addendums/{addendumId}/staff-sign    | Quản lý ký phụ lục DRAFT & áp dụng hiệu lực (Bước ký 2)       | facility_manager, business_ops_manager, system_admin                                        | —          |
+| POST   | /contracts/{id}/addendums/{addendumId}/cancel        | Hủy phụ lục (giải phóng kho mới nếu UNIT_CHANGE)              | customer, facility_manager, business_ops_manager, system_admin                              | —          |
+| POST   | /contracts/{id}/check-out                            | Nghiệm thu trả kho & quyết toán thanh lý hợp đồng             | facility_staff, facility_manager, business_ops_manager, system_admin                        | —          |
+| POST   | /contracts/{id}/terminate                            | Chấm dứt hợp đồng an toàn (kèm biên bản & ảnh hiện trường)    | facility_manager, business_ops_manager, system_admin                                        | —          |
+| POST   | /contracts/{id}/settlement/confirm                   | Khách hàng đồng ý quyết toán cọc sau check-out                | customer (chủ hợp đồng)                                                                     | —          |
+| POST   | /contracts/{id}/settlement/dispute                   | Khách hàng khiếu nại tranh chấp phí bồi thường hư hại cọc     | customer (chủ hợp đồng)                                                                     | —          |
+| POST   | /contracts/walk-in                                   | Tạo hợp đồng khách vãng lai tại quầy (inline KYC)             | facility_staff, facility_manager, business_ops_manager, system_admin                        | —          |
+| GET    | /contracts/{id}/draft-pdf                            | Xuất bản in PDF/HTML nháp cho 2 bên ký sống                   | customer, facility_staff, facility_manager, business_ops_manager, system_admin              | —          |
+| POST   | /contracts/process-overdue                           | Quét hàng loạt hợp đồng quá hạn endDate sang OVERDUE          | facility_manager, business_ops_manager, system_admin                                        | —          |
+| POST   | /legal-entities                                      | Tạo mới pháp nhân doanh nghiệp                                | business_ops_manager, system_admin                                                          | —          |
+| GET    | /legal-entities                                      | Danh sách pháp nhân doanh nghiệp (phân trang)                 | facility_manager, business_ops_manager, system_admin                                        | Dạng 1     |
+| GET    | /legal-entities/{id}                                 | Chi tiết pháp nhân doanh nghiệp                               | facility_manager, business_ops_manager, system_admin                                        | —          |
+| PATCH  | /legal-entities/{id}                                 | Cập nhật thông tin pháp nhân                                  | business_ops_manager, system_admin                                                          | —          |
+| DELETE | /legal-entities/{id}                                 | Xóa mềm pháp nhân                                             | system_admin                                                                                | —          |
+| POST   | /signing-authorizations                              | Cấp văn bản ủy quyền ký cho Quản lý cơ sở                     | business_ops_manager, system_admin                                                          | —          |
+| GET    | /signing-authorizations                              | Danh sách văn bản ủy quyền ký (phân trang)                    | facility_manager, business_ops_manager, system_admin                                        | Dạng 1     |
+| GET    | /signing-authorizations/{id}                         | Chi tiết văn bản ủy quyền ký                                  | facility_manager, business_ops_manager, system_admin                                        | —          |
+| PATCH  | /signing-authorizations/{id}                         | Cập nhật văn bản ủy quyền ký                                  | business_ops_manager, system_admin                                                          | —          |
+| POST   | /signing-authorizations/{id}/revoke                  | Thu hồi hiệu lực văn bản ủy quyền ký                          | business_ops_manager, system_admin                                                          | —          |
+| POST   | /upload/signature                                    | **[Upload Chứng từ]** Tạo chữ ký tải trực tiếp lên Cloudinary | customer, facility_staff, facility_manager, Ops, Admin                                      | —          |
 
 Query cho API danh sách (`GET /contracts`):
 
@@ -415,6 +416,27 @@ export type TerminateContractRequest = z.infer<typeof terminateContractSchema>;
 export type ContractQuery = z.infer<typeof contractQuerySchema>;
 ```
 
+### `src/modules/upload/schemas/upload.request.schema.ts` (API Upload File/Ảnh Chứng từ)
+
+```ts
+export const cloudinarySignatureRequestSchema = z.object({
+  folder: z
+    .string()
+    .trim()
+    .min(1, 'Folder cannot be empty')
+    .regex(
+      /^[\w\-/]+$/,
+      'Folder can only contain alphanumeric characters, hyphens, underscores and slashes'
+    )
+    .default('self-storage/contracts')
+    .optional(),
+});
+
+export type CloudinarySignatureRequest = z.infer<
+  typeof cloudinarySignatureRequestSchema
+>;
+```
+
 ## Response (hình dạng dữ liệu, cập nhật `packages/shared/src/types/`)
 
 Mọi API trả về bọc chuẩn `ApiResponse<T>`.
@@ -635,6 +657,30 @@ export interface ContractResponse {
 }
 ```
 
+### `CloudinarySignatureResponse` (File BE: `src/modules/upload/schemas/upload.response.schema.ts`)
+
+```ts
+export interface CloudinarySignatureResponse {
+  signature: string;
+  timestamp: number;
+  apiKey: string;
+  cloudName: string;
+  folder: string;
+}
+```
+
+> **⚡ QUY TRÌNH CLIENT-SIDE UPLOAD (BẮT BUỘC KHI CHECK-IN SCAN, WALK-IN CCCD & TERMINATE):**
+>
+> 1. Gọi `POST /upload/signature` với `{ folder: 'self-storage/contracts' }` để nhận chữ ký.
+> 2. Gửi file trực tiếp từ Client lên Cloudinary: `POST https://api.cloudinary.com/v1_1/${cloudName}/auto/upload` với `FormData`:
+>    - `file`: File / Blob
+>    - `api_key`: `apiKey`
+>    - `timestamp`: `timestamp`
+>    - `signature`: `signature`
+>    - `folder`: `folder`
+> 3. Cloudinary trả về `{ secure_url: string }`.
+> 4. Truyền URL này vào payload hợp đồng: `signedContractFileUrls: [secure_url]`, `idCardFrontImageUrl: secure_url`, `reportFileUrls: [secure_url]`.
+
 - **Trường tham chiếu:** `customerId`, `facilityId`, `storageUnitId`, `facilityUnitTypeOfferingId`, `assignedStaffId`, `reservationId` là chuỗi hex ObjectId (24 ký tự). Dữ liệu đối tượng mở rộng được populate trả kèm qua các snapshot objects tương ứng: `customer`, `facility`, `offering`, `storageUnit`, `assignedStaff`.
 - **Kiểu serialize:**
   - Tiền tệ (`rentalPrice`, `depositAmount`, `totalPeriodicPrice`, `damageFee`, `overdueFee`, `refundAmount`, `forfeitedAmount`, `additionalPaymentRequired`): số nguyên VND (`number`).
@@ -720,12 +766,24 @@ export enum ContractAddendumStatusEnum {
 
 ### `ContractAddendumTypeEnum` (File BE: `src/common/enums/contract.enum.ts`)
 
-```ts
+````ts
 export enum ContractAddendumTypeEnum {
   RENEW = 'renew',
   UNIT_CHANGE = 'unit_change',
 }
-```
+
+### `CloudinaryFolderEnum` (File BE: `src/common/enums/upload.enum.ts`)
+
+```ts
+export enum CloudinaryFolderEnum {
+  AMENITIES = 'self-storage/amenities',
+  FACILITIES = 'self-storage/facilities',
+  UNIT_TYPES = 'self-storage/unit-types',
+  AVATARS = 'self-storage/avatars',
+  CONTRACTS = 'self-storage/contracts',
+  GENERAL = 'self-storage/general',
+}
+````
 
 ## Ma trận hành động theo trạng thái
 
