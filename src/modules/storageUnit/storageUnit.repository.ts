@@ -327,4 +327,15 @@ export class StorageUnitRepository {
       .populate(POPULATE_UNIT_TYPE)
       .sort({ floor: 1, zone: 1, unitNumber: 1 });
   }
+
+  async findUnitsByStatus(
+    status: StorageUnitStatusEnum,
+    session?: ClientSession
+  ) {
+    const query = this.storageUnit.find({ status, deleted: false });
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
 }

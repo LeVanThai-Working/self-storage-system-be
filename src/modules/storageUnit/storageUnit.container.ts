@@ -10,6 +10,10 @@ import { FacilityUnitTypeOffering } from '../facilityUnitTypeOffering/facilityUn
 import { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.repository.ts';
 import { CustomerInventory } from '../customerInventory/customerInventory.model.ts';
 import { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
+import { Reservation } from '../reservation/reservation.model.ts';
+import { ReservationRepository } from '../reservation/reservation.repository.ts';
+import { Contract } from '../contract/contract.model.ts';
+import { ContractRepository } from '../contract/contract.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const storageUnitRepository = new StorageUnitRepository(StorageUnit);
@@ -22,6 +26,8 @@ const offeringRepository = new FacilityUnitTypeOfferingRepository(
 const customerInventoryRepository = new CustomerInventoryRepository(
   CustomerInventory
 );
+const reservationRepository = new ReservationRepository(Reservation);
+const contractRepository = new ContractRepository(Contract);
 
 const storageUnitService = new StorageUnitService(
   storageUnitRepository,
@@ -29,7 +35,9 @@ const storageUnitService = new StorageUnitService(
   unitTypeRepository,
   offeringRepository,
   customerInventoryRepository,
-  auditLogService
+  auditLogService,
+  reservationRepository,
+  contractRepository
 );
 
 export const storageUnitController = new StorageUnitController(

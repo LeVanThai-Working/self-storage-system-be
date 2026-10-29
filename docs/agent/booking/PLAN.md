@@ -63,7 +63,7 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     T1.3
     D10
     Walk-in: KYC và cách ký
-    Tạo tài khoản kèm xác minh email hoặc SĐT; lưu CCCD mã hóa và ảnh; khách đăng nhập trên thiết bị tại quầy để ký
+    [ĐÃ CHỐT] Bắt buộc dateOfBirth >= 18 tuổi; tạo tài khoản walk-in kèm xác minh email/SĐT; lưu CCCD mã hóa (AES-256-GCM) và ảnh 2 mặt; khách đăng nhập trên thiết bị tại quầy để ký; snapshot thông tin khách vào Contract
     T4.2, T4.6
     D11
     Hình thức ký
@@ -71,7 +71,7 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
     T4.3
     D12
     Pháp nhân: một cho cả chuỗi hay mỗi cơ sở; ai có ủy quyền ký
-    Mỗi Facility trỏ tới một LegalEntity (nhiều cơ sở có thể dùng chung)
+    [ĐÃ CHỐT] Mỗi Facility trỏ tới một LegalEntity (nhiều cơ sở có thể dùng chung); quản lý cơ sở ký cần SigningAuthorization còn hiệu lực; snapshot pháp nhân và ủy quyền vào Contract lúc ký
     T4.1
     D13
     POST /contracts/:id/renew còn tồn tại không
@@ -172,9 +172,9 @@ Tổng hợp từ toàn bộ thông tin bạn đã cung cấp (Reservation, Cont
        T3.6 Ràng buộc DB và idempotency
        • Làm: partial unique index cho một hợp đồng DRAFT hoặc ACTIVE trên mỗi reservationId, và cho một hợp đồng đang giữ mỗi storageUnitId. check-in dùng conditional update kèm customerSigned = true và storageUnitId đúng. Idempotency key cho POST /contracts và các thao tác thanh toán.
        Phase 4: pháp lý, chữ ký, PDF (P2, nhiều phần cần pháp chế)
-       T4.1 LegalEntity, SigningAuthorization và snapshot [OPEN D12]
+       T4.1 LegalEntity, SigningAuthorization và snapshot [ĐÃ CHỐT D12]
        • Làm: LegalEntity (companyName, taxCode, địa chỉ đăng ký, người đại diện pháp luật, chức vụ, tài khoản nhận tiền); Facility trỏ tới legalEntityId. SigningAuthorization (authorizedUserId, số và ngày văn bản ủy quyền, phạm vi, validFrom, validTo, file). check-in và facility-sign chỉ cho phép khi người ký là người đại diện hoặc có ủy quyền còn hiệu lực. Snapshot pháp nhân và ủy quyền vào Contract lúc ký.
-       T4.2 Danh tính khách [OPEN D10]
+       T4.2 Danh tính khách [ĐÃ CHỐT D10]
        • Làm: bắt buộc dateOfBirth và kiểm tra ≥ 18 tuổi khi tạo hợp đồng. Snapshot thông tin khách (tên, SĐT, email, địa chỉ) vào Contract lúc ký. Lưu số CCCD (mã hóa) và ảnh giấy tờ khi check-in tại quầy. Luồng kích hoạt tài khoản walk-in, xác minh email hoặc SĐT.
        T4.3 Ký hợp đồng giấy số hóa và lưu trữ bằng chứng ký [ĐÃ CHỐT D11]
        • Làm: Bỏ quy trình ký điện tử CA bên thứ 3. Chuyển sang mô hình Hợp đồng giấy số hóa (Digitized Paper Contract):

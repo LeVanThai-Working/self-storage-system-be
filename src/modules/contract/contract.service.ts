@@ -4,11 +4,15 @@ import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
 import {
+  addDays,
+  calculateAgeVN,
   checkOperatingHoursMatchVN,
   checkTimeSlotMatchVN,
+  endOfDayVN,
   isEarlyCheckInVN,
   startOfDayVN,
 } from '../../utils/date.util.ts';
+import { encryptText } from '../../utils/encryption.util.ts';
 import { calculateContractOverdueFee } from '../../utils/contractFee.util.ts';
 import {
   computeCancellationOutcome,
@@ -16,7 +20,11 @@ import {
 } from '../../utils/reservationPolicy.util.ts';
 import { contractConfig } from '../../config/contract.config.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
-import { RoleEnum } from '../../common/enums/user.enum.ts';
+import {
+  AuthProviderEnum,
+  RoleEnum,
+  UserStatusEnum,
+} from '../../common/enums/user.enum.ts';
 import { BillingUnitEnum } from '../../common/enums/billing.enum.ts';
 import {
   ContractAddendumStatusEnum,
@@ -35,6 +43,13 @@ import {
 } from '../../common/enums/reservation.enum.ts';
 import { RefundReasonEnum } from '../../common/enums/refundRequest.enum.ts';
 import {
+  NotificationChannelEnum,
+  NotificationPriorityEnum,
+  NotificationTypeEnum,
+} from '../../common/enums/notification.enum.ts';
+import { runAfterCommit } from '../../utils/transactionScope.util.ts';
+import type { NotificationService } from '../notification/notification.service.ts';
+import {
   AuditActionEnum,
   AuditResourceEnum,
 } from '../../common/enums/auditLog.enum.ts';
@@ -49,6 +64,14 @@ import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { UserRepository } from '../user/user.repository.ts';
 import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
 import type { IncidentRepository } from '../incident/incident.repository.ts';
+import type { LegalEntityRepository } from '../legalEntity/legalEntity.repository.ts';
+import type { SigningAuthorizationRepository } from '../signingAuthorization/signingAuthorization.repository.ts';
+import type { ProfileRepository } from '../profile/profile.repository.ts';
+import type { ContractTemplateRepository } from '../contractTemplate/contractTemplate.repository.ts';
+import type { StorageRackRepository } from '../storageRack/storageRack.repository.ts';
+import type { IStorageRack } from '../storageRack/storageRack.model.ts';
+import { RentalTargetTypeEnum } from '../../common/enums/rental.enum.ts';
+import { ContractPdfService } from './services/contractPdf.service.ts';
 import type {
   IContract,
   IContractAddendum,
@@ -57,10 +80,15 @@ import type {
   IContractSignatureHistory,
   IContractTerminationFile,
   IContractTerminationHistory,
+  ICustomerSnapshot,
+  ILegalEntitySnapshot,
+  ISigningAuthorizationSnapshot,
 } from './contract.model.ts';
 import {
   contractResponseSchema,
+  processContractOverdueResponseSchema,
   type ContractResponse,
+  type ProcessContractOverdueResponse,
 } from './schemas/contract.response.schema.ts';
 import type {
   ApproveContractAddendumRequest,
@@ -72,12 +100,15 @@ import type {
   CreateContractAddendumRequest,
   CreateContractRequest,
   CustomerSignContractRequest,
+  ProcessContractOverdueQuery,
   RejectContractAddendumRequest,
   RenewContractRequest,
   SignContractAddendumRequest,
   TerminateContractRequest,
   DisputeSettlementRequest,
+  WalkInContractRequest,
 } from './schemas/contract.request.schema.ts';
+import type { ContractQueue } from './contract.queue.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 
 export class ContractService {
@@ -92,7 +123,15 @@ export class ContractService {
     private readonly auditLogService?: AuditLogService,
     private readonly refundRequestService?: RefundRequestService,
     private readonly customerInventoryRepository?: CustomerInventoryRepository,
-    private readonly incidentRepository?: IncidentRepository
+    private readonly incidentRepository?: IncidentRepository,
+    private readonly contractQueue?: ContractQueue,
+    private readonly notificationService?: NotificationService,
+    private readonly legalEntityRepository?: LegalEntityRepository,
+    private readonly signingAuthRepository?: SigningAuthorizationRepository,
+    private readonly profileRepository?: ProfileRepository,
+    private readonly contractTemplateRepository?: ContractTemplateRepository,
+    private readonly storageRackRepository?: StorageRackRepository,
+    private readonly contractPdfService: ContractPdfService = new ContractPdfService()
   ) {}
 
   // 1. Create contract (From RESERVATION or WALK_IN)
@@ -152,6 +191,21 @@ export class ContractService {
           : (reservation.facilityId as Types.ObjectId);
 
       await this.assertFacilityAccess(actorId, actorRole, String(facilityId));
+
+      // Age check on customer profile (T4.2)
+      if (this.profileRepository) {
+        const profile = await this.profileRepository.findByUserId(
+          String(customerId)
+        );
+        if (profile?.dateOfBirth) {
+          const age = calculateAgeVN(new Date(profile.dateOfBirth));
+          if (age < contractConfig.minCustomerAge) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_430, [
+              'Customer must be at least 18 years old',
+            ]);
+          }
+        }
+      }
 
       // Reservation must be CONFIRMED or OVERDUE (within grace period)
       if (
@@ -224,6 +278,17 @@ export class ContractService {
           customerId: new Types.ObjectId(String(customerId)),
           facilityId: new Types.ObjectId(String(facilityId)),
           storageUnitId: new Types.ObjectId(String(storageUnitId)),
+          rentalTargetType:
+            reservation.rentalTargetType ||
+            (reservation.rentedRackIds && reservation.rentedRackIds.length > 0
+              ? RentalTargetTypeEnum.STORAGE_RACK
+              : RentalTargetTypeEnum.STORAGE_UNIT),
+          rentedRackIds: (reservation.rentedRackIds || []).map(
+            (id) =>
+              new Types.ObjectId(
+                String((id as { _id?: Types.ObjectId })._id || id)
+              )
+          ),
           facilityUnitTypeOfferingId: new Types.ObjectId(
             String(facilityUnitTypeOfferingId)
           ),
@@ -263,6 +328,22 @@ export class ContractService {
         metadata: { source: ContractSourceEnum.RESERVATION },
       });
 
+      const customerIdStr = this.extractIdStr(created.customerId);
+      const facilityIdStr = this.extractIdStr(created.facilityId);
+      this.notifyCustomer(
+        customerIdStr,
+        facilityIdStr,
+        `Hợp đồng nháp [${created.contractCode}] đã được tạo`,
+        `Hợp đồng thuê kho [${created.contractCode}] từ đơn đặt chỗ đã được lập bản nháp. Vui lòng xác nhận và ký hợp đồng.`,
+        { contractId: String(created._id), contractCode: created.contractCode }
+      );
+      this.notifyFacilityManager(
+        facilityIdStr,
+        `Hợp đồng [${created.contractCode}] đã được tạo`,
+        `Hợp đồng [${created.contractCode}] đã được tạo tại cơ sở từ đơn đặt chỗ.`,
+        { contractId: String(created._id), contractCode: created.contractCode }
+      );
+
       return validateResponse(contractResponseSchema, formatted);
     } else {
       // WALK_IN flow
@@ -275,6 +356,21 @@ export class ContractService {
       const customer = await this.userRepository.findById(data.customerId!);
       if (!customer) {
         throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Customer']);
+      }
+
+      // Age check on customer profile (T4.2)
+      if (this.profileRepository) {
+        const profile = await this.profileRepository.findByUserId(
+          String(data.customerId)
+        );
+        if (profile?.dateOfBirth) {
+          const age = calculateAgeVN(new Date(profile.dateOfBirth));
+          if (age < contractConfig.minCustomerAge) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_430, [
+              'Customer must be at least 18 years old',
+            ]);
+          }
+        }
       }
 
       const facility = await this.facilityRepository.findById(data.facilityId!);
@@ -411,6 +507,7 @@ export class ContractService {
           totalPeriodicPrice,
           amenities: contractAmenities,
           status: ContractStatusEnum.DRAFT,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
           termsAccepted: false,
           notes: data.notes || null,
         },
@@ -430,6 +527,22 @@ export class ContractService {
         after: formatted,
         metadata: { source: ContractSourceEnum.WALK_IN },
       });
+
+      const customerIdStr = this.extractIdStr(created.customerId);
+      const facilityIdStr = this.extractIdStr(created.facilityId);
+      this.notifyCustomer(
+        customerIdStr,
+        facilityIdStr,
+        `Hợp đồng nháp [${created.contractCode}] đã được tạo`,
+        `Hợp đồng thuê kho vãng lai [${created.contractCode}] đã được tạo bản nháp. Vui lòng ký hợp đồng tại quầy.`,
+        { contractId: String(created._id), contractCode: created.contractCode }
+      );
+      this.notifyFacilityManager(
+        facilityIdStr,
+        `Hợp đồng vãng lai mới [${created.contractCode}]`,
+        `Hợp đồng vãng lai [${created.contractCode}] đã được tạo tại cơ sở.`,
+        { contractId: String(created._id), contractCode: created.contractCode }
+      );
 
       return validateResponse(contractResponseSchema, formatted);
     }
@@ -500,11 +613,25 @@ export class ContractService {
           ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
           : String(contract.storageUnitId);
 
-      await this.storageUnitRepository.updateById(
-        storageUnitId,
-        { status: StorageUnitStatusEnum.OCCUPIED },
-        session
-      );
+      if (contract.rentedRackIds && contract.rentedRackIds.length > 0) {
+        if (this.storageRackRepository) {
+          const rackIds = contract.rentedRackIds.map((id) =>
+            String((id as { _id?: Types.ObjectId })._id || id)
+          );
+          await this.storageRackRepository.occupyRacksAtomic(
+            rackIds,
+            String(contract._id),
+            customerIdStr,
+            session
+          );
+        }
+      } else {
+        await this.storageUnitRepository.updateById(
+          storageUnitId,
+          { status: StorageUnitStatusEnum.OCCUPIED },
+          session
+        );
+      }
 
       if (contract.reservationId) {
         await this.reservationRepository.atomicUpdateStatus(
@@ -516,12 +643,47 @@ export class ContractService {
       }
     }
 
+    // T4.2: Snapshot customer info during signing & verify age
+    let customerSnapshot: ICustomerSnapshot | null = null;
+    if (this.profileRepository) {
+      const profile = await this.profileRepository.findByUserId(customerIdStr);
+      if (profile?.dateOfBirth) {
+        const age = calculateAgeVN(new Date(profile.dateOfBirth));
+        if (age < contractConfig.minCustomerAge) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_430, [
+            'Customer must be at least 18 years old',
+          ]);
+        }
+      }
+      const customerUser = await this.userRepository.findById(customerIdStr);
+      if (customerUser) {
+        customerSnapshot = {
+          customerId: new Types.ObjectId(customerIdStr),
+          name: customerUser.name,
+          email: customerUser.email,
+          phoneNumber: customerUser.phoneNumber || '',
+          dateOfBirth: profile?.dateOfBirth
+            ? new Date(profile.dateOfBirth)
+            : null,
+          address: profile?.address || null,
+          idCardNumberMasked: profile?.idCardLast4
+            ? `****${profile.idCardLast4}`
+            : null,
+          idCardFrontPhotoUrl: profile?.idCardFrontPhotoUrl || null,
+          idCardBackPhotoUrl: profile?.idCardBackPhotoUrl || null,
+          signedAt: now,
+          signedIp: null,
+        };
+      }
+    }
+
     const updated = await this.contractRepository.update(
       id,
       {
         customerSigned: true,
         customerSignedAt: now,
         termsAccepted: true,
+        customerSnapshot: customerSnapshot || contract.customerSnapshot || null,
         status: bothSigned
           ? ContractStatusEnum.ACTIVE
           : ContractStatusEnum.DRAFT,
@@ -549,6 +711,13 @@ export class ContractService {
         operatingHours,
       },
     });
+
+    this.notifyFacilityManager(
+      facilityIdStr,
+      `Khách hàng đã ký hợp đồng [${contract.contractCode}]`,
+      `Khách hàng đã xác nhận ký hợp đồng [${contract.contractCode}]. Sẵn sàng làm thủ tục nhận kho check-in.`,
+      { contractId: id, contractCode: contract.contractCode }
+    );
 
     return validateResponse(contractResponseSchema, formatted);
   }
@@ -614,8 +783,83 @@ export class ContractService {
       ? new Date(data.actualCheckInDate)
       : now;
 
+    // T4.3: Digitized paper contract scan upload verification
+    if (contractConfig.requireSignedContractScan) {
+      if (
+        !data.signedContractFileUrls ||
+        data.signedContractFileUrls.length === 0
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_432);
+      }
+    }
+
+    const signedContractFiles: IContractTerminationFile[] = (
+      data.signedContractFileUrls || []
+    ).map((url) => ({
+      url,
+      fileHash: crypto.createHash('sha256').update(url).digest('hex'),
+      uploadedAt: now,
+    }));
+
     // T2.8: Compute early check-in, out-of-slot, and facility operating hours soft flags
     const facility = await this.facilityRepository.findById(facilityIdStr);
+
+    // T4.1 / D12: Check SigningAuthorization for Facility Manager
+    let signingAuthorizationSnapshot: ISigningAuthorizationSnapshot | null =
+      null;
+    if (
+      this.signingAuthRepository &&
+      contractConfig.requireSigningAuthorization
+    ) {
+      if (actorRole === RoleEnum.FACILITY_MANAGER) {
+        const validAuth =
+          await this.signingAuthRepository.findValidAuthorization(
+            actorId,
+            facilityIdStr,
+            now
+          );
+        if (!validAuth) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_431);
+        }
+        signingAuthorizationSnapshot = {
+          authorizationId: validAuth._id,
+          authorizedUserId: validAuth.authorizedUserId,
+          authorizationNumber: validAuth.authorizationNumber,
+          issuedDate: validAuth.issuedDate,
+          validFrom: validAuth.validFrom,
+          validTo: validAuth.validTo,
+          documentUrl: validAuth.documentUrl,
+          fileHash: validAuth.fileHash ?? null,
+        };
+      }
+    }
+
+    // T4.1 / D12: Snapshot Legal Entity from Facility
+    let legalEntitySnapshot: ILegalEntitySnapshot | null = null;
+    if (this.legalEntityRepository && facility?.legalEntityId) {
+      const le = await this.legalEntityRepository.findById(
+        String(facility.legalEntityId)
+      );
+      if (le) {
+        legalEntitySnapshot = {
+          legalEntityId: le._id,
+          companyName: le.companyName,
+          taxCode: le.taxCode,
+          registeredAddress: le.registeredAddress,
+          legalRepresentative: {
+            name: le.legalRepresentative.name,
+            title: le.legalRepresentative.title,
+            idNumber: le.legalRepresentative.idNumber,
+          },
+          bankAccount: {
+            bankName: le.bankAccount.bankName,
+            accountNumber: le.bankAccount.accountNumber,
+            accountHolder: le.bankAccount.accountHolder,
+          },
+        };
+      }
+    }
+
     let reservation = null;
     if (contract.reservationId) {
       reservation = await this.reservationRepository.findById(
@@ -696,6 +940,7 @@ export class ContractService {
       }
     }
     const bothSigned = Boolean(contract.customerSigned);
+    const customerIdStr = this.extractIdStr(contract.customerId);
 
     if (bothSigned) {
       const storageUnitId =
@@ -703,12 +948,26 @@ export class ContractService {
           ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
           : String(contract.storageUnitId);
 
-      // Transition storage unit to OCCUPIED
-      await this.storageUnitRepository.updateById(
-        storageUnitId,
-        { status: StorageUnitStatusEnum.OCCUPIED },
-        session
-      );
+      if (contract.rentedRackIds && contract.rentedRackIds.length > 0) {
+        if (this.storageRackRepository) {
+          const rackIds = contract.rentedRackIds.map((id) =>
+            String((id as { _id?: Types.ObjectId })._id || id)
+          );
+          await this.storageRackRepository.occupyRacksAtomic(
+            rackIds,
+            String(contract._id),
+            customerIdStr,
+            session
+          );
+        }
+      } else {
+        // Transition storage unit to OCCUPIED
+        await this.storageUnitRepository.updateById(
+          storageUnitId,
+          { status: StorageUnitStatusEnum.OCCUPIED },
+          session
+        );
+      }
 
       // If contract was created from Reservation, complete the reservation
       if (contract.reservationId) {
@@ -725,26 +984,37 @@ export class ContractService {
       }
     }
 
-    const updated = await this.contractRepository.update(
+    const storageUnitIdStr = this.extractIdStr(contract.storageUnitId);
+    const updated = await this.contractRepository.atomicCheckIn(
       id,
+      {
+        status: ContractStatusEnum.DRAFT,
+        customerSigned: true,
+        storageUnitId: storageUnitIdStr,
+      },
       {
         staffSigned: true,
         staffSignedAt: now,
-        status: bothSigned
-          ? ContractStatusEnum.ACTIVE
-          : ContractStatusEnum.DRAFT,
+        status: ContractStatusEnum.ACTIVE,
         startDate: finalStartDate,
         endDate: finalEndDate,
         actualCheckInDate,
         earlyCheckIn,
         outOfSlot,
-        termsAccepted: bothSigned ? true : contract.termsAccepted,
+        termsAccepted: true,
+        signedContractFiles,
+        signingAuthorizationSnapshot,
+        legalEntitySnapshot,
         notes: data.notes || contract.notes,
         assignedStaffId:
           contract.assignedStaffId || new Types.ObjectId(actorId),
       },
       session
     );
+
+    if (!updated) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+    }
 
     const populated = await this.contractRepository.findById(id, session);
     const formatted = this.formatContract(populated || updated!);
@@ -764,6 +1034,19 @@ export class ContractService {
         notes: data.notes || undefined,
       },
     });
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Nhận kho thành công [${contract.contractCode}]`,
+      `Hợp đồng thuê kho [${contract.contractCode}] đã kích hoạt thành công. Quý khách có thể bắt đầu sử dụng phòng kho.`,
+      {
+        contractId: id,
+        contractCode: contract.contractCode,
+        status: ContractStatusEnum.ACTIVE,
+      },
+      NotificationPriorityEnum.HIGH
+    );
 
     return validateResponse(contractResponseSchema, formatted);
   }
@@ -1294,6 +1577,7 @@ export class ContractService {
         cancellationReason: null,
         cancelledBy: null,
         cancelledAt: null,
+        expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000),
         notes: data.notes || null,
       };
 
@@ -1405,6 +1689,7 @@ export class ContractService {
       cancellationReason: null,
       cancelledBy: null,
       cancelledAt: null,
+      expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000),
       notes: data.notes || null,
     };
 
@@ -1880,12 +2165,25 @@ export class ContractService {
         ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
         : String(contract.storageUnitId);
 
-    // Vacate unit -> transition to UNDER_MAINTENANCE for cleaning
-    await this.storageUnitRepository.updateById(
-      storageUnitId,
-      { status: StorageUnitStatusEnum.UNDER_MAINTENANCE },
-      session
-    );
+    if (contract.rentedRackIds && contract.rentedRackIds.length > 0) {
+      if (this.storageRackRepository) {
+        const rackIds = contract.rentedRackIds.map((rId) =>
+          String((rId as { _id?: Types.ObjectId })._id || rId)
+        );
+        await this.storageRackRepository.vacateRacksAtomic(
+          rackIds,
+          String(contract._id),
+          session
+        );
+      }
+    } else {
+      // Vacate unit -> transition to UNDER_MAINTENANCE for cleaning
+      await this.storageUnitRepository.updateById(
+        storageUnitId,
+        { status: StorageUnitStatusEnum.UNDER_MAINTENANCE },
+        session
+      );
+    }
 
     // Release all active contract amenities inventory
     for (const a of contract.amenities) {
@@ -1966,6 +2264,14 @@ export class ContractService {
         refundRequestId: refundRequestId ?? null,
       },
     });
+
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Trả kho hoàn tất [${contract.contractCode}]`,
+      `Thủ tục kiểm tra và trả kho cho hợp đồng [${contract.contractCode}] đã hoàn tất. Yêu cầu hoàn cọc đang được xử lý.`,
+      { contractId: id, contractCode: contract.contractCode, refundAmount }
+    );
 
     return validateResponse(contractResponseSchema, formatted);
   }
@@ -2065,12 +2371,25 @@ export class ContractService {
         )
       : 0;
 
-    // Transition storage unit to PENDING_CLEARANCE [CHỐT D14]
-    await this.storageUnitRepository.updateById(
-      storageUnitId,
-      { status: StorageUnitStatusEnum.PENDING_CLEARANCE },
-      session
-    );
+    if (contract.rentedRackIds && contract.rentedRackIds.length > 0) {
+      if (this.storageRackRepository) {
+        const rackIds = contract.rentedRackIds.map((rId) =>
+          String((rId as { _id?: Types.ObjectId })._id || rId)
+        );
+        await this.storageRackRepository.vacateRacksAtomic(
+          rackIds,
+          String(contract._id),
+          session
+        );
+      }
+    } else {
+      // Transition storage unit to PENDING_CLEARANCE [CHỐT D14]
+      await this.storageUnitRepository.updateById(
+        storageUnitId,
+        { status: StorageUnitStatusEnum.PENDING_CLEARANCE },
+        session
+      );
+    }
 
     // Release all active contract amenities inventory
     for (const a of contract.amenities) {
@@ -2164,6 +2483,20 @@ export class ContractService {
         forfeitedAmount: contract.depositAmount,
       },
     });
+
+    const customerIdStr = this.extractIdStr(contract.customerId);
+    this.notifyCustomer(
+      customerIdStr,
+      facilityIdStr,
+      `Hợp đồng [${contract.contractCode}] đã chấm dứt`,
+      `Hợp đồng [${contract.contractCode}] đã bị chấm dứt (${data.terminationType}). Lý do: ${data.reason}.`,
+      {
+        contractId: id,
+        contractCode: contract.contractCode,
+        terminationType: data.terminationType,
+      },
+      NotificationPriorityEnum.HIGH
+    );
 
     return validateResponse(contractResponseSchema, formatted);
   }
@@ -2270,51 +2603,6 @@ export class ContractService {
     return validateResponse(contractResponseSchema, formatted);
   }
 
-  // 9. Batch process overdue contracts
-  async processOverdueContracts(
-    actorId?: string,
-    actorRole?: string
-  ): Promise<{ processedCount: number }> {
-    if (actorId !== undefined || actorRole !== undefined) {
-      if (
-        actorRole !== RoleEnum.FACILITY_MANAGER &&
-        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
-        actorRole !== RoleEnum.SYSTEM_ADMIN
-      ) {
-        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
-          RoleEnum.FACILITY_MANAGER,
-        ]);
-      }
-
-      if (actorRole === RoleEnum.FACILITY_MANAGER) {
-        const user = actorId
-          ? await this.userRepository.findById(actorId)
-          : null;
-        if (!user) {
-          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
-        }
-        if (!user.assignedFacilityId) {
-          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, [
-            'Assigned Facility',
-          ]);
-        }
-      }
-    }
-
-    const overdueContracts =
-      await this.contractRepository.findExpiredActiveContracts(new Date());
-
-    let count = 0;
-    for (const c of overdueContracts) {
-      await this.contractRepository.update(String(c._id), {
-        status: ContractStatusEnum.OVERDUE,
-      });
-      count++;
-    }
-
-    return { processedCount: count };
-  }
-
   // 10. Get contract by ID
   async getContractById(
     id: string,
@@ -2348,6 +2636,296 @@ export class ContractService {
       contractResponseSchema,
       this.formatContract(contract)
     );
+  }
+
+  // 10b. Generate printable A4 draft PDF / HTML for in-person signing (T4.4)
+  async getContractDraftPdf(
+    id: string,
+    callerId: string,
+    callerRole: string
+  ): Promise<{ html: string; buffer: Buffer; contractCode: string }> {
+    const contract = await this.contractRepository.findById(id);
+    if (!contract) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
+    }
+
+    const facilityIdStr = this.extractIdStr(contract.facilityId);
+    const customerIdStr = this.extractIdStr(contract.customerId);
+
+    if (callerRole === RoleEnum.CUSTOMER) {
+      if (customerIdStr !== callerId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else if (
+      callerRole === RoleEnum.FACILITY_STAFF ||
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+      callerRole === RoleEnum.SYSTEM_ADMIN
+    ) {
+      await this.assertFacilityAccess(callerId, callerRole, facilityIdStr);
+    } else {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const facility = await this.facilityRepository.findById(facilityIdStr);
+    let legalEntity = null;
+    if (this.legalEntityRepository && facility?.legalEntityId) {
+      legalEntity = await this.legalEntityRepository.findById(
+        String(facility.legalEntityId)
+      );
+    }
+    const customerUser = await this.userRepository.findById(customerIdStr);
+    const profile = this.profileRepository
+      ? await this.profileRepository.findByUserId(customerIdStr)
+      : null;
+
+    let signingAuth = null;
+    if (this.signingAuthRepository) {
+      signingAuth = await this.signingAuthRepository.findValidAuthorization(
+        callerId,
+        facilityIdStr
+      );
+    }
+
+    const storageUnitIdStr = this.extractIdStr(contract.storageUnitId);
+    const storageUnit =
+      await this.storageUnitRepository.findById(storageUnitIdStr);
+
+    const context = {
+      contract,
+      facility,
+      customer: customerUser,
+      profile,
+      legalEntity,
+      signingAuth,
+      storageUnit,
+    };
+
+    const html = this.contractPdfService.generateContractHtml(context);
+    const buffer = this.contractPdfService.generateContractPdfBuffer(context);
+
+    return { html, buffer, contractCode: contract.contractCode };
+  }
+
+  // Walk-in contract creation with inline KYC & user provisioning (T4.6 / D10)
+  @Transactional()
+  async createWalkInContract(
+    data: WalkInContractRequest,
+    actorId: string,
+    actorRole: string,
+    session?: ClientSession
+  ): Promise<ContractResponse> {
+    if (
+      actorRole !== RoleEnum.FACILITY_STAFF &&
+      actorRole !== RoleEnum.FACILITY_MANAGER &&
+      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      actorRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    await this.assertFacilityAccess(actorId, actorRole, data.facilityId);
+
+    // 1. Age check (D10 / T4.2)
+    const dob = new Date(data.dateOfBirth);
+    const age = calculateAgeVN(dob);
+    if (age < contractConfig.minCustomerAge) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_430, [
+        'Customer must be at least 18 years old',
+      ]);
+    }
+
+    // 2. Validate Offering
+    const offering = await this.unitTypeOfferingRepository.findById(
+      data.facilityUnitTypeOfferingId,
+      session
+    );
+    const offeringFacilityId = offering
+      ? this.extractIdStr(offering.facilityId)
+      : null;
+    if (!offering || offeringFacilityId !== data.facilityId) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+        'FacilityUnitTypeOffering',
+      ]);
+    }
+
+    // 3. Atomically reserve storage unit (or racks if rack rental)
+    const isRackRental = Boolean(
+      data.rentedRackIds && data.rentedRackIds.length > 0
+    );
+    let reservedRacks: IStorageRack[] = [];
+
+    if (isRackRental) {
+      const unit = await this.storageUnitRepository.findById(
+        data.storageUnitId,
+        session
+      );
+      if (!unit || this.extractIdStr(unit.facilityId) !== data.facilityId) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+          'Storage Unit',
+        ]);
+      }
+      if (!this.storageRackRepository) {
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106, [
+          'Storage Rack repository not configured',
+        ]);
+      }
+      const racks = await this.storageRackRepository.findAndReserveRacksAtomic(
+        data.rentedRackIds!,
+        data.facilityId,
+        data.storageUnitId,
+        session
+      );
+      if (!racks || racks.length !== data.rentedRackIds!.length) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_637, [
+          'One or more selected storage racks are not available',
+        ]);
+      }
+      reservedRacks = racks;
+    } else {
+      const lockedUnit =
+        await this.storageUnitRepository.findAndReserveUnitAtomic(
+          data.storageUnitId,
+          data.facilityId,
+          session
+        );
+      if (!lockedUnit) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_306);
+      }
+    }
+
+    // 4. Find or create Customer user
+    let customerUser = await this.userRepository.findByEmail(
+      data.customerEmail
+    );
+    if (!customerUser) {
+      customerUser = await this.userRepository.createUser({
+        name: data.customerName,
+        email: data.customerEmail,
+        phoneNumber: data.customerPhone,
+        role: RoleEnum.CUSTOMER,
+        authProvider: AuthProviderEnum.LOCAL,
+        status: UserStatusEnum.ACTIVE,
+        isEmailVerified: true,
+        password: crypto.randomBytes(16).toString('hex'),
+      });
+    }
+
+    const customerUserId = String(customerUser._id);
+
+    // 5. Encrypt CCCD & upsert profile (D10 / T4.2)
+    const encryptedIdCardNumber = encryptText(data.idCardNumber);
+    const idCardLast4 = data.idCardNumber.slice(-4);
+
+    if (this.profileRepository) {
+      await this.profileRepository.upsertByUserId(
+        customerUserId,
+        {
+          dateOfBirth: dob,
+          address: data.address,
+          encryptedIdCardNumber,
+          idCardLast4,
+          idCardFrontPhotoUrl: data.idCardFrontPhotoUrl,
+          idCardBackPhotoUrl: data.idCardBackPhotoUrl,
+        },
+        session
+      );
+    }
+
+    // 6. Build customer snapshot
+    const customerSnapshot: ICustomerSnapshot = {
+      customerId: new Types.ObjectId(customerUserId),
+      name: data.customerName,
+      email: data.customerEmail,
+      phoneNumber: data.customerPhone,
+      dateOfBirth: dob,
+      address: data.address || null,
+      idCardNumberMasked: `****${idCardLast4}`,
+      idCardFrontPhotoUrl: data.idCardFrontPhotoUrl || null,
+      idCardBackPhotoUrl: data.idCardBackPhotoUrl || null,
+      signedAt: null,
+      signedIp: null,
+    };
+
+    let rentalPrice = offering.pricePerUnit;
+    if (isRackRental) {
+      let rackTotalPrice = 0;
+      for (const rack of reservedRacks) {
+        if (typeof rack.customPrice === 'number' && rack.customPrice >= 0) {
+          rackTotalPrice += rack.customPrice;
+        } else if (
+          offering.rackZonePricing &&
+          typeof offering.rackZonePricing[
+            rack.zone as keyof typeof offering.rackZonePricing
+          ] === 'number'
+        ) {
+          rackTotalPrice +=
+            offering.rackZonePricing[
+              rack.zone as keyof typeof offering.rackZonePricing
+            ];
+        } else {
+          rackTotalPrice += offering.pricePerUnit;
+        }
+      }
+      rentalPrice = rackTotalPrice;
+    }
+
+    const depositAmount = rentalPrice * (offering.depositMultiplier || 1);
+    const totalPeriodicPrice = rentalPrice;
+    const contractCode = await this.generateContractCode();
+
+    const created = await this.contractRepository.create(
+      {
+        contractCode,
+        source: ContractSourceEnum.WALK_IN,
+        customerId: new Types.ObjectId(customerUserId),
+        facilityId: new Types.ObjectId(data.facilityId),
+        storageUnitId: new Types.ObjectId(data.storageUnitId),
+        rentalTargetType: isRackRental
+          ? RentalTargetTypeEnum.STORAGE_RACK
+          : RentalTargetTypeEnum.STORAGE_UNIT,
+        rentedRackIds: isRackRental
+          ? data.rentedRackIds!.map((id) => new Types.ObjectId(id))
+          : [],
+        facilityUnitTypeOfferingId: new Types.ObjectId(
+          data.facilityUnitTypeOfferingId
+        ),
+        assignedStaffId: data.assignedStaffId
+          ? new Types.ObjectId(data.assignedStaffId)
+          : new Types.ObjectId(actorId),
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        billingUnit: data.billingUnit,
+        rentalPrice,
+        depositAmount,
+        totalPeriodicPrice,
+        amenities: [],
+        status: ContractStatusEnum.DRAFT,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        termsAccepted: false,
+        customerSigned: false,
+        staffSigned: false,
+        customerSnapshot,
+        notes: data.notes || null,
+      },
+      session
+    );
+
+    const populated = await this.contractRepository.findById(
+      String(created._id),
+      session
+    );
+    const formatted = this.formatContract(populated || created);
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CREATE,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: String(created._id),
+      after: formatted,
+      metadata: { source: ContractSourceEnum.WALK_IN, isWalkInCustomer: true },
+    });
+
+    return validateResponse(contractResponseSchema, formatted);
   }
 
   // 11. View contracts list (pagination + scoped filters)
@@ -2396,6 +2974,139 @@ export class ContractService {
       return String((ref as { _id: unknown })._id);
     }
     return String(ref);
+  }
+
+  private notifyFacilityManager(
+    facilityId: string,
+    title: string,
+    content: string,
+    metadata?: Record<string, unknown>
+  ): void {
+    if (!this.notificationService) return;
+    runAfterCommit(async () => {
+      try {
+        const facility = await this.facilityRepository.findById(facilityId);
+        if (!facility) return;
+        let managerId = facility.managerId
+          ? String(
+              (facility.managerId as { _id?: Types.ObjectId })._id ||
+                facility.managerId
+            )
+          : null;
+
+        if (!managerId) {
+          const managers = await this.userRepository.findUsersByRoles([
+            RoleEnum.FACILITY_MANAGER,
+          ]);
+          const matched = managers.find(
+            (m) => String(m.assignedFacilityId) === facilityId
+          );
+          if (matched) {
+            managerId = String(matched._id);
+          }
+        }
+
+        if (managerId) {
+          await this.notificationService?.sendNotification({
+            recipientId: managerId,
+            facilityId,
+            title,
+            content,
+            type: NotificationTypeEnum.CONTRACT,
+            priority: NotificationPriorityEnum.HIGH,
+            channels: [NotificationChannelEnum.IN_APP],
+            metadata: {
+              ...metadata,
+              facilityId,
+              facilityName: facility.name,
+            },
+          });
+        }
+      } catch (err) {
+        console.warn(
+          'Failed to notify facility manager from contract service:',
+          (err as Error)?.message || err
+        );
+      }
+    });
+  }
+
+  private notifyAssignedStaff(
+    staffId: string,
+    facilityId: string,
+    title: string,
+    content: string,
+    metadata?: Record<string, unknown>
+  ): void {
+    if (!this.notificationService) return;
+    runAfterCommit(async () => {
+      try {
+        await this.notificationService?.sendNotification({
+          recipientId: staffId,
+          facilityId,
+          title,
+          content,
+          type: NotificationTypeEnum.CONTRACT,
+          priority: NotificationPriorityEnum.HIGH,
+          channels: [NotificationChannelEnum.IN_APP],
+          metadata: {
+            ...metadata,
+            facilityId,
+            staffId,
+          },
+        });
+      } catch (err) {
+        console.warn(
+          'Failed to notify assigned staff from contract service:',
+          (err as Error)?.message || err
+        );
+      }
+    });
+  }
+
+  private notifyCustomer(
+    customerId: string,
+    facilityId: string,
+    title: string,
+    content: string,
+    metadata?: Record<string, unknown>,
+    priority: NotificationPriorityEnum = NotificationPriorityEnum.NORMAL,
+    customChannels?: NotificationChannelEnum[]
+  ): void {
+    if (!this.notificationService) return;
+    runAfterCommit(async () => {
+      try {
+        const customer = await this.userRepository.findById(customerId);
+        if (!customer) return;
+        const channels = customChannels
+          ? [...customChannels]
+          : [NotificationChannelEnum.IN_APP];
+        if (!customChannels && customer.email) {
+          channels.push(NotificationChannelEnum.EMAIL);
+        }
+        await this.notificationService?.sendNotification({
+          recipientId: customerId,
+          facilityId,
+          title,
+          content,
+          type: NotificationTypeEnum.CONTRACT,
+          priority,
+          channels,
+          metadata: {
+            ...metadata,
+            facilityId,
+            customerId,
+            customerEmail: customer.email,
+            email: customer.email,
+          },
+        });
+      } catch (err) {
+        console.warn(
+          'Failed to notify customer from contract service:',
+          (err as Error)?.message || err
+        );
+      }
+    });
   }
 
   private async assertFacilityAccess(
@@ -2586,6 +3297,54 @@ export class ContractService {
 
     const bothSigned = customerSigned && staffSigned;
 
+    let signedAddendumFiles: IContractTerminationFile[] =
+      rawTarget.signedAddendumFiles || [];
+    let signingAuthorizationSnapshot: ISigningAuthorizationSnapshot | null =
+      rawTarget.signingAuthorizationSnapshot || null;
+
+    if (party === 'staff') {
+      if (contractConfig.requireSignedContractScan) {
+        if (
+          !data.signedAddendumFileUrls ||
+          data.signedAddendumFileUrls.length === 0
+        ) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_433);
+        }
+      }
+      signedAddendumFiles = (data.signedAddendumFileUrls || []).map((url) => ({
+        url,
+        fileHash: crypto.createHash('sha256').update(url).digest('hex'),
+        uploadedAt: now,
+      }));
+
+      if (
+        this.signingAuthRepository &&
+        contractConfig.requireSigningAuthorization
+      ) {
+        if (actorRole === RoleEnum.FACILITY_MANAGER) {
+          const validAuth =
+            await this.signingAuthRepository.findValidAuthorization(
+              actorId,
+              facilityIdStr,
+              now
+            );
+          if (!validAuth) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_431);
+          }
+          signingAuthorizationSnapshot = {
+            authorizationId: validAuth._id,
+            authorizedUserId: validAuth.authorizedUserId,
+            authorizationNumber: validAuth.authorizationNumber,
+            issuedDate: validAuth.issuedDate,
+            validFrom: validAuth.validFrom,
+            validTo: validAuth.validTo,
+            documentUrl: validAuth.documentUrl,
+            fileHash: validAuth.fileHash ?? null,
+          };
+        }
+      }
+    }
+
     addendums[index] = {
       ...rawTarget,
       type: addendumType,
@@ -2601,6 +3360,8 @@ export class ContractService {
         ? ContractAddendumStatusEnum.ACTIVE
         : ContractAddendumStatusEnum.DRAFT,
       completedAt: bothSigned ? now : null,
+      signedAddendumFiles,
+      signingAuthorizationSnapshot,
       notes: data.notes || rawTarget.notes || null,
     };
 
@@ -2950,6 +3711,7 @@ export class ContractService {
             ? ad.cancelledAt.toISOString()
             : new Date(String(ad.cancelledAt)).toISOString()
           : null,
+        signedAddendumFiles: formatTerminationFiles(ad.signedAddendumFiles),
         notes: (ad.notes as string) ?? null,
       };
     });
@@ -2999,6 +3761,14 @@ export class ContractService {
       customerId: customerIdStr,
       facilityId: facilityIdStr,
       storageUnitId: storageUnitIdStr,
+      rentalTargetType: (raw.rentalTargetType as string) ?? null,
+      rentedRackIds: Array.isArray(raw.rentedRackIds)
+        ? raw.rentedRackIds.map((id) =>
+            typeof id === 'object' && id !== null && '_id' in id
+              ? String((id as { _id: unknown })._id)
+              : String(id)
+          )
+        : [],
       facilityUnitTypeOfferingId: offeringIdStr,
       assignedStaffId: assignedStaffIdStr,
       startDate:
@@ -3094,6 +3864,13 @@ export class ContractService {
       reportFiles,
       evidenceFiles,
       terminationHistory,
+      signedContractFiles: formatTerminationFiles(raw.signedContractFiles),
+      legalEntitySnapshot:
+        (raw.legalEntitySnapshot as ILegalEntitySnapshot) ?? null,
+      customerSnapshot: (raw.customerSnapshot as ICustomerSnapshot) ?? null,
+      signingAuthorizationSnapshot:
+        (raw.signingAuthorizationSnapshot as ISigningAuthorizationSnapshot) ??
+        null,
       status: raw.status as ContractStatusEnum,
       termsAccepted: Boolean(raw.termsAccepted),
       customerSigned: Boolean(raw.customerSigned),
@@ -3124,5 +3901,362 @@ export class ContractService {
           ? raw.updatedAt.toISOString()
           : new Date(String(raw.updatedAt)).toISOString(),
     };
+  }
+
+  /**
+   * Process overdue contracts with batching and per-record transaction isolation.
+   * Can be invoked by BullMQ repeatable job or manually by OPS/ADMIN.
+   */
+  async processOverdueContracts(
+    query?: ProcessContractOverdueQuery
+  ): Promise<ProcessContractOverdueResponse> {
+    const limit = query?.limit ?? 50;
+    const now = new Date();
+    let overdueCount = 0;
+    let failedCount = 0;
+
+    const expiredList =
+      await this.contractRepository.findExpiredActiveContracts(now, { limit });
+
+    for (const contract of expiredList) {
+      try {
+        const ok = await this.processSingleOverdueContract(
+          contract._id.toString(),
+          now
+        );
+        if (ok) overdueCount++;
+      } catch (err: unknown) {
+        failedCount++;
+        console.error(
+          `[ContractService ALERT] Failed to process overdue contract ${contract.contractCode} (${contract._id}):`,
+          err instanceof Error ? err.message : String(err)
+        );
+      }
+    }
+
+    const responseData = {
+      overdueCount,
+      processedCount: overdueCount,
+      failedCount,
+    };
+
+    return validateResponse(processContractOverdueResponseSchema, responseData);
+  }
+
+  /**
+   * Processes a single contract overdue transition in an isolated transaction.
+   */
+  @Transactional()
+  async processSingleOverdueContract(
+    id: string,
+    now: Date = new Date(),
+    session?: ClientSession
+  ): Promise<boolean> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract || contract.status !== ContractStatusEnum.ACTIVE) {
+      return false;
+    }
+
+    if (contract.endDate >= now) {
+      return false;
+    }
+
+    const feeResult = calculateContractOverdueFee({
+      rentalPrice: contract.rentalPrice,
+      billingUnit: contract.billingUnit,
+      endDate: contract.endDate,
+      actualCheckOutDate: now,
+    });
+
+    const updated = await this.contractRepository.atomicUpdateStatus(
+      id,
+      ContractStatusEnum.ACTIVE,
+      {
+        status: ContractStatusEnum.OVERDUE,
+        overdueFee: feeResult.overdueFee,
+      },
+      session
+    );
+
+    if (updated) {
+      this.auditLogService?.record({
+        action: AuditActionEnum.UPDATE,
+        resourceType: AuditResourceEnum.CONTRACT,
+        resourceId: id,
+        before: this.formatContract(contract),
+        after: this.formatContract(updated),
+        actor: {
+          id: 'SYSTEM',
+          role: RoleEnum.SYSTEM_ADMIN,
+          email: 'system@internal.cron',
+        },
+        metadata: {
+          reason: 'Contract expired past endDate, transitioned to OVERDUE',
+          overdueDays: feeResult.overdueDays,
+          overdueFee: feeResult.overdueFee,
+        },
+      });
+
+      const customerIdStr = this.extractIdStr(contract.customerId);
+      const facilityIdStr = this.extractIdStr(contract.facilityId);
+      this.notifyCustomer(
+        customerIdStr,
+        facilityIdStr,
+        `Hợp đồng [${contract.contractCode}] đã quá hạn`,
+        `Hợp đồng [${contract.contractCode}] của quý khách đã quá hạn ngày kết thúc ${contract.endDate.toLocaleDateString('vi-VN')}. Phí trễ hạn phát sinh là ${feeResult.overdueFee.toLocaleString('vi-VN')} VNĐ. Vui lòng liên hệ cơ sở để gia hạn hoặc làm thủ tục trả kho.`,
+        {
+          contractId: id,
+          contractCode: contract.contractCode,
+          overdueFee: feeResult.overdueFee,
+        },
+        NotificationPriorityEnum.URGENT
+      );
+
+      this.notifyFacilityManager(
+        facilityIdStr,
+        `Hợp đồng [${contract.contractCode}] quá hạn`,
+        `Hợp đồng [${contract.contractCode}] đã chuyển sang trạng thái OVERDUE do quá hạn ngày kết thúc ${contract.endDate.toLocaleDateString('vi-VN')}. Phí trễ hạn: ${feeResult.overdueFee.toLocaleString('vi-VN')} VNĐ.`,
+        {
+          contractId: id,
+          contractCode: contract.contractCode,
+          overdueFee: feeResult.overdueFee,
+        }
+      );
+
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Scans and prepares reminders for contracts expiring in 30, 7, and 1 days.
+   */
+  async processExpiryReminders(
+    now: Date = new Date()
+  ): Promise<{ remindedCount: number }> {
+    let remindedCount = 0;
+    const reminderDays = [30, 7, 1];
+
+    for (const days of reminderDays) {
+      const targetStart = startOfDayVN(addDays(now, days));
+      const targetEnd = endOfDayVN(addDays(now, days));
+
+      const expiringContracts =
+        await this.contractRepository.findExpiringActiveContracts(
+          targetStart,
+          targetEnd,
+          { limit: 100 }
+        );
+
+      for (const contract of expiringContracts) {
+        const customerIdStr = this.extractIdStr(contract.customerId);
+        const facilityIdStr = this.extractIdStr(contract.facilityId);
+        this.notifyCustomer(
+          customerIdStr,
+          facilityIdStr,
+          `Nhắc hạn hợp đồng [${contract.contractCode}] - Còn ${days} ngày`,
+          `Hợp đồng [${contract.contractCode}] sẽ kết thúc vào ngày ${contract.endDate.toLocaleDateString('vi-VN')} (còn ${days} ngày). Quý khách vui lòng làm thủ tục gia hạn hoặc chuẩn bị kế hoạch trả kho.`,
+          {
+            contractId: String(contract._id),
+            contractCode: contract.contractCode,
+            daysRemaining: days,
+          }
+        );
+        remindedCount++;
+      }
+    }
+
+    return { remindedCount };
+  }
+
+  /**
+   * Scans and processes expired Walk-in contract drafts and addendums.
+   * Auto-cancels drafts and releases held storage units.
+   */
+  async processExpiredDrafts(now: Date = new Date()): Promise<{
+    expiredContractsCount: number;
+    expiredAddendumsCount: number;
+    processedCount: number;
+    failedCount: number;
+  }> {
+    let expiredContractsCount = 0;
+    let expiredAddendumsCount = 0;
+    let failedCount = 0;
+
+    // 1. Expired Walk-in Contract DRAFTs (expiresAt < now)
+    const expiredDraftContracts =
+      await this.contractRepository.findExpiredDraftContracts(now, {
+        limit: 50,
+      });
+
+    for (const contract of expiredDraftContracts) {
+      try {
+        const ok = await this.processSingleExpiredDraftContract(
+          contract._id.toString(),
+          now
+        );
+        if (ok) expiredContractsCount++;
+      } catch (err: unknown) {
+        failedCount++;
+        console.error(
+          `[ContractService ALERT] Failed to auto-cancel expired draft contract ${contract.contractCode}:`,
+          err instanceof Error ? err.message : String(err)
+        );
+      }
+    }
+
+    // 2. Contracts with Expired Addendums (expiresAt < now, status PENDING_APPROVAL or DRAFT)
+    const contractsWithExpiredAddendums =
+      await this.contractRepository.findContractsWithExpiredDraftAddendums(
+        now,
+        { limit: 50 }
+      );
+
+    for (const contract of contractsWithExpiredAddendums) {
+      try {
+        const count = await this.processSingleContractExpiredAddendums(
+          contract._id.toString(),
+          now
+        );
+        expiredAddendumsCount += count;
+      } catch (err: unknown) {
+        failedCount++;
+        console.error(
+          `[ContractService ALERT] Failed to process expired addendums on contract ${contract.contractCode}:`,
+          err instanceof Error ? err.message : String(err)
+        );
+      }
+    }
+
+    return {
+      expiredContractsCount,
+      expiredAddendumsCount,
+      processedCount: expiredContractsCount + expiredAddendumsCount,
+      failedCount,
+    };
+  }
+
+  @Transactional()
+  async processSingleExpiredDraftContract(
+    id: string,
+    now: Date = new Date(),
+    session?: ClientSession
+  ): Promise<boolean> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract || contract.status !== ContractStatusEnum.DRAFT) {
+      return false;
+    }
+    if (!contract.expiresAt || contract.expiresAt >= now) {
+      return false;
+    }
+
+    // Auto-cancel contract
+    await this.contractRepository.update(
+      id,
+      {
+        status: ContractStatusEnum.CANCELLED,
+        cancellationReason: 'DRAFT_EXPIRED',
+        cancellationType: ContractCancellationTypeEnum.CANCEL,
+        cancelledAt: now,
+      },
+      session
+    );
+
+    // Release storage unit back to AVAILABLE
+    const storageUnitIdStr = this.extractIdStr(contract.storageUnitId);
+    if (storageUnitIdStr) {
+      await this.storageUnitRepository.updateById(
+        storageUnitIdStr,
+        { status: StorageUnitStatusEnum.AVAILABLE },
+        session
+      );
+    }
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.CANCEL,
+      resourceType: AuditResourceEnum.CONTRACT,
+      resourceId: id,
+      before: this.formatContract(contract),
+      after: {
+        ...this.formatContract(contract),
+        status: ContractStatusEnum.CANCELLED,
+        cancellationReason: 'DRAFT_EXPIRED',
+      },
+      metadata: {
+        reason: 'DRAFT_EXPIRED',
+        source: 'SYSTEM',
+      },
+    });
+
+    return true;
+  }
+
+  @Transactional()
+  async processSingleContractExpiredAddendums(
+    id: string,
+    now: Date = new Date(),
+    session?: ClientSession
+  ): Promise<number> {
+    const contract = await this.contractRepository.findById(id, session);
+    if (!contract || !contract.addendums) {
+      return 0;
+    }
+
+    let expiredCount = 0;
+    const updatedAddendums = [...contract.addendums];
+
+    for (let i = 0; i < updatedAddendums.length; i++) {
+      const addendum = updatedAddendums[i];
+      if (
+        (addendum.status === ContractAddendumStatusEnum.PENDING_APPROVAL ||
+          addendum.status === ContractAddendumStatusEnum.DRAFT) &&
+        addendum.expiresAt &&
+        addendum.expiresAt < now
+      ) {
+        addendum.status = ContractAddendumStatusEnum.CANCELLED;
+        addendum.cancellationReason = 'ADDENDUM_EXPIRED';
+        addendum.cancelledAt = now;
+        expiredCount++;
+
+        // If unit change was proposed and reserved, release new storage unit
+        if (
+          addendum.type === ContractAddendumTypeEnum.UNIT_CHANGE &&
+          addendum.newStorageUnitId
+        ) {
+          const newUnitIdStr = this.extractIdStr(addendum.newStorageUnitId);
+          await this.storageUnitRepository.updateById(
+            newUnitIdStr,
+            { status: StorageUnitStatusEnum.AVAILABLE },
+            session
+          );
+        }
+      }
+    }
+
+    if (expiredCount > 0) {
+      await this.contractRepository.update(
+        id,
+        { addendums: updatedAddendums },
+        session
+      );
+
+      this.auditLogService?.record({
+        action: AuditActionEnum.CANCEL_ADDENDUM,
+        resourceType: AuditResourceEnum.CONTRACT,
+        resourceId: id,
+        before: this.formatContract(contract),
+        after: {
+          ...this.formatContract(contract),
+          addendums: updatedAddendums,
+        },
+        metadata: {
+          expiredCount,
+          source: 'SYSTEM',
+        },
+      });
+    }
+
+    return expiredCount;
   }
 }

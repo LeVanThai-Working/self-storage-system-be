@@ -194,6 +194,20 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_427: 'MESSAGE_CODE_427',
   // Overdue Payment Termination Requires Overdue Grace Period Exceeded
   MESSAGE_CODE_428: 'MESSAGE_CODE_428',
+  // Legal Entity Not Found Or Inactive
+  MESSAGE_CODE_429: 'MESSAGE_CODE_429',
+  // Customer Must Be At Least 18 Years Old
+  MESSAGE_CODE_430: 'MESSAGE_CODE_430',
+  // Valid Signing Authorization Required For Facility Manager
+  MESSAGE_CODE_431: 'MESSAGE_CODE_431',
+  // Signed Contract Document Required For Check-In
+  MESSAGE_CODE_432: 'MESSAGE_CODE_432',
+  // Signed Addendum Document Required For Activation
+  MESSAGE_CODE_433: 'MESSAGE_CODE_433',
+  // Customer Identity KYC Information Required
+  MESSAGE_CODE_434: 'MESSAGE_CODE_434',
+  // Contract Template Not Found Or Inactive
+  MESSAGE_CODE_435: 'MESSAGE_CODE_435',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -486,6 +500,16 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_427: 'Violation Termination Requires Violation Category',
   MESSAGE_CODE_428:
     'Overdue Payment Termination Requires Overdue Grace Period Exceeded (At Least 5 Days Overdue)',
+  MESSAGE_CODE_429: 'Legal Entity Not Found Or Inactive',
+  MESSAGE_CODE_430: 'Customer Must Be At Least 18 Years Old',
+  MESSAGE_CODE_431:
+    'Valid Signing Authorization Required For Facility Manager To Sign Or Check-In',
+  MESSAGE_CODE_432:
+    'Signed Contract Document Required For Check-In (At Least 1 File Scan/Photo)',
+  MESSAGE_CODE_433:
+    'Signed Addendum Document Required For Activation (At Least 1 File Scan/Photo)',
+  MESSAGE_CODE_434: 'Customer Identity KYC Information Required',
+  MESSAGE_CODE_435: 'Contract Template Not Found Or Inactive',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',

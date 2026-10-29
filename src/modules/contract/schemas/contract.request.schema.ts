@@ -137,6 +137,10 @@ export const createContractSchema = z
 export const checkInContractSchema = z.object({
   termsAccepted: z.boolean().default(true),
   actualCheckInDate: dateStringSchema.optional(),
+  signedContractFileUrls: z
+    .array(z.string().url('Invalid contract scan URL'))
+    .min(1, 'At least one signed contract document scan/photo is required')
+    .optional(),
   notes: z.string().max(1000).optional(),
 });
 
@@ -221,6 +225,30 @@ export const rejectContractAddendumSchema = z.object({
 export const signContractAddendumSchema = z.object({
   termsAccepted: z.boolean().default(true),
   damageFee: z.number().min(0).optional(),
+  signedAddendumFileUrls: z
+    .array(z.string().url('Invalid addendum scan URL'))
+    .min(1, 'At least one signed addendum document scan/photo is required')
+    .optional(),
+  notes: z.string().max(1000).optional(),
+});
+
+export const walkInContractSchema = z.object({
+  facilityId: objectIdSchema,
+  storageUnitId: objectIdSchema,
+  rentedRackIds: z.array(objectIdSchema).optional(),
+  facilityUnitTypeOfferingId: objectIdSchema,
+  startDate: dateStringSchema,
+  endDate: dateStringSchema,
+  billingUnit: z.nativeEnum(BillingUnitEnum).default(BillingUnitEnum.MONTH),
+  customerName: z.string().min(2).max(100),
+  customerEmail: z.string().email(),
+  customerPhone: z.string().min(10).max(15),
+  dateOfBirth: dateStringSchema,
+  address: z.string().min(5).max(255).optional(),
+  idCardNumber: z.string().min(9).max(20),
+  idCardFrontPhotoUrl: z.string().url().optional(),
+  idCardBackPhotoUrl: z.string().url().optional(),
+  assignedStaffId: objectIdSchema.optional(),
   notes: z.string().max(1000).optional(),
 });
 
@@ -310,6 +338,14 @@ export const contractAddendumParamSchema = z.object({
   addendumId: objectIdSchema,
 });
 
+export const processContractOverdueQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(50).optional(),
+});
+
+export type ProcessContractOverdueQuery = z.infer<
+  typeof processContractOverdueQuerySchema
+>;
+
 export type DisputeSettlementRequest = z.infer<typeof disputeSettlementSchema>;
 export type CreateContractRequest = z.infer<typeof createContractSchema>;
 export type CheckInContractRequest = z.infer<typeof checkInContractSchema>;
@@ -333,6 +369,7 @@ export type SignContractAddendumRequest = z.infer<
 export type CancelContractAddendumRequest = z.infer<
   typeof cancelContractAddendumSchema
 >;
+export type WalkInContractRequest = z.infer<typeof walkInContractSchema>;
 export type CheckOutContractRequest = z.infer<typeof checkOutContractSchema>;
 export type TerminateContractRequest = z.infer<typeof terminateContractSchema>;
 export type ContractQuery = z.infer<typeof contractQuerySchema>;

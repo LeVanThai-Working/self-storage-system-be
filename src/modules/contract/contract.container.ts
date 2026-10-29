@@ -20,6 +20,14 @@ import { Incident } from '../incident/incident.model.ts';
 import { IncidentRepository } from '../incident/incident.repository.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
+import { notificationService } from '../notification/notification.container.ts';
+import { contractQueue } from './contract.queue.ts';
+import { legalEntityRepository } from '../legalEntity/legalEntity.container.ts';
+import { signingAuthRepository } from '../signingAuthorization/signingAuthorization.container.ts';
+import { profileRepository } from '../profile/profile.container.ts';
+import { ContractTemplate } from '../contractTemplate/contractTemplate.model.ts';
+import { ContractTemplateRepository } from '../contractTemplate/contractTemplate.repository.ts';
+import { storageRackRepository } from '../storageRack/storageRack.container.ts';
 
 export const contractRepository = new ContractRepository(Contract);
 const reservationRepository = new ReservationRepository(Reservation);
@@ -36,6 +44,9 @@ const customerInventoryRepository = new CustomerInventoryRepository(
   CustomerInventory
 );
 const incidentRepository = new IncidentRepository(Incident);
+const contractTemplateRepository = new ContractTemplateRepository(
+  ContractTemplate
+);
 
 export const contractService = new ContractService(
   contractRepository,
@@ -48,7 +59,14 @@ export const contractService = new ContractService(
   auditLogService,
   refundRequestService,
   customerInventoryRepository,
-  incidentRepository
+  incidentRepository,
+  contractQueue,
+  notificationService,
+  legalEntityRepository,
+  signingAuthRepository,
+  profileRepository,
+  contractTemplateRepository,
+  storageRackRepository
 );
 
 export const contractController = new ContractController(contractService);

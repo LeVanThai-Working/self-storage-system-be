@@ -22,6 +22,8 @@ import { StorageUnitController } from './../modules/storageUnit/storageUnit.cont
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { StorageRackController } from './../modules/storageRack/storageRack.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { SigningAuthorizationController } from './../modules/signingAuthorization/signingAuthorization.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ReservationController } from './../modules/reservation/reservation.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { RefundRequestController } from './../modules/refundRequest/refundRequest.controller.js';
@@ -29,6 +31,8 @@ import { RefundRequestController } from './../modules/refundRequest/refundReques
 import { PaymentController } from './../modules/payment/payment.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { NotificationController } from './../modules/notification/notification.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { LegalEntityController } from './../modules/legalEntity/legalEntity.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { IncidentController } from './../modules/incident/incident.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -378,12 +382,12 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","batch_migrate_rack","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","batch_migrate_rack","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
         "dataType": "refEnum",
-        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","refund_request","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement","inventory_request","incident","support_ticket"],
+        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","refund_request","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement","inventory_request","incident","support_ticket","legal_entity","signing_authorization","contract_template"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditStatusEnum": {
@@ -803,6 +807,18 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeoftoggleMaintenanceSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse__reconciledCount-number--details-Array__unitId-string--unitNumber-string--facilityId-string____": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"dataType":"nestedObjectLiteral","nestedProperties":{"details":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"facilityId":{"dataType":"string","required":true},"unitNumber":{"dataType":"string","required":true},"unitId":{"dataType":"string","required":true}}},"required":true},"reconciledCount":{"dataType":"double","required":true}},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "RackStatusEnum": {
         "dataType": "refEnum",
         "enums": ["available","reserved","rented","active","maintenance","inactive"],
@@ -935,6 +951,79 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofupdateRackTierSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofsigningAuthorizationResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"fileHash":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["revoked"]},{"dataType":"enum","enums":["expired"]}],"required":true},"documentUrl":{"dataType":"string","required":true},"validTo":{"dataType":"string","required":true},"validFrom":{"dataType":"string","required":true},"issuedDate":{"dataType":"string","required":true},"authorizationNumber":{"dataType":"string","required":true},"facilityIds":{"dataType":"array","array":{"dataType":"any"},"required":true},"authorizedUserId":{"dataType":"any","required":true},"legalEntityId":{"dataType":"any","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SigningAuthorizationResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofsigningAuthorizationResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_SigningAuthorizationResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"SigningAuthorizationResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcreateSigningAuthorizationSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"documentUrl":{"dataType":"string","required":true},"validTo":{"dataType":"datetime","required":true},"validFrom":{"dataType":"datetime","required":true},"issuedDate":{"dataType":"datetime","required":true},"authorizationNumber":{"dataType":"string","required":true},"facilityIds":{"dataType":"array","array":{"dataType":"string"},"required":true},"authorizedUserId":{"dataType":"string","required":true},"legalEntityId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateSigningAuthorizationRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcreateSigningAuthorizationSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedData_SigningAuthorizationResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "items": {"dataType":"array","array":{"dataType":"refAlias","ref":"SigningAuthorizationResponse"},"required":true},
+            "pagination": {"ref":"PaginationMeta","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedData_SigningAuthorizationResponse__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedData_SigningAuthorizationResponse_","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofsigningAuthorizationQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["revoked"]},{"dataType":"enum","enums":["expired"]}]},"facilityId":{"dataType":"string"},"legalEntityId":{"dataType":"string"},"authorizedUserId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["issuedDate"]},{"dataType":"enum","enums":["validFrom"]},{"dataType":"enum","enums":["validTo"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SigningAuthorizationQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofsigningAuthorizationQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofupdateSigningAuthorizationSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"documentUrl":{"dataType":"string"},"validTo":{"dataType":"datetime"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UpdateSigningAuthorizationRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofupdateSigningAuthorizationSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "BillingUnitEnum": {
         "dataType": "refEnum",
         "enums": ["day","month","one_time"],
@@ -957,7 +1046,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofreservationResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"offering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"email":{"dataType":"string"},"phone":{"dataType":"string"},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"pendingUnitChange":{"dataType":"nestedObjectLiteral","nestedProperties":{"proposedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"priceDifference":{"dataType":"double"},"newOffering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"proposedAt":{"dataType":"string","required":true},"oldUnitStatus":{"dataType":"string","required":true},"reason":{"dataType":"string","required":true},"newPricePerUnit":{"dataType":"double","required":true},"newFacilityUnitTypeOfferingId":{"dataType":"string","required":true},"newStorageUnitId":{"dataType":"string","required":true}}},"outOfSlot":{"dataType":"boolean"},"earlyCheckIn":{"dataType":"boolean"},"immediateForfeitWarning":{"dataType":"boolean"},"policySnapshot":{"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationMode":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["slot_start"]},{"dataType":"enum","enums":["calendar_day"]}]},"noShowGraceHours":{"dataType":"double","required":true},"forfeitPercent":{"dataType":"double","required":true},"freeCancelHours":{"dataType":"double","required":true}}},"acceptedAt":{"dataType":"string"},"policyVersion":{"dataType":"string"},"paymentId":{"dataType":"string"},"paidAmount":{"dataType":"double"},"paidAt":{"dataType":"string"},"refundNote":{"dataType":"string"},"refundReference":{"dataType":"string"},"refundedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"refundedAt":{"dataType":"string"},"graceExtensionReason":{"dataType":"string"},"graceExtendedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"graceExtendedAt":{"dataType":"string"},"arrivedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"arrivedAt":{"dataType":"string"},"forceCancelledAt":{"dataType":"string"},"forceCancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"incidentId":{"dataType":"string"},"cancellationSource":{"ref":"ReservationCancelSourceEnum"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"assignedStaffAt":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedStaffId":{"dataType":"string"},"confirmedAt":{"dataType":"string"},"confirmedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"graceExpiresAt":{"dataType":"string"},"expiresAt":{"dataType":"string"},"storageUnitId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"unitChangeHistory":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"changedAt":{"dataType":"string"},"changedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rejectReason":{"dataType":"string"},"decisionAt":{"dataType":"string"},"decisionBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"proposedAt":{"dataType":"string"},"proposedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["pending"]},{"dataType":"enum","enums":["accepted"]},{"dataType":"enum","enums":["rejected"]}]},"toPrice":{"dataType":"double"},"fromPrice":{"dataType":"double"},"toOfferingId":{"dataType":"string"},"fromOfferingId":{"dataType":"string"},"toUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"fromUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"reason":{"dataType":"string","required":true},"toUnitId":{"dataType":"string","required":true},"fromUnitId":{"dataType":"string","required":true}}},"required":true},"termsAccepted":{"dataType":"boolean","required":true},"refundStatus":{"ref":"RefundStatusEnum","required":true},"forfeitedAmount":{"dataType":"double","required":true},"refundAmount":{"dataType":"double","required":true},"evidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true},"status":{"ref":"ReservationStatusEnum","required":true},"totalAmount":{"dataType":"double","required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"depositAmount":{"dataType":"double","required":true},"basePrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"rentalDuration":{"dataType":"double","required":true},"checkInTimeSlot":{"dataType":"string","required":true},"checkInDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"reservationCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"offering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"email":{"dataType":"string"},"phone":{"dataType":"string"},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"pendingUnitChange":{"dataType":"nestedObjectLiteral","nestedProperties":{"proposedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"priceDifference":{"dataType":"double"},"newOffering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"proposedAt":{"dataType":"string","required":true},"oldUnitStatus":{"dataType":"string","required":true},"reason":{"dataType":"string","required":true},"newPricePerUnit":{"dataType":"double","required":true},"newFacilityUnitTypeOfferingId":{"dataType":"string","required":true},"newStorageUnitId":{"dataType":"string","required":true}}},"outOfSlot":{"dataType":"boolean"},"earlyCheckIn":{"dataType":"boolean"},"immediateForfeitWarning":{"dataType":"boolean"},"policySnapshot":{"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationMode":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["slot_start"]},{"dataType":"enum","enums":["calendar_day"]}]},"noShowGraceHours":{"dataType":"double","required":true},"forfeitPercent":{"dataType":"double","required":true},"freeCancelHours":{"dataType":"double","required":true}}},"acceptedAt":{"dataType":"string"},"policyVersion":{"dataType":"string"},"paymentId":{"dataType":"string"},"paidAmount":{"dataType":"double"},"paidAt":{"dataType":"string"},"refundNote":{"dataType":"string"},"refundReference":{"dataType":"string"},"refundedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"refundedAt":{"dataType":"string"},"graceExtensionReason":{"dataType":"string"},"graceExtendedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"graceExtendedAt":{"dataType":"string"},"arrivedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"arrivedAt":{"dataType":"string"},"forceCancelledAt":{"dataType":"string"},"forceCancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"incidentId":{"dataType":"string"},"cancellationSource":{"ref":"ReservationCancelSourceEnum"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"assignedStaffAt":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedStaffId":{"dataType":"string"},"confirmedAt":{"dataType":"string"},"confirmedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"graceExpiresAt":{"dataType":"string"},"expiresAt":{"dataType":"string"},"rentalTargetType":{"dataType":"string"},"storageUnitId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"unitChangeHistory":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"changedAt":{"dataType":"string"},"changedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rejectReason":{"dataType":"string"},"decisionAt":{"dataType":"string"},"decisionBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"proposedAt":{"dataType":"string"},"proposedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["pending"]},{"dataType":"enum","enums":["accepted"]},{"dataType":"enum","enums":["rejected"]}]},"toPrice":{"dataType":"double"},"fromPrice":{"dataType":"double"},"toOfferingId":{"dataType":"string"},"fromOfferingId":{"dataType":"string"},"toUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"fromUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"reason":{"dataType":"string","required":true},"toUnitId":{"dataType":"string","required":true},"fromUnitId":{"dataType":"string","required":true}}},"required":true},"termsAccepted":{"dataType":"boolean","required":true},"refundStatus":{"ref":"RefundStatusEnum","required":true},"forfeitedAmount":{"dataType":"double","required":true},"refundAmount":{"dataType":"double","required":true},"evidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true},"status":{"ref":"ReservationStatusEnum","required":true},"totalAmount":{"dataType":"double","required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"depositAmount":{"dataType":"double","required":true},"basePrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"rentalDuration":{"dataType":"double","required":true},"checkInTimeSlot":{"dataType":"string","required":true},"checkInDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"rentedRackIds":{"dataType":"array","array":{"dataType":"string"},"required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"reservationCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ReservationResponse": {
@@ -979,7 +1068,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcreateReservationSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"termsAccepted":{"dataType":"boolean"},"notes":{"dataType":"string"},"startDate":{"dataType":"string"},"facilityUnitTypeOfferingId":{"dataType":"string"},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"quantity":{"dataType":"double","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"rentalDuration":{"dataType":"double","required":true},"checkInTimeSlot":{"dataType":"string","required":true},"checkInDate":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"termsAccepted":{"dataType":"boolean"},"notes":{"dataType":"string"},"startDate":{"dataType":"string"},"facilityUnitTypeOfferingId":{"dataType":"string"},"rentedRackIds":{"dataType":"array","array":{"dataType":"string"}},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"quantity":{"dataType":"double","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"rentalDuration":{"dataType":"double","required":true},"checkInTimeSlot":{"dataType":"string","required":true},"checkInDate":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateReservationRequest": {
@@ -1555,6 +1644,79 @@ const models: TsoaRoute.Models = {
             "data": {"dataType":"nestedObjectLiteral","nestedProperties":{"modifiedCount":{"dataType":"double","required":true}},"required":true},
         },
         "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeoflegalEntityResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"email":{"dataType":"string"},"phone":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["inactive"]}],"required":true},"bankAccount":{"dataType":"nestedObjectLiteral","nestedProperties":{"accountHolder":{"dataType":"string","required":true},"accountNumber":{"dataType":"string","required":true},"bankName":{"dataType":"string","required":true}},"required":true},"legalRepresentative":{"dataType":"nestedObjectLiteral","nestedProperties":{"idNumber":{"dataType":"string"},"title":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}},"required":true},"registeredAddress":{"dataType":"string","required":true},"taxCode":{"dataType":"string","required":true},"companyName":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "LegalEntityResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeoflegalEntityResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_LegalEntityResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"LegalEntityResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcreateLegalEntitySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"email":{"dataType":"string"},"phone":{"dataType":"string"},"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["inactive"]}],"required":true},"bankAccount":{"dataType":"nestedObjectLiteral","nestedProperties":{"accountHolder":{"dataType":"string","required":true},"accountNumber":{"dataType":"string","required":true},"bankName":{"dataType":"string","required":true}},"required":true},"legalRepresentative":{"dataType":"nestedObjectLiteral","nestedProperties":{"idNumber":{"dataType":"string"},"title":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}},"required":true},"registeredAddress":{"dataType":"string","required":true},"taxCode":{"dataType":"string","required":true},"companyName":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateLegalEntityRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcreateLegalEntitySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedData_LegalEntityResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "items": {"dataType":"array","array":{"dataType":"refAlias","ref":"LegalEntityResponse"},"required":true},
+            "pagination": {"ref":"PaginationMeta","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedData_LegalEntityResponse__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedData_LegalEntityResponse_","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeoflegalEntityQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["inactive"]}]},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["companyName"]},{"dataType":"enum","enums":["taxCode"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "LegalEntityQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeoflegalEntityQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofupdateLegalEntitySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["inactive"]}]},"email":{"dataType":"string"},"phone":{"dataType":"string"},"bankAccount":{"dataType":"nestedObjectLiteral","nestedProperties":{"accountHolder":{"dataType":"string","required":true},"accountNumber":{"dataType":"string","required":true},"bankName":{"dataType":"string","required":true}}},"legalRepresentative":{"dataType":"nestedObjectLiteral","nestedProperties":{"idNumber":{"dataType":"string"},"title":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"registeredAddress":{"dataType":"string"},"taxCode":{"dataType":"string"},"companyName":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UpdateLegalEntityRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofupdateLegalEntitySchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "IncidentSeverityEnum": {
@@ -2672,7 +2834,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcontractResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"offering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"email":{"dataType":"string"},"phone":{"dataType":"string"},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"outOfSlot":{"dataType":"boolean"},"earlyCheckIn":{"dataType":"boolean"},"staffSignedAt":{"dataType":"string"},"customerSignedAt":{"dataType":"string"},"terminatedAt":{"dataType":"string"},"terminatedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"terminationReason":{"dataType":"string"},"violationCategory":{"ref":"ViolationCategoryEnum"},"terminationType":{"ref":"ContractTerminationTypeEnum"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"cancellationType":{"ref":"ContractCancellationTypeEnum"},"disputeReason":{"dataType":"string"},"disputedAt":{"dataType":"string"},"settlementConfirmedAt":{"dataType":"string"},"depositStatus":{"ref":"ContractDepositStatusEnum"},"inspectionNotes":{"dataType":"string"},"inspectedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"firstPeriodPaymentId":{"dataType":"string"},"firstPeriodPaidAt":{"dataType":"string"},"depositPaymentId":{"dataType":"string"},"depositPaidAt":{"dataType":"string"},"actualCheckOutDate":{"dataType":"string"},"actualCheckInDate":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"reservationId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"signatureHistory":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"resetReason":{"dataType":"string","required":true},"resetAt":{"dataType":"string","required":true},"previousEndDate":{"dataType":"string","required":true},"previousStartDate":{"dataType":"string","required":true},"signedAt":{"dataType":"string","required":true},"party":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["customer"]},{"dataType":"enum","enums":["staff"]}],"required":true}}},"required":true},"staffSigned":{"dataType":"boolean","required":true},"customerSigned":{"dataType":"boolean","required":true},"termsAccepted":{"dataType":"boolean","required":true},"status":{"ref":"ContractStatusEnum","required":true},"terminationHistory":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"terminatedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"violationCategory":{"ref":"ViolationCategoryEnum"},"forfeitedAmount":{"dataType":"double","required":true},"depositStatus":{"ref":"ContractDepositStatusEnum","required":true},"storageUnitStatus":{"ref":"StorageUnitStatusEnum","required":true},"terminatedAt":{"dataType":"string","required":true},"evidenceFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"reportFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"reason":{"dataType":"string","required":true},"terminationType":{"ref":"ContractTerminationTypeEnum","required":true}}},"required":true},"evidenceFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"reportFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"inspectionPhotos":{"dataType":"array","array":{"dataType":"string"},"required":true},"additionalPaymentRequired":{"dataType":"double","required":true},"forfeitedAmount":{"dataType":"double","required":true},"refundAmount":{"dataType":"double","required":true},"overdueFee":{"dataType":"double","required":true},"damageFee":{"dataType":"double","required":true},"renewalCount":{"dataType":"double","required":true},"renewals":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"note":{"dataType":"string"},"renewedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"renewedAt":{"dataType":"string","required":true},"newEndDate":{"dataType":"string","required":true},"previousEndDate":{"dataType":"string","required":true}}},"required":true},"addendums":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"rejectedAt":{"dataType":"string"},"rejectedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rejectionReason":{"dataType":"string"},"completedAt":{"dataType":"string"},"staffSignedAt":{"dataType":"string"},"customerSignedAt":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedStaffId":{"dataType":"string"},"approvedAt":{"dataType":"string"},"approvedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"requestedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnitId":{"dataType":"string"},"previousStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"previousStorageUnitId":{"dataType":"string"},"newEndDate":{"dataType":"string"},"previousEndDate":{"dataType":"string"},"staffSigned":{"dataType":"boolean","required":true},"customerSigned":{"dataType":"boolean","required":true},"requestedAt":{"dataType":"string","required":true},"status":{"ref":"ContractAddendumStatusEnum","required":true},"damageFee":{"dataType":"double","required":true},"totalPeriodicPrice":{"dataType":"double","required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"addedAt":{"dataType":"string","required":true},"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"type":{"ref":"ContractAddendumTypeEnum","required":true},"addendumCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"addedAt":{"dataType":"string","required":true},"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"totalPeriodicPrice":{"dataType":"double","required":true},"depositAmount":{"dataType":"double","required":true},"rentalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"endDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"source":{"ref":"ContractSourceEnum","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"offering":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"minRentalDays":{"dataType":"double"},"depositMultiplier":{"dataType":"double"},"unitTypeId":{"dataType":"string"},"pricePerUnit":{"dataType":"double","required":true},"billingUnit":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"email":{"dataType":"string"},"phone":{"dataType":"string"},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"outOfSlot":{"dataType":"boolean"},"earlyCheckIn":{"dataType":"boolean"},"staffSignedAt":{"dataType":"string"},"customerSignedAt":{"dataType":"string"},"signingAuthorizationSnapshot":{"dataType":"any"},"customerSnapshot":{"dataType":"any"},"legalEntitySnapshot":{"dataType":"any"},"terminatedAt":{"dataType":"string"},"terminatedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"terminationReason":{"dataType":"string"},"violationCategory":{"ref":"ViolationCategoryEnum"},"terminationType":{"ref":"ContractTerminationTypeEnum"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"cancellationType":{"ref":"ContractCancellationTypeEnum"},"disputeReason":{"dataType":"string"},"disputedAt":{"dataType":"string"},"settlementConfirmedAt":{"dataType":"string"},"depositStatus":{"ref":"ContractDepositStatusEnum"},"inspectionNotes":{"dataType":"string"},"inspectedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"firstPeriodPaymentId":{"dataType":"string"},"firstPeriodPaidAt":{"dataType":"string"},"depositPaymentId":{"dataType":"string"},"depositPaidAt":{"dataType":"string"},"actualCheckOutDate":{"dataType":"string"},"actualCheckInDate":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"rentalTargetType":{"dataType":"string"},"reservationId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"signatureHistory":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"resetReason":{"dataType":"string","required":true},"resetAt":{"dataType":"string","required":true},"previousEndDate":{"dataType":"string","required":true},"previousStartDate":{"dataType":"string","required":true},"signedAt":{"dataType":"string","required":true},"party":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["customer"]},{"dataType":"enum","enums":["staff"]}],"required":true}}},"required":true},"staffSigned":{"dataType":"boolean","required":true},"customerSigned":{"dataType":"boolean","required":true},"termsAccepted":{"dataType":"boolean","required":true},"status":{"ref":"ContractStatusEnum","required":true},"signedContractFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"terminationHistory":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"terminatedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"violationCategory":{"ref":"ViolationCategoryEnum"},"forfeitedAmount":{"dataType":"double","required":true},"depositStatus":{"ref":"ContractDepositStatusEnum","required":true},"storageUnitStatus":{"ref":"StorageUnitStatusEnum","required":true},"terminatedAt":{"dataType":"string","required":true},"evidenceFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"reportFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"reason":{"dataType":"string","required":true},"terminationType":{"ref":"ContractTerminationTypeEnum","required":true}}},"required":true},"evidenceFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"reportFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"inspectionPhotos":{"dataType":"array","array":{"dataType":"string"},"required":true},"additionalPaymentRequired":{"dataType":"double","required":true},"forfeitedAmount":{"dataType":"double","required":true},"refundAmount":{"dataType":"double","required":true},"overdueFee":{"dataType":"double","required":true},"damageFee":{"dataType":"double","required":true},"renewalCount":{"dataType":"double","required":true},"renewals":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"note":{"dataType":"string"},"renewedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"renewedAt":{"dataType":"string","required":true},"newEndDate":{"dataType":"string","required":true},"previousEndDate":{"dataType":"string","required":true}}},"required":true},"addendums":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"cancelledBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"cancellationReason":{"dataType":"string"},"rejectedAt":{"dataType":"string"},"rejectedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rejectionReason":{"dataType":"string"},"completedAt":{"dataType":"string"},"staffSignedAt":{"dataType":"string"},"customerSignedAt":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"assignedStaffId":{"dataType":"string"},"approvedAt":{"dataType":"string"},"approvedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"requestedBy":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"newStorageUnitId":{"dataType":"string"},"previousStorageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"status":{"dataType":"string","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"previousStorageUnitId":{"dataType":"string"},"newEndDate":{"dataType":"string"},"previousEndDate":{"dataType":"string"},"signedAddendumFiles":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"fileHash":{"dataType":"string"},"uploadedAt":{"dataType":"string","required":true},"url":{"dataType":"string","required":true}}},"required":true},"staffSigned":{"dataType":"boolean","required":true},"customerSigned":{"dataType":"boolean","required":true},"requestedAt":{"dataType":"string","required":true},"status":{"ref":"ContractAddendumStatusEnum","required":true},"damageFee":{"dataType":"double","required":true},"totalPeriodicPrice":{"dataType":"double","required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"addedAt":{"dataType":"string","required":true},"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"type":{"ref":"ContractAddendumTypeEnum","required":true},"addendumCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true},"amenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"addedAt":{"dataType":"string","required":true},"totalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"pricePerUnit":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true},"facilityAmenityOfferingId":{"dataType":"string","required":true}}},"required":true},"totalPeriodicPrice":{"dataType":"double","required":true},"depositAmount":{"dataType":"double","required":true},"rentalPrice":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"endDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"rentedRackIds":{"dataType":"array","array":{"dataType":"string"},"required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"source":{"ref":"ContractSourceEnum","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ContractResponse": {
@@ -2700,6 +2862,16 @@ const models: TsoaRoute.Models = {
     "CreateContractRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofcreateContractSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofwalkInContractSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"idCardBackPhotoUrl":{"dataType":"string"},"idCardFrontPhotoUrl":{"dataType":"string"},"address":{"dataType":"string"},"rentedRackIds":{"dataType":"array","array":{"dataType":"string"}},"idCardNumber":{"dataType":"string","required":true},"dateOfBirth":{"dataType":"string","required":true},"customerPhone":{"dataType":"string","required":true},"customerEmail":{"dataType":"string","required":true},"customerName":{"dataType":"string","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true},"endDate":{"dataType":"string","required":true},"startDate":{"dataType":"string","required":true},"facilityUnitTypeOfferingId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "WalkInContractRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofwalkInContractSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "PaginatedData_ContractResponse_": {
@@ -2733,6 +2905,18 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofcontractQuerySchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse__html-string--contractCode-string__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"dataType":"nestedObjectLiteral","nestedProperties":{"contractCode":{"dataType":"string","required":true},"html":{"dataType":"string","required":true}},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcustomerSignContractSchema_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"termsAccepted":{"dataType":"boolean","required":true}},"validators":{}},
@@ -2745,7 +2929,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcheckInContractSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"actualCheckInDate":{"dataType":"string"},"termsAccepted":{"dataType":"boolean","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"signedContractFileUrls":{"dataType":"array","array":{"dataType":"string"}},"actualCheckInDate":{"dataType":"string"},"termsAccepted":{"dataType":"boolean","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CheckInContractRequest": {
@@ -2805,7 +2989,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofsignContractAddendumSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"damageFee":{"dataType":"double"},"termsAccepted":{"dataType":"boolean","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"signedAddendumFileUrls":{"dataType":"array","array":{"dataType":"string"}},"damageFee":{"dataType":"double"},"termsAccepted":{"dataType":"boolean","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SignContractAddendumRequest": {
@@ -2851,6 +3035,38 @@ const models: TsoaRoute.Models = {
     "DisputeSettlementRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofdisputeSettlementSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofprocessContractOverdueResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"failedCount":{"dataType":"double","required":true},"processedCount":{"dataType":"double","required":true},"overdueCount":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ProcessContractOverdueResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofprocessContractOverdueResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_ProcessContractOverdueResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"ProcessContractOverdueResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofprocessContractOverdueQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"limit":{"dataType":"double"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ProcessContractOverdueQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofprocessContractOverdueQuerySchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ApprovalRequestTargetTypeEnum": {
@@ -4651,6 +4867,41 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStorageUnitController_reconcile: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.post('/storage-units/reconcile',
+            ...(fetchMiddlewares<RequestHandler>(StorageUnitController)),
+            ...(fetchMiddlewares<RequestHandler>(StorageUnitController.prototype.reconcile)),
+
+            async function StorageUnitController_reconcile(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStorageUnitController_reconcile, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StorageUnitController>(StorageUnitController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'reconcile',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsStorageRackController_getStorageRacks: Record<string, TsoaRoute.ParameterSchema> = {
                 query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"ref":"RackZoneEnum"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"status":{"ref":"RackStatusEnum"},"storageUnitId":{"dataType":"string"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["updatedAt"]},{"dataType":"enum","enums":["rackCode"]},{"dataType":"enum","enums":["aisle"]},{"dataType":"enum","enums":["bay"]},{"dataType":"enum","enums":["tierCount"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
@@ -4968,6 +5219,182 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSigningAuthorizationController_createSigningAuthorization: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"CreateSigningAuthorizationRequest"},
+        };
+        app.post('/signing-authorizations',
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController)),
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController.prototype.createSigningAuthorization)),
+
+            async function SigningAuthorizationController_createSigningAuthorization(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSigningAuthorizationController_createSigningAuthorization, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SigningAuthorizationController>(SigningAuthorizationController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createSigningAuthorization',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 201,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSigningAuthorizationController_getAllSigningAuthorizations: Record<string, TsoaRoute.ParameterSchema> = {
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["revoked"]},{"dataType":"enum","enums":["expired"]}]},"facilityId":{"dataType":"string"},"legalEntityId":{"dataType":"string"},"authorizedUserId":{"dataType":"string"},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["issuedDate"]},{"dataType":"enum","enums":["validFrom"]},{"dataType":"enum","enums":["validTo"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/signing-authorizations',
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController)),
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController.prototype.getAllSigningAuthorizations)),
+
+            async function SigningAuthorizationController_getAllSigningAuthorizations(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSigningAuthorizationController_getAllSigningAuthorizations, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SigningAuthorizationController>(SigningAuthorizationController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getAllSigningAuthorizations',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSigningAuthorizationController_getSigningAuthorizationById: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/signing-authorizations/:id',
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController)),
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController.prototype.getSigningAuthorizationById)),
+
+            async function SigningAuthorizationController_getSigningAuthorizationById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSigningAuthorizationController_getSigningAuthorizationById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SigningAuthorizationController>(SigningAuthorizationController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getSigningAuthorizationById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSigningAuthorizationController_updateSigningAuthorization: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"UpdateSigningAuthorizationRequest"},
+        };
+        app.patch('/signing-authorizations/:id',
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController)),
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController.prototype.updateSigningAuthorization)),
+
+            async function SigningAuthorizationController_updateSigningAuthorization(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSigningAuthorizationController_updateSigningAuthorization, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SigningAuthorizationController>(SigningAuthorizationController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'updateSigningAuthorization',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSigningAuthorizationController_revokeSigningAuthorization: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.post('/signing-authorizations/:id/revoke',
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController)),
+            ...(fetchMiddlewares<RequestHandler>(SigningAuthorizationController.prototype.revokeSigningAuthorization)),
+
+            async function SigningAuthorizationController_revokeSigningAuthorization(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSigningAuthorizationController_revokeSigningAuthorization, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SigningAuthorizationController>(SigningAuthorizationController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'revokeSigningAuthorization',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsReservationController_createReservation: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 body: {"in":"body","name":"body","required":true,"ref":"CreateReservationRequest"},
@@ -5075,6 +5502,7 @@ export function RegisterRoutes(app: Router) {
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsReservationController_processOverdueReservations: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.post('/reservations/process-overdue',
             ...(fetchMiddlewares<RequestHandler>(ReservationController)),
@@ -6260,6 +6688,182 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'deleteNotification',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsLegalEntityController_createLegalEntity: Record<string, TsoaRoute.ParameterSchema> = {
+                body: {"in":"body","name":"body","required":true,"ref":"CreateLegalEntityRequest"},
+        };
+        app.post('/legal-entities',
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController)),
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController.prototype.createLegalEntity)),
+
+            async function LegalEntityController_createLegalEntity(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsLegalEntityController_createLegalEntity, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<LegalEntityController>(LegalEntityController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createLegalEntity',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 201,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsLegalEntityController_getAllLegalEntities: Record<string, TsoaRoute.ParameterSchema> = {
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["inactive"]}]},"search":{"dataType":"string"},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["companyName"]},{"dataType":"enum","enums":["taxCode"]}],"required":true},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/legal-entities',
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController)),
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController.prototype.getAllLegalEntities)),
+
+            async function LegalEntityController_getAllLegalEntities(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsLegalEntityController_getAllLegalEntities, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<LegalEntityController>(LegalEntityController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getAllLegalEntities',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsLegalEntityController_getLegalEntityById: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/legal-entities/:id',
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController)),
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController.prototype.getLegalEntityById)),
+
+            async function LegalEntityController_getLegalEntityById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsLegalEntityController_getLegalEntityById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<LegalEntityController>(LegalEntityController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getLegalEntityById',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsLegalEntityController_updateLegalEntity: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"UpdateLegalEntityRequest"},
+        };
+        app.patch('/legal-entities/:id',
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController)),
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController.prototype.updateLegalEntity)),
+
+            async function LegalEntityController_updateLegalEntity(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsLegalEntityController_updateLegalEntity, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<LegalEntityController>(LegalEntityController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'updateLegalEntity',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsLegalEntityController_deleteLegalEntity: Record<string, TsoaRoute.ParameterSchema> = {
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.delete('/legal-entities/:id',
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController)),
+            ...(fetchMiddlewares<RequestHandler>(LegalEntityController.prototype.deleteLegalEntity)),
+
+            async function LegalEntityController_deleteLegalEntity(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsLegalEntityController_deleteLegalEntity, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<LegalEntityController>(LegalEntityController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'deleteLegalEntity',
                 controller,
                 response,
                 next,
@@ -8817,6 +9421,42 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsContractController_createWalkInContract: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"WalkInContractRequest"},
+        };
+        app.post('/contracts/walk-in',
+            ...(fetchMiddlewares<RequestHandler>(ContractController)),
+            ...(fetchMiddlewares<RequestHandler>(ContractController.prototype.createWalkInContract)),
+
+            async function ContractController_createWalkInContract(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsContractController_createWalkInContract, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ContractController>(ContractController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createWalkInContract',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 201,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsContractController_getContracts: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"endDateTo":{"dataType":"string"},"endDateFrom":{"dataType":"string"},"startDateTo":{"dataType":"string"},"startDateFrom":{"dataType":"string"},"contractCode":{"dataType":"string"},"source":{"ref":"ContractSourceEnum"},"status":{"ref":"ContractStatusEnum"},"facilityUnitTypeOfferingId":{"dataType":"string"},"storageUnitId":{"dataType":"string"},"facilityId":{"dataType":"string"},"customerId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"string","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
@@ -8842,41 +9482,6 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getContracts',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: 200,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsContractController_processOverdue: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-        };
-        app.post('/contracts/process-overdue',
-            ...(fetchMiddlewares<RequestHandler>(ContractController)),
-            ...(fetchMiddlewares<RequestHandler>(ContractController.prototype.processOverdue)),
-
-            async function ContractController_processOverdue(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsContractController_processOverdue, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<ContractController>(ContractController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'processOverdue',
                 controller,
                 response,
                 next,
@@ -8918,6 +9523,42 @@ export function RegisterRoutes(app: Router) {
                 next,
                 validatedArgs,
                 successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsContractController_getContractDraftPdf: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/contracts/:id/draft-pdf',
+            ...(fetchMiddlewares<RequestHandler>(ContractController)),
+            ...(fetchMiddlewares<RequestHandler>(ContractController.prototype.getContractDraftPdf)),
+
+            async function ContractController_getContractDraftPdf(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsContractController_getContractDraftPdf, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ContractController>(ContractController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getContractDraftPdf',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
               });
             } catch (err) {
                 return next(err);
@@ -9435,6 +10076,42 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'disputeSettlement',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsContractController_processOverdue: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","dataType":"nestedObjectLiteral","nestedProperties":{"limit":{"dataType":"double"}}},
+        };
+        app.post('/contracts/process-overdue',
+            ...(fetchMiddlewares<RequestHandler>(ContractController)),
+            ...(fetchMiddlewares<RequestHandler>(ContractController.prototype.processOverdue)),
+
+            async function ContractController_processOverdue(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsContractController_processOverdue, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ContractController>(ContractController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'processOverdue',
                 controller,
                 response,
                 next,

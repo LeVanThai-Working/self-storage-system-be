@@ -20,6 +20,7 @@ import { AppError } from '../../common/errors/appError.error.ts';
 import { validateRequest } from '../../middlewares/validate.middleware.ts';
 import { jwtUtil } from '../auth/auth.container.ts';
 import type { TokenPayload } from '../../utils/jwt.util.ts';
+import { RoleEnum } from '../../common/enums/user.enum.ts';
 import {
   approveContractAddendumSchema,
   cancelContractAddendumSchema,
@@ -32,11 +33,13 @@ import {
   createContractAddendumSchema,
   createContractSchema,
   customerSignContractSchema,
+  processContractOverdueQuerySchema,
   rejectContractAddendumSchema,
   renewContractSchema,
   signContractAddendumSchema,
   terminateContractSchema,
   disputeSettlementSchema,
+  walkInContractSchema,
   type ApproveContractAddendumRequest,
   type CancelContractAddendumRequest,
   type CancelContractRequest,
@@ -46,13 +49,18 @@ import {
   type CreateContractAddendumRequest,
   type CreateContractRequest,
   type CustomerSignContractRequest,
+  type ProcessContractOverdueQuery,
   type RejectContractAddendumRequest,
   type RenewContractRequest,
   type SignContractAddendumRequest,
   type TerminateContractRequest,
   type DisputeSettlementRequest,
+  type WalkInContractRequest,
 } from './schemas/contract.request.schema.ts';
-import type { ContractResponse } from './schemas/contract.response.schema.ts';
+import type {
+  ContractResponse,
+  ProcessContractOverdueResponse,
+} from './schemas/contract.response.schema.ts';
 import type {
   ApiResponse,
   ApiErrorResponse,
@@ -172,6 +180,38 @@ export class ContractController extends Controller {
     };
   }
 
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Post('walk-in')
+  @Middlewares(validateRequest({ body: walkInContractSchema }))
+  @SuccessResponse(201, 'Walk-in contract created successfully')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async createWalkInContract(
+    @Request() req: ExpressRequest,
+    @Body() body: WalkInContractRequest
+  ): Promise<ApiResponse<ContractResponse>> {
+    const caller = extractCaller(req);
+    const contract = await this.contractService.createWalkInContract(
+      body,
+      caller.userId,
+      caller.role
+    );
+
+    this.setStatus(201);
+    return {
+      success: true,
+      statusCode: 201,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_002,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_002, [
+        'Walk-in Contract',
+      ]),
+      data: contract,
+    };
+  }
+
   /**
    * View contracts list with pagination and scoped filters.
    */
@@ -194,33 +234,6 @@ export class ContractController extends Controller {
       caller.role
     );
 
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
-      data: result,
-    };
-  }
-
-  /**
-   * Batch process active contracts that have passed their endDate to mark them as OVERDUE.
-   */
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
-  @Post('process-overdue')
-  @SuccessResponse(200, 'Success')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  public async processOverdue(
-    @Request() req: ExpressRequest
-  ): Promise<ApiResponse<{ processedCount: number }>> {
-    const caller = extractCaller(req);
-    const result = await this.contractService.processOverdueContracts(
-      caller.userId,
-      caller.role
-    );
     return {
       success: true,
       statusCode: 200,
@@ -259,6 +272,36 @@ export class ContractController extends Controller {
       messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
       message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
       data: contract,
+    };
+  }
+
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Get('{id}/draft-pdf')
+  @Middlewares(validateRequest({ params: contractIdParamSchema }))
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async getContractDraftPdf(
+    @Request() req: ExpressRequest,
+    @Path() id: string
+  ): Promise<ApiResponse<{ html: string; contractCode: string }>> {
+    const caller = extractCaller(req);
+    const result = await this.contractService.getContractDraftPdf(
+      id,
+      caller.userId,
+      caller.role
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: {
+        html: result.html,
+        contractCode: result.contractCode,
+      },
     };
   }
 
@@ -858,6 +901,44 @@ export class ContractController extends Controller {
         'Contract Settlement',
       ]),
       data: contract,
+    };
+  }
+
+  /**
+   * Scan and transition expired ACTIVE contracts to OVERDUE status.
+   * Calculates overdue penalty fees and isolates failures per contract.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: SYSTEM_ADMIN, BUSINESS_OPS_MANAGER
+  @Post('process-overdue')
+  @Middlewares(validateRequest({ query: processContractOverdueQuerySchema }))
+  @SuccessResponse(200, 'Success')
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  public async processOverdue(
+    @Request() req: ExpressRequest,
+    @Queries() query?: ProcessContractOverdueQuery
+  ): Promise<ApiResponse<ProcessContractOverdueResponse>> {
+    const caller = extractCaller(req);
+    if (
+      caller.role !== RoleEnum.SYSTEM_ADMIN &&
+      caller.role !== RoleEnum.BUSINESS_OPS_MANAGER
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+        RoleEnum.SYSTEM_ADMIN,
+        RoleEnum.BUSINESS_OPS_MANAGER,
+      ]);
+    }
+
+    const result = await this.contractService.processOverdueContracts(query);
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: result,
     };
   }
 }
