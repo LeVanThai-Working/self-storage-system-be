@@ -51,6 +51,7 @@ export class StorageUnitService {
     if (!unit) return unit;
     const doc = unit as {
       toObject?: (options?: unknown) => Record<string, unknown>;
+      populated?: (path: string) => unknown;
       _id?: unknown;
       id?: string;
       facilityId?: unknown;
@@ -60,6 +61,21 @@ export class StorageUnitService {
       typeof doc.toObject === 'function'
         ? doc.toObject({ virtuals: true })
         : { ...doc };
+
+    // A populate that finds no document (e.g. a hard-deleted unit type) yields null; Mongoose
+    // still remembers the original id, so keep it instead of failing the whole list response.
+    for (const [path, snapshot] of [
+      ['facilityId', 'facility'],
+      ['unitTypeId', 'unitType'],
+    ] as const) {
+      if (obj[path] === null && typeof doc.populated === 'function') {
+        const originalId = doc.populated(path);
+        if (originalId) {
+          obj[path] = String(originalId);
+          obj[snapshot] = null;
+        }
+      }
+    }
 
     if (!obj.id && obj._id) {
       obj.id = String(obj._id);
