@@ -93,6 +93,26 @@ function extractCaller(req: ExpressRequest): CallerContext {
     }
   }
 
+  const cookieToken = req.cookies?.accessToken;
+  if (cookieToken) {
+    try {
+      const payload = jwtUtil.verifyAccessToken(cookieToken) as {
+        userId?: string;
+        role?: string;
+        assignedFacilityId?: string;
+      };
+      if (payload?.userId) {
+        return {
+          id: payload.userId,
+          role: payload.role,
+          assignedFacilityId: payload.assignedFacilityId,
+        };
+      }
+    } catch {
+      // ignore token verification error in dev fallback
+    }
+  }
+
   throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
 }
 
