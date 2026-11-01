@@ -210,6 +210,12 @@
 			},
 			"infer_typeofuserQuerySchema_": {
 				"properties": {
+					"assignedFacilityId": {
+						"type": "string"
+					},
+					"role": {
+						"$ref": "#/components/schemas/RoleEnum"
+					},
 					"sort": {
 						"type": "string",
 						"enum": [
@@ -17376,6 +17382,22 @@
 				"parameters": [
 					{
 						"in": "query",
+						"name": "assignedFacilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "role",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RoleEnum"
+						}
+					},
+					{
+						"in": "query",
 						"name": "sort",
 						"required": false,
 						"schema": {
@@ -17515,6 +17537,22 @@
 				],
 				"security": [],
 				"parameters": [
+					{
+						"in": "query",
+						"name": "assignedFacilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "role",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/RoleEnum"
+						}
+					},
 					{
 						"in": "query",
 						"name": "sort",
@@ -20497,6 +20535,26 @@
 								}
 							}
 						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
 					}
 				},
 				"description": "Get list of storage racks (with pagination, filter by facilityId, storageUnitId, status, rackCode)",
@@ -20713,6 +20771,26 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/ApiResponse_StorageRackResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
 								}
 							}
 						}

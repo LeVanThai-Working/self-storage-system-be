@@ -453,13 +453,75 @@ describe('Pha 1: FE Feedback Tests (G1, G3, G4, G7, G8, G12, G13)', () => {
       expect(racks[0].isMine).toBe(true);
     });
 
-    it('blocks Staff of different facility from calling getRacksByStorageUnit', async () => {
+    it('allows Staff of different facility to view racks with currentCustomerId masked', async () => {
+      const racks = await rackService.getRacksByStorageUnit(
+        facilityAUnitId,
+        staffBCaller
+      );
+      expect(racks.length).toBe(1);
+      expect(racks[0].currentCustomerId).toBeNull();
+    });
+
+    it('allows Staff of the same facility to view racks with currentCustomerId exposed', async () => {
+      const racks = await rackService.getRacksByStorageUnit(
+        facilityAUnitId,
+        staffACaller
+      );
+      expect(racks.length).toBe(1);
+      expect(racks[0].currentCustomerId).not.toBeNull();
+    });
+
+    it('blocks Customer and unauthenticated from calling getStorageRacks', async () => {
       await expect(
-        rackService.getRacksByStorageUnit(facilityAUnitId, staffBCaller)
+        rackService.getStorageRacks(undefined, customer1Caller)
       ).rejects.toMatchObject({
         statusCode: 403,
         messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
       });
+
+      await expect(
+        rackService.getStorageRacks(undefined, undefined)
+      ).rejects.toMatchObject({
+        statusCode: 401,
+        messageCode: MESSAGE_CODE.MESSAGE_CODE_102,
+      });
+    });
+
+    it('scopes getStorageRacks to Staff facility and blocks cross-facility query', async () => {
+      const res = await rackService.getStorageRacks(undefined, staffACaller);
+      expect(res.items.every((r) => r.facilityId === TEST_FACILITY_A_ID)).toBe(
+        true
+      );
+
+      await expect(
+        rackService.getStorageRacks(
+          { facilityId: TEST_FACILITY_A_ID },
+          staffBCaller
+        )
+      ).rejects.toMatchObject({
+        statusCode: 403,
+        messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
+      });
+    });
+
+    it('enforces RBAC on getStorageRackById', async () => {
+      await expect(
+        rackService.getStorageRackById(rackAId, customer1Caller)
+      ).rejects.toMatchObject({
+        statusCode: 403,
+        messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
+      });
+
+      await expect(
+        rackService.getStorageRackById(rackAId, staffBCaller)
+      ).rejects.toMatchObject({
+        statusCode: 403,
+        messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
+      });
+
+      const rack = await rackService.getStorageRackById(rackAId, staffACaller);
+      expect(rack.id).toBe(rackAId);
+      expect(rack.facilityId).toBe(TEST_FACILITY_A_ID);
     });
   });
 

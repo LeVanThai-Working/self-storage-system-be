@@ -268,6 +268,8 @@ async function runMasterSeed() {
     managerHN: OID('661100000000000000000005'),
     staffQ1: OID('661100000000000000000006'),
     staffQ7: OID('661100000000000000000007'),
+    staff2Q7: OID('661100000000000000000021'),
+    staff3Q7: OID('661100000000000000000022'),
     customer1: OID('661100000000000000000008'),
     customer2: OID('661100000000000000000009'),
     customer3: OID('661100000000000000000010'),
@@ -380,6 +382,34 @@ async function runMasterSeed() {
       assignedFacilityId: facilityIds.q7,
       avatarUrl:
         'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400',
+    },
+    {
+      _id: userIds.staff2Q7,
+      name: 'Trần Văn Vận Hành (Kho Q7)',
+      email: 'staff2.q7@selfstorage.vn',
+      password: defaultHashedPassword,
+      phoneNumber: '0901000021',
+      role: RoleEnum.FACILITY_STAFF,
+      authProvider: AuthProviderEnum.LOCAL,
+      status: UserStatusEnum.ACTIVE,
+      isEmailVerified: true,
+      assignedFacilityId: facilityIds.q7,
+      avatarUrl:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    },
+    {
+      _id: userIds.staff3Q7,
+      name: 'Lê Thị Kiểm Hàng (Thủ kho Q7)',
+      email: 'staff3.q7@selfstorage.vn',
+      password: defaultHashedPassword,
+      phoneNumber: '0901000022',
+      role: RoleEnum.FACILITY_STAFF,
+      authProvider: AuthProviderEnum.LOCAL,
+      status: UserStatusEnum.ACTIVE,
+      isEmailVerified: true,
+      assignedFacilityId: facilityIds.q7,
+      avatarUrl:
+        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400',
     },
     {
       _id: userIds.customer1,
@@ -1496,8 +1526,9 @@ async function runMasterSeed() {
     ],
   });
 
+  // Lưu ý: unit dạng warehouse_rack cho thuê từng kệ lẻ bên trong nên phòng kho vẫn AVAILABLE
   await StorageUnit.findByIdAndUpdate(unitQ7WR1, {
-    status: StorageUnitStatusEnum.OCCUPIED,
+    status: StorageUnitStatusEnum.AVAILABLE,
   });
   await StorageRack.findByIdAndUpdate(createdRacks['rack_q7_a1'], {
     status: RackStatusEnum.RENTED,
@@ -1599,6 +1630,38 @@ async function runMasterSeed() {
       `${String(facilityIds.hn_cg)}_${String(unitTypeIds.room_std)}`
     ];
   const unitCGRM1 = createdUnits['u_cg_rm1'];
+
+  const reservation3Id = OID('664400000000000000000005');
+  const offeringQ7ST =
+    createdOfferingsMap[
+      `${String(facilityIds.q7)}_${String(unitTypeIds.room_std)}`
+    ];
+  const unitQ7ST1 = createdUnits['u_q7_rm1'];
+
+  await Reservation.create({
+    _id: reservation3Id,
+    reservationCode: 'RES-202611-0003',
+    customerId: userIds.customer3,
+    facilityId: facilityIds.q7,
+    storageUnitId: unitQ7ST1,
+    facilityUnitTypeOfferingId: offeringQ7ST,
+    rentalTargetType: RentalTargetTypeEnum.STORAGE_UNIT,
+    startDate: new Date('2026-11-02T00:00:00Z'),
+    checkInDate: new Date('2026-11-02T10:00:00Z'),
+    checkInTimeSlot: '10:00 - 12:00',
+    rentalDuration: 3,
+    billingUnit: BillingUnitEnum.MONTH,
+    basePrice: 1200000,
+    depositAmount: 1200000,
+    totalAmount: 1200000,
+    paidAmount: 1200000,
+    paidAt: new Date('2026-11-01T09:00:00Z'),
+    status: ReservationStatusEnum.CONFIRMED,
+    refundStatus: RefundStatusEnum.NONE,
+    termsAccepted: true,
+    acceptedAt: new Date('2026-11-01T08:50:00Z'),
+    amenities: [],
+  });
 
   await Reservation.create({
     _id: reservation2Id,
@@ -1721,6 +1784,53 @@ async function runMasterSeed() {
       deliveryCompany: 'Giao Hàng Nhanh',
     },
     staffNotes: 'Hàng hóa nguyên đai nguyên kiện, bốc dỡ vào kệ A01 an toàn.',
+  });
+
+  await InventoryRequest.create({
+    requestCode: 'REQ-IN-202611-0002',
+    type: InventoryRequestTypeEnum.INBOUND,
+    status: InventoryRequestStatusEnum.PENDING,
+    customerId: userIds.customer2,
+    contractId: contract1Id,
+    facilityId: facilityIds.q7,
+    storageUnitId: unitQ7WR1,
+    items: [
+      { skuId: createdSkus['fan'], quantity: 15, actualQuantity: 0 },
+      { skuId: createdSkus['clothes_box'], quantity: 20, actualQuantity: 0 },
+    ],
+    assignedStaffId: null,
+    isVerified: false,
+    transporterInfo: {
+      name: 'Phan Văn Hùng (Tài xế Viettel Post)',
+      phoneNumber: '0988112233',
+      vehiclePlate: '51C-789.12',
+      deliveryCompany: 'Viettel Post',
+    },
+    staffNotes:
+      'Xe chở 15 quạt thông minh & 20 kiện quần áo sẽ đến kho Q7 lúc 14:00. Chờ quản lý phân công nhân viên đón tiếp và đối soát.',
+    createdAt: new Date('2026-11-01T08:00:00Z'),
+  });
+
+  await InventoryRequest.create({
+    requestCode: 'REQ-OUT-202611-0002',
+    type: InventoryRequestTypeEnum.OUTBOUND,
+    status: InventoryRequestStatusEnum.PENDING,
+    customerId: userIds.customer2,
+    contractId: contract1Id,
+    facilityId: facilityIds.q7,
+    storageUnitId: unitQ7WR1,
+    items: [{ skuId: createdSkus['fan'], quantity: 5 }],
+    assignedStaffId: null,
+    isVerified: false,
+    transporterInfo: {
+      name: 'Võ Minh Trí (Tài xế Ahamove)',
+      phoneNumber: '0977445566',
+      vehiclePlate: '59P2-456.78',
+      deliveryCompany: 'Ahamove',
+    },
+    staffNotes:
+      'Khách tạo lệnh rút 5 cây quạt bàn giao cho tài xế Ahamove. Chờ quản lý phân công nhân viên soạn hàng.',
+    createdAt: new Date('2026-11-01T09:00:00Z'),
   });
 
   await InventoryRequest.create({
@@ -1927,6 +2037,28 @@ async function runMasterSeed() {
   });
 
   await Incident.create({
+    incidentCode: 'INC-202611-0003',
+    facilityId: facilityIds.q7,
+    storageUnitId: unitQ7WR1,
+    reporterId: userIds.managerQ7,
+    reporterRole: RoleEnum.FACILITY_MANAGER,
+    category: IncidentCategoryEnum.STRUCTURAL,
+    severity: IncidentSeverityEnum.MEDIUM,
+    title:
+      'Kiểm tra bảo dưỡng thanh ray trượt và bu lông định vị Kệ Pallet R03 - Dãy A',
+    description:
+      'Khớp khóa thanh ray định vị tầng 2 Kệ R03 có dấu hiệu xô lệch nhẹ. Cần điều phối nhân viên kỹ thuật kho kiểm tra và siết lại bu lông an toàn.',
+    images: [
+      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800',
+    ],
+    status: IncidentStatusEnum.REPORTED,
+    assignedStaffId: null,
+    putUnitUnderMaintenance: false,
+    requiresRelocation: false,
+    createdAt: new Date('2026-11-01T07:30:00Z'),
+  });
+
+  await Incident.create({
     incidentCode: 'INC-202610-0002',
     facilityId: facilityIds.hn_hk,
     storageUnitId: createdUnits['u_hk_cl1'],
@@ -1976,6 +2108,23 @@ async function runMasterSeed() {
       respondedAt: new Date('2026-10-18T10:00:00Z'),
     },
     completedAt: new Date('2026-10-18T10:05:00Z'),
+  });
+
+  await SupportTicket.create({
+    ticketCode: 'TCK-202611-0003',
+    customerId: userIds.customer2,
+    facilityId: facilityIds.q7,
+    contractId: contract1Id,
+    category: SupportTicketCategoryEnum.FACILITY_ACCESS,
+    priority: SupportTicketPriorityEnum.HIGH,
+    title:
+      'Đăng ký xe tải 3.5 tấn vào bốc dỡ hàng tại cổng bãi xe Q7 chiều nay',
+    description:
+      'Chiều nay 14:00 công ty chúng tôi có xe tải 3.5 tấn tới giao hàng. Nhờ quản lý điều phối nhân viên trực cổng mở barie và hướng dẫn đỗ xe vào dock dỡ hàng.',
+    attachments: [],
+    status: SupportTicketStatusEnum.PENDING,
+    assignedStaffId: null,
+    createdAt: new Date('2026-11-01T08:15:00Z'),
   });
 
   await SupportTicket.create({

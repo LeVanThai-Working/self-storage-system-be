@@ -52,9 +52,37 @@ export class StorageRackService {
     private readonly storageRackRepository: StorageRackRepository,
     private readonly rackTierRepository: RackTierRepository,
     private readonly storageUnitRepository: StorageUnitRepository,
-    private readonly facilityRepository: FacilityRepository,
+    private readonly facilityRepository?: FacilityRepository,
     private readonly auditLogService?: AuditLogService
   ) {}
+
+  private async resolveCallerAssignedFacilityId(
+    caller: CallerContext
+  ): Promise<string | undefined> {
+    if (caller.assignedFacilityId) {
+      return caller.assignedFacilityId;
+    }
+    if (caller.id) {
+      const user = await User.findById(caller.id).select('assignedFacilityId');
+      if (user?.assignedFacilityId) {
+        caller.assignedFacilityId = String(user.assignedFacilityId);
+        return caller.assignedFacilityId;
+      }
+      if (
+        caller.role === RoleEnum.FACILITY_MANAGER &&
+        this.facilityRepository
+      ) {
+        const managed = await this.facilityRepository.findByManagerId(
+          caller.id
+        );
+        if (managed?._id) {
+          caller.assignedFacilityId = String(managed._id);
+          return caller.assignedFacilityId;
+        }
+      }
+    }
+    return undefined;
+  }
 
   private calculateVolume(dimensions?: IDimensions): number | undefined {
     if (!dimensions) return undefined;
@@ -158,9 +186,43 @@ export class StorageRackService {
   }
 
   async getStorageRacks(
-    query?: StorageRackQuery
+    query?: StorageRackQuery,
+    caller?: CallerContext
   ): Promise<PaginatedData<StorageRackResponse>> {
-    const result = await this.storageRackRepository.findAll(query);
+    if (!caller?.id || !caller?.role) {
+      throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
+    }
+
+    if (caller.role === RoleEnum.CUSTOMER) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const enforcedQuery: StorageRackQuery = {
+      page: query?.page || 1,
+      limit: query?.limit || 10,
+      sortBy: query?.sortBy || 'createdAt',
+      sortOrder: query?.sortOrder || 'desc',
+      ...query,
+    };
+
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+
+      if (query?.facilityId && query.facilityId !== staffFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+
+      enforcedQuery.facilityId = staffFacilityId;
+    }
+
+    const result = await this.storageRackRepository.findAll(enforcedQuery);
     const formatted = result.items.map((item) => this.formatStorageRack(item));
     const validated = validateResponse(
       storageRackListResponseSchema,
@@ -172,11 +234,38 @@ export class StorageRackService {
     };
   }
 
-  async getStorageRackById(id: string): Promise<StorageRackResponse> {
+  async getStorageRackById(
+    id: string,
+    caller?: CallerContext
+  ): Promise<StorageRackResponse> {
+    if (!caller?.id || !caller?.role) {
+      throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
+    }
+
+    if (caller.role === RoleEnum.CUSTOMER) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
     const rack = await this.storageRackRepository.findById(id);
     if (!rack) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
     }
+
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      const rackFacilityId = String(
+        (rack.facilityId as { _id?: unknown })?._id || rack.facilityId
+      );
+
+      if (!staffFacilityId || staffFacilityId !== rackFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
     const tiers = await this.rackTierRepository.findByRackId(id);
     const formatted = this.formatStorageRack(rack, tiers);
     return validateResponse(storageRackResponseSchema, formatted);
@@ -192,23 +281,22 @@ export class StorageRackService {
     }
 
     const unitFacilityId = String(unit.facilityId?._id || unit.facilityId);
+    let canViewCustomerDetails = false;
+
     if (caller) {
       if (
+        caller.role === RoleEnum.SYSTEM_ADMIN ||
+        caller.role === RoleEnum.BUSINESS_OPS_MANAGER
+      ) {
+        canViewCustomerDetails = true;
+      } else if (
         caller.role === RoleEnum.FACILITY_STAFF ||
         caller.role === RoleEnum.FACILITY_MANAGER
       ) {
-        let assignedFacilityId = caller.assignedFacilityId;
-        if (!assignedFacilityId && caller.id) {
-          const userDoc = await User.findById(caller.id).select(
-            'assignedFacilityId'
-          );
-          if (userDoc?.assignedFacilityId) {
-            assignedFacilityId = String(userDoc.assignedFacilityId);
-          }
-        }
-
-        if (!assignedFacilityId || assignedFacilityId !== unitFacilityId) {
-          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        const staffFacilityId =
+          await this.resolveCallerAssignedFacilityId(caller);
+        if (staffFacilityId === unitFacilityId) {
+          canViewCustomerDetails = true;
         }
       }
     }
@@ -217,8 +305,6 @@ export class StorageRackService {
       await this.storageRackRepository.findByStorageUnitId(storageUnitId);
     const allTiers =
       await this.rackTierRepository.findByStorageUnitId(storageUnitId);
-
-    const isCustomer = !caller?.role || caller.role === RoleEnum.CUSTOMER;
 
     const formattedRacks = racks.map((rack) => {
       const rackId = String(rack._id);
@@ -230,13 +316,11 @@ export class StorageRackService {
         ? String(rack.currentCustomerId)
         : null;
 
-      if (isCustomer) {
-        formatted.isMine =
-          caller?.id && rackCustomerId ? caller.id === rackCustomerId : false;
+      formatted.isMine =
+        caller?.id && rackCustomerId ? caller.id === rackCustomerId : false;
+
+      if (!canViewCustomerDetails) {
         formatted.currentCustomerId = null;
-      } else {
-        formatted.isMine =
-          caller?.id && rackCustomerId ? caller.id === rackCustomerId : false;
       }
 
       return formatted;

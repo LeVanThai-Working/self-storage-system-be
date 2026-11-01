@@ -33,6 +33,8 @@ export const userQuerySchema = paginationQuerySchema.extend({
     .enum(['name', 'email', 'createdAt', 'updatedAt', 'role', 'status'])
     .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
+  role: z.nativeEnum(RoleEnum).optional(),
+  assignedFacilityId: z.string().optional(),
 });
 
 export type CreateUserRequest = z.infer<typeof createUserSchema>;
