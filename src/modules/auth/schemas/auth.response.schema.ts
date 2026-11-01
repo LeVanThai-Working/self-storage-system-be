@@ -14,6 +14,7 @@ export const authUserResponseSchema = z.object({
   role: z.enum(RoleEnum),
   authProvider: z.enum(AuthProviderEnum).optional(),
   status: z.enum(UserStatusEnum).optional(),
+  assignedFacilityId: z.unknown().optional(),
   createdAt: z.union([z.date().transform((d) => d.toISOString()), z.string()]),
   updatedAt: z.union([z.date().transform((d) => d.toISOString()), z.string()]),
 });

@@ -5,6 +5,7 @@ import type { StorageUnitRepository } from '../storageUnit/storageUnit.repositor
 import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import { RoleEnum } from '../../common/enums/user.enum.ts';
+import { User } from '../user/user.model.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 
 export interface CallerContext {
@@ -196,10 +197,17 @@ export class StorageRackService {
         caller.role === RoleEnum.FACILITY_STAFF ||
         caller.role === RoleEnum.FACILITY_MANAGER
       ) {
-        if (
-          !caller.assignedFacilityId ||
-          caller.assignedFacilityId !== unitFacilityId
-        ) {
+        let assignedFacilityId = caller.assignedFacilityId;
+        if (!assignedFacilityId && caller.id) {
+          const userDoc = await User.findById(caller.id).select(
+            'assignedFacilityId'
+          );
+          if (userDoc?.assignedFacilityId) {
+            assignedFacilityId = String(userDoc.assignedFacilityId);
+          }
+        }
+
+        if (!assignedFacilityId || assignedFacilityId !== unitFacilityId) {
           throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
         }
       }
@@ -333,6 +341,17 @@ export class StorageRackService {
         ? String((facilityId as { _id: unknown })._id)
         : String(facilityId);
 
+    const existingRacks =
+      await this.storageRackRepository.findByStorageUnitIdIncludeDeleted(
+        storageUnitId
+      );
+    const existingCodes = new Set(
+      existingRacks.map((r) => r.rackCode.toUpperCase().trim())
+    );
+    const existingCoordinates = new Set(
+      existingRacks.map((r) => `${r.aisle.toUpperCase().trim()}-${r.bay}`)
+    );
+
     const aisleLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
     for (let r = 1; r <= config.rackCount; r++) {
@@ -347,13 +366,14 @@ export class StorageRackService {
             ? RackZoneEnum.STANDARD
             : RackZoneEnum.ECONOMY;
 
-      // Check if rack code already exists
-      const existing =
-        await this.storageRackRepository.findByUnitAndRackCodeIncludeDeleted(
-          storageUnitId,
-          rackCode
-        );
-      if (existing) continue;
+      // Check if rack code or coordinate (aisle + bay) already exists in this storage unit
+      const coordKey = `${aisle}-${bay}`;
+      if (
+        existingCodes.has(rackCode.toUpperCase()) ||
+        existingCoordinates.has(coordKey)
+      ) {
+        continue;
+      }
 
       const createdRack = await this.storageRackRepository.create(
         {
@@ -374,12 +394,15 @@ export class StorageRackService {
         session
       );
 
+      existingCodes.add(rackCode.toUpperCase());
+      existingCoordinates.add(coordKey);
+
       const tiers: Partial<IRackTier>[] = [];
       for (let t = 1; t <= config.tiersPerRack; t++) {
         const tierCode = `${rackCode}-T${String(t).padStart(2, '0')}`;
         tiers.push({
           facilityId: new Types.ObjectId(
-            facilityId
+            resolvedFacilityId
           ) as unknown as IRackTier['facilityId'],
           storageUnitId: new Types.ObjectId(
             storageUnitId
@@ -409,7 +432,6 @@ export class StorageRackService {
     }
   }
 
-  @Transactional()
   async provisionRacksForUnitEndpoint(
     storageUnitId: string
   ): Promise<StorageRackResponse[]> {

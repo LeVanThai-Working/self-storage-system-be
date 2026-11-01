@@ -99,6 +99,15 @@ export class StorageRackRepository {
       .sort({ rackCode: 1 });
   }
 
+  async findByStorageUnitIdIncludeDeleted(storageUnitId: string) {
+    if (!Types.ObjectId.isValid(storageUnitId)) return [];
+    return (
+      this.storageRack as unknown as {
+        findWithDeleted: (filter: unknown) => Promise<IStorageRack[]>;
+      }
+    ).findWithDeleted({ storageUnitId: new Types.ObjectId(storageUnitId) });
+  }
+
   async findByUnitAndRackCode(storageUnitId: string, rackCode: string) {
     if (!Types.ObjectId.isValid(storageUnitId)) return null;
     return this.storageRack.findOne({

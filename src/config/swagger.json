@@ -449,6 +449,7 @@
 							"createdAt": {
 								"type": "string"
 							},
+							"assignedFacilityId": {},
 							"status": {
 								"$ref": "#/components/schemas/UserStatusEnum"
 							},
@@ -632,6 +633,7 @@
 					"createdAt": {
 						"type": "string"
 					},
+					"assignedFacilityId": {},
 					"status": {
 						"$ref": "#/components/schemas/UserStatusEnum"
 					},
@@ -899,6 +901,7 @@
 					"putaway_inbound_request",
 					"cancel_inventory_request",
 					"expire_inventory_request",
+					"assign_inventory_request",
 					"batch_migrate_rack",
 					"evacuate_rack_to_holding",
 					"update_inventory_status",
@@ -11393,6 +11396,16 @@
 						"type": "string",
 						"format": "date-time"
 					},
+					"assignedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"assignedStaffName": {
+						"type": "string"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					},
 					"customerFeedbackNotes": {
 						"type": "string"
 					},
@@ -11699,6 +11712,16 @@
 						"type": "object"
 					},
 					"unitNumber": {
+						"type": "string"
+					},
+					"assignedAt": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"assignedStaffName": {
+						"type": "string"
+					},
+					"assignedStaffId": {
 						"type": "string"
 					},
 					"customerPhone": {
@@ -12199,6 +12222,16 @@
 									"type": "string",
 									"format": "date-time"
 								},
+								"assignedAt": {
+									"type": "string",
+									"format": "date-time"
+								},
+								"assignedStaffName": {
+									"type": "string"
+								},
+								"assignedStaffId": {
+									"type": "string"
+								},
 								"customerFeedbackNotes": {
 									"type": "string"
 								},
@@ -12468,6 +12501,20 @@
 				},
 				"type": "object",
 				"additionalProperties": false
+			},
+			"infer_typeofassignInventoryRequestSchema_": {
+				"properties": {
+					"assignedStaffId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"assignedStaffId"
+				],
+				"type": "object"
+			},
+			"AssignInventoryRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignInventoryRequestSchema_"
 			},
 			"infer_typeofregenerateOtpResponseSchema_": {
 				"properties": {
@@ -28567,6 +28614,88 @@
 				"parameters": []
 			}
 		},
+		"/customer-inventories/requests/{id}/assign": {
+			"post": {
+				"operationId": "AssignStaff",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "10b. Customer regenerates OTP for Pending Request",
+				"tags": [
+					"Customer Inventory Request (Dual Handshake)"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignInventoryRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/customer-inventories/requests/{id}/regenerate-otp": {
 			"post": {
 				"operationId": "RegenerateOtp",
@@ -28612,7 +28741,6 @@
 						}
 					}
 				},
-				"description": "10b. Customer regenerates OTP for Pending Request",
 				"tags": [
 					"Customer Inventory Request (Dual Handshake)"
 				],

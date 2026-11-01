@@ -64,6 +64,7 @@ export enum AuditActionEnum {
   PUTAWAY_INBOUND_REQUEST = 'putaway_inbound_request',
   CANCEL_INVENTORY_REQUEST = 'cancel_inventory_request',
   EXPIRE_INVENTORY_REQUEST = 'expire_inventory_request',
+  ASSIGN_INVENTORY_REQUEST = 'assign_inventory_request',
   BATCH_MIGRATE_RACK = 'batch_migrate_rack',
   EVACUATE_RACK_TO_HOLDING = 'evacuate_rack_to_holding',
   UPDATE_INVENTORY_STATUS = 'update_inventory_status',

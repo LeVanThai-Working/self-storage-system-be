@@ -350,6 +350,10 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_646: 'MESSAGE_CODE_646',
   // Emergency Reason Or Incident Required For Evacuation
   MESSAGE_CODE_647: 'MESSAGE_CODE_647',
+  // Only Assigned Staff Or Facility Manager Can Handle This Inventory Request
+  MESSAGE_CODE_648: 'MESSAGE_CODE_648',
+  // Only Assigned Staff Or Facility Manager Can Complete Outbound Handover
+  MESSAGE_CODE_649: 'MESSAGE_CODE_649',
 
   // ==========================================
   // INCIDENT (700 - 709)
@@ -392,6 +396,10 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_725: 'MESSAGE_CODE_725',
   // Assigned Staff Does Not Belong To Facility
   MESSAGE_CODE_726: 'MESSAGE_CODE_726',
+  // Only Assigned Staff Or Facility Manager Can Complete Support Ticket
+  MESSAGE_CODE_727: 'MESSAGE_CODE_727',
+  // Support Ticket Is Already Being Processed By Another Staff
+  MESSAGE_CODE_728: 'MESSAGE_CODE_728',
 
   // ==========================================
   // INVOICE (800 - 815)
@@ -615,6 +623,10 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_645: 'Inventory Item Status Does Not Allow This Operation',
   MESSAGE_CODE_646: 'Invalid Inventory Item Status Transition',
   MESSAGE_CODE_647: 'Emergency Reason Or Incident Required For Evacuation',
+  MESSAGE_CODE_648:
+    'Only Assigned Staff Or Facility Manager Can Handle This Inventory Request',
+  MESSAGE_CODE_649:
+    'Only Assigned Staff Or Facility Manager Can Complete Outbound Handover',
 
   // Incident
   MESSAGE_CODE_700: 'Incident Not Found',
@@ -636,6 +648,10 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_724: 'Contract Does Not Belong To Customer',
   MESSAGE_CODE_725: 'Support Ticket Facility Mismatch',
   MESSAGE_CODE_726: 'Assigned Staff Does Not Belong To Facility',
+  MESSAGE_CODE_727:
+    'Only Assigned Staff Or Facility Manager Can Complete Support Ticket',
+  MESSAGE_CODE_728:
+    'Support Ticket Is Already Being Processed By Another Staff',
 
   // Invoice
   MESSAGE_CODE_800: 'Invoice Not Found',

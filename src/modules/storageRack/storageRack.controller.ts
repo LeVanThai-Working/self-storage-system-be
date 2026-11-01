@@ -90,7 +90,7 @@ function extractCaller(req: ExpressRequest): CallerContext {
         return {
           id: payload.userId,
           role: payload.role,
-          assignedFacilityId: payload.assignedFacilityId,
+          assignedFacilityId: payload.assignedFacilityId || headerFacilityId,
         };
       }
     } catch {
@@ -110,7 +110,7 @@ function extractCaller(req: ExpressRequest): CallerContext {
         return {
           id: payload.userId,
           role: payload.role,
-          assignedFacilityId: payload.assignedFacilityId,
+          assignedFacilityId: payload.assignedFacilityId || headerFacilityId,
         };
       }
     } catch {

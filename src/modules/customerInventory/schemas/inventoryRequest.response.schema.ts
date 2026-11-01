@@ -68,6 +68,9 @@ export const inventoryRequestResponseSchema = z.object({
   discrepancyImages: z.array(z.string()).optional(),
   customerFeedbackNotes: z.string().nullable().optional(),
 
+  assignedStaffId: z.string().nullable().optional(),
+  assignedStaffName: z.string().optional(),
+  assignedAt: z.date().nullable().optional(),
   verifiedAt: z.date().nullable().optional(),
   verifiedBy: z.string().nullable().optional(),
   completedAt: z.date().nullable().optional(),
@@ -89,6 +92,9 @@ export const verifiedHandoverDetailsResponseSchema = z.object({
   contractId: z.string(),
   facilityId: z.string(),
   storageUnitId: z.string(),
+  assignedStaffId: z.string().nullable().optional(),
+  assignedStaffName: z.string().optional(),
+  assignedAt: z.date().nullable().optional(),
   unitNumber: z.string().optional(),
   transporterInfo: z
     .object({
