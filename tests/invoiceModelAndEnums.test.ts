@@ -33,6 +33,7 @@ import { Payment } from '../src/modules/payment/payment.model.ts';
 describe('billing/T0.1: Invoice Model, Enums & Message Codes', () => {
   beforeAll(async () => {
     await setupTestDB();
+    await Invoice.init();
   });
 
   afterAll(async () => {

@@ -32,6 +32,7 @@ import {
   createPreAdvisedInboundRequestSchema,
   disputeInboundRequestSchema,
   putawayInboundRequestSchema,
+  assignInventoryRequestSchema,
   inventoryRequestIdParamSchema,
   inventoryRequestQuerySchema,
   type CreateOutboundRequest,
@@ -43,6 +44,7 @@ import {
   type CreatePreAdvisedInboundRequest,
   type DisputeInboundRequest,
   type PutawayInboundRequest,
+  type AssignInventoryRequest,
   type InventoryRequestQuery,
 } from './schemas/inventoryRequest.request.schema.ts';
 import type {
@@ -540,6 +542,46 @@ export class InventoryRequestController extends Controller {
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: CUSTOMER
+
+  /**
+   * Facility Manager assigns a staff member to handle inventory request
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Post('requests/{id}/assign')
+  @Middlewares(
+    validateRequest({
+      params: inventoryRequestIdParamSchema,
+      body: assignInventoryRequestSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async assignStaff(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: AssignInventoryRequest
+  ): Promise<ApiResponse<InventoryRequestResponse>> {
+    const caller = extractCaller(req);
+    const request = await this.inventoryRequestService.assignStaffToRequest(
+      id,
+      body,
+      caller
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, [
+        'Inventory Request',
+      ]),
+      data: request,
+    };
+  }
+
   @Post('requests/{id}/regenerate-otp')
   @Middlewares(validateRequest({ params: inventoryRequestIdParamSchema }))
   @Response<ApiErrorResponse>(400, 'Bad Request')

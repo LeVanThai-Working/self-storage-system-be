@@ -142,6 +142,10 @@ export const putawayInboundRequestSchema = z.object({
     .min(1, 'Must specify at least one shelf tier placement for putaway'),
 });
 
+export const assignInventoryRequestSchema = z.object({
+  assignedStaffId: z.string().regex(objectIdRegex, 'Invalid Staff ID format'),
+});
+
 export const inventoryRequestIdParamSchema = z.object({
   id: z.string().regex(objectIdRegex, 'Invalid Inventory Request ID format'),
 });
@@ -192,3 +196,7 @@ export interface InventoryRequestQuery {
   startDate?: string;
   endDate?: string;
 }
+
+export type AssignInventoryRequest = z.infer<
+  typeof assignInventoryRequestSchema
+>;

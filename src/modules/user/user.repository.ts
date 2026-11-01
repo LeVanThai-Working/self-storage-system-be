@@ -27,6 +27,14 @@ export class UserRepository {
       ];
     }
 
+    if (query.role) {
+      filter.role = query.role;
+    }
+
+    if (query.assignedFacilityId) {
+      filter.assignedFacilityId = query.assignedFacilityId;
+    }
+
     let sortBy = query.sortBy || 'createdAt';
     let sortOrder = query.sortOrder || 'desc';
 

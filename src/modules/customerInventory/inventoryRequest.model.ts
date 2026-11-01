@@ -49,6 +49,8 @@ export interface IInventoryRequest extends SoftDeleteDocument {
   discrepancyImages?: string[];
   customerFeedbackNotes?: string | null;
 
+  assignedStaffId?: Types.ObjectId | null;
+  assignedAt?: Date | null;
   verifiedAt?: Date | null;
   verifiedBy?: Types.ObjectId | null;
   completedAt?: Date | null;
@@ -205,6 +207,13 @@ const inventoryRequestSchema = new Schema<IInventoryRequest>(
       type: String,
       trim: true,
     },
+    assignedStaffId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    assignedAt: {
+      type: Date,
+    },
     verifiedAt: {
       type: Date,
     },
@@ -234,6 +243,7 @@ const inventoryRequestSchema = new Schema<IInventoryRequest>(
 
 inventoryRequestSchema.index({ customerId: 1, type: 1, status: 1 });
 inventoryRequestSchema.index({ facilityId: 1, status: 1 });
+inventoryRequestSchema.index({ facilityId: 1, status: 1, assignedStaffId: 1 });
 inventoryRequestSchema.index({ createdAt: 1, status: 1 });
 
 inventoryRequestSchema.plugin(MongooseDelete, {

@@ -443,6 +443,20 @@ export class SupportTicketService {
       }
     }
 
+    // Anti-collision guard: If ticket is already in PROCESSING and has assignedStaffId
+    if (
+      ticket.status === SupportTicketStatusEnum.PROCESSING &&
+      ticket.assignedStaffId
+    ) {
+      const isFM =
+        callerRole === RoleEnum.FACILITY_MANAGER ||
+        callerRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+        callerRole === RoleEnum.SYSTEM_ADMIN;
+      if (!isFM && toId(ticket.assignedStaffId) !== caller.id) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_728);
+      }
+    }
+
     let targetStaffId: Types.ObjectId | undefined;
     if (request.assignedStaffId) {
       if (this.userRepository) {
@@ -543,6 +557,16 @@ export class SupportTicketService {
       ) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_725);
       }
+    }
+
+    const isAssignee = toId(ticket.assignedStaffId) === caller.id;
+    const isFM =
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+      callerRole === RoleEnum.SYSTEM_ADMIN;
+
+    if (!isAssignee && !isFM) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_727);
     }
 
     const staffResponse = {

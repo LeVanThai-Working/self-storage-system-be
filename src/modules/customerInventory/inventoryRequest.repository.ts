@@ -58,7 +58,8 @@ export class InventoryRequestRepository {
       .populate('items.rackTierId', 'tierNumber maxWeightKg status')
       .populate('customerId', 'name email phoneNumber')
       .populate('facilityId', 'code name address')
-      .populate('storageUnitId', 'unitNumber floor zone');
+      .populate('storageUnitId', 'unitNumber floor zone')
+      .populate('assignedStaffId', 'fullName name email phone role');
     if (session) q.session(session);
     return q.exec();
   }
@@ -240,6 +241,7 @@ export class InventoryRequestRepository {
         { path: 'customerId', select: 'name email phoneNumber' },
         { path: 'facilityId', select: 'code name address' },
         { path: 'storageUnitId', select: 'unitNumber floor zone' },
+        { path: 'assignedStaffId', select: 'fullName name email phone role' },
       ],
     });
   }
@@ -247,6 +249,25 @@ export class InventoryRequestRepository {
   /**
    * Find all requests currently in PENDING status that have expired (expiresAt <= now).
    */
+  async assignStaff(
+    id: string,
+    staffId: string,
+    session?: ClientSession
+  ): Promise<IInventoryRequest | null> {
+    if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(staffId))
+      return null;
+    return this.model.findOneAndUpdate(
+      { _id: new Types.ObjectId(id), deleted: false },
+      {
+        $set: {
+          assignedStaffId: new Types.ObjectId(staffId),
+          assignedAt: new Date(),
+        },
+      },
+      { returnDocument: 'after', session }
+    );
+  }
+
   async findExpiredPendingRequests(
     now: Date = new Date(),
     session?: ClientSession

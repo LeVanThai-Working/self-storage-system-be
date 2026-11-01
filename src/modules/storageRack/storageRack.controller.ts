@@ -90,7 +90,7 @@ function extractCaller(req: ExpressRequest): CallerContext {
         return {
           id: payload.userId,
           role: payload.role,
-          assignedFacilityId: payload.assignedFacilityId,
+          assignedFacilityId: payload.assignedFacilityId || headerFacilityId,
         };
       }
     } catch {
@@ -110,7 +110,7 @@ function extractCaller(req: ExpressRequest): CallerContext {
         return {
           id: payload.userId,
           role: payload.role,
-          assignedFacilityId: payload.assignedFacilityId,
+          assignedFacilityId: payload.assignedFacilityId || headerFacilityId,
         };
       }
     } catch {
@@ -137,11 +137,17 @@ export class StorageRackController extends Controller {
   @Get('')
   @Middlewares(validateRequest({ query: storageRackQuerySchema }))
   @Response<ApiErrorResponse>(400, 'Invalid query parameters')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   public async getStorageRacks(
+    @Request() req: ExpressRequest,
     @Queries() query: StorageRackQuery
   ): Promise<ApiResponse<PaginatedData<StorageRackResponse>>> {
-    const { items, pagination } =
-      await this.storageRackService.getStorageRacks(query);
+    const caller = extractCaller(req);
+    const { items, pagination } = await this.storageRackService.getStorageRacks(
+      query,
+      caller
+    );
 
     return {
       success: true,
@@ -188,11 +194,15 @@ export class StorageRackController extends Controller {
   // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('{id}')
   @Middlewares(validateRequest({ params: storageRackIdParamSchema }))
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
   @Response<ApiErrorResponse>(404, 'Storage Rack not found')
   public async getStorageRackById(
-    @Path() id: string
+    @Path() id: string,
+    @Request() req: ExpressRequest
   ): Promise<ApiResponse<StorageRackResponse>> {
-    const rack = await this.storageRackService.getStorageRackById(id);
+    const caller = extractCaller(req);
+    const rack = await this.storageRackService.getStorageRackById(id, caller);
 
     return {
       success: true,

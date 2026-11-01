@@ -51,6 +51,7 @@ import type {
   CreateInboundRequest,
   CreatePreAdvisedInboundRequest,
   PutawayInboundRequest,
+  AssignInventoryRequest,
   InventoryRequestQuery,
 } from './schemas/inventoryRequest.request.schema.ts';
 
@@ -339,6 +340,20 @@ export class InventoryRequestService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_632);
     }
 
+    const callerRole = caller.role || RoleEnum.CUSTOMER;
+    const isFM =
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+      callerRole === RoleEnum.SYSTEM_ADMIN;
+
+    if (
+      request.assignedStaffId &&
+      !isFM &&
+      toId(request.assignedStaffId) !== caller.id
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_648);
+    }
+
     // Atomic one-time invalidation: transition to PROCESSING and invalidate OTP/QR
     const updated =
       await this.inventoryRequestRepository.conditionalUpdateStatus(
@@ -349,6 +364,9 @@ export class InventoryRequestService {
           isVerified: true,
           verifiedAt: new Date(),
           verifiedBy: new Types.ObjectId(caller.id),
+          assignedStaffId:
+            request.assignedStaffId || new Types.ObjectId(caller.id),
+          assignedAt: request.assignedAt || new Date(),
           pickupQrToken: null,
           otpHash: null,
         }
@@ -383,6 +401,9 @@ export class InventoryRequestService {
       contractId: formatted.contractId,
       facilityId: formatted.facilityId,
       storageUnitId: formatted.storageUnitId,
+      assignedStaffId: formatted.assignedStaffId,
+      assignedStaffName: formatted.assignedStaffName,
+      assignedAt: formatted.assignedAt,
       unitNumber: formatted.unitNumber,
       transporterInfo: formatted.transporterInfo,
       items: formatted.items,
@@ -419,6 +440,17 @@ export class InventoryRequestService {
 
     if (request.status !== InventoryRequestStatusEnum.PROCESSING) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_632);
+    }
+
+    const callerRole = caller.role || RoleEnum.CUSTOMER;
+    const isFM =
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+      callerRole === RoleEnum.SYSTEM_ADMIN;
+
+    const assigneeId = toId(request.assignedStaffId || request.verifiedBy);
+    if (!isFM && assigneeId && assigneeId !== caller.id) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_649);
     }
 
     if (!data.evidenceImages || data.evidenceImages.length === 0) {
@@ -542,6 +574,9 @@ export class InventoryRequestService {
           discrepancyImages: data.discrepancyImages || [],
           completedAt: new Date(),
           completedBy: new Types.ObjectId(caller.id),
+          assignedStaffId:
+            request.assignedStaffId || new Types.ObjectId(caller.id),
+          assignedAt: request.assignedAt || new Date(),
         },
         session
       );
@@ -944,6 +979,8 @@ export class InventoryRequestService {
       isVerified: true,
       verifiedAt: new Date(),
       verifiedBy: new Types.ObjectId(caller.id),
+      assignedStaffId: new Types.ObjectId(caller.id),
+      assignedAt: new Date(),
     });
 
     this.auditLogService?.record({
@@ -1194,6 +1231,17 @@ export class InventoryRequestService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_632);
     }
 
+    const callerRole = caller.role || RoleEnum.CUSTOMER;
+    const isFM =
+      callerRole === RoleEnum.FACILITY_MANAGER ||
+      callerRole === RoleEnum.BUSINESS_OPS_MANAGER ||
+      callerRole === RoleEnum.SYSTEM_ADMIN;
+
+    const assigneeId = toId(request.assignedStaffId || request.verifiedBy);
+    if (!isFM && assigneeId && assigneeId !== caller.id) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_648);
+    }
+
     const updatedItems = [];
 
     // Increase stock into specified tiers
@@ -1321,6 +1369,9 @@ export class InventoryRequestService {
           items: updatedItems,
           completedAt: new Date(),
           completedBy: new Types.ObjectId(caller.id),
+          assignedStaffId:
+            request.assignedStaffId || new Types.ObjectId(caller.id),
+          assignedAt: request.assignedAt || new Date(),
         },
         session
       );
@@ -1548,6 +1599,101 @@ export class InventoryRequestService {
     return expiredCount;
   }
 
+  /**
+   * Manager assigns or re-assigns staff member to take ownership of inventory request
+   */
+  async assignStaffToRequest(
+    id: string,
+    data: AssignInventoryRequest,
+    caller: CallerContext,
+    session?: ClientSession
+  ): Promise<InventoryRequestResponse> {
+    this.validateRoleAccess(caller);
+
+    const callerRole = caller.role || RoleEnum.CUSTOMER;
+    if (
+      callerRole !== RoleEnum.FACILITY_MANAGER &&
+      callerRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      callerRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const request = await this.inventoryRequestRepository.findById(id, session);
+    if (!request || request.deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_630);
+    }
+
+    if (
+      request.status === InventoryRequestStatusEnum.COMPLETED ||
+      request.status === InventoryRequestStatusEnum.CANCELLED ||
+      request.status === InventoryRequestStatusEnum.EXPIRED
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_632);
+    }
+
+    const facilityId = await this.resolveCallerAssignedFacilityId(caller);
+    if (
+      callerRole === RoleEnum.FACILITY_MANAGER &&
+      (!facilityId || facilityId !== toId(request.facilityId))
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    if (this.userRepository) {
+      const staffUser = await this.userRepository.findById(
+        data.assignedStaffId
+      );
+      if (
+        !staffUser ||
+        staffUser.deleted ||
+        toId(staffUser.assignedFacilityId) !== toId(request.facilityId)
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_708);
+      }
+    }
+
+    const updated = await this.inventoryRequestRepository.assignStaff(
+      id,
+      data.assignedStaffId,
+      session
+    );
+
+    if (!updated) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_630);
+    }
+
+    this.auditLogService?.record({
+      action: AuditActionEnum.ASSIGN_INVENTORY_REQUEST,
+      resourceType: AuditResourceEnum.INVENTORY_REQUEST,
+      resourceId: id,
+      before: request,
+      after: updated,
+    });
+
+    if (this.notificationService) {
+      this.notificationService.sendNotification({
+        recipientId: data.assignedStaffId,
+        facilityId: toId(request.facilityId),
+        title: `[Giao việc] Đơn yêu cầu kho ${request.requestCode}`,
+        content: `Bạn được phân công phụ trách đơn ${request.type === InventoryRequestTypeEnum.INBOUND ? 'nhập' : 'xuất'} kho ${request.requestCode}.`,
+        type: NotificationTypeEnum.SYSTEM,
+        priority: NotificationPriorityEnum.HIGH,
+        channels: [NotificationChannelEnum.IN_APP],
+        metadata: { requestId: id, requestCode: request.requestCode },
+      });
+    }
+
+    const populated = await this.inventoryRequestRepository.findById(
+      id,
+      session
+    );
+    return validateResponse(
+      inventoryRequestResponseSchema,
+      this.formatRequest(populated || updated)
+    );
+  }
+
   private formatRequest(doc: IInventoryRequest) {
     const raw = doc.toObject ? doc.toObject() : doc;
 
@@ -1562,6 +1708,17 @@ export class InventoryRequestService {
       facilityCode: (raw.facilityId as unknown as { code?: string })?.code,
       facilityName: (raw.facilityId as unknown as { name?: string })?.name,
       storageUnitId: String(raw.storageUnitId?._id || raw.storageUnitId),
+      assignedStaffId: raw.assignedStaffId
+        ? String(
+            (raw.assignedStaffId as { _id?: Types.ObjectId })?._id ||
+              raw.assignedStaffId
+          )
+        : null,
+      assignedStaffName:
+        (raw.assignedStaffId as { fullName?: string; name?: string })
+          ?.fullName ||
+        (raw.assignedStaffId as { fullName?: string; name?: string })?.name,
+      assignedAt: raw.assignedAt || null,
       unitNumber: (raw.storageUnitId as unknown as { unitNumber?: string })
         ?.unitNumber,
       items: (raw.items || []).map(

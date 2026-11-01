@@ -93,6 +93,9 @@ export class AuthService {
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
+      assignedFacilityId: user.assignedFacilityId
+        ? user.assignedFacilityId.toString()
+        : undefined,
     });
 
     await this.authRedisService.saveRefreshToken(
@@ -184,6 +187,9 @@ export class AuthService {
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
+      assignedFacilityId: user.assignedFacilityId
+        ? user.assignedFacilityId.toString()
+        : undefined,
     });
 
     await this.authRedisService.saveRefreshToken(
@@ -214,6 +220,9 @@ export class AuthService {
       userId: user._id.toString(),
       email: user.email,
       role: user.role,
+      assignedFacilityId: user.assignedFacilityId
+        ? user.assignedFacilityId.toString()
+        : undefined,
     });
 
     await this.authRedisService.saveRefreshToken(
@@ -277,6 +286,9 @@ export class AuthService {
         userId: user._id.toString(),
         email: user.email,
         role: user.role,
+        assignedFacilityId: user.assignedFacilityId
+          ? user.assignedFacilityId.toString()
+          : undefined,
       },
       payload.familyId
     );
