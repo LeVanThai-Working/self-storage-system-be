@@ -392,6 +392,32 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_725: 'MESSAGE_CODE_725',
   // Assigned Staff Does Not Belong To Facility
   MESSAGE_CODE_726: 'MESSAGE_CODE_726',
+
+  // ==========================================
+  // INVOICE (800 - 815)
+  // ==========================================
+  // Invoice Not Found
+  MESSAGE_CODE_800: 'MESSAGE_CODE_800',
+  // Invalid Invoice Status Transition
+  MESSAGE_CODE_801: 'MESSAGE_CODE_801',
+  // Invoice Has Already Been Paid
+  MESSAGE_CODE_802: 'MESSAGE_CODE_802',
+  // Invoice Cannot Be Cancelled In Current Status
+  MESSAGE_CODE_803: 'MESSAGE_CODE_803',
+  // Invoice Due Date Must Be After Issue Date
+  MESSAGE_CODE_804: 'MESSAGE_CODE_804',
+  // Invoice Amount Must Match Payment Exactly
+  MESSAGE_CODE_805: 'MESSAGE_CODE_805',
+  // Proof Image URL Is Required For Manual Payment
+  MESSAGE_CODE_806: 'MESSAGE_CODE_806',
+  // Invoice Facility Mismatch
+  MESSAGE_CODE_807: 'MESSAGE_CODE_807',
+  // Invoice Items Cannot Be Empty
+  MESSAGE_CODE_808: 'MESSAGE_CODE_808',
+  // Cannot Void Already Paid Invoice
+  MESSAGE_CODE_809: 'MESSAGE_CODE_809',
+  // Invoice Code Already Exists
+  MESSAGE_CODE_810: 'MESSAGE_CODE_810',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -610,4 +636,17 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_724: 'Contract Does Not Belong To Customer',
   MESSAGE_CODE_725: 'Support Ticket Facility Mismatch',
   MESSAGE_CODE_726: 'Assigned Staff Does Not Belong To Facility',
+
+  // Invoice
+  MESSAGE_CODE_800: 'Invoice Not Found',
+  MESSAGE_CODE_801: 'Invalid Invoice Status Transition',
+  MESSAGE_CODE_802: 'Invoice Has Already Been Paid',
+  MESSAGE_CODE_803: 'Invoice Cannot Be Cancelled In Current Status',
+  MESSAGE_CODE_804: 'Invoice Due Date Must Be After Issue Date',
+  MESSAGE_CODE_805: 'Invoice Amount Must Match Payment Exactly',
+  MESSAGE_CODE_806: 'Proof Image URL Is Required For Manual Payment',
+  MESSAGE_CODE_807: 'Invoice Facility Mismatch',
+  MESSAGE_CODE_808: 'Invoice Items Cannot Be Empty',
+  MESSAGE_CODE_809: 'Cannot Void Already Paid Invoice',
+  MESSAGE_CODE_810: 'Invoice Code Already Exists',
 };

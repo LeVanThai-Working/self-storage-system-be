@@ -6,6 +6,7 @@ export enum NotificationTypeEnum {
   RESERVATION = 'reservation',
   CONTRACT = 'contract',
   PAYMENT = 'payment',
+  INVOICE = 'invoice',
   INCIDENT = 'incident',
   SUPPORT_TICKET = 'support_ticket',
   CUSTOMER_INVENTORY = 'customer_inventory',

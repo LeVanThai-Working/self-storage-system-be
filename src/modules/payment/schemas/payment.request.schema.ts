@@ -22,6 +22,10 @@ export const createPaymentSchema = z
       .string()
       .regex(/^[0-9a-fA-F]{24}$/, 'Invalid contract ID format')
       .optional(),
+    invoiceId: z
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/, 'Invalid invoice ID format')
+      .optional(),
   })
   .refine(
     (data) => {
@@ -34,11 +38,14 @@ export const createPaymentSchema = z
       ) {
         return !!data.contractId;
       }
+      if (data.purpose === PaymentPurposeEnum.INVOICE_PAYMENT) {
+        return !!data.invoiceId;
+      }
       return false;
     },
     {
       message:
-        'Must provide reservationId for RESERVATION_DEPOSIT, or contractId for CONTRACT_DEPOSIT or RENT_FIRST_PERIOD',
+        'Must provide reservationId for RESERVATION_DEPOSIT, contractId for CONTRACT_DEPOSIT or RENT_FIRST_PERIOD, or invoiceId for INVOICE_PAYMENT',
     }
   );
 

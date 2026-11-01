@@ -661,4 +661,37 @@ export class ContractRepository {
     const count = await query.exec();
     return count > 0;
   }
+
+  /**
+   * Find active contracts for recurring billing scan.
+   */
+  async findActiveContractsForBilling(
+    options?: { limit?: number; skip?: number },
+    session?: ClientSession
+  ): Promise<IContract[]> {
+    const query = this.contract
+      .find({
+        status: ContractStatusEnum.ACTIVE,
+        deleted: false,
+      })
+      .populate('customerId', 'name email phoneNumber')
+      .populate('facilityId', 'name city address')
+      .populate(
+        'facilityUnitTypeOfferingId',
+        'unitTypeId billingUnit pricePerUnit depositMultiplier'
+      )
+      .populate('storageUnitId', 'unitNumber floor zone');
+
+    if (options?.skip) {
+      query.skip(options.skip);
+    }
+    if (options?.limit) {
+      query.limit(options.limit);
+    }
+    if (session) {
+      query.session(session);
+    }
+
+    return query.exec();
+  }
 }

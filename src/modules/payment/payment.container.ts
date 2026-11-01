@@ -14,6 +14,11 @@ import {
 } from '../contract/contract.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 import { refundRequestService } from '../refundRequest/refundRequest.container.ts';
+import {
+  invoiceRepository,
+  invoiceService,
+  setPaymentServiceForInvoice,
+} from '../invoice/invoice.container.ts';
 import { User } from '../user/user.model.ts';
 import { UserRepository } from '../user/user.repository.ts';
 
@@ -33,8 +38,12 @@ export const paymentService = new PaymentService(
   contractService,
   auditLogService,
   userRepository,
-  refundRequestService
+  refundRequestService,
+  invoiceRepository,
+  invoiceService
 );
+
+setPaymentServiceForInvoice(paymentService);
 
 export const paymentController = new PaymentController(
   paymentService,

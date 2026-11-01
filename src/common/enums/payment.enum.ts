@@ -11,6 +11,7 @@ export enum PaymentPurposeEnum {
   RESERVATION_DEPOSIT = 'reservation_deposit',
   CONTRACT_DEPOSIT = 'contract_deposit',
   RENT_FIRST_PERIOD = 'rent_first_period',
+  INVOICE_PAYMENT = 'invoice_payment',
 }
 
 export enum PaymentMethodEnum {

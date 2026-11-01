@@ -70,3 +70,9 @@ export const contractService = new ContractService(
 );
 
 export const contractController = new ContractController(contractService);
+
+export const setInvoiceServiceForContract = (
+  service: import('../invoice/invoice.service.ts').InvoiceService
+): void => {
+  contractService.setInvoiceService(service);
+};
