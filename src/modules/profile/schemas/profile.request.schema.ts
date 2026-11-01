@@ -5,6 +5,15 @@ const MAX_AGE_YEARS = 120;
 
 export const updateProfileSchema = z.object({
   avatarUrl: z.string().url('avatarUrl must be a valid URL').optional(),
+  avatar: z.string().url('avatar must be a valid URL').optional(),
+  idCardFrontPhotoUrl: z
+    .string()
+    .url('idCardFrontPhotoUrl must be a valid URL')
+    .optional(),
+  idCardBackPhotoUrl: z
+    .string()
+    .url('idCardBackPhotoUrl must be a valid URL')
+    .optional(),
   dateOfBirth: z
     .string()
     .date('dateOfBirth must be a valid date (YYYY-MM-DD)')

@@ -50,7 +50,12 @@ export class ProfileService {
 
     const updateData: Record<string, unknown> = {};
 
-    if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+    const avatarUrl = data.avatarUrl || data.avatar;
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
+    if (data.idCardFrontPhotoUrl !== undefined)
+      updateData.idCardFrontPhotoUrl = data.idCardFrontPhotoUrl;
+    if (data.idCardBackPhotoUrl !== undefined)
+      updateData.idCardBackPhotoUrl = data.idCardBackPhotoUrl;
     if (data.dateOfBirth !== undefined)
       updateData.dateOfBirth = new Date(data.dateOfBirth);
     if (data.address !== undefined) updateData.address = data.address;
