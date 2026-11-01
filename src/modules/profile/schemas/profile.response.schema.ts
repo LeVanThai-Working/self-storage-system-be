@@ -4,7 +4,10 @@ import { GenderEnum } from '../../../common/enums/user.enum.ts';
 export const profileResponseSchema = z.object({
   id: z.string().optional(),
   userId: z.union([z.string(), z.unknown()]).transform((v) => String(v)),
-  avatarUrl: z.string().optional(),
+  avatarUrl: z.string().optional().nullable(),
+  idCardFrontPhotoUrl: z.string().optional().nullable(),
+  idCardBackPhotoUrl: z.string().optional().nullable(),
+  idCardLast4: z.string().optional().nullable(),
   dateOfBirth: z
     .union([z.date().transform((d) => d.toISOString()), z.string()])
     .optional(),

@@ -773,6 +773,15 @@
 					"dateOfBirth": {
 						"type": "string"
 					},
+					"idCardLast4": {
+						"type": "string"
+					},
+					"idCardBackPhotoUrl": {
+						"type": "string"
+					},
+					"idCardFrontPhotoUrl": {
+						"type": "string"
+					},
 					"avatarUrl": {
 						"type": "string"
 					},
@@ -826,6 +835,15 @@
 						"type": "string"
 					},
 					"dateOfBirth": {
+						"type": "string"
+					},
+					"idCardBackPhotoUrl": {
+						"type": "string"
+					},
+					"idCardFrontPhotoUrl": {
+						"type": "string"
+					},
+					"avatar": {
 						"type": "string"
 					},
 					"avatarUrl": {
@@ -18179,14 +18197,7 @@
 				"tags": [
 					"Profile"
 				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
+				"security": [],
 				"parameters": []
 			},
 			"patch": {
@@ -18227,14 +18238,7 @@
 				"tags": [
 					"Profile"
 				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
+				"security": [],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -18287,14 +18291,7 @@
 				"tags": [
 					"Profile"
 				],
-				"security": [
-					{
-						"bearerAuth": []
-					},
-					{
-						"cookieAuth": []
-					}
-				],
+				"security": [],
 				"parameters": [
 					{
 						"in": "path",
