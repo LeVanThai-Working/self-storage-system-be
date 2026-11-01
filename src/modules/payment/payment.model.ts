@@ -16,6 +16,7 @@ export interface IPayment extends SoftDeleteDocument {
   purpose: PaymentPurposeEnum;
   reservationId?: Types.ObjectId | null;
   contractId?: Types.ObjectId | null;
+  invoiceId?: Types.ObjectId | null;
   customerId: Types.ObjectId;
   facilityId: Types.ObjectId;
   amount: number;
@@ -83,6 +84,12 @@ const paymentSchema = new Schema<IPayment>(
     contractId: {
       type: Schema.Types.ObjectId,
       ref: 'Contract',
+      default: null,
+      index: true,
+    },
+    invoiceId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Invoice',
       default: null,
       index: true,
     },

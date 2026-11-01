@@ -1,4 +1,9 @@
-import type { ClientSession, FilterQuery, Model } from 'mongoose';
+import {
+  Types,
+  type ClientSession,
+  type FilterQuery,
+  type Model,
+} from 'mongoose';
 import type { SoftDeleteModel } from 'mongoose-delete';
 import type { IPayment, IPaymentTransaction } from './payment.model.ts';
 import { paginate, type PaginateResult } from '../../utils/pagination.util.ts';
@@ -128,6 +133,24 @@ export class PaymentRepository {
     if (purpose) {
       filter.purpose = purpose;
     }
+    const query = this.payment.findOne(filter);
+
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
+  async findActiveByInvoice(invoiceId: string, session?: ClientSession) {
+    const filter: FilterQuery<IPayment> = {
+      invoiceId: new Types.ObjectId(invoiceId),
+      status: PaymentStatusEnum.PENDING,
+      $or: [
+        { expiresAt: { $exists: false } },
+        { expiresAt: null },
+        { expiresAt: { $gt: new Date() } },
+      ],
+    };
     const query = this.payment.findOne(filter);
 
     if (session) {

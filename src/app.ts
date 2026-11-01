@@ -26,6 +26,10 @@ import {
   initInventoryRequestWorker,
   closeInventoryRequestWorker,
 } from './modules/customerInventory/inventoryRequest.worker.ts';
+import {
+  initBillingWorker,
+  closeBillingWorker,
+} from './modules/billing/billing.worker.ts';
 
 const app: Express = express();
 const httpServer = http.createServer(app);
@@ -61,6 +65,7 @@ const initServices = async () => {
     await connectRedis();
     await initReservationWorker();
     await initInventoryRequestWorker();
+    await initBillingWorker();
   } catch (error) {
     console.error('Fatal error initializing services:', error);
     if (process.env.NODE_ENV === 'production') {
@@ -152,6 +157,7 @@ const shutdown = async (signal: string) => {
   console.log(`\nReceived ${signal}. Gracefully shutting down...`);
   await closeReservationWorker();
   await closeInventoryRequestWorker();
+  await closeBillingWorker();
   process.exit(0);
 };
 

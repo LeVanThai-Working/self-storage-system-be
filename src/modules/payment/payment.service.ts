@@ -9,6 +9,9 @@ import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import type { UserRepository } from '../user/user.repository.ts';
 import type { IPayment, IPaymentTransaction } from './payment.model.ts';
 import type { RefundRequestService } from '../refundRequest/refundRequest.service.ts';
+import type { InvoiceRepository } from '../invoice/invoice.repository.ts';
+import type { InvoiceService } from '../invoice/invoice.service.ts';
+import { InvoiceStatusEnum } from '../../common/enums/billing.enum.ts';
 import { RefundReasonEnum } from '../../common/enums/refundRequest.enum.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
@@ -57,7 +60,9 @@ export class PaymentService {
     private readonly contractService: ContractService,
     private readonly auditLogService?: AuditLogService,
     private readonly userRepository?: UserRepository,
-    private readonly refundRequestService?: RefundRequestService
+    private readonly refundRequestService?: RefundRequestService,
+    private readonly invoiceRepository?: InvoiceRepository,
+    private readonly invoiceService?: InvoiceService
   ) {}
 
   private async assertFacilityAccess(
@@ -160,6 +165,9 @@ export class PaymentService {
       purpose: raw.purpose as PaymentPurposeEnum,
       reservationId: raw.reservationId ? String(raw.reservationId) : null,
       contractId: raw.contractId ? String(raw.contractId) : null,
+      invoiceId: raw.invoiceId
+        ? String((raw.invoiceId as { _id?: unknown })?._id || raw.invoiceId)
+        : null,
       customerId: customerIdStr,
       facilityId: facilityIdStr,
       amount: Number(raw.amount),
@@ -298,6 +306,7 @@ export class PaymentService {
     let expiresAt: Date | null;
     let reservationId: Types.ObjectId | null = null;
     let contractId: Types.ObjectId | null = null;
+    let invoiceId: Types.ObjectId | null = null;
 
     if (data.purpose === PaymentPurposeEnum.RESERVATION_DEPOSIT) {
       if (!data.reservationId) {
@@ -435,7 +444,7 @@ export class PaymentService {
       );
       amount = contract.depositAmount;
       expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours holding
-    } else {
+    } else if (data.purpose === PaymentPurposeEnum.RENT_FIRST_PERIOD) {
       // RENT_FIRST_PERIOD flow
       if (!data.contractId) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
@@ -505,6 +514,93 @@ export class PaymentService {
       );
       amount = contract.totalPeriodicPrice;
       expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours holding
+    } else if (data.purpose === PaymentPurposeEnum.INVOICE_PAYMENT) {
+      if (!data.invoiceId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+          'invoiceId is required for INVOICE_PAYMENT',
+        ]);
+      }
+
+      if (!this.invoiceRepository) {
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106, [
+          'InvoiceRepository not available',
+        ]);
+      }
+
+      const invoice = await this.invoiceRepository.findById(
+        data.invoiceId,
+        session
+      );
+      if (!invoice) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_800, ['Invoice']);
+      }
+
+      const isStaffOrAdmin = [
+        RoleEnum.SYSTEM_ADMIN,
+        RoleEnum.BUSINESS_OPS_MANAGER,
+        RoleEnum.FACILITY_MANAGER,
+        RoleEnum.FACILITY_STAFF,
+      ].includes(callerRole as RoleEnum);
+
+      const invoiceCustomerStr = String(
+        (invoice.customerId as { _id?: Types.ObjectId })?._id ||
+          invoice.customerId
+      );
+      const invoiceFacilityStr = String(
+        (invoice.facilityId as { _id?: Types.ObjectId })?._id ||
+          invoice.facilityId
+      );
+
+      if (!isStaffOrAdmin) {
+        if (invoiceCustomerStr !== customerId) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        }
+      } else {
+        await this.assertFacilityAccess(
+          customerId,
+          callerRole,
+          invoiceFacilityStr
+        );
+      }
+
+      if (invoice.status === InvoiceStatusEnum.PAID) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_802, ['Invoice']);
+      }
+
+      if (invoice.status === InvoiceStatusEnum.CANCELLED) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_803, ['Invoice']);
+      }
+
+      const existingPayment = await this.paymentRepository.findActiveByInvoice(
+        data.invoiceId,
+        session
+      );
+      if (existingPayment) {
+        const populated = await this.paymentRepository.findById(
+          String(existingPayment._id),
+          session
+        );
+        return validateResponse(
+          paymentResponseSchema,
+          this.formatPayment(populated || existingPayment)
+        );
+      }
+
+      invoiceId = new Types.ObjectId(data.invoiceId);
+      contractId = new Types.ObjectId(
+        String(
+          (invoice.contractId as { _id?: Types.ObjectId })?._id ||
+            invoice.contractId
+        )
+      );
+      targetCustomerId = new Types.ObjectId(invoiceCustomerStr);
+      targetFacilityId = new Types.ObjectId(invoiceFacilityStr);
+      amount = invoice.totalAmount;
+      expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours holding
+    } else {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+        `Unsupported payment purpose: ${String(data.purpose)}`,
+      ]);
     }
 
     // Generate unique payment code
@@ -527,6 +623,7 @@ export class PaymentService {
         purpose: data.purpose,
         reservationId,
         contractId,
+        invoiceId,
         customerId: targetCustomerId,
         facilityId: targetFacilityId,
         amount,
@@ -762,6 +859,24 @@ export class PaymentService {
           paidAmount: payment.amount,
           paidAt: now,
           referenceCode: data.referenceCode,
+        },
+        session
+      );
+    } else if (
+      payment.purpose === PaymentPurposeEnum.INVOICE_PAYMENT &&
+      payment.invoiceId &&
+      this.invoiceService
+    ) {
+      await this.invoiceService.markInvoicePaid(
+        String(payment.invoiceId),
+        {
+          paymentId: id,
+          paidAmount: payment.amount,
+          paidAt: now,
+          paymentMethod: data.method,
+          confirmedBy: new Types.ObjectId(staffId),
+          confirmedAt: now,
+          proofImageUrl: data.proofImageUrl || null,
         },
         session
       );
@@ -1181,6 +1296,21 @@ export class PaymentService {
           paidAmount: expectedAmount,
           paidAt: now,
           referenceCode: payload.referenceCode || payload.code || null,
+        },
+        session
+      );
+    } else if (
+      payment.purpose === PaymentPurposeEnum.INVOICE_PAYMENT &&
+      payment.invoiceId &&
+      this.invoiceService
+    ) {
+      await this.invoiceService.markInvoicePaid(
+        String(payment.invoiceId),
+        {
+          paymentId,
+          paidAmount: expectedAmount,
+          paidAt: now,
+          paymentMethod: PaymentMethodEnum.SEPAY_QR,
         },
         session
       );

@@ -111,7 +111,15 @@ import type {
 import type { ContractQueue } from './contract.queue.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 
+import type { InvoiceService } from '../invoice/invoice.service.ts';
+
 export class ContractService {
+  private invoiceService?: InvoiceService;
+
+  public setInvoiceService(service: InvoiceService): void {
+    this.invoiceService = service;
+  }
+
   constructor(
     private readonly contractRepository: ContractRepository,
     private readonly reservationRepository: ReservationRepository,
@@ -268,7 +276,17 @@ export class ContractService {
         (sum, a) => sum + a.totalPrice,
         0
       );
-      const totalPeriodicPrice = reservation.basePrice + amenitiesTotal;
+      let totalPeriodicPrice = reservation.basePrice + amenitiesTotal;
+      if (reservation.billingUnit === BillingUnitEnum.DAY) {
+        const durationDays = Math.max(1, reservation.rentalDuration || 1);
+        if (durationDays <= 14) {
+          totalPeriodicPrice =
+            reservation.basePrice * durationDays +
+            amenitiesTotal * durationDays;
+        } else {
+          totalPeriodicPrice = reservation.basePrice * 7 + amenitiesTotal * 7;
+        }
+      }
 
       const created = await this.contractRepository.create(
         {
@@ -484,7 +502,23 @@ export class ContractService {
         0
       );
       const rentalPrice = data.rentalPrice!;
-      const totalPeriodicPrice = rentalPrice + amenitiesTotal;
+      let totalPeriodicPrice = rentalPrice + amenitiesTotal;
+      if (data.billingUnit === BillingUnitEnum.DAY) {
+        const durationDays = Math.max(
+          1,
+          Math.round(
+            (new Date(data.endDate!).getTime() -
+              new Date(data.startDate!).getTime()) /
+              (24 * 60 * 60 * 1000)
+          )
+        );
+        if (durationDays <= 14) {
+          totalPeriodicPrice =
+            rentalPrice * durationDays + amenitiesTotal * durationDays;
+        } else {
+          totalPeriodicPrice = rentalPrice * 7 + amenitiesTotal * 7;
+        }
+      }
 
       const created = await this.contractRepository.create(
         {
@@ -2160,6 +2194,20 @@ export class ContractService {
       refundRequestId = refundDoc.id;
     }
 
+    // Generate check-out settlement invoice via InvoiceService (T3.2)
+    if (this.invoiceService) {
+      await this.invoiceService.generateCheckOutSettlementInvoice(
+        contract,
+        {
+          damageFee,
+          overdueFee,
+          actualCheckOutDate,
+          notes: data.inspectionNotes || undefined,
+        },
+        session
+      );
+    }
+
     const storageUnitId =
       contract.storageUnitId && typeof contract.storageUnitId === 'object'
         ? String((contract.storageUnitId as { _id: Types.ObjectId })._id)
@@ -2871,7 +2919,22 @@ export class ContractService {
     }
 
     const depositAmount = rentalPrice * (offering.depositMultiplier || 1);
-    const totalPeriodicPrice = rentalPrice;
+    let totalPeriodicPrice = rentalPrice;
+    if (data.billingUnit === BillingUnitEnum.DAY) {
+      const durationDays = Math.max(
+        1,
+        Math.round(
+          (new Date(data.endDate).getTime() -
+            new Date(data.startDate).getTime()) /
+            (24 * 60 * 60 * 1000)
+        )
+      );
+      if (durationDays <= 14) {
+        totalPeriodicPrice = rentalPrice * durationDays;
+      } else {
+        totalPeriodicPrice = rentalPrice * 7;
+      }
+    }
     const contractCode = await this.generateContractCode();
 
     const created = await this.contractRepository.create(
@@ -3390,6 +3453,19 @@ export class ContractService {
         updatePayload.status = ContractStatusEnum.ACTIVE;
         updatePayload.renewalCount = (contract.renewalCount || 0) + 1;
         updatePayload.renewals = [...(contract.renewals || []), renewalEntry];
+
+        if (this.invoiceService) {
+          const renewedContract = {
+            ...(contract.toObject ? contract.toObject() : contract),
+            _id: contract._id,
+            endDate: nextEndDate,
+            renewalCount: (contract.renewalCount || 0) + 1,
+          };
+          await this.invoiceService.handleContractRenewal(
+            renewedContract as unknown as IContract,
+            session
+          );
+        }
       } else if (addendumType === ContractAddendumTypeEnum.UNIT_CHANGE) {
         const oldUnitIdStr = rawTarget.previousStorageUnitId
           ? this.extractIdStr(rawTarget.previousStorageUnitId)
@@ -3421,6 +3497,21 @@ export class ContractService {
         );
 
         updatePayload.storageUnitId = new Types.ObjectId(newUnitIdStr);
+        if (rawTarget.totalPeriodicPrice > 0) {
+          updatePayload.rentalPrice = rawTarget.totalPeriodicPrice;
+          updatePayload.totalPeriodicPrice = rawTarget.totalPeriodicPrice;
+        }
+
+        if (this.invoiceService && rawTarget.totalPeriodicPrice > 0) {
+          await this.invoiceService.handleUnitChangeProRata(
+            contract,
+            {
+              addendumCode: rawTarget.addendumCode,
+              totalPeriodicPrice: rawTarget.totalPeriodicPrice,
+            },
+            session
+          );
+        }
       }
     }
 

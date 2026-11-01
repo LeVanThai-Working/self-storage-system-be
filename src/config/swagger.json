@@ -914,7 +914,12 @@
 					"cancel_support_ticket",
 					"revoke_authorization",
 					"digitize_contract",
-					"digitize_addendum"
+					"digitize_addendum",
+					"generate_invoice",
+					"pay_invoice",
+					"cancel_invoice",
+					"void_invoice",
+					"send_invoice"
 				],
 				"type": "string"
 			},
@@ -945,7 +950,8 @@
 					"support_ticket",
 					"legal_entity",
 					"signing_authorization",
-					"contract_template"
+					"contract_template",
+					"invoice"
 				],
 				"type": "string"
 			},
@@ -5805,7 +5811,8 @@
 				"enum": [
 					"reservation_deposit",
 					"contract_deposit",
-					"rent_first_period"
+					"rent_first_period",
+					"invoice_payment"
 				],
 				"type": "string"
 			},
@@ -5986,6 +5993,9 @@
 					"qrUrl": {
 						"type": "string"
 					},
+					"invoiceId": {
+						"type": "string"
+					},
 					"contractId": {
 						"type": "string"
 					},
@@ -6082,6 +6092,9 @@
 			},
 			"infer_typeofcreatePaymentSchema_": {
 				"properties": {
+					"invoiceId": {
+						"type": "string"
+					},
 					"contractId": {
 						"type": "string"
 					},
@@ -6497,6 +6510,7 @@
 					"reservation",
 					"contract",
 					"payment",
+					"invoice",
 					"incident",
 					"support_ticket",
 					"customer_inventory"
@@ -7163,6 +7177,854 @@
 			},
 			"UpdateLegalEntityRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateLegalEntitySchema_"
+			},
+			"InvoiceTypeEnum": {
+				"enum": [
+					"first_period",
+					"recurring",
+					"incidental",
+					"check_out_settlement"
+				],
+				"type": "string"
+			},
+			"InvoiceStatusEnum": {
+				"enum": [
+					"draft",
+					"issued",
+					"paid",
+					"overdue",
+					"cancelled",
+					"void"
+				],
+				"type": "string"
+			},
+			"InvoiceItemTypeEnum": {
+				"enum": [
+					"rent",
+					"amenity",
+					"damage_fee",
+					"overdue_fee",
+					"discount",
+					"other"
+				],
+				"type": "string"
+			},
+			"infer_typeofinvoiceResponseSchema_": {
+				"properties": {
+					"cancelReason": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"cancelledBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"code": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"proofImageUrl": {
+						"type": "string"
+					},
+					"confirmedAt": {
+						"type": "string"
+					},
+					"confirmedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"code": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"createdBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"code": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"issuedAt": {
+						"type": "string"
+					},
+					"notes": {
+						"type": "string"
+					},
+					"paymentMethod": {
+						"$ref": "#/components/schemas/PaymentMethodEnum"
+					},
+					"paymentId": {
+						"type": "string"
+					},
+					"paidAt": {
+						"type": "string"
+					},
+					"contract": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"code": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"customer": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"code": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"facility": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"code": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"paidAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"taxAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"discountAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"subtotal": {
+						"type": "number",
+						"format": "double"
+					},
+					"items": {
+						"items": {
+							"properties": {
+								"description": {
+									"type": "string"
+								},
+								"itemType": {
+									"$ref": "#/components/schemas/InvoiceItemTypeEnum"
+								},
+								"amount": {
+									"type": "number",
+									"format": "double"
+								},
+								"unitPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"name": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"itemType",
+								"amount",
+								"unitPrice",
+								"quantity",
+								"name"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"dueDate": {
+						"type": "string"
+					},
+					"periodEndDate": {
+						"type": "string"
+					},
+					"periodStartDate": {
+						"type": "string"
+					},
+					"billingPeriodIndex": {
+						"type": "number",
+						"format": "double"
+					},
+					"status": {
+						"$ref": "#/components/schemas/InvoiceStatusEnum"
+					},
+					"type": {
+						"$ref": "#/components/schemas/InvoiceTypeEnum"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"invoiceCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"paidAmount",
+					"totalAmount",
+					"taxAmount",
+					"discountAmount",
+					"subtotal",
+					"items",
+					"dueDate",
+					"periodEndDate",
+					"periodStartDate",
+					"billingPeriodIndex",
+					"status",
+					"type",
+					"facilityId",
+					"customerId",
+					"contractId",
+					"invoiceCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"InvoiceResponse": {
+				"$ref": "#/components/schemas/infer_typeofinvoiceResponseSchema_"
+			},
+			"PaginatedData_InvoiceResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/InvoiceResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_InvoiceResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_InvoiceResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofinvoiceQuerySchema_": {
+				"properties": {
+					"dueAfter": {
+						"type": "string"
+					},
+					"dueBefore": {
+						"type": "string"
+					},
+					"type": {
+						"$ref": "#/components/schemas/InvoiceTypeEnum"
+					},
+					"status": {
+						"$ref": "#/components/schemas/InvoiceStatusEnum"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"search": {
+						"type": "string"
+					},
+					"sortBy": {
+						"type": "string",
+						"enum": [
+							"status",
+							"createdAt",
+							"totalAmount",
+							"dueDate"
+						]
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"sortBy",
+					"sortOrder",
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"InvoiceQuery": {
+				"$ref": "#/components/schemas/infer_typeofinvoiceQuerySchema_"
+			},
+			"ApiResponse_InvoiceResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/InvoiceResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateManualInvoiceSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"taxAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"discountAmount": {
+						"type": "number",
+						"format": "double"
+					},
+					"items": {
+						"items": {
+							"properties": {
+								"amount": {
+									"type": "number",
+									"format": "double"
+								},
+								"description": {
+									"type": "string"
+								},
+								"itemType": {
+									"$ref": "#/components/schemas/InvoiceItemTypeEnum"
+								},
+								"unitPrice": {
+									"type": "number",
+									"format": "double"
+								},
+								"quantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"name": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"itemType",
+								"unitPrice",
+								"quantity",
+								"name"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"dueDate": {
+						"type": "string"
+					},
+					"periodEndDate": {
+						"type": "string"
+					},
+					"periodStartDate": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"taxAmount",
+					"discountAmount",
+					"items",
+					"dueDate",
+					"periodEndDate",
+					"periodStartDate",
+					"contractId"
+				],
+				"type": "object"
+			},
+			"CreateManualInvoiceRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateManualInvoiceSchema_"
+			},
+			"infer_typeofrecurringInvoiceScanResultSchema_": {
+				"properties": {
+					"failedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"skippedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"generatedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"scannedCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"failedCount",
+					"skippedCount",
+					"generatedCount",
+					"scannedCount"
+				],
+				"type": "object"
+			},
+			"RecurringInvoiceScanResult": {
+				"$ref": "#/components/schemas/infer_typeofrecurringInvoiceScanResultSchema_"
+			},
+			"ApiResponse_RecurringInvoiceScanResult_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RecurringInvoiceScanResult"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofoverdueInvoiceScanResultSchema_": {
+				"properties": {
+					"failedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"skippedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"contractsLockedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"markedOverdueCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"scannedCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"failedCount",
+					"skippedCount",
+					"contractsLockedCount",
+					"markedOverdueCount",
+					"scannedCount"
+				],
+				"type": "object"
+			},
+			"OverdueInvoiceScanResult": {
+				"$ref": "#/components/schemas/infer_typeofoverdueInvoiceScanResultSchema_"
+			},
+			"ApiResponse_OverdueInvoiceScanResult_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/OverdueInvoiceScanResult"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofremindInvoicesScanResultSchema_": {
+				"properties": {
+					"failedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"skippedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalRemindedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"remindedT0Count": {
+						"type": "number",
+						"format": "double"
+					},
+					"remindedT1Count": {
+						"type": "number",
+						"format": "double"
+					},
+					"remindedT3Count": {
+						"type": "number",
+						"format": "double"
+					},
+					"scannedCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"failedCount",
+					"skippedCount",
+					"totalRemindedCount",
+					"remindedT0Count",
+					"remindedT1Count",
+					"remindedT3Count",
+					"scannedCount"
+				],
+				"type": "object"
+			},
+			"RemindInvoicesScanResult": {
+				"$ref": "#/components/schemas/infer_typeofremindInvoicesScanResultSchema_"
+			},
+			"ApiResponse_RemindInvoicesScanResult_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RemindInvoicesScanResult"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofinvoicePdfResponseSchema_": {
+				"properties": {
+					"invoiceCode": {
+						"type": "string"
+					},
+					"html": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"invoiceCode",
+					"html"
+				],
+				"type": "object"
+			},
+			"InvoicePdfResponse": {
+				"$ref": "#/components/schemas/infer_typeofinvoicePdfResponseSchema_"
+			},
+			"ApiResponse_InvoicePdfResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/InvoicePdfResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofconfirmManualInvoicePaymentSchema_": {
+				"properties": {
+					"note": {
+						"type": "string"
+					},
+					"referenceCode": {
+						"type": "string"
+					},
+					"paymentMethod": {
+						"anyOf": [
+							{
+								"$ref": "#/components/schemas/PaymentMethodEnum.CASH"
+							},
+							{
+								"$ref": "#/components/schemas/PaymentMethodEnum.BANK_TRANSFER"
+							}
+						]
+					},
+					"proofImageUrl": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"paymentMethod",
+					"proofImageUrl"
+				],
+				"type": "object"
+			},
+			"ConfirmManualInvoicePaymentRequest": {
+				"$ref": "#/components/schemas/infer_typeofconfirmManualInvoicePaymentSchema_"
+			},
+			"infer_typeofcancelInvoiceSchema_": {
+				"properties": {
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"reason"
+				],
+				"type": "object"
+			},
+			"CancelInvoiceRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelInvoiceSchema_"
 			},
 			"IncidentSeverityEnum": {
 				"enum": [
@@ -23058,6 +23920,720 @@
 						}
 					}
 				]
+			}
+		},
+		"/invoices": {
+			"get": {
+				"operationId": "GetInvoices",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_InvoiceResponse__"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "View invoices list with pagination and role-based scoping filters.\n- CUSTOMER: only views own invoices.\n- FACILITY_STAFF/MANAGER: views invoices within assigned facility.\n- SYSTEM_ADMIN/BUSINESS_OPS_MANAGER: system-wide view.",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "dueAfter",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "dueBefore",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "type",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/InvoiceTypeEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/InvoiceStatusEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"status",
+								"createdAt",
+								"totalAmount",
+								"dueDate"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
+			}
+		},
+		"/invoices/manual": {
+			"post": {
+				"operationId": "CreateManualInvoice",
+				"responses": {
+					"201": {
+						"description": "Manual Invoice Created Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_InvoiceResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Contract Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a manual incidental invoice (e.g. damages, penalty fees, additional services).",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateManualInvoiceRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/invoices/process-recurring": {
+			"post": {
+				"operationId": "ProcessRecurringInvoices",
+				"responses": {
+					"200": {
+						"description": "Recurring Invoices Processed Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RecurringInvoiceScanResult_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Kích hoạt thủ công mẻ quét sinh hóa đơn định kỳ (T-7).\nDành cho quản trị viên vận hành hệ thống (BUSINESS_OPS_MANAGER, SYSTEM_ADMIN).",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/invoices/process-overdue": {
+			"post": {
+				"operationId": "ProcessOverdueInvoices",
+				"responses": {
+					"200": {
+						"description": "Overdue Invoices Processed Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_OverdueInvoiceScanResult_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Kích hoạt thủ công mẻ quét hóa đơn quá hạn sau thời gian ân hạn (3 ngày).\nDành cho quản trị viên vận hành hệ thống (BUSINESS_OPS_MANAGER, SYSTEM_ADMIN).",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/invoices/process-reminders": {
+			"post": {
+				"operationId": "ProcessPaymentReminders",
+				"responses": {
+					"200": {
+						"description": "Payment Reminders Processed Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RemindInvoicesScanResult_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Kích hoạt thủ công mẻ nhắc hạn thanh toán hóa đơn (T-3, T-1, T-0).\nDành cho quản trị viên vận hành hệ thống (BUSINESS_OPS_MANAGER, SYSTEM_ADMIN).",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/invoices/{id}": {
+			"get": {
+				"operationId": "GetInvoiceById",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_InvoiceResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Invoice Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "View invoice details by ID.",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/invoices/{id}/pdf": {
+			"get": {
+				"operationId": "GetInvoicePdf",
+				"responses": {
+					"200": {
+						"description": "Invoice PDF Exported Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_InvoicePdfResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Invoice Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Xuất hóa đơn định dạng ISO A4 chuẩn pháp lý (HTML printable kèm mã VietQR).",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/invoices/{id}/payments": {
+			"post": {
+				"operationId": "CreateInvoicePayment",
+				"responses": {
+					"201": {
+						"description": "Invoice Payment Created Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaymentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Invoice Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create or retrieve active SePay VietQR payment link for this invoice.",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/invoices/{id}/confirm-manual": {
+			"post": {
+				"operationId": "ConfirmManualPayment",
+				"responses": {
+					"200": {
+						"description": "Payment Confirmed Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_InvoiceResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Invoice Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Confirm manual payment at counter (CASH or BANK_TRANSFER).\nEnforces Maker-Checker and proof receipt requirement.",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ConfirmManualInvoicePaymentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/invoices/{id}/cancel": {
+			"post": {
+				"operationId": "CancelInvoice",
+				"responses": {
+					"200": {
+						"description": "Invoice Cancelled Successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_InvoiceResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Invoice Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Cancel an ISSUED or OVERDUE invoice.",
+				"tags": [
+					"Invoices"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelInvoiceRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/incidents": {

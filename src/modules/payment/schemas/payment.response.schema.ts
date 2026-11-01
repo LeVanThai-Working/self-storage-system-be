@@ -36,6 +36,7 @@ export const paymentResponseSchema = z.object({
   purpose: z.enum(PaymentPurposeEnum),
   reservationId: z.string().optional().nullable(),
   contractId: z.string().optional().nullable(),
+  invoiceId: z.string().optional().nullable(),
   customerId: z.string(),
   facilityId: z.string(),
   amount: z.number(),

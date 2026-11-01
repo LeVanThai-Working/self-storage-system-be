@@ -80,6 +80,11 @@ export enum AuditActionEnum {
   REVOKE_AUTHORIZATION = 'revoke_authorization',
   DIGITIZE_CONTRACT = 'digitize_contract',
   DIGITIZE_ADDENDUM = 'digitize_addendum',
+  GENERATE_INVOICE = 'generate_invoice',
+  PAY_INVOICE = 'pay_invoice',
+  CANCEL_INVOICE = 'cancel_invoice',
+  VOID_INVOICE = 'void_invoice',
+  SEND_INVOICE = 'send_invoice',
 }
 
 export enum AuditResourceEnum {
@@ -109,6 +114,7 @@ export enum AuditResourceEnum {
   LEGAL_ENTITY = 'legal_entity',
   SIGNING_AUTHORIZATION = 'signing_authorization',
   CONTRACT_TEMPLATE = 'contract_template',
+  INVOICE = 'invoice',
 }
 
 export enum AuditStatusEnum {

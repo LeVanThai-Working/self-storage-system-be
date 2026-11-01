@@ -55,6 +55,8 @@ import { LegalEntityController } from './modules/legalEntity/legalEntity.control
 import { legalEntityController } from './modules/legalEntity/legalEntity.container.ts';
 import { SigningAuthorizationController } from './modules/signingAuthorization/signingAuthorization.controller.ts';
 import { signingAuthorizationController } from './modules/signingAuthorization/signingAuthorization.container.ts';
+import { InvoiceController } from './modules/invoice/invoice.controller.ts';
+import { invoiceController } from './modules/invoice/invoice.container.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -138,6 +140,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === SigningAuthorizationController) {
       return signingAuthorizationController as unknown as T;
+    }
+    if (controller === InvoiceController) {
+      return invoiceController as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`
