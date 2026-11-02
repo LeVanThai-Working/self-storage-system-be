@@ -977,7 +977,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcreateSigningAuthorizationSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"documentUrl":{"dataType":"string","required":true},"validTo":{"dataType":"datetime","required":true},"validFrom":{"dataType":"datetime","required":true},"issuedDate":{"dataType":"datetime","required":true},"authorizationNumber":{"dataType":"string","required":true},"facilityIds":{"dataType":"array","array":{"dataType":"string"},"required":true},"authorizedUserId":{"dataType":"string","required":true},"legalEntityId":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"documentUrl":{"dataType":"string","required":true},"validTo":{"dataType":"string","required":true},"validFrom":{"dataType":"string","required":true},"issuedDate":{"dataType":"string","required":true},"authorizationNumber":{"dataType":"string","required":true},"facilityIds":{"dataType":"array","array":{"dataType":"string"},"required":true},"authorizedUserId":{"dataType":"string","required":true},"legalEntityId":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateSigningAuthorizationRequest": {
@@ -1018,7 +1018,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofupdateSigningAuthorizationSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"documentUrl":{"dataType":"string"},"validTo":{"dataType":"datetime"}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"documentUrl":{"dataType":"string"},"validTo":{"dataType":"string"}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "UpdateSigningAuthorizationRequest": {

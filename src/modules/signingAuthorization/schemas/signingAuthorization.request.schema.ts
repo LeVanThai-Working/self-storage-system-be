@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { paginationQuerySchema } from '../../../common/schemas/pagination.schema.ts';
 
+export const dateStringSchema = z
+  .string()
+  .refine((val) => !isNaN(Date.parse(val)), {
+    message: 'Invalid date format (must be ISO-8601)',
+  });
+
 export const createSigningAuthorizationSchema = z
   .object({
     legalEntityId: z
@@ -15,21 +21,35 @@ export const createSigningAuthorizationSchema = z
       )
       .min(1, 'At least one facility must be authorized'),
     authorizationNumber: z.string().min(3).max(100),
-    issuedDate: z.coerce.date(),
-    validFrom: z.coerce.date(),
-    validTo: z.coerce.date(),
+    issuedDate: dateStringSchema,
+    validFrom: dateStringSchema,
+    validTo: dateStringSchema,
     documentUrl: z.string().url(),
-    notes: z.string().max(500).optional().nullable(),
+    notes: z
+      .string()
+      .max(500)
+      .optional()
+      .nullable()
+      .transform((val) => val ?? undefined),
   })
-  .refine((data) => data.validTo >= data.validFrom, {
-    message: 'validTo must be greater than or equal to validFrom',
-    path: ['validTo'],
-  });
+  .refine(
+    (data) =>
+      new Date(data.validTo).getTime() >= new Date(data.validFrom).getTime(),
+    {
+      message: 'validTo must be greater than or equal to validFrom',
+      path: ['validTo'],
+    }
+  );
 
 export const updateSigningAuthorizationSchema = z.object({
-  validTo: z.coerce.date().optional(),
+  validTo: dateStringSchema.optional(),
   documentUrl: z.string().url().optional(),
-  notes: z.string().max(500).optional().nullable(),
+  notes: z
+    .string()
+    .max(500)
+    .optional()
+    .nullable()
+    .transform((val) => val ?? undefined),
 });
 
 export const signingAuthorizationQuerySchema = paginationQuerySchema.extend({

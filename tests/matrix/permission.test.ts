@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+﻿import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import express, { type Express } from 'express';
 import request from 'supertest';
 import mongoose from 'mongoose';
@@ -81,8 +81,8 @@ describe('Shared Permission Matrix Suite (T0.5)', () => {
       facilityId: new mongoose.Types.ObjectId(TEST_FACILITY_A_ID),
       facilityUnitTypeOfferingId: new mongoose.Types.ObjectId(offeringId),
       storageUnitId: new mongoose.Types.ObjectId(unitId),
-      startDate: new Date(),
-      checkInDate: new Date(),
+      startDate: new Date(Date.now() + 86400000),
+      checkInDate: new Date(Date.now() + 86400000),
       checkInTimeSlot: '09:00 - 11:00',
       rentalDuration: 1,
       billingUnit: BillingUnitEnum.MONTH,

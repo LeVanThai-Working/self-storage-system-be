@@ -404,6 +404,68 @@ describe('billing/T1.1: Invoice Generation Service Implementation', () => {
       );
       expect(cycle3).toBeNull();
     });
+
+    it('should include one-time amenities in first period invoice, but exclude them from recurring cycle invoices', async () => {
+      const { customer, facility1 } = await createTestFixtures();
+
+      const contractWithOneTimeAmenity = await Contract.create({
+        contractCode: 'HD-2026-ONE-TIME',
+        source: ContractSourceEnum.WALK_IN,
+        customerId: customer._id,
+        facilityId: facility1._id,
+        storageUnitId: new Types.ObjectId(),
+        facilityUnitTypeOfferingId: new Types.ObjectId(),
+        rentalPrice: 2000000,
+        depositAmount: 2000000,
+        depositStatus: ContractDepositStatusEnum.HELD,
+        billingUnit: BillingUnitEnum.MONTH,
+        rentalDuration: 6,
+        startDate: new Date('2026-11-01T00:00:00.000Z'),
+        endDate: new Date('2027-05-01T00:00:00.000Z'),
+        totalPeriodicPrice: 2200000,
+        amenities: [
+          {
+            facilityAmenityOfferingId: new Types.ObjectId(),
+            amenityId: new Types.ObjectId(),
+            name: 'Ổ cắm điện 220V',
+            quantity: 1,
+            pricePerUnit: 150000,
+            billingUnit: BillingUnitEnum.MONTH,
+            totalPrice: 150000,
+          },
+          {
+            facilityAmenityOfferingId: new Types.ObjectId(),
+            amenityId: new Types.ObjectId(),
+            name: 'Thùng carton size L',
+            quantity: 2,
+            pricePerUnit: 25000,
+            billingUnit: BillingUnitEnum.ONE_TIME,
+            totalPrice: 50000,
+          },
+        ],
+        status: ContractStatusEnum.ACTIVE,
+      });
+
+      // 1. First period invoice must include both recurring and one-time amenities
+      const p1 = await service.generateFirstPeriodInvoice(
+        contractWithOneTimeAmenity
+      );
+      expect(p1.items.length).toBe(3);
+      expect(p1.totalAmount).toBe(2200000); // 2,000,000 rent + 150,000 month + 50,000 one_time
+
+      // 2. Cycle 2 recurring invoice must exclude one-time amenities
+      const p2 = await service.generateRecurringInvoice(
+        contractWithOneTimeAmenity,
+        2
+      );
+      expect(p2).not.toBeNull();
+      expect(p2?.items.length).toBe(2); // Only rent + monthly amenity
+      const oneTimeItem = p2?.items.find((i) =>
+        i.name.includes('Thùng carton')
+      );
+      expect(oneTimeItem).toBeUndefined();
+      expect(p2?.totalAmount).toBe(2150000); // Only 2,000,000 rent + 150,000 month
+    });
   });
 
   describe('3. createManualInvoice', () => {

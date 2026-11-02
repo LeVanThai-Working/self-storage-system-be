@@ -53,7 +53,6 @@ import { RoleEnum } from '../src/common/enums/user.enum.ts';
 import { MESSAGE_CODE } from '../src/common/consts/messageCode.const.ts';
 import { decryptText } from '../src/utils/encryption.util.ts';
 import { contractConfig } from '../src/config/contract.config.ts';
-import { startOfDayVN } from '../src/utils/date.util.ts';
 
 describe('Phase 4: Legal Framework, Customer KYC, Digitized Paper Signing, PDF Preview & Walk-in', () => {
   let contractRepo: ContractRepository;
@@ -414,10 +413,8 @@ describe('Phase 4: Legal Framework, Customer KYC, Digitized Paper Signing, PDF P
         storageUnitId,
         facilityUnitTypeOfferingId: offeringId,
         assignedStaffId: staffId,
-        startDate: startOfDayVN(now),
-        endDate: new Date(
-          startOfDayVN(now).getTime() + 30 * 24 * 60 * 60 * 1000
-        ),
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         billingUnit: BillingUnitEnum.MONTH,
         rentalPrice: 1500000,
         depositAmount: 1500000,
@@ -511,7 +508,6 @@ describe('Phase 4: Legal Framework, Customer KYC, Digitized Paper Signing, PDF P
 
   describe('T4.4: Contract Draft PDF / Printable A4 Preview', () => {
     it('generates HTML and Buffer preview of draft contract with legal and customer data', async () => {
-      const now = new Date();
       const contract = await Contract.create({
         contractCode: 'CTR-PREVIEW-01',
         source: ContractSourceEnum.WALK_IN,
@@ -519,10 +515,8 @@ describe('Phase 4: Legal Framework, Customer KYC, Digitized Paper Signing, PDF P
         facilityId,
         storageUnitId,
         facilityUnitTypeOfferingId: offeringId,
-        startDate: startOfDayVN(now),
-        endDate: new Date(
-          startOfDayVN(now).getTime() + 30 * 24 * 60 * 60 * 1000
-        ),
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         billingUnit: BillingUnitEnum.MONTH,
         rentalPrice: 1500000,
         depositAmount: 1500000,
@@ -573,10 +567,8 @@ describe('Phase 4: Legal Framework, Customer KYC, Digitized Paper Signing, PDF P
         facilityId,
         storageUnitId,
         facilityUnitTypeOfferingId: offeringId,
-        startDate: startOfDayVN(now),
-        endDate: new Date(
-          startOfDayVN(now).getTime() + 30 * 24 * 60 * 60 * 1000
-        ),
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         billingUnit: BillingUnitEnum.MONTH,
         rentalPrice: 1500000,
         depositAmount: 1500000,
