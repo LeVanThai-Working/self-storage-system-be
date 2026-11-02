@@ -28,6 +28,16 @@ const unitTypeSnapshotSchema = z.object({
   }),
 });
 
+export const rackCapacitySchema = z
+  .object({
+    total: z.number(),
+    available: z.number(),
+    occupied: z.number(),
+    availablePercentage: z.number(),
+  })
+  .optional()
+  .nullable();
+
 export const storageUnitResponseSchema = z.object({
   id: z.string(),
   facilityId: z.string(),
@@ -40,6 +50,7 @@ export const storageUnitResponseSchema = z.object({
   notes: z.string().optional().nullable(),
   facility: facilitySnapshotSchema.optional().nullable(),
   unitType: unitTypeSnapshotSchema.optional().nullable(),
+  rackCapacity: rackCapacitySchema,
   createdAt: z.union([
     z.date().transform((d) => d.toISOString()),
     z.iso.datetime(),
@@ -56,3 +67,4 @@ export type StorageUnitResponse = z.infer<typeof storageUnitResponseSchema>;
 export type StorageUnitListResponse = z.infer<
   typeof storageUnitListResponseSchema
 >;
+export type RackCapacityResponse = z.infer<typeof rackCapacitySchema>;

@@ -39,6 +39,7 @@ import {
 } from './schemas/storageRack.response.schema.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
+import { UnitTypeCategoryEnum } from '../../common/enums/unitType.enum.ts';
 import {
   UnitType,
   type IDefaultRackConfig,
@@ -84,6 +85,31 @@ export class StorageRackService {
     return undefined;
   }
 
+  private async assertFacilityAccess(
+    caller: CallerContext,
+    facilityId: string
+  ): Promise<void> {
+    if (
+      caller.role === RoleEnum.SYSTEM_ADMIN ||
+      caller.role === RoleEnum.BUSINESS_OPS_MANAGER
+    ) {
+      return;
+    }
+
+    if (
+      caller.role !== RoleEnum.FACILITY_MANAGER &&
+      caller.role !== RoleEnum.FACILITY_STAFF
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const assignedFacilityId =
+      await this.resolveCallerAssignedFacilityId(caller);
+    if (!assignedFacilityId || assignedFacilityId !== facilityId) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, ['Facility']);
+    }
+  }
+
   private calculateVolume(dimensions?: IDimensions): number | undefined {
     if (!dimensions) return undefined;
     return (
@@ -91,6 +117,42 @@ export class StorageRackService {
         dimensions.length * dimensions.width * dimensions.height * 1000
       ) / 1000
     );
+  }
+
+  private async getUnitCategory(
+    storageUnit: unknown
+  ): Promise<UnitTypeCategoryEnum | null> {
+    if (!storageUnit) return null;
+    const doc = storageUnit as { unitTypeId?: unknown; type?: unknown };
+
+    if (doc.type && typeof doc.type === 'string') {
+      if (doc.type.toLowerCase() === 'warehouse_rack') {
+        return UnitTypeCategoryEnum.WAREHOUSE_RACK;
+      }
+    }
+
+    if (!doc.unitTypeId) return null;
+
+    if (
+      typeof doc.unitTypeId === 'object' &&
+      doc.unitTypeId !== null &&
+      'category' in (doc.unitTypeId as object)
+    ) {
+      return (
+        (doc.unitTypeId as { category?: UnitTypeCategoryEnum }).category ?? null
+      );
+    }
+
+    const rawId =
+      typeof doc.unitTypeId === 'object' &&
+      doc.unitTypeId !== null &&
+      '_id' in (doc.unitTypeId as object)
+        ? (doc.unitTypeId as { _id: unknown })._id
+        : doc.unitTypeId;
+
+    if (!rawId) return null;
+    const ut = await UnitType.findById(rawId).select('category');
+    return ut?.category ?? null;
   }
 
   private formatRackTier(tier: unknown): Record<string, unknown> {
@@ -222,6 +284,28 @@ export class StorageRackService {
       enforcedQuery.facilityId = staffFacilityId;
     }
 
+    if (enforcedQuery.storageUnitId) {
+      const unit = await this.storageUnitRepository.findById(
+        enforcedQuery.storageUnitId
+      );
+      if (unit) {
+        const category = await this.getUnitCategory(unit);
+        if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+          return {
+            items: [],
+            pagination: {
+              totalItems: 0,
+              page: enforcedQuery.page || 1,
+              limit: enforcedQuery.limit || 10,
+              totalPages: 0,
+              hasNextPage: false,
+              hasPrevPage: false,
+            },
+          };
+        }
+      }
+    }
+
     const result = await this.storageRackRepository.findAll(enforcedQuery);
     const formatted = result.items.map((item) => this.formatStorageRack(item));
     const validated = validateResponse(
@@ -251,6 +335,22 @@ export class StorageRackService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
     }
 
+    if (rack.storageUnitId) {
+      const rawUnitId =
+        typeof rack.storageUnitId === 'object' &&
+        rack.storageUnitId !== null &&
+        '_id' in (rack.storageUnitId as object)
+          ? String((rack.storageUnitId as { _id: unknown })._id)
+          : String(rack.storageUnitId);
+      const unit = await this.storageUnitRepository.findById(rawUnitId);
+      if (unit) {
+        const category = await this.getUnitCategory(unit);
+        if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+          throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_604);
+        }
+      }
+    }
+
     if (
       caller.role === RoleEnum.FACILITY_STAFF ||
       caller.role === RoleEnum.FACILITY_MANAGER
@@ -278,6 +378,11 @@ export class StorageRackService {
     const unit = await this.storageUnitRepository.findById(storageUnitId);
     if (!unit) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+
+    const category = await this.getUnitCategory(unit);
+    if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+      return [];
     }
 
     const unitFacilityId = String(unit.facilityId?._id || unit.facilityId);
@@ -331,11 +436,29 @@ export class StorageRackService {
 
   @Transactional()
   async createStorageRack(
-    data: CreateStorageRackRequest
+    data: CreateStorageRackRequest,
+    caller?: CallerContext
   ): Promise<StorageRackResponse> {
     const unit = await this.storageUnitRepository.findById(data.storageUnitId);
     if (!unit) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+
+    if (caller?.role) {
+      if (
+        caller.role !== RoleEnum.FACILITY_MANAGER &&
+        caller.role !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        caller.role !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      const unitFacilityId = String(unit.facilityId?._id || unit.facilityId);
+      await this.assertFacilityAccess(caller, unitFacilityId);
+    }
+
+    const category = await this.getUnitCategory(unit);
+    if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_604);
     }
 
     const normalizedRackCode = data.rackCode.toUpperCase().trim();
@@ -517,11 +640,29 @@ export class StorageRackService {
   }
 
   async provisionRacksForUnitEndpoint(
-    storageUnitId: string
+    storageUnitId: string,
+    caller?: CallerContext
   ): Promise<StorageRackResponse[]> {
     const unit = await this.storageUnitRepository.findById(storageUnitId);
     if (!unit) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+
+    if (caller?.role) {
+      if (
+        caller.role !== RoleEnum.FACILITY_MANAGER &&
+        caller.role !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        caller.role !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      const unitFacilityId = String(unit.facilityId?._id || unit.facilityId);
+      await this.assertFacilityAccess(caller, unitFacilityId);
+    }
+
+    const category = await this.getUnitCategory(unit);
+    if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_604);
     }
 
     let config = (
@@ -560,11 +701,19 @@ export class StorageRackService {
   @Transactional()
   async updateStorageRack(
     id: string,
-    data: UpdateStorageRackRequest
+    data: UpdateStorageRackRequest,
+    caller?: CallerContext
   ): Promise<StorageRackResponse> {
     const oldRack = await this.storageRackRepository.findById(id);
     if (!oldRack) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
+    }
+
+    if (caller?.role) {
+      const rackFacilityId = String(
+        oldRack.facilityId?._id || oldRack.facilityId
+      );
+      await this.assertFacilityAccess(caller, rackFacilityId);
     }
 
     const updated = await this.storageRackRepository.update(id, data);
@@ -587,11 +736,19 @@ export class StorageRackService {
   @Transactional()
   async updateRackTier(
     id: string,
-    data: UpdateRackTierRequest
+    data: UpdateRackTierRequest,
+    caller?: CallerContext
   ): Promise<RackTierResponse> {
     const oldTier = await this.rackTierRepository.findById(id);
     if (!oldTier) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_601);
+    }
+
+    if (caller?.role) {
+      const tierFacilityId = String(
+        oldTier.facilityId?._id || oldTier.facilityId
+      );
+      await this.assertFacilityAccess(caller, tierFacilityId);
     }
 
     const updatePayload: Partial<IRackTier> = {
@@ -619,10 +776,30 @@ export class StorageRackService {
   }
 
   @Transactional()
-  async deleteStorageRack(id: string): Promise<void> {
+  async deleteStorageRack(id: string, caller?: CallerContext): Promise<void> {
     const rack = await this.storageRackRepository.findById(id);
     if (!rack) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
+    }
+
+    if (caller?.role) {
+      if (
+        caller.role !== RoleEnum.FACILITY_MANAGER &&
+        caller.role !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        caller.role !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      const rackFacilityId = String(rack.facilityId?._id || rack.facilityId);
+      await this.assertFacilityAccess(caller, rackFacilityId);
+    }
+
+    if (
+      rack.status === RackStatusEnum.RENTED ||
+      rack.status === RackStatusEnum.RESERVED ||
+      rack.currentContractId
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_606);
     }
 
     await this.storageRackRepository.softDelete(id);
@@ -637,10 +814,25 @@ export class StorageRackService {
   }
 
   @Transactional()
-  async restoreStorageRack(id: string): Promise<StorageRackResponse> {
+  async restoreStorageRack(
+    id: string,
+    caller?: CallerContext
+  ): Promise<StorageRackResponse> {
     const rack = await this.storageRackRepository.findByIdIncludeDeleted(id);
     if (!rack) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
+    }
+
+    if (caller?.role) {
+      if (
+        caller.role !== RoleEnum.FACILITY_MANAGER &&
+        caller.role !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        caller.role !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      const rackFacilityId = String(rack.facilityId?._id || rack.facilityId);
+      await this.assertFacilityAccess(caller, rackFacilityId);
     }
 
     await this.storageRackRepository.restore(id);

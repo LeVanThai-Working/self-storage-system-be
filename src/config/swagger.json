@@ -2394,6 +2394,33 @@
 					"createdAt": {
 						"type": "string"
 					},
+					"rackCapacity": {
+						"properties": {
+							"availablePercentage": {
+								"type": "number",
+								"format": "double"
+							},
+							"occupied": {
+								"type": "number",
+								"format": "double"
+							},
+							"available": {
+								"type": "number",
+								"format": "double"
+							},
+							"total": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"availablePercentage",
+							"occupied",
+							"available",
+							"total"
+						],
+						"type": "object"
+					},
 					"unitType": {
 						"properties": {
 							"category": {
@@ -5022,8 +5049,8 @@
 					"oldUnitStatus": {
 						"type": "string",
 						"enum": [
-							"under_maintenance",
-							"available"
+							"available",
+							"under_maintenance"
 						]
 					},
 					"customerAgreed": {

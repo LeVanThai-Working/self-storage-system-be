@@ -2013,6 +2013,13 @@ export class ReservationService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_300);
     }
 
+    const facilityIdStr = String(
+      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
+        reservation.facilityId
+    );
+
+    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+
     if (reservation.status !== ReservationStatusEnum.PAYMENT_SUCCESSFUL) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_301);
     }
@@ -2021,13 +2028,6 @@ export class ReservationService {
     if (new Date(reservation.checkInDate) < todayVN) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_319);
     }
-
-    const facilityIdStr = String(
-      (reservation.facilityId as { _id?: Types.ObjectId })._id ||
-        reservation.facilityId
-    );
-
-    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
 
     const staff = await this.validateCheckInStaff(
       data.assignedStaffId,

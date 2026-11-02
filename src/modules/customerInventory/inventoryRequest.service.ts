@@ -13,6 +13,8 @@ import {
   InventoryItemStatusEnum,
 } from '../../common/enums/customerInventory.enum.ts';
 import { RackTierStatusEnum } from '../../common/enums/storageRack.enum.ts';
+import { UnitTypeCategoryEnum } from '../../common/enums/unitType.enum.ts';
+import { UnitType } from '../unitType/unitType.model.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -114,6 +116,42 @@ export class InventoryRequestService {
     return crypto.createHmac('sha256', secret).update(otp.trim()).digest('hex');
   }
 
+  private async getUnitCategory(
+    storageUnit: unknown
+  ): Promise<UnitTypeCategoryEnum | null> {
+    if (!storageUnit) return null;
+    const doc = storageUnit as { unitTypeId?: unknown; type?: unknown };
+
+    if (doc.type && typeof doc.type === 'string') {
+      if (doc.type.toLowerCase() === 'warehouse_rack') {
+        return UnitTypeCategoryEnum.WAREHOUSE_RACK;
+      }
+    }
+
+    if (!doc.unitTypeId) return null;
+
+    if (
+      typeof doc.unitTypeId === 'object' &&
+      doc.unitTypeId !== null &&
+      'category' in (doc.unitTypeId as object)
+    ) {
+      return (
+        (doc.unitTypeId as { category?: UnitTypeCategoryEnum }).category ?? null
+      );
+    }
+
+    const rawId =
+      typeof doc.unitTypeId === 'object' &&
+      doc.unitTypeId !== null &&
+      '_id' in (doc.unitTypeId as object)
+        ? (doc.unitTypeId as { _id: unknown })._id
+        : doc.unitTypeId;
+
+    if (!rawId) return null;
+    const ut = await UnitType.findById(rawId).select('category');
+    return ut?.category ?? null;
+  }
+
   /**
    * 1. Customer creates an Outbound (Stock Out) Request
    */
@@ -139,6 +177,18 @@ export class InventoryRequestService {
 
     const facilityId = contract.facilityId?._id || contract.facilityId;
     const storageUnitId = contract.storageUnitId?._id || contract.storageUnitId;
+
+    const unit = await this.storageUnitRepository.findById(
+      String(storageUnitId),
+      session
+    );
+    if (!unit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+    const category = await this.getUnitCategory(unit);
+    if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_650);
+    }
 
     // Validate inventory availability and reserve atomically for each requested item
     for (const item of data.items) {
@@ -833,6 +883,17 @@ export class InventoryRequestService {
     const facilityId = contract.facilityId?._id || contract.facilityId;
     const storageUnitId = contract.storageUnitId?._id || contract.storageUnitId;
 
+    const unit = await this.storageUnitRepository.findById(
+      String(storageUnitId)
+    );
+    if (!unit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+    const category = await this.getUnitCategory(unit);
+    if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_650);
+    }
+
     // Generate Request Code
     const countToday = await this.inventoryRequestRepository.countRequestsToday(
       InventoryRequestTypeEnum.INBOUND
@@ -941,6 +1002,18 @@ export class InventoryRequestService {
 
     if (contract.status !== ContractStatusEnum.ACTIVE) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_622);
+    }
+
+    const storageUnitId = contract.storageUnitId?._id || contract.storageUnitId;
+    const unit = await this.storageUnitRepository.findById(
+      String(storageUnitId)
+    );
+    if (!unit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+    const category = await this.getUnitCategory(unit);
+    if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_650);
     }
 
     // Require 3 evidence images for staff assisted inbound

@@ -11,10 +11,12 @@ import {
   TEST_FACILITY_A_ID,
 } from './helpers/auth.helper.ts';
 import { Facility } from '../src/modules/facility/facility.model.ts';
+import { UnitType } from '../src/modules/unitType/unitType.model.ts';
 import { Contract } from '../src/modules/contract/contract.model.ts';
 import { StorageUnit } from '../src/modules/storageUnit/storageUnit.model.ts';
 import { StorageRack } from '../src/modules/storageRack/storageRack.model.ts';
 import { RackTier } from '../src/modules/storageRack/rackTier.model.ts';
+import { UnitTypeCategoryEnum } from '../src/common/enums/unitType.enum.ts';
 import type { IFacility } from '../src/modules/facility/facility.model.ts';
 import type { IContract } from '../src/modules/contract/contract.model.ts';
 import type { IStorageUnit } from '../src/modules/storageUnit/storageUnit.model.ts';
@@ -86,13 +88,20 @@ describe('G11: Inventory Request Expiry, Outbound Reserve & Auto Expiration', ()
       pricingTiers: [],
     });
 
+    const whUnitType = await UnitType.create({
+      name: `WH Unit Type ${Date.now()}`,
+      dimensions: { length: 10, width: 10, height: 5 },
+      area: 100,
+      volume: 500,
+      category: UnitTypeCategoryEnum.WAREHOUSE_RACK,
+    });
+
     unit = await StorageUnit.create({
       facilityId: facilityA._id,
-      unitTypeId: new Types.ObjectId(),
+      unitTypeId: whUnitType._id,
       unitNumber: 'U-101',
       floor: 1,
       zone: 'A',
-      type: 'WAREHOUSE_RACK',
       status: StorageUnitStatusEnum.OCCUPIED,
       isActive: true,
     });
