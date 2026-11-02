@@ -691,7 +691,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofstorageUnitResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"unitType":{"dataType":"nestedObjectLiteral","nestedProperties":{"category":{"ref":"UnitTypeCategoryEnum"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}},"required":true},"status":{"ref":"UnitTypeStatusEnum","required":true},"volume":{"dataType":"double","required":true},"area":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"FacilityStatusEnum","required":true},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"zone":{"dataType":"string"},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"status":{"ref":"StorageUnitStatusEnum","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"unitTypeId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"rackCapacity":{"dataType":"nestedObjectLiteral","nestedProperties":{"availablePercentage":{"dataType":"double","required":true},"occupied":{"dataType":"double","required":true},"available":{"dataType":"double","required":true},"total":{"dataType":"double","required":true}}},"unitType":{"dataType":"nestedObjectLiteral","nestedProperties":{"category":{"ref":"UnitTypeCategoryEnum"},"dimensions":{"dataType":"nestedObjectLiteral","nestedProperties":{"height":{"dataType":"double","required":true},"width":{"dataType":"double","required":true},"length":{"dataType":"double","required":true}},"required":true},"status":{"ref":"UnitTypeStatusEnum","required":true},"volume":{"dataType":"double","required":true},"area":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"ref":"FacilityStatusEnum","required":true},"address":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"zone":{"dataType":"string"},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"status":{"ref":"StorageUnitStatusEnum","required":true},"floor":{"dataType":"double","required":true},"unitNumber":{"dataType":"string","required":true},"unitTypeId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "StorageUnitResponse": {
@@ -1135,7 +1135,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofreassignStorageUnitSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"oldUnitStatus":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["under_maintenance"]},{"dataType":"enum","enums":["available"]}]},"customerAgreed":{"dataType":"boolean","required":true},"reason":{"dataType":"string","required":true},"newStorageUnitId":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"oldUnitStatus":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["available"]},{"dataType":"enum","enums":["under_maintenance"]}]},"customerAgreed":{"dataType":"boolean","required":true},"reason":{"dataType":"string","required":true},"newStorageUnitId":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ReassignStorageUnitRequest": {
@@ -5297,6 +5297,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsStorageRackController_createStorageRack: Record<string, TsoaRoute.ParameterSchema> = {
                 data: {"in":"body","name":"data","required":true,"ref":"CreateStorageRackRequest"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.post('/storage-racks',
             ...(fetchMiddlewares<RequestHandler>(StorageRackController)),
@@ -5332,6 +5333,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsStorageRackController_provisionRacks: Record<string, TsoaRoute.ParameterSchema> = {
                 unitId: {"in":"path","name":"unitId","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.post('/storage-racks/unit/:unitId/provision',
             ...(fetchMiddlewares<RequestHandler>(StorageRackController)),
@@ -5368,6 +5370,7 @@ export function RegisterRoutes(app: Router) {
         const argsStorageRackController_updateStorageRack: Record<string, TsoaRoute.ParameterSchema> = {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
                 data: {"in":"body","name":"data","required":true,"ref":"UpdateStorageRackRequest"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.patch('/storage-racks/:id',
             ...(fetchMiddlewares<RequestHandler>(StorageRackController)),
@@ -5404,6 +5407,7 @@ export function RegisterRoutes(app: Router) {
         const argsStorageRackController_updateRackTier: Record<string, TsoaRoute.ParameterSchema> = {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
                 data: {"in":"body","name":"data","required":true,"ref":"UpdateRackTierRequest"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.patch('/storage-racks/tiers/:id',
             ...(fetchMiddlewares<RequestHandler>(StorageRackController)),
@@ -5439,6 +5443,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsStorageRackController_deleteStorageRack: Record<string, TsoaRoute.ParameterSchema> = {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.delete('/storage-racks/:id',
             ...(fetchMiddlewares<RequestHandler>(StorageRackController)),
@@ -5474,6 +5479,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsStorageRackController_restoreStorageRack: Record<string, TsoaRoute.ParameterSchema> = {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.post('/storage-racks/:id/restore',
             ...(fetchMiddlewares<RequestHandler>(StorageRackController)),

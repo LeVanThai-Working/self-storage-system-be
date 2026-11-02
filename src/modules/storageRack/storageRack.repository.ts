@@ -346,4 +346,102 @@ export class StorageRackRepository {
       { session }
     );
   }
+
+  async getRackCapacityByStorageUnitIds(storageUnitIds: string[]): Promise<
+    Record<
+      string,
+      {
+        total: number;
+        available: number;
+        occupied: number;
+        availablePercentage: number;
+      }
+    >
+  > {
+    const validObjectIds = storageUnitIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+
+    const result: Record<
+      string,
+      {
+        total: number;
+        available: number;
+        occupied: number;
+        availablePercentage: number;
+      }
+    > = {};
+
+    for (const id of storageUnitIds) {
+      result[id] = {
+        total: 0,
+        available: 0,
+        occupied: 0,
+        availablePercentage: 0,
+      };
+    }
+
+    if (validObjectIds.length === 0) {
+      return result;
+    }
+
+    const stats = await this.storageRack.aggregate<{
+      _id: Types.ObjectId;
+      total: number;
+      available: number;
+      occupied: number;
+    }>([
+      {
+        $match: {
+          storageUnitId: { $in: validObjectIds },
+          deleted: { $ne: true },
+        },
+      },
+      {
+        $group: {
+          _id: '$storageUnitId',
+          total: { $sum: 1 },
+          available: {
+            $sum: {
+              $cond: [{ $eq: ['$status', RackStatusEnum.AVAILABLE] }, 1, 0],
+            },
+          },
+          occupied: {
+            $sum: {
+              $cond: [
+                {
+                  $in: [
+                    '$status',
+                    [RackStatusEnum.RENTED, RackStatusEnum.RESERVED],
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    for (const item of stats) {
+      if (item._id) {
+        const key = item._id.toString();
+        const total = item.total || 0;
+        const available = item.available || 0;
+        const occupied = item.occupied || 0;
+        const availablePercentage =
+          total > 0 ? Math.round((available / total) * 100) : 0;
+
+        result[key] = {
+          total,
+          available,
+          occupied,
+          availablePercentage,
+        };
+      }
+    }
+
+    return result;
+  }
 }

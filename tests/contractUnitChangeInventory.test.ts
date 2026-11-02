@@ -69,7 +69,7 @@ describe('X6: Block UNIT_CHANGE Addendum Activation While Old Storage Unit Has I
       dimensions: { length: 3, width: 3, height: 3 },
       area: 9,
       volume: 27,
-      category: UnitTypeCategoryEnum.MEDIUM,
+      category: UnitTypeCategoryEnum.WAREHOUSE_RACK,
     });
 
     const oldUnit = await StorageUnit.create({

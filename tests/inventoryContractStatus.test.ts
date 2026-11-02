@@ -193,7 +193,7 @@ describe('X2: Inventory operations by contract status & contract lock', () => {
       dimensions: { length: 3, width: 3, height: 3 },
       area: 9,
       volume: 27,
-      category: UnitTypeCategoryEnum.MEDIUM,
+      category: UnitTypeCategoryEnum.WAREHOUSE_RACK,
     });
 
     await StorageUnit.create({

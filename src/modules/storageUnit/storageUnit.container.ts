@@ -14,6 +14,7 @@ import { Reservation } from '../reservation/reservation.model.ts';
 import { ReservationRepository } from '../reservation/reservation.repository.ts';
 import { Contract } from '../contract/contract.model.ts';
 import { ContractRepository } from '../contract/contract.repository.ts';
+import { storageRackRepository } from '../storageRack/storageRack.container.ts';
 import { auditLogService } from '../auditLog/auditLog.container.ts';
 
 const storageUnitRepository = new StorageUnitRepository(StorageUnit);
@@ -37,7 +38,8 @@ const storageUnitService = new StorageUnitService(
   customerInventoryRepository,
   auditLogService,
   reservationRepository,
-  contractRepository
+  contractRepository,
+  storageRackRepository
 );
 
 export const storageUnitController = new StorageUnitController(

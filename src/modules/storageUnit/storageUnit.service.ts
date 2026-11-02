@@ -6,6 +6,7 @@ import type { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffe
 import type { CustomerInventoryRepository } from '../customerInventory/customerInventory.repository.ts';
 import type { ReservationRepository } from '../reservation/reservation.repository.ts';
 import type { ContractRepository } from '../contract/contract.repository.ts';
+import type { StorageRackRepository } from '../storageRack/storageRack.repository.ts';
 import { RoleEnum } from '../../common/enums/user.enum.ts';
 import type { IStorageUnit } from './storageUnit.model.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
@@ -25,7 +26,10 @@ import type {
 } from './schemas/storageUnit.request.schema.ts';
 import type { PaginatedData } from '../../common/types/pagination.type.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
-import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
+import {
+  UnitTypeCategoryEnum,
+  UnitTypeStatusEnum,
+} from '../../common/enums/unitType.enum.ts';
 import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
 import { FacilityUnitTypeOfferingStatusEnum } from '../../common/enums/facilityUnitTypeOffering.enum.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
@@ -44,7 +48,8 @@ export class StorageUnitService {
     private readonly customerInventoryRepository: CustomerInventoryRepository,
     private readonly auditLogService?: AuditLogService,
     private readonly reservationRepository?: ReservationRepository,
-    private readonly contractRepository?: ContractRepository
+    private readonly contractRepository?: ContractRepository,
+    private readonly storageRackRepository?: StorageRackRepository
   ) {}
 
   private formatStorageUnit(unit: unknown): unknown {
@@ -81,6 +86,8 @@ export class StorageUnitService {
       obj.id = String(obj._id);
     }
 
+    obj.rackCapacity = null;
+
     // Map populated facilityId -> facility
     if (obj.facilityId && typeof obj.facilityId === 'object') {
       const f = obj.facilityId as Record<string, unknown>;
@@ -116,6 +123,47 @@ export class StorageUnitService {
     return obj;
   }
 
+  private async populateRackCapacities(
+    items: StorageUnitResponse[]
+  ): Promise<void> {
+    const warehouseRackIds = items
+      .filter(
+        (item) =>
+          item.unitType?.category === UnitTypeCategoryEnum.WAREHOUSE_RACK
+      )
+      .map((item) => item.id);
+
+    let capacityMap: Record<
+      string,
+      {
+        total: number;
+        available: number;
+        occupied: number;
+        availablePercentage: number;
+      }
+    > = {};
+
+    if (warehouseRackIds.length > 0 && this.storageRackRepository) {
+      capacityMap =
+        await this.storageRackRepository.getRackCapacityByStorageUnitIds(
+          warehouseRackIds
+        );
+    }
+
+    for (const item of items) {
+      if (item.unitType?.category === UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+        item.rackCapacity = capacityMap[item.id] ?? {
+          total: 0,
+          available: 0,
+          occupied: 0,
+          availablePercentage: 0,
+        };
+      } else {
+        item.rackCapacity = null;
+      }
+    }
+  }
+
   async getStorageUnits(
     query?: StorageUnitQuery
   ): Promise<PaginatedData<StorageUnitResponse>> {
@@ -123,7 +171,10 @@ export class StorageUnitService {
       const result = await this.storageUnitRepository.findAll(query);
       const formattedItems = result.items.map((item) =>
         this.formatStorageUnit(item)
-      );
+      ) as StorageUnitResponse[];
+
+      await this.populateRackCapacities(formattedItems);
+
       const validatedItems = validateResponse(
         storageUnitListResponseSchema,
         formattedItems
@@ -144,10 +195,10 @@ export class StorageUnitService {
     if (!unit) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
     }
-    return validateResponse(
-      storageUnitResponseSchema,
-      this.formatStorageUnit(unit)
-    );
+    const formatted = this.formatStorageUnit(unit) as StorageUnitResponse;
+    await this.populateRackCapacities([formatted]);
+
+    return validateResponse(storageUnitResponseSchema, formatted);
   }
 
   async getAvailableUnits(
@@ -166,7 +217,11 @@ export class StorageUnitService {
       facilityId,
       filters
     );
-    const formatted = units.map((u) => this.formatStorageUnit(u));
+    const formatted = units.map((u) =>
+      this.formatStorageUnit(u)
+    ) as StorageUnitResponse[];
+    await this.populateRackCapacities(formatted);
+
     return validateResponse(storageUnitListResponseSchema, formatted);
   }
 

@@ -272,6 +272,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_604: 'MESSAGE_CODE_604',
   // Invalid Rack Zone Pricing Configuration
   MESSAGE_CODE_605: 'MESSAGE_CODE_605',
+  // Cannot Delete Storage Rack With Active Rental Or Contract
+  MESSAGE_CODE_606: 'MESSAGE_CODE_606',
 
   // ==========================================
   // CUSTOMER SKU (610 - 614)
@@ -354,6 +356,8 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_648: 'MESSAGE_CODE_648',
   // Only Assigned Staff Or Facility Manager Can Complete Outbound Handover
   MESSAGE_CODE_649: 'MESSAGE_CODE_649',
+  // Self Storage Units Do Not Support Inventory And SKU Management
+  MESSAGE_CODE_650: 'MESSAGE_CODE_650',
 
   // ==========================================
   // INCIDENT (700 - 709)
@@ -582,6 +586,7 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_603: 'Storage Rack Code Already Exists',
   MESSAGE_CODE_604: 'Storage Unit Does Not Support Rack Layout',
   MESSAGE_CODE_605: 'Invalid Rack Zone Pricing Configuration',
+  MESSAGE_CODE_606: 'Cannot Delete Storage Rack With Active Rental Or Contract',
 
   // Customer SKU
   MESSAGE_CODE_610: 'Customer SKU Not Found',
@@ -627,6 +632,8 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
     'Only Assigned Staff Or Facility Manager Can Handle This Inventory Request',
   MESSAGE_CODE_649:
     'Only Assigned Staff Or Facility Manager Can Complete Outbound Handover',
+  MESSAGE_CODE_650:
+    'Self Storage Units Do Not Support Inventory And SKU Management',
 
   // Incident
   MESSAGE_CODE_700: 'Incident Not Found',

@@ -74,7 +74,7 @@ describe('X3: Contract Check-out & Terminate with Remaining Customer Inventory',
       dimensions: { length: 3, width: 3, height: 3 },
       area: 9,
       volume: 27,
-      category: UnitTypeCategoryEnum.MEDIUM,
+      category: UnitTypeCategoryEnum.WAREHOUSE_RACK,
     });
 
     const unit = await StorageUnit.create({

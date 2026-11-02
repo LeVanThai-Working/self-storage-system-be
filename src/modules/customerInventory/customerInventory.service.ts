@@ -9,6 +9,8 @@ import {
   MovementTypeEnum,
   InventoryItemStatusEnum,
 } from '../../common/enums/customerInventory.enum.ts';
+import { UnitTypeCategoryEnum } from '../../common/enums/unitType.enum.ts';
+import { UnitType } from '../unitType/unitType.model.ts';
 import {
   RackStatusEnum,
   RackTierStatusEnum,
@@ -261,6 +263,42 @@ export class CustomerInventoryService {
     return undefined;
   }
 
+  private async getUnitCategory(
+    storageUnit: unknown
+  ): Promise<UnitTypeCategoryEnum | null> {
+    if (!storageUnit) return null;
+    const doc = storageUnit as { unitTypeId?: unknown; type?: unknown };
+
+    if (doc.type && typeof doc.type === 'string') {
+      if (doc.type.toLowerCase() === 'warehouse_rack') {
+        return UnitTypeCategoryEnum.WAREHOUSE_RACK;
+      }
+    }
+
+    if (!doc.unitTypeId) return null;
+
+    if (
+      typeof doc.unitTypeId === 'object' &&
+      doc.unitTypeId !== null &&
+      'category' in (doc.unitTypeId as object)
+    ) {
+      return (
+        (doc.unitTypeId as { category?: UnitTypeCategoryEnum }).category ?? null
+      );
+    }
+
+    const rawId =
+      typeof doc.unitTypeId === 'object' &&
+      doc.unitTypeId !== null &&
+      '_id' in (doc.unitTypeId as object)
+        ? (doc.unitTypeId as { _id: unknown })._id
+        : doc.unitTypeId;
+
+    if (!rawId) return null;
+    const ut = await UnitType.findById(rawId).select('category');
+    return ut?.category ?? null;
+  }
+
   /**
    * Helper to validate Contract, SKU, and RackTier entities
    */
@@ -316,6 +354,18 @@ export class CustomerInventoryService {
       contract.storageUnitId?._id || contract.storageUnitId
     );
     const facilityId = String(contract.facilityId?._id || contract.facilityId);
+
+    const unit = await this.storageUnitRepository.findById(
+      storageUnitId,
+      session
+    );
+    if (!unit) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
+    }
+    const category = await this.getUnitCategory(unit);
+    if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_650);
+    }
 
     // 4. Verify RackTier if specified
     let storageRackId: string | null = null;
@@ -1087,6 +1137,55 @@ export class CustomerInventoryService {
       enforcedQuery.facilityId = staffFacilityId;
     }
 
+    if (enforcedQuery.storageUnitId) {
+      const unit = await this.storageUnitRepository.findById(
+        enforcedQuery.storageUnitId
+      );
+      if (unit) {
+        const category = await this.getUnitCategory(unit);
+        if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+          return {
+            items: [],
+            pagination: {
+              totalItems: 0,
+              page: enforcedQuery.page || 1,
+              limit: enforcedQuery.limit || 10,
+              totalPages: 0,
+              hasNextPage: false,
+              hasPrevPage: false,
+            },
+          };
+        }
+      }
+    }
+
+    if (enforcedQuery.contractId) {
+      const contract = await this.contractRepository.findById(
+        enforcedQuery.contractId
+      );
+      if (contract?.storageUnitId) {
+        const unit = await this.storageUnitRepository.findById(
+          String(contract.storageUnitId)
+        );
+        if (unit) {
+          const category = await this.getUnitCategory(unit);
+          if (category && category !== UnitTypeCategoryEnum.WAREHOUSE_RACK) {
+            return {
+              items: [],
+              pagination: {
+                totalItems: 0,
+                page: enforcedQuery.page || 1,
+                limit: enforcedQuery.limit || 10,
+                totalPages: 0,
+                hasNextPage: false,
+                hasPrevPage: false,
+              },
+            };
+          }
+        }
+      }
+    }
+
     const result = await this.inventoryRepository.findPaginated(enforcedQuery);
 
     return validateResponse(paginatedCustomerInventoryResponseSchema, {
@@ -1203,6 +1302,78 @@ export class CustomerInventoryService {
     } else {
       contract =
         await this.contractRepository.findCurrentByStorageUnitId(storageUnitId);
+    }
+
+    const category = await this.getUnitCategory(unit);
+    let isWarehouseRack = category === UnitTypeCategoryEnum.WAREHOUSE_RACK;
+    if (!category) {
+      const existingRacks =
+        await this.storageRackRepository.findByStorageUnitId(storageUnitId);
+      if (existingRacks.length > 0) {
+        isWarehouseRack = true;
+      }
+    }
+
+    if (!isWarehouseRack) {
+      let contractSummary = null;
+      if (contract) {
+        const cust = toPopulated(contract.customerId);
+        contractSummary = {
+          id: String(contract._id),
+          contractCode: contract.contractCode,
+          status: contract.status,
+          startDate: contract.startDate
+            ? new Date(contract.startDate).toISOString()
+            : null,
+          endDate: contract.endDate
+            ? new Date(contract.endDate).toISOString()
+            : null,
+          customer: cust
+            ? {
+                id: String(cust._id),
+                name: cust.name || '',
+                email: cust.email || null,
+                phoneNumber: cust.phoneNumber || null,
+              }
+            : null,
+        };
+      }
+
+      const storageUnitSummary = {
+        id: String(unit._id),
+        unitNumber: unit.unitNumber,
+        floor: unit.floor ?? null,
+        zone: unit.zone || null,
+        status: unit.status || null,
+      };
+
+      const fac = toPopulated(unit.facilityId);
+      let facilitySummary = null;
+      if (fac) {
+        facilitySummary = {
+          id: String(fac._id),
+          name: fac.name || '',
+          code: fac.code || null,
+          city: fac.city || null,
+          address: fac.address || null,
+        };
+      }
+
+      return validateResponse(storageUnitInventoryTreeResponseSchema, {
+        facility: facilitySummary,
+        storageUnit: storageUnitSummary,
+        contract: contractSummary,
+        summary: {
+          totalRacks: 0,
+          totalTiers: 0,
+          occupiedTiers: 0,
+          availableTiers: 0,
+          totalSkus: 0,
+          totalQuantity: 0,
+        },
+        racks: [],
+        unrackedItems: [],
+      });
     }
 
     const [racks, allTiers, items] = await Promise.all([

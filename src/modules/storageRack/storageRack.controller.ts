@@ -225,10 +225,15 @@ export class StorageRackController extends Controller {
   @Response<ApiErrorResponse>(400, 'Invalid request or duplicate rack code')
   @Response<ApiErrorResponse>(404, 'Storage Unit not found')
   public async createStorageRack(
-    @Body() data: CreateStorageRackRequest
+    @Body() data: CreateStorageRackRequest,
+    @Request() req: ExpressRequest
   ): Promise<ApiResponse<StorageRackResponse>> {
+    const caller = extractCaller(req);
     this.setStatus(201);
-    const created = await this.storageRackService.createStorageRack(data);
+    const created = await this.storageRackService.createStorageRack(
+      data,
+      caller
+    );
 
     return {
       success: true,
@@ -253,10 +258,14 @@ export class StorageRackController extends Controller {
   )
   @Response<ApiErrorResponse>(404, 'Storage Unit not found')
   public async provisionRacks(
-    @Path() unitId: string
+    @Path() unitId: string,
+    @Request() req: ExpressRequest
   ): Promise<ApiResponse<StorageRackResponse[]>> {
-    const racks =
-      await this.storageRackService.provisionRacksForUnitEndpoint(unitId);
+    const caller = extractCaller(req);
+    const racks = await this.storageRackService.provisionRacksForUnitEndpoint(
+      unitId,
+      caller
+    );
 
     return {
       success: true,
@@ -283,9 +292,15 @@ export class StorageRackController extends Controller {
   @Response<ApiErrorResponse>(404, 'Storage Rack not found')
   public async updateStorageRack(
     @Path() id: string,
-    @Body() data: UpdateStorageRackRequest
+    @Body() data: UpdateStorageRackRequest,
+    @Request() req: ExpressRequest
   ): Promise<ApiResponse<StorageRackResponse>> {
-    const updated = await this.storageRackService.updateStorageRack(id, data);
+    const caller = extractCaller(req);
+    const updated = await this.storageRackService.updateStorageRack(
+      id,
+      data,
+      caller
+    );
 
     return {
       success: true,
@@ -312,9 +327,15 @@ export class StorageRackController extends Controller {
   @Response<ApiErrorResponse>(404, 'Rack Tier not found')
   public async updateRackTier(
     @Path() id: string,
-    @Body() data: UpdateRackTierRequest
+    @Body() data: UpdateRackTierRequest,
+    @Request() req: ExpressRequest
   ): Promise<ApiResponse<RackTierResponse>> {
-    const updated = await this.storageRackService.updateRackTier(id, data);
+    const caller = extractCaller(req);
+    const updated = await this.storageRackService.updateRackTier(
+      id,
+      data,
+      caller
+    );
 
     return {
       success: true,
@@ -330,14 +351,16 @@ export class StorageRackController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Delete('{id}')
   @Middlewares(validateRequest({ params: storageRackIdParamSchema }))
   @Response<ApiErrorResponse>(404, 'Storage Rack not found')
   public async deleteStorageRack(
-    @Path() id: string
+    @Path() id: string,
+    @Request() req: ExpressRequest
   ): Promise<ApiResponse<null>> {
-    await this.storageRackService.deleteStorageRack(id);
+    const caller = extractCaller(req);
+    await this.storageRackService.deleteStorageRack(id, caller);
 
     return {
       success: true,
@@ -353,14 +376,19 @@ export class StorageRackController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('{id}/restore')
   @Middlewares(validateRequest({ params: storageRackIdParamSchema }))
   @Response<ApiErrorResponse>(404, 'Storage Rack not found')
   public async restoreStorageRack(
-    @Path() id: string
+    @Path() id: string,
+    @Request() req: ExpressRequest
   ): Promise<ApiResponse<StorageRackResponse>> {
-    const restored = await this.storageRackService.restoreStorageRack(id);
+    const caller = extractCaller(req);
+    const restored = await this.storageRackService.restoreStorageRack(
+      id,
+      caller
+    );
 
     return {
       success: true,
