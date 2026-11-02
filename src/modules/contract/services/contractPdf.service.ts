@@ -92,8 +92,15 @@ export class ContractPdfService {
     const depositAmountStr = new Intl.NumberFormat('vi-VN').format(
       contract.depositAmount ?? 0
     );
+    const recurringAmenitiesTotal = (contract.amenities || [])
+      .filter((a) => a.billingUnit !== 'one_time')
+      .reduce((sum, a) => sum + (a.totalPrice || 0), 0);
+    const effectivePeriodicPrice =
+      contract.status === 'active'
+        ? (contract.totalPeriodicPrice ?? contract.rentalPrice ?? 0)
+        : (contract.rentalPrice ?? 0) + recurringAmenitiesTotal;
     const totalPeriodicStr = new Intl.NumberFormat('vi-VN').format(
-      contract.totalPeriodicPrice ?? contract.rentalPrice ?? 0
+      effectivePeriodicPrice
     );
 
     const facilityName = facility?.name ?? 'Cơ sở Lưu trữ SSM';

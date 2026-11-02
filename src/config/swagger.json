@@ -3638,16 +3638,13 @@
 						"type": "string"
 					},
 					"validTo": {
-						"type": "string",
-						"format": "date-time"
+						"type": "string"
 					},
 					"validFrom": {
-						"type": "string",
-						"format": "date-time"
+						"type": "string"
 					},
 					"issuedDate": {
-						"type": "string",
-						"format": "date-time"
+						"type": "string"
 					},
 					"authorizationNumber": {
 						"type": "string"
@@ -3795,8 +3792,7 @@
 						"type": "string"
 					},
 					"validTo": {
-						"type": "string",
-						"format": "date-time"
+						"type": "string"
 					}
 				},
 				"type": "object"

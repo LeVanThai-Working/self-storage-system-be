@@ -406,6 +406,10 @@ export class InvoiceService {
 
     if (Array.isArray(contract.amenities)) {
       for (const a of contract.amenities) {
+        // Skip one-time amenities for recurring cycles (only billed in first period)
+        if (a.billingUnit === BillingUnitEnum.ONE_TIME) {
+          continue;
+        }
         const amenityQtyMultiplier =
           contract.billingUnit === BillingUnitEnum.DAY &&
           a.billingUnit === BillingUnitEnum.DAY

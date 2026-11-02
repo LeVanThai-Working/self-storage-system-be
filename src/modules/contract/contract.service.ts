@@ -272,19 +272,36 @@ export class ContractService {
         })
       );
 
-      const amenitiesTotal = contractAmenities.reduce(
+      const recurringAmenities = contractAmenities.filter(
+        (a) => a.billingUnit !== BillingUnitEnum.ONE_TIME
+      );
+      const oneTimeAmenities = contractAmenities.filter(
+        (a) => a.billingUnit === BillingUnitEnum.ONE_TIME
+      );
+      const recurringAmenitiesTotal = recurringAmenities.reduce(
         (sum, a) => sum + a.totalPrice,
         0
       );
-      let totalPeriodicPrice = reservation.basePrice + amenitiesTotal;
+      const oneTimeAmenitiesTotal = oneTimeAmenities.reduce(
+        (sum, a) => sum + a.totalPrice,
+        0
+      );
+
+      // Period 1 upfront payment: rent + recurring amenities + one-time purchase items
+      let totalPeriodicPrice =
+        reservation.basePrice + recurringAmenitiesTotal + oneTimeAmenitiesTotal;
       if (reservation.billingUnit === BillingUnitEnum.DAY) {
         const durationDays = Math.max(1, reservation.rentalDuration || 1);
         if (durationDays <= 14) {
           totalPeriodicPrice =
             reservation.basePrice * durationDays +
-            amenitiesTotal * durationDays;
+            recurringAmenitiesTotal * durationDays +
+            oneTimeAmenitiesTotal;
         } else {
-          totalPeriodicPrice = reservation.basePrice * 7 + amenitiesTotal * 7;
+          totalPeriodicPrice =
+            reservation.basePrice * 7 +
+            recurringAmenitiesTotal * 7 +
+            oneTimeAmenitiesTotal;
         }
       }
 
@@ -497,12 +514,25 @@ export class ContractService {
         }
       }
 
-      const amenitiesTotal = contractAmenities.reduce(
+      const recurringAmenities = contractAmenities.filter(
+        (a) => a.billingUnit !== BillingUnitEnum.ONE_TIME
+      );
+      const oneTimeAmenities = contractAmenities.filter(
+        (a) => a.billingUnit === BillingUnitEnum.ONE_TIME
+      );
+      const recurringAmenitiesTotal = recurringAmenities.reduce(
         (sum, a) => sum + a.totalPrice,
         0
       );
+      const oneTimeAmenitiesTotal = oneTimeAmenities.reduce(
+        (sum, a) => sum + a.totalPrice,
+        0
+      );
+
       const rentalPrice = data.rentalPrice!;
-      let totalPeriodicPrice = rentalPrice + amenitiesTotal;
+      // Period 1 upfront payment: rent + recurring amenities + one-time purchase items
+      let totalPeriodicPrice =
+        rentalPrice + recurringAmenitiesTotal + oneTimeAmenitiesTotal;
       if (data.billingUnit === BillingUnitEnum.DAY) {
         const durationDays = Math.max(
           1,
@@ -514,9 +544,14 @@ export class ContractService {
         );
         if (durationDays <= 14) {
           totalPeriodicPrice =
-            rentalPrice * durationDays + amenitiesTotal * durationDays;
+            rentalPrice * durationDays +
+            recurringAmenitiesTotal * durationDays +
+            oneTimeAmenitiesTotal;
         } else {
-          totalPeriodicPrice = rentalPrice * 7 + amenitiesTotal * 7;
+          totalPeriodicPrice =
+            rentalPrice * 7 +
+            recurringAmenitiesTotal * 7 +
+            oneTimeAmenitiesTotal;
         }
       }
 
@@ -1018,6 +1053,30 @@ export class ContractService {
       }
     }
 
+    const recurringAmenitiesTotal = (contract.amenities || [])
+      .filter((a) => a.billingUnit !== BillingUnitEnum.ONE_TIME)
+      .reduce((sum, a) => sum + a.totalPrice, 0);
+
+    let recurringTotalPeriodicPrice =
+      contract.rentalPrice + recurringAmenitiesTotal;
+    if (contract.billingUnit === BillingUnitEnum.DAY) {
+      const durationDays = Math.max(
+        1,
+        Math.round(
+          (finalEndDate.getTime() - finalStartDate.getTime()) /
+            (24 * 60 * 60 * 1000)
+        )
+      );
+      if (durationDays <= 14) {
+        recurringTotalPeriodicPrice =
+          contract.rentalPrice * durationDays +
+          recurringAmenitiesTotal * durationDays;
+      } else {
+        recurringTotalPeriodicPrice =
+          contract.rentalPrice * 7 + recurringAmenitiesTotal * 7;
+      }
+    }
+
     const storageUnitIdStr = this.extractIdStr(contract.storageUnitId);
     const updated = await this.contractRepository.atomicCheckIn(
       id,
@@ -1036,6 +1095,7 @@ export class ContractService {
         earlyCheckIn,
         outOfSlot,
         termsAccepted: true,
+        totalPeriodicPrice: recurringTotalPeriodicPrice,
         signedContractFiles,
         signingAuthorizationSnapshot,
         legalEntitySnapshot,
