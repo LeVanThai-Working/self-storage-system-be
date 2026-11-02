@@ -47,9 +47,9 @@ export class SigningAuthorizationService {
       authorizedUserId: new Types.ObjectId(data.authorizedUserId),
       facilityIds: data.facilityIds.map((id) => new Types.ObjectId(id)),
       authorizationNumber: data.authorizationNumber.trim(),
-      issuedDate: data.issuedDate,
-      validFrom: data.validFrom,
-      validTo: data.validTo,
+      issuedDate: new Date(data.issuedDate),
+      validFrom: new Date(data.validFrom),
+      validTo: new Date(data.validTo),
       documentUrl: data.documentUrl,
       fileHash,
       status: 'active',
@@ -126,6 +126,7 @@ export class SigningAuthorizationService {
     const updated = await this.signingAuthRepository.update(id, {
       ...data,
       fileHash,
+      validTo: data.validTo ? new Date(data.validTo) : undefined,
       notes: data.notes ?? undefined,
     });
 
