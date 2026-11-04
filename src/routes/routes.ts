@@ -50,9 +50,9 @@ import { FacilityController } from './../modules/facility/facility.controller.js
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { CustomerSkuController } from './../modules/customerSku/customerSku.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-import { InventoryRequestController } from './../modules/customerInventory/inventoryRequest.controller.js';
-// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { CustomerInventoryController } from './../modules/customerInventory/customerInventory.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { AccessScheduleController } from './../modules/customerInventory/accessSchedule.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ContractController } from './../modules/contract/contract.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
@@ -384,12 +384,12 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","expire_inventory_request","assign_inventory_request","batch_migrate_rack","evacuate_rack_to_holding","update_inventory_status","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum","generate_invoice","pay_invoice","cancel_invoice","void_invoice","send_invoice"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","expire_inventory_request","assign_inventory_request","batch_migrate_rack","evacuate_rack_to_holding","update_inventory_status","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum","generate_invoice","pay_invoice","cancel_invoice","void_invoice","send_invoice","create_access_schedule","check_in_access_schedule","check_out_access_schedule","cancel_access_schedule","no_show_access_schedule"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
         "dataType": "refEnum",
-        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","refund_request","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement","inventory_request","incident","support_ticket","legal_entity","signing_authorization","contract_template","invoice"],
+        "enums": ["auth","user","profile","facility","unit_type","amenity","facility_unit_type_offering","facility_amenity_offering","storage_unit","reservation","approval_request","contract","payment","refund_request","notification","storage_rack","rack_tier","customer_sku","customer_inventory","inventory_movement","inventory_request","incident","support_ticket","legal_entity","signing_authorization","contract_template","invoice","access_schedule"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditStatusEnum": {
@@ -2555,223 +2555,6 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofupdateCustomerSkuSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "InventoryRequestTypeEnum": {
-        "dataType": "refEnum",
-        "enums": ["inbound","outbound"],
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "InventoryRequestStatusEnum": {
-        "dataType": "refEnum",
-        "enums": ["pending","pending_confirmation","processing","ready_to_putaway","completed","disputed","cancelled","expired"],
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofinventoryRequestResponseSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"isAutoConfirmed":{"dataType":"boolean"},"cancelledAt":{"dataType":"datetime"},"completedBy":{"dataType":"string"},"completedAt":{"dataType":"datetime"},"verifiedBy":{"dataType":"string"},"verifiedAt":{"dataType":"datetime"},"assignedAt":{"dataType":"datetime"},"assignedStaffName":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"customerFeedbackNotes":{"dataType":"string"},"discrepancyImages":{"dataType":"array","array":{"dataType":"string"}},"discrepancyReason":{"dataType":"string"},"staffNotes":{"dataType":"string"},"signatureUrl":{"dataType":"string"},"evidenceImages":{"dataType":"array","array":{"dataType":"string"}},"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"expiresAt":{"dataType":"datetime"},"rawOtpCode":{"dataType":"string"},"pickupQrPayload":{"dataType":"string"},"pickupQrToken":{"dataType":"string"},"unitNumber":{"dataType":"string"},"facilityName":{"dataType":"string"},"facilityCode":{"dataType":"string"},"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"isVerified":{"dataType":"boolean","required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"tierNumber":{"dataType":"double"},"rackTierId":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"storageRackId":{"dataType":"string"},"discrepancyQuantity":{"dataType":"double"},"actualQuantity":{"dataType":"double"},"uom":{"dataType":"string"},"barcode":{"dataType":"string"},"name":{"dataType":"string"},"skuCode":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"InventoryRequestStatusEnum","required":true},"type":{"ref":"InventoryRequestTypeEnum","required":true},"requestCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "InventoryRequestResponse": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofinventoryRequestResponseSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ApiResponse_InventoryRequestResponse_": {
-        "dataType": "refObject",
-        "properties": {
-            "success": {"dataType":"boolean","required":true},
-            "statusCode": {"dataType":"double","required":true},
-            "messageCode": {"dataType":"string","required":true},
-            "message": {"dataType":"string","required":true},
-            "data": {"ref":"InventoryRequestResponse","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcreateOutboundRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"expiresAt":{"dataType":"string"},"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTierId":{"dataType":"string","required":true},"storageRackId":{"dataType":"string","required":true},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateOutboundRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcreateOutboundRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofverifiedHandoverDetailsResponseSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"unitNumber":{"dataType":"string"},"assignedAt":{"dataType":"datetime"},"assignedStaffName":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"customerPhone":{"dataType":"string"},"customerName":{"dataType":"string"},"verifiedBy":{"dataType":"string","required":true},"verifiedAt":{"dataType":"datetime","required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"tierNumber":{"dataType":"double"},"rackTierId":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"storageRackId":{"dataType":"string"},"discrepancyQuantity":{"dataType":"double"},"actualQuantity":{"dataType":"double"},"uom":{"dataType":"string"},"barcode":{"dataType":"string"},"name":{"dataType":"string"},"skuCode":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"InventoryRequestStatusEnum","required":true},"type":{"ref":"InventoryRequestTypeEnum","required":true},"requestCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "VerifiedHandoverDetailsResponse": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofverifiedHandoverDetailsResponseSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ApiResponse_VerifiedHandoverDetailsResponse_": {
-        "dataType": "refObject",
-        "properties": {
-            "success": {"dataType":"boolean","required":true},
-            "statusCode": {"dataType":"double","required":true},
-            "messageCode": {"dataType":"string","required":true},
-            "message": {"dataType":"string","required":true},
-            "data": {"ref":"VerifiedHandoverDetailsResponse","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofverifyPickupCodeSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"requestCode":{"dataType":"string"},"pickupCode":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "VerifyPickupCodeRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofverifyPickupCodeSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcompleteOutboundHandoverSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"discrepancyImages":{"dataType":"array","array":{"dataType":"string"}},"discrepancyReason":{"dataType":"string"},"actualItems":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"actualQuantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}}},"staffNotes":{"dataType":"string"},"signatureUrl":{"dataType":"string"},"evidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CompleteOutboundHandoverRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcompleteOutboundHandoverSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcancelOutboundRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string"}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CancelOutboundRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcancelOutboundRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcreateInboundRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"staffNotes":{"dataType":"string"},"signatureUrl":{"dataType":"string"},"evidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true},"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}},"required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreateInboundRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcreateInboundRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcreatePreAdvisedInboundRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"expiresAt":{"dataType":"string"},"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CreatePreAdvisedInboundRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcreatePreAdvisedInboundRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcancelInboundRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string"}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "CancelInboundRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcancelInboundRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofdisputeInboundRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"disputeReason":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "DisputeInboundRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofdisputeInboundRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofputawayInboundRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"placements":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTierId":{"dataType":"string","required":true},"storageRackId":{"dataType":"string","required":true},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "PutawayInboundRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofputawayInboundRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofpaginatedInventoryRequestResponseSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"pagination":{"dataType":"nestedObjectLiteral","nestedProperties":{"hasPrevPage":{"dataType":"boolean","required":true},"hasNextPage":{"dataType":"boolean","required":true},"totalPages":{"dataType":"double","required":true},"totalItems":{"dataType":"double","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"isAutoConfirmed":{"dataType":"boolean"},"cancelledAt":{"dataType":"datetime"},"completedBy":{"dataType":"string"},"completedAt":{"dataType":"datetime"},"verifiedBy":{"dataType":"string"},"verifiedAt":{"dataType":"datetime"},"assignedAt":{"dataType":"datetime"},"assignedStaffName":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"customerFeedbackNotes":{"dataType":"string"},"discrepancyImages":{"dataType":"array","array":{"dataType":"string"}},"discrepancyReason":{"dataType":"string"},"staffNotes":{"dataType":"string"},"signatureUrl":{"dataType":"string"},"evidenceImages":{"dataType":"array","array":{"dataType":"string"}},"transporterInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"deliveryCompany":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"phoneNumber":{"dataType":"string","required":true},"name":{"dataType":"string","required":true}}},"expiresAt":{"dataType":"datetime"},"rawOtpCode":{"dataType":"string"},"pickupQrPayload":{"dataType":"string"},"pickupQrToken":{"dataType":"string"},"unitNumber":{"dataType":"string"},"facilityName":{"dataType":"string"},"facilityCode":{"dataType":"string"},"updatedAt":{"dataType":"datetime","required":true},"createdAt":{"dataType":"datetime","required":true},"isVerified":{"dataType":"boolean","required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"tierNumber":{"dataType":"double"},"rackTierId":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"storageRackId":{"dataType":"string"},"discrepancyQuantity":{"dataType":"double"},"actualQuantity":{"dataType":"double"},"uom":{"dataType":"string"},"barcode":{"dataType":"string"},"name":{"dataType":"string"},"skuCode":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"InventoryRequestStatusEnum","required":true},"type":{"ref":"InventoryRequestTypeEnum","required":true},"requestCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "PaginatedInventoryRequestResponse": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofpaginatedInventoryRequestResponseSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ApiResponse_PaginatedInventoryRequestResponse_": {
-        "dataType": "refObject",
-        "properties": {
-            "success": {"dataType":"boolean","required":true},
-            "statusCode": {"dataType":"double","required":true},
-            "messageCode": {"dataType":"string","required":true},
-            "message": {"dataType":"string","required":true},
-            "data": {"ref":"PaginatedInventoryRequestResponse","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "InventoryRequestQuery": {
-        "dataType": "refObject",
-        "properties": {
-            "page": {"dataType":"double"},
-            "limit": {"dataType":"double"},
-            "search": {"dataType":"string"},
-            "sortBy": {"dataType":"string"},
-            "sortOrder": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}]},
-            "customerId": {"dataType":"string"},
-            "facilityId": {"dataType":"string"},
-            "contractId": {"dataType":"string"},
-            "type": {"ref":"InventoryRequestTypeEnum"},
-            "status": {"ref":"InventoryRequestStatusEnum"},
-            "startDate": {"dataType":"string"},
-            "endDate": {"dataType":"string"},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofassignInventoryRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignedStaffId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "AssignInventoryRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofassignInventoryRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofregenerateOtpResponseSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"expiresAt":{"dataType":"datetime","required":true},"rawOtpCode":{"dataType":"string","required":true},"requestCode":{"dataType":"string","required":true},"requestId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RegenerateOtpResponse": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofregenerateOtpResponseSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ApiResponse_RegenerateOtpResponse_": {
-        "dataType": "refObject",
-        "properties": {
-            "success": {"dataType":"boolean","required":true},
-            "statusCode": {"dataType":"double","required":true},
-            "messageCode": {"dataType":"string","required":true},
-            "message": {"dataType":"string","required":true},
-            "data": {"ref":"RegenerateOtpResponse","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "InventoryItemStatusEnum": {
         "dataType": "refEnum",
         "enums": ["normal","temporary_holding","damaged","disputed"],
@@ -3005,38 +2788,6 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofbatchMigrateRackResponseSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true},"movementsGenerated":{"dataType":"array","array":{"dataType":"string"},"required":true},"totalQuantityMigrated":{"dataType":"double","required":true},"migratedItemsCount":{"dataType":"double","required":true},"contractId":{"dataType":"string","required":true},"toRackCode":{"dataType":"string","required":true},"fromRackCode":{"dataType":"string","required":true},"toRackId":{"dataType":"string","required":true},"fromRackId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "BatchMigrateRackResponse": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofbatchMigrateRackResponseSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ApiResponse_BatchMigrateRackResponse_": {
-        "dataType": "refObject",
-        "properties": {
-            "success": {"dataType":"boolean","required":true},
-            "statusCode": {"dataType":"double","required":true},
-            "messageCode": {"dataType":"string","required":true},
-            "message": {"dataType":"string","required":true},
-            "data": {"ref":"BatchMigrateRackResponse","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofbatchMigrateRackRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"reason":{"dataType":"string"},"emergencyReason":{"dataType":"string"},"incidentId":{"dataType":"string"},"addendumId":{"dataType":"string"},"contractId":{"dataType":"string"},"toRackId":{"dataType":"string","required":true},"fromRackId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "BatchMigrateRackRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofbatchMigrateRackRequestSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofevacuateRackResponseSchema_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true},"movementsGenerated":{"dataType":"array","array":{"dataType":"string"},"required":true},"totalQuantityEvacuated":{"dataType":"double","required":true},"evacuatedItemsCount":{"dataType":"double","required":true},"rackStatus":{"dataType":"string","required":true},"fromRackCode":{"dataType":"string","required":true},"fromRackId":{"dataType":"string","required":true}},"validators":{}},
@@ -3077,6 +2828,148 @@ const models: TsoaRoute.Models = {
     "UpdateInventoryStatusRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofupdateInventoryStatusRequestSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AccessScheduleStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["pending","checked_in","completed","cancelled","no_show","expired"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofaccessScheduleDetailResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}}},"staffNotes":{"dataType":"string"},"cancelledReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"checkedOutByName":{"dataType":"string"},"checkedOutAt":{"dataType":"string"},"checkedInByName":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"rawOtpCode":{"dataType":"string"},"qrPayload":{"dataType":"string"},"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"facilityCode":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerPhone":{"dataType":"string"},"customerName":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"timeSlotSnapshot":{"dataType":"nestedObjectLiteral","nestedProperties":{"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true}},"required":true},"timeSlotId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AccessScheduleDetailResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofaccessScheduleDetailResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_AccessScheduleDetailResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"AccessScheduleDetailResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcreateAccessScheduleSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"numberOfPeople":{"dataType":"double"},"scheduledDate":{"dataType":"string","required":true},"timeSlotId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CreateAccessScheduleRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcreateAccessScheduleSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofavailableAccessSlotResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"isAvailable":{"dataType":"boolean","required":true},"availableCapacity":{"dataType":"double","required":true},"bookedCount":{"dataType":"double","required":true},"maxCapacity":{"dataType":"double","required":true},"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true},"timeSlotId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AvailableAccessSlotResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofavailableAccessSlotResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_AvailableAccessSlotResponse-Array_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"dataType":"array","array":{"dataType":"refAlias","ref":"AvailableAccessSlotResponse"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofaccessScheduleCheckInResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true},"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}},"required":true},"schedule":{"dataType":"nestedObjectLiteral","nestedProperties":{"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}}},"staffNotes":{"dataType":"string"},"cancelledReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"checkedOutByName":{"dataType":"string"},"checkedOutAt":{"dataType":"string"},"checkedInByName":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"rawOtpCode":{"dataType":"string"},"qrPayload":{"dataType":"string"},"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"facilityCode":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerPhone":{"dataType":"string"},"customerName":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"timeSlotSnapshot":{"dataType":"nestedObjectLiteral","nestedProperties":{"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true}},"required":true},"timeSlotId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AccessScheduleCheckInResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofaccessScheduleCheckInResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_AccessScheduleCheckInResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"AccessScheduleCheckInResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcheckInAccessScheduleSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"staffNotes":{"dataType":"string"},"code":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CheckInAccessScheduleRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcheckInAccessScheduleSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcheckOutAccessScheduleSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"staffNotes":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CheckOutAccessScheduleRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcheckOutAccessScheduleSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcancelAccessScheduleSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CancelAccessScheduleRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcancelAccessScheduleSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofaccessScheduleListItemResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"checkedOutAt":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerName":{"dataType":"string"},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AccessScheduleListItemResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofaccessScheduleListItemResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaginatedData_AccessScheduleListItemResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "items": {"dataType":"array","array":{"dataType":"refAlias","ref":"AccessScheduleListItemResponse"},"required":true},
+            "pagination": {"ref":"PaginationMeta","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_PaginatedData_AccessScheduleListItemResponse__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"PaginatedData_AccessScheduleListItemResponse_","required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ContractSourceEnum": {
@@ -9208,550 +9101,6 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_createOutboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"ref":"CreateOutboundRequest"},
-        };
-        app.post('/customer-inventories/outbound-requests',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.createOutboundRequest)),
-
-            async function InventoryRequestController_createOutboundRequest(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_createOutboundRequest, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'createOutboundRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_verifyPickupCode: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"ref":"VerifyPickupCodeRequest"},
-        };
-        app.post('/customer-inventories/verify-pickup-code',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.verifyPickupCode)),
-
-            async function InventoryRequestController_verifyPickupCode(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_verifyPickupCode, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'verifyPickupCode',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_completeOutboundHandover: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"ref":"CompleteOutboundHandoverRequest"},
-        };
-        app.post('/customer-inventories/outbound-requests/:id/complete',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.completeOutboundHandover)),
-
-            async function InventoryRequestController_completeOutboundHandover(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_completeOutboundHandover, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'completeOutboundHandover',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_cancelOutboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"ref":"CancelOutboundRequest"},
-        };
-        app.post('/customer-inventories/outbound-requests/:id/cancel',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.cancelOutboundRequest)),
-
-            async function InventoryRequestController_cancelOutboundRequest(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_cancelOutboundRequest, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'cancelOutboundRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_createInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"ref":"CreateInboundRequest"},
-        };
-        app.post('/customer-inventories/inbound-requests',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.createInboundRequest)),
-
-            async function InventoryRequestController_createInboundRequest(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_createInboundRequest, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'createInboundRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_createPreAdvisedInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"ref":"CreatePreAdvisedInboundRequest"},
-        };
-        app.post('/customer-inventories/inbound-requests/pre-advised',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.createPreAdvisedInboundRequest)),
-
-            async function InventoryRequestController_createPreAdvisedInboundRequest(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_createPreAdvisedInboundRequest, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'createPreAdvisedInboundRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_cancelInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"ref":"CancelInboundRequest"},
-        };
-        app.post('/customer-inventories/inbound-requests/:id/cancel',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.cancelInboundRequest)),
-
-            async function InventoryRequestController_cancelInboundRequest(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_cancelInboundRequest, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'cancelInboundRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_confirmInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-        };
-        app.post('/customer-inventories/inbound-requests/:id/confirm',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.confirmInboundRequest)),
-
-            async function InventoryRequestController_confirmInboundRequest(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_confirmInboundRequest, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'confirmInboundRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_disputeInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"ref":"DisputeInboundRequest"},
-        };
-        app.post('/customer-inventories/inbound-requests/:id/dispute',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.disputeInboundRequest)),
-
-            async function InventoryRequestController_disputeInboundRequest(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_disputeInboundRequest, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'disputeInboundRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_putawayInboundRequest: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"ref":"PutawayInboundRequest"},
-        };
-        app.post('/customer-inventories/inbound-requests/:id/putaway',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.putawayInboundRequest)),
-
-            async function InventoryRequestController_putawayInboundRequest(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_putawayInboundRequest, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'putawayInboundRequest',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_getRequests: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                query: {"in":"queries","name":"query","required":true,"ref":"InventoryRequestQuery"},
-        };
-        app.get('/customer-inventories/requests',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.getRequests)),
-
-            async function InventoryRequestController_getRequests(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_getRequests, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'getRequests',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_processAutoAccept: Record<string, TsoaRoute.ParameterSchema> = {
-        };
-        app.post('/customer-inventories/requests/process-auto-accept',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.processAutoAccept)),
-
-            async function InventoryRequestController_processAutoAccept(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_processAutoAccept, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'processAutoAccept',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_assignStaff: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-                body: {"in":"body","name":"body","required":true,"ref":"AssignInventoryRequest"},
-        };
-        app.post('/customer-inventories/requests/:id/assign',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.assignStaff)),
-
-            async function InventoryRequestController_assignStaff(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_assignStaff, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'assignStaff',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_regenerateOtp: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-        };
-        app.post('/customer-inventories/requests/:id/regenerate-otp',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.regenerateOtp)),
-
-            async function InventoryRequestController_regenerateOtp(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_regenerateOtp, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'regenerateOtp',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsInventoryRequestController_getRequestById: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                id: {"in":"path","name":"id","required":true,"dataType":"string"},
-        };
-        app.get('/customer-inventories/requests/:id',
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController)),
-            ...(fetchMiddlewares<RequestHandler>(InventoryRequestController.prototype.getRequestById)),
-
-            async function InventoryRequestController_getRequestById(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsInventoryRequestController_getRequestById, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<InventoryRequestController>(InventoryRequestController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'getRequestById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsCustomerInventoryController_stockIn: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 body: {"in":"body","name":"body","required":true,"ref":"StockInRequest"},
@@ -10148,42 +9497,6 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsCustomerInventoryController_batchMigrateRack: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"ref":"BatchMigrateRackRequest"},
-        };
-        app.post('/customer-inventories/racks/batch-migrate',
-            ...(fetchMiddlewares<RequestHandler>(CustomerInventoryController)),
-            ...(fetchMiddlewares<RequestHandler>(CustomerInventoryController.prototype.batchMigrateRack)),
-
-            async function CustomerInventoryController_batchMigrateRack(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsCustomerInventoryController_batchMigrateRack, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<CustomerInventoryController>(CustomerInventoryController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'batchMigrateRack',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsCustomerInventoryController_evacuateRackToHolding: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 body: {"in":"body","name":"body","required":true,"ref":"EvacuateRackToHoldingRequest"},
@@ -10246,6 +9559,304 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'updateInventoryStatus',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_createAccessSchedule: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"CreateAccessScheduleRequest"},
+        };
+        app.post('/access-schedules',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.createAccessSchedule)),
+
+            async function AccessScheduleController_createAccessSchedule(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_createAccessSchedule, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'createAccessSchedule',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_getAvailableSlots: Record<string, TsoaRoute.ParameterSchema> = {
+                facilityId: {"in":"query","name":"facilityId","required":true,"dataType":"string"},
+                date: {"in":"query","name":"date","required":true,"dataType":"string"},
+        };
+        app.get('/access-schedules/available-slots',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.getAvailableSlots)),
+
+            async function AccessScheduleController_getAvailableSlots(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_getAvailableSlots, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getAvailableSlots',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_checkIn: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"CheckInAccessScheduleRequest"},
+        };
+        app.post('/access-schedules/check-in',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.checkIn)),
+
+            async function AccessScheduleController_checkIn(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_checkIn, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'checkIn',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_checkOut: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"CheckOutAccessScheduleRequest"},
+        };
+        app.post('/access-schedules/:id/check-out',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.checkOut)),
+
+            async function AccessScheduleController_checkOut(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_checkOut, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'checkOut',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_cancelSchedule: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"CancelAccessScheduleRequest"},
+        };
+        app.post('/access-schedules/:id/cancel',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.cancelSchedule)),
+
+            async function AccessScheduleController_cancelSchedule(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_cancelSchedule, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'cancelSchedule',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_processNoShowScan: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.post('/access-schedules/process-no-show',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.processNoShowScan)),
+
+            async function AccessScheduleController_processNoShowScan(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_processNoShowScan, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'processNoShowScan',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_getSchedules: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                page: {"default":1,"in":"query","name":"page","dataType":"double"},
+                limit: {"default":10,"in":"query","name":"limit","dataType":"double"},
+                sortBy: {"in":"query","name":"sortBy","dataType":"string"},
+                sortOrder: {"in":"query","name":"sortOrder","dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}]},
+                facilityId: {"in":"query","name":"facilityId","dataType":"string"},
+                customerId: {"in":"query","name":"customerId","dataType":"string"},
+                contractId: {"in":"query","name":"contractId","dataType":"string"},
+                status: {"in":"query","name":"status","dataType":"string"},
+                startDate: {"in":"query","name":"startDate","dataType":"string"},
+                endDate: {"in":"query","name":"endDate","dataType":"string"},
+        };
+        app.get('/access-schedules',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.getSchedules)),
+
+            async function AccessScheduleController_getSchedules(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_getSchedules, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getSchedules',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_getScheduleById: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.get('/access-schedules/:id',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.getScheduleById)),
+
+            async function AccessScheduleController_getScheduleById(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_getScheduleById, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getScheduleById',
                 controller,
                 response,
                 next,

@@ -360,6 +360,28 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_650: 'MESSAGE_CODE_650',
 
   // ==========================================
+  // ACCESS SCHEDULE (651 - 659)
+  // ==========================================
+  // Access Schedule Not Found
+  MESSAGE_CODE_651: 'MESSAGE_CODE_651',
+  // Time Slot Is Fully Booked
+  MESSAGE_CODE_652: 'MESSAGE_CODE_652',
+  // Invalid Access Schedule Status Transition
+  MESSAGE_CODE_653: 'MESSAGE_CODE_653',
+  // Check-in Time Has Not Started Yet
+  MESSAGE_CODE_654: 'MESSAGE_CODE_654',
+  // Check-in Grace Period Has Expired
+  MESSAGE_CODE_655: 'MESSAGE_CODE_655',
+  // Cannot Cancel Access Schedule Too Close To Start Time
+  MESSAGE_CODE_656: 'MESSAGE_CODE_656',
+  // Customer Already Has An Active Schedule In This Time Slot
+  MESSAGE_CODE_657: 'MESSAGE_CODE_657',
+  // Access Schedule Does Not Belong To Facility
+  MESSAGE_CODE_658: 'MESSAGE_CODE_658',
+  // Invalid Or Expired Access QR Token Or OTP
+  MESSAGE_CODE_659: 'MESSAGE_CODE_659',
+
+  // ==========================================
   // INCIDENT (700 - 709)
   // ==========================================
   // Incident Not Found
@@ -634,6 +656,17 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
     'Only Assigned Staff Or Facility Manager Can Complete Outbound Handover',
   MESSAGE_CODE_650:
     'Self Storage Units Do Not Support Inventory And SKU Management',
+
+  // Access Schedule
+  MESSAGE_CODE_651: 'Access Schedule Not Found',
+  MESSAGE_CODE_652: 'Time Slot Is Fully Booked',
+  MESSAGE_CODE_653: 'Invalid Access Schedule Status Transition',
+  MESSAGE_CODE_654: 'Check-in Time Has Not Started Yet',
+  MESSAGE_CODE_655: 'Check-in Grace Period Has Expired',
+  MESSAGE_CODE_656: 'Cannot Cancel Access Schedule Too Close To Start Time',
+  MESSAGE_CODE_657: 'Customer Already Has An Active Schedule In This Time Slot',
+  MESSAGE_CODE_658: 'Access Schedule Does Not Belong To Facility',
+  MESSAGE_CODE_659: 'Invalid Or Expired Access QR Token Or OTP',
 
   // Incident
   MESSAGE_CODE_700: 'Incident Not Found',

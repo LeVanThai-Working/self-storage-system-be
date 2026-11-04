@@ -23,9 +23,9 @@ import {
   closeReservationWorker,
 } from './modules/reservation/reservation.worker.ts';
 import {
-  initInventoryRequestWorker,
-  closeInventoryRequestWorker,
-} from './modules/customerInventory/inventoryRequest.worker.ts';
+  initAccessScheduleWorker,
+  closeAccessScheduleWorker,
+} from './modules/customerInventory/accessSchedule.worker.ts';
 import {
   initBillingWorker,
   closeBillingWorker,
@@ -64,7 +64,7 @@ const initServices = async () => {
     await connect();
     await connectRedis();
     await initReservationWorker();
-    await initInventoryRequestWorker();
+    await initAccessScheduleWorker();
     await initBillingWorker();
   } catch (error) {
     console.error('Fatal error initializing services:', error);
@@ -156,7 +156,7 @@ httpServer.listen(port, '0.0.0.0', () => {
 const shutdown = async (signal: string) => {
   console.log(`\nReceived ${signal}. Gracefully shutting down...`);
   await closeReservationWorker();
-  await closeInventoryRequestWorker();
+  await closeAccessScheduleWorker();
   await closeBillingWorker();
   process.exit(0);
 };

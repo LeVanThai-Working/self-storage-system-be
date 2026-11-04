@@ -946,7 +946,12 @@
 					"pay_invoice",
 					"cancel_invoice",
 					"void_invoice",
-					"send_invoice"
+					"send_invoice",
+					"create_access_schedule",
+					"check_in_access_schedule",
+					"check_out_access_schedule",
+					"cancel_access_schedule",
+					"no_show_access_schedule"
 				],
 				"type": "string"
 			},
@@ -978,7 +983,8 @@
 					"legal_entity",
 					"signing_authorization",
 					"contract_template",
-					"invoice"
+					"invoice",
+					"access_schedule"
 				],
 				"type": "string"
 			},
@@ -11400,1225 +11406,6 @@
 			"UpdateCustomerSkuRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateCustomerSkuSchema_"
 			},
-			"InventoryRequestTypeEnum": {
-				"enum": [
-					"inbound",
-					"outbound"
-				],
-				"type": "string"
-			},
-			"InventoryRequestStatusEnum": {
-				"enum": [
-					"pending",
-					"pending_confirmation",
-					"processing",
-					"ready_to_putaway",
-					"completed",
-					"disputed",
-					"cancelled",
-					"expired"
-				],
-				"type": "string"
-			},
-			"infer_typeofinventoryRequestResponseSchema_": {
-				"properties": {
-					"isAutoConfirmed": {
-						"type": "boolean"
-					},
-					"cancelledAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"completedBy": {
-						"type": "string"
-					},
-					"completedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"verifiedBy": {
-						"type": "string"
-					},
-					"verifiedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"assignedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"assignedStaffName": {
-						"type": "string"
-					},
-					"assignedStaffId": {
-						"type": "string"
-					},
-					"customerFeedbackNotes": {
-						"type": "string"
-					},
-					"discrepancyImages": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"discrepancyReason": {
-						"type": "string"
-					},
-					"staffNotes": {
-						"type": "string"
-					},
-					"signatureUrl": {
-						"type": "string"
-					},
-					"evidenceImages": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"transporterInfo": {
-						"properties": {
-							"deliveryCompany": {
-								"type": "string"
-							},
-							"vehiclePlate": {
-								"type": "string"
-							},
-							"phoneNumber": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"phoneNumber",
-							"name"
-						],
-						"type": "object"
-					},
-					"expiresAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"rawOtpCode": {
-						"type": "string"
-					},
-					"pickupQrPayload": {
-						"type": "string"
-					},
-					"pickupQrToken": {
-						"type": "string"
-					},
-					"unitNumber": {
-						"type": "string"
-					},
-					"facilityName": {
-						"type": "string"
-					},
-					"facilityCode": {
-						"type": "string"
-					},
-					"updatedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"createdAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"isVerified": {
-						"type": "boolean"
-					},
-					"items": {
-						"items": {
-							"properties": {
-								"tierNumber": {
-									"type": "number",
-									"format": "double"
-								},
-								"rackTierId": {
-									"type": "string"
-								},
-								"zone": {
-									"type": "string"
-								},
-								"bay": {
-									"type": "number",
-									"format": "double"
-								},
-								"aisle": {
-									"type": "string"
-								},
-								"rackCode": {
-									"type": "string"
-								},
-								"storageRackId": {
-									"type": "string"
-								},
-								"discrepancyQuantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"actualQuantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"uom": {
-									"type": "string"
-								},
-								"barcode": {
-									"type": "string"
-								},
-								"name": {
-									"type": "string"
-								},
-								"skuCode": {
-									"type": "string"
-								},
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"skuId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"quantity",
-								"skuId"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"storageUnitId": {
-						"type": "string"
-					},
-					"facilityId": {
-						"type": "string"
-					},
-					"contractId": {
-						"type": "string"
-					},
-					"customerId": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/InventoryRequestStatusEnum"
-					},
-					"type": {
-						"$ref": "#/components/schemas/InventoryRequestTypeEnum"
-					},
-					"requestCode": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"updatedAt",
-					"createdAt",
-					"isVerified",
-					"items",
-					"storageUnitId",
-					"facilityId",
-					"contractId",
-					"customerId",
-					"status",
-					"type",
-					"requestCode",
-					"id"
-				],
-				"type": "object"
-			},
-			"InventoryRequestResponse": {
-				"$ref": "#/components/schemas/infer_typeofinventoryRequestResponseSchema_"
-			},
-			"ApiResponse_InventoryRequestResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/InventoryRequestResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofcreateOutboundRequestSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"expiresAt": {
-						"type": "string"
-					},
-					"transporterInfo": {
-						"properties": {
-							"deliveryCompany": {
-								"type": "string"
-							},
-							"vehiclePlate": {
-								"type": "string"
-							},
-							"phoneNumber": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"phoneNumber",
-							"name"
-						],
-						"type": "object"
-					},
-					"items": {
-						"items": {
-							"properties": {
-								"rackTierId": {
-									"type": "string"
-								},
-								"storageRackId": {
-									"type": "string"
-								},
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"skuId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"rackTierId",
-								"storageRackId",
-								"quantity",
-								"skuId"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"contractId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"items",
-					"contractId"
-				],
-				"type": "object"
-			},
-			"CreateOutboundRequest": {
-				"$ref": "#/components/schemas/infer_typeofcreateOutboundRequestSchema_"
-			},
-			"infer_typeofverifiedHandoverDetailsResponseSchema_": {
-				"properties": {
-					"transporterInfo": {
-						"properties": {
-							"deliveryCompany": {
-								"type": "string"
-							},
-							"vehiclePlate": {
-								"type": "string"
-							},
-							"phoneNumber": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"phoneNumber",
-							"name"
-						],
-						"type": "object"
-					},
-					"unitNumber": {
-						"type": "string"
-					},
-					"assignedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"assignedStaffName": {
-						"type": "string"
-					},
-					"assignedStaffId": {
-						"type": "string"
-					},
-					"customerPhone": {
-						"type": "string"
-					},
-					"customerName": {
-						"type": "string"
-					},
-					"verifiedBy": {
-						"type": "string"
-					},
-					"verifiedAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"items": {
-						"items": {
-							"properties": {
-								"tierNumber": {
-									"type": "number",
-									"format": "double"
-								},
-								"rackTierId": {
-									"type": "string"
-								},
-								"zone": {
-									"type": "string"
-								},
-								"bay": {
-									"type": "number",
-									"format": "double"
-								},
-								"aisle": {
-									"type": "string"
-								},
-								"rackCode": {
-									"type": "string"
-								},
-								"storageRackId": {
-									"type": "string"
-								},
-								"discrepancyQuantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"actualQuantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"uom": {
-									"type": "string"
-								},
-								"barcode": {
-									"type": "string"
-								},
-								"name": {
-									"type": "string"
-								},
-								"skuCode": {
-									"type": "string"
-								},
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"skuId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"quantity",
-								"skuId"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"storageUnitId": {
-						"type": "string"
-					},
-					"facilityId": {
-						"type": "string"
-					},
-					"contractId": {
-						"type": "string"
-					},
-					"customerId": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/InventoryRequestStatusEnum"
-					},
-					"type": {
-						"$ref": "#/components/schemas/InventoryRequestTypeEnum"
-					},
-					"requestCode": {
-						"type": "string"
-					},
-					"id": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"verifiedBy",
-					"verifiedAt",
-					"items",
-					"storageUnitId",
-					"facilityId",
-					"contractId",
-					"customerId",
-					"status",
-					"type",
-					"requestCode",
-					"id"
-				],
-				"type": "object"
-			},
-			"VerifiedHandoverDetailsResponse": {
-				"$ref": "#/components/schemas/infer_typeofverifiedHandoverDetailsResponseSchema_"
-			},
-			"ApiResponse_VerifiedHandoverDetailsResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/VerifiedHandoverDetailsResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofverifyPickupCodeSchema_": {
-				"properties": {
-					"requestCode": {
-						"type": "string"
-					},
-					"pickupCode": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"pickupCode"
-				],
-				"type": "object"
-			},
-			"VerifyPickupCodeRequest": {
-				"$ref": "#/components/schemas/infer_typeofverifyPickupCodeSchema_"
-			},
-			"infer_typeofcompleteOutboundHandoverSchema_": {
-				"properties": {
-					"discrepancyImages": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"discrepancyReason": {
-						"type": "string"
-					},
-					"actualItems": {
-						"items": {
-							"properties": {
-								"rackTierId": {
-									"type": "string"
-								},
-								"storageRackId": {
-									"type": "string"
-								},
-								"actualQuantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"skuId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"actualQuantity",
-								"skuId"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"staffNotes": {
-						"type": "string"
-					},
-					"signatureUrl": {
-						"type": "string"
-					},
-					"evidenceImages": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"evidenceImages"
-				],
-				"type": "object"
-			},
-			"CompleteOutboundHandoverRequest": {
-				"$ref": "#/components/schemas/infer_typeofcompleteOutboundHandoverSchema_"
-			},
-			"infer_typeofcancelOutboundRequestSchema_": {
-				"properties": {
-					"reason": {
-						"type": "string"
-					}
-				},
-				"type": "object"
-			},
-			"CancelOutboundRequest": {
-				"$ref": "#/components/schemas/infer_typeofcancelOutboundRequestSchema_"
-			},
-			"infer_typeofcreateInboundRequestSchema_": {
-				"properties": {
-					"staffNotes": {
-						"type": "string"
-					},
-					"signatureUrl": {
-						"type": "string"
-					},
-					"evidenceImages": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"transporterInfo": {
-						"properties": {
-							"deliveryCompany": {
-								"type": "string"
-							},
-							"vehiclePlate": {
-								"type": "string"
-							},
-							"phoneNumber": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"phoneNumber",
-							"name"
-						],
-						"type": "object"
-					},
-					"items": {
-						"items": {
-							"properties": {
-								"rackTierId": {
-									"type": "string"
-								},
-								"storageRackId": {
-									"type": "string"
-								},
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"skuId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"quantity",
-								"skuId"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"contractId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"evidenceImages",
-					"transporterInfo",
-					"items",
-					"contractId"
-				],
-				"type": "object"
-			},
-			"CreateInboundRequest": {
-				"$ref": "#/components/schemas/infer_typeofcreateInboundRequestSchema_"
-			},
-			"infer_typeofcreatePreAdvisedInboundRequestSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"expiresAt": {
-						"type": "string"
-					},
-					"transporterInfo": {
-						"properties": {
-							"deliveryCompany": {
-								"type": "string"
-							},
-							"vehiclePlate": {
-								"type": "string"
-							},
-							"phoneNumber": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
-							}
-						},
-						"required": [
-							"phoneNumber",
-							"name"
-						],
-						"type": "object"
-					},
-					"items": {
-						"items": {
-							"properties": {
-								"rackTierId": {
-									"type": "string"
-								},
-								"storageRackId": {
-									"type": "string"
-								},
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"skuId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"quantity",
-								"skuId"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					},
-					"contractId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"items",
-					"contractId"
-				],
-				"type": "object"
-			},
-			"CreatePreAdvisedInboundRequest": {
-				"$ref": "#/components/schemas/infer_typeofcreatePreAdvisedInboundRequestSchema_"
-			},
-			"infer_typeofcancelInboundRequestSchema_": {
-				"properties": {
-					"reason": {
-						"type": "string"
-					}
-				},
-				"type": "object"
-			},
-			"CancelInboundRequest": {
-				"$ref": "#/components/schemas/infer_typeofcancelInboundRequestSchema_"
-			},
-			"infer_typeofdisputeInboundRequestSchema_": {
-				"properties": {
-					"disputeReason": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"disputeReason"
-				],
-				"type": "object"
-			},
-			"DisputeInboundRequest": {
-				"$ref": "#/components/schemas/infer_typeofdisputeInboundRequestSchema_"
-			},
-			"infer_typeofputawayInboundRequestSchema_": {
-				"properties": {
-					"placements": {
-						"items": {
-							"properties": {
-								"rackTierId": {
-									"type": "string"
-								},
-								"storageRackId": {
-									"type": "string"
-								},
-								"quantity": {
-									"type": "number",
-									"format": "double"
-								},
-								"skuId": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"rackTierId",
-								"storageRackId",
-								"quantity",
-								"skuId"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"placements"
-				],
-				"type": "object"
-			},
-			"PutawayInboundRequest": {
-				"$ref": "#/components/schemas/infer_typeofputawayInboundRequestSchema_"
-			},
-			"infer_typeofpaginatedInventoryRequestResponseSchema_": {
-				"properties": {
-					"pagination": {
-						"properties": {
-							"hasPrevPage": {
-								"type": "boolean"
-							},
-							"hasNextPage": {
-								"type": "boolean"
-							},
-							"totalPages": {
-								"type": "number",
-								"format": "double"
-							},
-							"totalItems": {
-								"type": "number",
-								"format": "double"
-							},
-							"limit": {
-								"type": "number",
-								"format": "double"
-							},
-							"page": {
-								"type": "number",
-								"format": "double"
-							}
-						},
-						"required": [
-							"hasPrevPage",
-							"hasNextPage",
-							"totalPages",
-							"totalItems",
-							"limit",
-							"page"
-						],
-						"type": "object"
-					},
-					"items": {
-						"items": {
-							"properties": {
-								"isAutoConfirmed": {
-									"type": "boolean"
-								},
-								"cancelledAt": {
-									"type": "string",
-									"format": "date-time"
-								},
-								"completedBy": {
-									"type": "string"
-								},
-								"completedAt": {
-									"type": "string",
-									"format": "date-time"
-								},
-								"verifiedBy": {
-									"type": "string"
-								},
-								"verifiedAt": {
-									"type": "string",
-									"format": "date-time"
-								},
-								"assignedAt": {
-									"type": "string",
-									"format": "date-time"
-								},
-								"assignedStaffName": {
-									"type": "string"
-								},
-								"assignedStaffId": {
-									"type": "string"
-								},
-								"customerFeedbackNotes": {
-									"type": "string"
-								},
-								"discrepancyImages": {
-									"items": {
-										"type": "string"
-									},
-									"type": "array"
-								},
-								"discrepancyReason": {
-									"type": "string"
-								},
-								"staffNotes": {
-									"type": "string"
-								},
-								"signatureUrl": {
-									"type": "string"
-								},
-								"evidenceImages": {
-									"items": {
-										"type": "string"
-									},
-									"type": "array"
-								},
-								"transporterInfo": {
-									"properties": {
-										"deliveryCompany": {
-											"type": "string"
-										},
-										"vehiclePlate": {
-											"type": "string"
-										},
-										"phoneNumber": {
-											"type": "string"
-										},
-										"name": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"phoneNumber",
-										"name"
-									],
-									"type": "object"
-								},
-								"expiresAt": {
-									"type": "string",
-									"format": "date-time"
-								},
-								"rawOtpCode": {
-									"type": "string"
-								},
-								"pickupQrPayload": {
-									"type": "string"
-								},
-								"pickupQrToken": {
-									"type": "string"
-								},
-								"unitNumber": {
-									"type": "string"
-								},
-								"facilityName": {
-									"type": "string"
-								},
-								"facilityCode": {
-									"type": "string"
-								},
-								"updatedAt": {
-									"type": "string",
-									"format": "date-time"
-								},
-								"createdAt": {
-									"type": "string",
-									"format": "date-time"
-								},
-								"isVerified": {
-									"type": "boolean"
-								},
-								"items": {
-									"items": {
-										"properties": {
-											"tierNumber": {
-												"type": "number",
-												"format": "double"
-											},
-											"rackTierId": {
-												"type": "string"
-											},
-											"zone": {
-												"type": "string"
-											},
-											"bay": {
-												"type": "number",
-												"format": "double"
-											},
-											"aisle": {
-												"type": "string"
-											},
-											"rackCode": {
-												"type": "string"
-											},
-											"storageRackId": {
-												"type": "string"
-											},
-											"discrepancyQuantity": {
-												"type": "number",
-												"format": "double"
-											},
-											"actualQuantity": {
-												"type": "number",
-												"format": "double"
-											},
-											"uom": {
-												"type": "string"
-											},
-											"barcode": {
-												"type": "string"
-											},
-											"name": {
-												"type": "string"
-											},
-											"skuCode": {
-												"type": "string"
-											},
-											"quantity": {
-												"type": "number",
-												"format": "double"
-											},
-											"skuId": {
-												"type": "string"
-											}
-										},
-										"required": [
-											"quantity",
-											"skuId"
-										],
-										"type": "object"
-									},
-									"type": "array"
-								},
-								"storageUnitId": {
-									"type": "string"
-								},
-								"facilityId": {
-									"type": "string"
-								},
-								"contractId": {
-									"type": "string"
-								},
-								"customerId": {
-									"type": "string"
-								},
-								"status": {
-									"$ref": "#/components/schemas/InventoryRequestStatusEnum"
-								},
-								"type": {
-									"$ref": "#/components/schemas/InventoryRequestTypeEnum"
-								},
-								"requestCode": {
-									"type": "string"
-								},
-								"id": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"updatedAt",
-								"createdAt",
-								"isVerified",
-								"items",
-								"storageUnitId",
-								"facilityId",
-								"contractId",
-								"customerId",
-								"status",
-								"type",
-								"requestCode",
-								"id"
-							],
-							"type": "object"
-						},
-						"type": "array"
-					}
-				},
-				"required": [
-					"pagination",
-					"items"
-				],
-				"type": "object"
-			},
-			"PaginatedInventoryRequestResponse": {
-				"$ref": "#/components/schemas/infer_typeofpaginatedInventoryRequestResponseSchema_"
-			},
-			"ApiResponse_PaginatedInventoryRequestResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/PaginatedInventoryRequestResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"InventoryRequestQuery": {
-				"properties": {
-					"page": {
-						"type": "number",
-						"format": "double"
-					},
-					"limit": {
-						"type": "number",
-						"format": "double"
-					},
-					"search": {
-						"type": "string"
-					},
-					"sortBy": {
-						"type": "string"
-					},
-					"sortOrder": {
-						"type": "string",
-						"enum": [
-							"asc",
-							"desc"
-						]
-					},
-					"customerId": {
-						"type": "string"
-					},
-					"facilityId": {
-						"type": "string"
-					},
-					"contractId": {
-						"type": "string"
-					},
-					"type": {
-						"$ref": "#/components/schemas/InventoryRequestTypeEnum"
-					},
-					"status": {
-						"$ref": "#/components/schemas/InventoryRequestStatusEnum"
-					},
-					"startDate": {
-						"type": "string"
-					},
-					"endDate": {
-						"type": "string"
-					}
-				},
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofassignInventoryRequestSchema_": {
-				"properties": {
-					"assignedStaffId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"assignedStaffId"
-				],
-				"type": "object"
-			},
-			"AssignInventoryRequest": {
-				"$ref": "#/components/schemas/infer_typeofassignInventoryRequestSchema_"
-			},
-			"infer_typeofregenerateOtpResponseSchema_": {
-				"properties": {
-					"expiresAt": {
-						"type": "string",
-						"format": "date-time"
-					},
-					"rawOtpCode": {
-						"type": "string"
-					},
-					"requestCode": {
-						"type": "string"
-					},
-					"requestId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"expiresAt",
-					"rawOtpCode",
-					"requestCode",
-					"requestId"
-				],
-				"type": "object"
-			},
-			"RegenerateOtpResponse": {
-				"$ref": "#/components/schemas/infer_typeofregenerateOtpResponseSchema_"
-			},
-			"ApiResponse_RegenerateOtpResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/RegenerateOtpResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"InventoryItemStatusEnum": {
 				"enum": [
 					"normal",
@@ -14673,122 +13460,6 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofbatchMigrateRackResponseSchema_": {
-				"properties": {
-					"message": {
-						"type": "string"
-					},
-					"movementsGenerated": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"totalQuantityMigrated": {
-						"type": "number",
-						"format": "double"
-					},
-					"migratedItemsCount": {
-						"type": "number",
-						"format": "double"
-					},
-					"contractId": {
-						"type": "string"
-					},
-					"toRackCode": {
-						"type": "string"
-					},
-					"fromRackCode": {
-						"type": "string"
-					},
-					"toRackId": {
-						"type": "string"
-					},
-					"fromRackId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"message",
-					"movementsGenerated",
-					"totalQuantityMigrated",
-					"migratedItemsCount",
-					"contractId",
-					"toRackCode",
-					"fromRackCode",
-					"toRackId",
-					"fromRackId"
-				],
-				"type": "object"
-			},
-			"BatchMigrateRackResponse": {
-				"$ref": "#/components/schemas/infer_typeofbatchMigrateRackResponseSchema_"
-			},
-			"ApiResponse_BatchMigrateRackResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/BatchMigrateRackResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofbatchMigrateRackRequestSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"reason": {
-						"type": "string"
-					},
-					"emergencyReason": {
-						"type": "string"
-					},
-					"incidentId": {
-						"type": "string"
-					},
-					"addendumId": {
-						"type": "string"
-					},
-					"contractId": {
-						"type": "string"
-					},
-					"toRackId": {
-						"type": "string"
-					},
-					"fromRackId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"toRackId",
-					"fromRackId"
-				],
-				"type": "object"
-			},
-			"BatchMigrateRackRequest": {
-				"$ref": "#/components/schemas/infer_typeofbatchMigrateRackRequestSchema_"
-			},
 			"infer_typeofevacuateRackResponseSchema_": {
 				"properties": {
 					"message": {
@@ -14907,6 +13578,733 @@
 			},
 			"UpdateInventoryStatusRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateInventoryStatusRequestSchema_"
+			},
+			"AccessScheduleStatusEnum": {
+				"enum": [
+					"pending",
+					"checked_in",
+					"completed",
+					"cancelled",
+					"no_show",
+					"expired"
+				],
+				"type": "string"
+			},
+			"infer_typeofaccessScheduleDetailResponseSchema_": {
+				"properties": {
+					"rentedRacks": {
+						"items": {
+							"properties": {
+								"zone": {
+									"type": "string"
+								},
+								"bay": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "number",
+											"format": "double"
+										}
+									]
+								},
+								"aisle": {
+									"type": "string"
+								},
+								"rackCode": {
+									"type": "string"
+								},
+								"rackId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"rackCode",
+								"rackId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"staffNotes": {
+						"type": "string"
+					},
+					"cancelledReason": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string"
+					},
+					"checkedOutByName": {
+						"type": "string"
+					},
+					"checkedOutAt": {
+						"type": "string"
+					},
+					"checkedInByName": {
+						"type": "string"
+					},
+					"checkedInAt": {
+						"type": "string"
+					},
+					"rawOtpCode": {
+						"type": "string"
+					},
+					"qrPayload": {
+						"type": "string"
+					},
+					"purpose": {
+						"type": "string"
+					},
+					"vehiclePlate": {
+						"type": "string"
+					},
+					"vehicleType": {
+						"type": "string"
+					},
+					"facilityCode": {
+						"type": "string"
+					},
+					"facilityName": {
+						"type": "string"
+					},
+					"contractCode": {
+						"type": "string"
+					},
+					"customerPhone": {
+						"type": "string"
+					},
+					"customerName": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"expiresAt": {
+						"type": "string"
+					},
+					"numberOfPeople": {
+						"type": "number",
+						"format": "double"
+					},
+					"scheduledDate": {
+						"type": "string"
+					},
+					"timeSlotSnapshot": {
+						"properties": {
+							"endTime": {
+								"type": "string"
+							},
+							"startTime": {
+								"type": "string"
+							},
+							"slotName": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"endTime",
+							"startTime",
+							"slotName"
+						],
+						"type": "object"
+					},
+					"timeSlotId": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AccessScheduleStatusEnum"
+					},
+					"scheduleCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"expiresAt",
+					"numberOfPeople",
+					"scheduledDate",
+					"timeSlotSnapshot",
+					"timeSlotId",
+					"facilityId",
+					"contractId",
+					"customerId",
+					"status",
+					"scheduleCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"AccessScheduleDetailResponse": {
+				"$ref": "#/components/schemas/infer_typeofaccessScheduleDetailResponseSchema_"
+			},
+			"ApiResponse_AccessScheduleDetailResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AccessScheduleDetailResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcreateAccessScheduleSchema_": {
+				"properties": {
+					"purpose": {
+						"type": "string"
+					},
+					"vehiclePlate": {
+						"type": "string"
+					},
+					"vehicleType": {
+						"type": "string"
+					},
+					"numberOfPeople": {
+						"type": "number",
+						"format": "double"
+					},
+					"scheduledDate": {
+						"type": "string"
+					},
+					"timeSlotId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"scheduledDate",
+					"timeSlotId",
+					"contractId"
+				],
+				"type": "object"
+			},
+			"CreateAccessScheduleRequest": {
+				"$ref": "#/components/schemas/infer_typeofcreateAccessScheduleSchema_"
+			},
+			"infer_typeofavailableAccessSlotResponseSchema_": {
+				"properties": {
+					"isAvailable": {
+						"type": "boolean"
+					},
+					"availableCapacity": {
+						"type": "number",
+						"format": "double"
+					},
+					"bookedCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"maxCapacity": {
+						"type": "number",
+						"format": "double"
+					},
+					"endTime": {
+						"type": "string"
+					},
+					"startTime": {
+						"type": "string"
+					},
+					"slotName": {
+						"type": "string"
+					},
+					"timeSlotId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"isAvailable",
+					"availableCapacity",
+					"bookedCount",
+					"maxCapacity",
+					"endTime",
+					"startTime",
+					"slotName",
+					"timeSlotId"
+				],
+				"type": "object"
+			},
+			"AvailableAccessSlotResponse": {
+				"$ref": "#/components/schemas/infer_typeofavailableAccessSlotResponseSchema_"
+			},
+			"ApiResponse_AvailableAccessSlotResponse-Array_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"items": {
+							"$ref": "#/components/schemas/AvailableAccessSlotResponse"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofaccessScheduleCheckInResponseSchema_": {
+				"properties": {
+					"message": {
+						"type": "string"
+					},
+					"rentedRacks": {
+						"items": {
+							"properties": {
+								"zone": {
+									"type": "string"
+								},
+								"bay": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"type": "number",
+											"format": "double"
+										}
+									]
+								},
+								"aisle": {
+									"type": "string"
+								},
+								"rackCode": {
+									"type": "string"
+								},
+								"rackId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"rackCode",
+								"rackId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"schedule": {
+						"properties": {
+							"rentedRacks": {
+								"items": {
+									"properties": {
+										"zone": {
+											"type": "string"
+										},
+										"bay": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"type": "number",
+													"format": "double"
+												}
+											]
+										},
+										"aisle": {
+											"type": "string"
+										},
+										"rackCode": {
+											"type": "string"
+										},
+										"rackId": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"rackCode",
+										"rackId"
+									],
+									"type": "object"
+								},
+								"type": "array"
+							},
+							"staffNotes": {
+								"type": "string"
+							},
+							"cancelledReason": {
+								"type": "string"
+							},
+							"cancelledAt": {
+								"type": "string"
+							},
+							"checkedOutByName": {
+								"type": "string"
+							},
+							"checkedOutAt": {
+								"type": "string"
+							},
+							"checkedInByName": {
+								"type": "string"
+							},
+							"checkedInAt": {
+								"type": "string"
+							},
+							"rawOtpCode": {
+								"type": "string"
+							},
+							"qrPayload": {
+								"type": "string"
+							},
+							"purpose": {
+								"type": "string"
+							},
+							"vehiclePlate": {
+								"type": "string"
+							},
+							"vehicleType": {
+								"type": "string"
+							},
+							"facilityCode": {
+								"type": "string"
+							},
+							"facilityName": {
+								"type": "string"
+							},
+							"contractCode": {
+								"type": "string"
+							},
+							"customerPhone": {
+								"type": "string"
+							},
+							"customerName": {
+								"type": "string"
+							},
+							"updatedAt": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "string"
+							},
+							"expiresAt": {
+								"type": "string"
+							},
+							"numberOfPeople": {
+								"type": "number",
+								"format": "double"
+							},
+							"scheduledDate": {
+								"type": "string"
+							},
+							"timeSlotSnapshot": {
+								"properties": {
+									"endTime": {
+										"type": "string"
+									},
+									"startTime": {
+										"type": "string"
+									},
+									"slotName": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"endTime",
+									"startTime",
+									"slotName"
+								],
+								"type": "object"
+							},
+							"timeSlotId": {
+								"type": "string"
+							},
+							"facilityId": {
+								"type": "string"
+							},
+							"contractId": {
+								"type": "string"
+							},
+							"customerId": {
+								"type": "string"
+							},
+							"status": {
+								"$ref": "#/components/schemas/AccessScheduleStatusEnum"
+							},
+							"scheduleCode": {
+								"type": "string"
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"updatedAt",
+							"createdAt",
+							"expiresAt",
+							"numberOfPeople",
+							"scheduledDate",
+							"timeSlotSnapshot",
+							"timeSlotId",
+							"facilityId",
+							"contractId",
+							"customerId",
+							"status",
+							"scheduleCode",
+							"id"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"message",
+					"rentedRacks",
+					"schedule"
+				],
+				"type": "object"
+			},
+			"AccessScheduleCheckInResponse": {
+				"$ref": "#/components/schemas/infer_typeofaccessScheduleCheckInResponseSchema_"
+			},
+			"ApiResponse_AccessScheduleCheckInResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/AccessScheduleCheckInResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"infer_typeofcheckInAccessScheduleSchema_": {
+				"properties": {
+					"staffNotes": {
+						"type": "string"
+					},
+					"code": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"code"
+				],
+				"type": "object"
+			},
+			"CheckInAccessScheduleRequest": {
+				"$ref": "#/components/schemas/infer_typeofcheckInAccessScheduleSchema_"
+			},
+			"infer_typeofcheckOutAccessScheduleSchema_": {
+				"properties": {
+					"staffNotes": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"CheckOutAccessScheduleRequest": {
+				"$ref": "#/components/schemas/infer_typeofcheckOutAccessScheduleSchema_"
+			},
+			"infer_typeofcancelAccessScheduleSchema_": {
+				"properties": {
+					"reason": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"CancelAccessScheduleRequest": {
+				"$ref": "#/components/schemas/infer_typeofcancelAccessScheduleSchema_"
+			},
+			"infer_typeofaccessScheduleListItemResponseSchema_": {
+				"properties": {
+					"checkedOutAt": {
+						"type": "string"
+					},
+					"checkedInAt": {
+						"type": "string"
+					},
+					"vehiclePlate": {
+						"type": "string"
+					},
+					"facilityName": {
+						"type": "string"
+					},
+					"contractCode": {
+						"type": "string"
+					},
+					"customerName": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"expiresAt": {
+						"type": "string"
+					},
+					"numberOfPeople": {
+						"type": "number",
+						"format": "double"
+					},
+					"scheduledDate": {
+						"type": "string"
+					},
+					"endTime": {
+						"type": "string"
+					},
+					"startTime": {
+						"type": "string"
+					},
+					"slotName": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"contractId": {
+						"type": "string"
+					},
+					"customerId": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/AccessScheduleStatusEnum"
+					},
+					"scheduleCode": {
+						"type": "string"
+					},
+					"id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"createdAt",
+					"expiresAt",
+					"numberOfPeople",
+					"scheduledDate",
+					"endTime",
+					"startTime",
+					"slotName",
+					"facilityId",
+					"contractId",
+					"customerId",
+					"status",
+					"scheduleCode",
+					"id"
+				],
+				"type": "object"
+			},
+			"AccessScheduleListItemResponse": {
+				"$ref": "#/components/schemas/infer_typeofaccessScheduleListItemResponseSchema_"
+			},
+			"PaginatedData_AccessScheduleListItemResponse_": {
+				"properties": {
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/AccessScheduleListItemResponse"
+						},
+						"type": "array"
+					},
+					"pagination": {
+						"$ref": "#/components/schemas/PaginationMeta"
+					}
+				},
+				"required": [
+					"items",
+					"pagination"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_PaginatedData_AccessScheduleListItemResponse__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/PaginatedData_AccessScheduleListItemResponse_"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
 			"ContractSourceEnum": {
 				"enum": [
@@ -27999,914 +27397,6 @@
 				]
 			}
 		},
-		"/customer-inventories/outbound-requests": {
-			"post": {
-				"operationId": "CreateOutboundRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "1. Customer creates an Outbound (Stock Out) Request\nGenerates One-Time Pickup QR token and HMAC-SHA256 hashed OTP",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateOutboundRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/verify-pickup-code": {
-			"post": {
-				"operationId": "VerifyPickupCode",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_VerifiedHandoverDetailsResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Invalid or expired code",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "2. Staff verifies Pickup QR Code or OTP (Opens Handover Details & transitions to PROCESSING)",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/VerifyPickupCodeRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/outbound-requests/{id}/complete": {
-			"post": {
-				"operationId": "CompleteOutboundHandover",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "3. Staff completes Outbound Handover (Atomic deduction, movement logging, tier sync)",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CompleteOutboundHandoverRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/outbound-requests/{id}/cancel": {
-			"post": {
-				"operationId": "CancelOutboundRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Cannot cancel request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "4. Customer cancels Outbound Request (Only allowed when PENDING)",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CancelOutboundRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/inbound-requests": {
-			"post": {
-				"operationId": "CreateInboundRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "5. Staff assists Inbound delivery receipt (Creates request in Staging Area with 3 evidence images)",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreateInboundRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/inbound-requests/pre-advised": {
-			"post": {
-				"operationId": "CreatePreAdvisedInboundRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "5b. Customer creates a Pre-advised Inbound Request (Returns rawOtpCode & QR payload)",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CreatePreAdvisedInboundRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/inbound-requests/{id}/cancel": {
-			"post": {
-				"operationId": "CancelInboundRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Cannot cancel request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "5c. Customer cancels Pre-advised Inbound Request (Only allowed when PENDING)",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/CancelInboundRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/inbound-requests/{id}/confirm": {
-			"post": {
-				"operationId": "ConfirmInboundRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "6. Customer confirms Inbound receipt",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/customer-inventories/inbound-requests/{id}/dispute": {
-			"post": {
-				"operationId": "DisputeInboundRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "7. Customer disputes Inbound delivery",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/DisputeInboundRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/inbound-requests/{id}/putaway": {
-			"post": {
-				"operationId": "PutawayInboundRequest",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "8. Staff performs Putaway (moves goods from staging area onto shelf tiers)",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/PutawayInboundRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/requests": {
-			"get": {
-				"operationId": "GetRequests",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_PaginatedInventoryRequestResponse_"
-								}
-							}
-						}
-					}
-				},
-				"description": "9. Query Paginated Inventory Requests",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "query",
-						"name": "page",
-						"required": false,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "limit",
-						"required": false,
-						"schema": {
-							"format": "double",
-							"type": "number"
-						}
-					},
-					{
-						"in": "query",
-						"name": "search",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortBy",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "sortOrder",
-						"required": false,
-						"schema": {
-							"type": "string",
-							"enum": [
-								"asc",
-								"desc"
-							]
-						}
-					},
-					{
-						"in": "query",
-						"name": "customerId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "facilityId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "contractId",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "type",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/InventoryRequestTypeEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "status",
-						"required": false,
-						"schema": {
-							"$ref": "#/components/schemas/InventoryRequestStatusEnum"
-						}
-					},
-					{
-						"in": "query",
-						"name": "startDate",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					},
-					{
-						"in": "query",
-						"name": "endDate",
-						"required": false,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/customer-inventories/requests/process-auto-accept": {
-			"post": {
-				"operationId": "ProcessAutoAccept",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "10. Process Auto-Accept for Inbound Requests older than 24h (Cron / Batch job)\nNote: Placed before dynamic path param '{id}' to avoid route collisions.",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": []
-			}
-		},
-		"/customer-inventories/requests/{id}/assign": {
-			"post": {
-				"operationId": "AssignStaff",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Not Found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "10b. Customer regenerates OTP for Pending Request",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/AssignInventoryRequest"
-							}
-						}
-					}
-				}
-			}
-		},
-		"/customer-inventories/requests/{id}/regenerate-otp": {
-			"post": {
-				"operationId": "RegenerateOtp",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_RegenerateOtpResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Request Not Found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
-		"/customer-inventories/requests/{id}": {
-			"get": {
-				"operationId": "GetRequestById",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_InventoryRequestResponse_"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access Denied",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Request Not Found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "11. Get Single Request Details",
-				"tags": [
-					"Customer Inventory Request (Dual Handshake)"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
 		"/customer-inventories/in": {
 			"post": {
 				"operationId": "StockIn",
@@ -29108,7 +27598,7 @@
 						}
 					}
 				},
-				"description": "3. Internal Stock Move (Stock Move)\nInternal warehouse operation: Staff/FM/Ops/Admin relocates items between locations or from holding area onto a rack tier.\nPermitted when contract status is ACTIVE or OVERDUE.",
+				"description": "3. Stock Move (Stock Move)\nCustomer relocates items between their rented rack tiers within an active contract.\nPermitted when contract status is ACTIVE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -29822,79 +28312,6 @@
 				]
 			}
 		},
-		"/customer-inventories/racks/batch-migrate": {
-			"post": {
-				"operationId": "BatchMigrateRack",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_BatchMigrateRackResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Not Found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "8. Batch Rack Migration\nInternal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory\nfrom source rack to an identical, vacant destination rack with valid legal basis.",
-				"tags": [
-					"Customer Inventories"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/BatchMigrateRackRequest"
-							}
-						}
-					}
-				}
-			}
-		},
 		"/customer-inventories/racks/evacuate-to-holding": {
 			"post": {
 				"operationId": "EvacuateRackToHolding",
@@ -30048,6 +28465,361 @@
 						}
 					}
 				}
+			}
+		},
+		"/access-schedules": {
+			"post": {
+				"operationId": "CreateAccessSchedule",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AccessScheduleDetailResponse_"
+								}
+							}
+						}
+					}
+				},
+				"description": "1. Register a new Access Schedule to visit the warehouse rack\nCustomer books an access time slot and receives an Access QR Token + 6-digit OTP",
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateAccessScheduleRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "GetSchedules",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_PaginatedData_AccessScheduleListItemResponse__"
+								}
+							}
+						}
+					}
+				},
+				"description": "7. Query Access Schedules with Scoped RBAC",
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "page",
+						"required": false,
+						"schema": {
+							"default": 1,
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": false,
+						"schema": {
+							"default": 10,
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "customerId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "status",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "startDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "endDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/access-schedules/available-slots": {
+			"get": {
+				"operationId": "GetAvailableSlots",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AvailableAccessSlotResponse-Array_"
+								}
+							}
+						}
+					}
+				},
+				"description": "2. Get available access slots for a facility on a specific date",
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "date",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/access-schedules/check-in": {
+			"post": {
+				"operationId": "CheckIn",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AccessScheduleCheckInResponse_"
+								}
+							}
+						}
+					}
+				},
+				"description": "3. Gate Staff verifies Check-in (Supports EITHER QR code scan OR 6-digit OTP)\nOpens gate and returns rented rack locations and vehicle info for loading bay direction",
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CheckInAccessScheduleRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/access-schedules/{id}/check-out": {
+			"post": {
+				"operationId": "CheckOut",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AccessScheduleDetailResponse_"
+								}
+							}
+						}
+					}
+				},
+				"description": "4. Gate Staff scans Check-out when customer departs",
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CheckOutAccessScheduleRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/access-schedules/{id}/cancel": {
+			"post": {
+				"operationId": "CancelSchedule",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AccessScheduleDetailResponse_"
+								}
+							}
+						}
+					}
+				},
+				"description": "5. Customer cancels scheduled visit (at least 1 hour before start time)",
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CancelAccessScheduleRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/access-schedules/process-no-show": {
+			"post": {
+				"operationId": "ProcessNoShowScan",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__processedCount-number__"
+								}
+							}
+						}
+					}
+				},
+				"description": "6. Scan and mark overdue pending access schedules as NO_SHOW (Ops/Admin or Cron)",
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/access-schedules/{id}": {
+			"get": {
+				"operationId": "GetScheduleById",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AccessScheduleDetailResponse_"
+								}
+							}
+						}
+					}
+				},
+				"description": "8. Get Access Schedule detail by ID",
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/contracts": {

@@ -1,14 +1,16 @@
 import { CustomerInventory } from './customerInventory.model.ts';
 import { InventoryMovement } from './inventoryMovement.model.ts';
-import { InventoryRequest } from './inventoryRequest.model.ts';
+import { AccessSchedule } from './accessSchedule.model.ts';
 import { CustomerInventoryRepository } from './customerInventory.repository.ts';
 import { InventoryMovementRepository } from './inventoryMovement.repository.ts';
-import { InventoryRequestRepository } from './inventoryRequest.repository.ts';
+import { AccessScheduleRepository } from './accessSchedule.repository.ts';
 import { CustomerInventoryService } from './customerInventory.service.ts';
 import { CustomerInventoryController } from './customerInventory.controller.ts';
-import { InventoryRequestService } from './inventoryRequest.service.ts';
-import { InventoryRequestController } from './inventoryRequest.controller.ts';
+import { AccessScheduleService } from './accessSchedule.service.ts';
+import { AccessScheduleController } from './accessSchedule.controller.ts';
 import { contractRepository } from '../contract/contract.container.ts';
+import { facilityRepository } from '../facility/facility.container.ts';
+import { facilityTimeSlotRepository } from '../facilityTimeSlot/facilityTimeSlot.container.ts';
 import { CustomerSku } from '../customerSku/customerSku.model.ts';
 import { CustomerSkuRepository } from '../customerSku/customerSku.repository.ts';
 import {
@@ -31,8 +33,8 @@ export const customerInventoryRepository = new CustomerInventoryRepository(
 export const inventoryMovementRepository = new InventoryMovementRepository(
   InventoryMovement
 );
-export const inventoryRequestRepository = new InventoryRequestRepository(
-  InventoryRequest
+export const accessScheduleRepository = new AccessScheduleRepository(
+  AccessSchedule
 );
 
 export const customerInventoryService = new CustomerInventoryService(
@@ -49,14 +51,12 @@ export const customerInventoryService = new CustomerInventoryService(
   notificationService
 );
 
-export const inventoryRequestService = new InventoryRequestService(
-  inventoryRequestRepository,
-  customerInventoryRepository,
-  inventoryMovementRepository,
+export const accessScheduleService = new AccessScheduleService(
+  accessScheduleRepository,
   contractRepository,
+  facilityRepository,
+  facilityTimeSlotRepository,
   storageRackRepository,
-  rackTierRepository,
-  storageUnitRepository,
   userRepository,
   auditLogService,
   notificationService
@@ -66,6 +66,6 @@ export const customerInventoryController = new CustomerInventoryController(
   customerInventoryService
 );
 
-export const inventoryRequestController = new InventoryRequestController(
-  inventoryRequestService
+export const accessScheduleController = new AccessScheduleController(
+  accessScheduleService
 );

@@ -229,72 +229,74 @@ describe('Pha 1: FE Feedback Tests (G1, G3, G4, G7, G8, G12, G13)', () => {
     skuAId = String(sku._id);
   });
 
-  describe('G1: Customer Blocked from in/out/adjust, Staff allowed to adjust', () => {
-    it('blocks Customer from stockIn with 403 MESSAGE_CODE_103', async () => {
-      await expect(
-        inventoryService.stockIn(
-          {
-            contractId: contractAId,
-            skuId: skuAId,
-            rackTierId: tierA1Id,
-            quantity: 10,
-          },
-          customer1Caller
-        )
-      ).rejects.toMatchObject({
-        statusCode: 403,
-        messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
-      });
+  describe('G1 & T-SMR.1: Customer Self-Mutation & Zero-Touch Staff Policy', () => {
+    it('allows Customer to stockIn directly into rented rack tier', async () => {
+      const res = await inventoryService.stockIn(
+        {
+          contractId: contractAId,
+          skuId: skuAId,
+          rackTierId: tierA1Id,
+          quantity: 10,
+        },
+        customer1Caller
+      );
+      expect(res.quantity).toBe(10);
     });
 
-    it('blocks Customer from stockOut with 403 MESSAGE_CODE_103', async () => {
-      await expect(
-        inventoryService.stockOut(
-          {
-            contractId: contractAId,
-            skuId: skuAId,
-            rackTierId: tierA1Id,
-            quantity: 5,
-          },
-          customer1Caller
-        )
-      ).rejects.toMatchObject({
-        statusCode: 403,
-        messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
-      });
+    it('allows Customer to stockOut from rented rack tier', async () => {
+      // First ensure there is stock
+      await inventoryService.stockIn(
+        {
+          contractId: contractAId,
+          skuId: skuAId,
+          rackTierId: tierA1Id,
+          quantity: 10,
+        },
+        customer1Caller
+      );
+
+      const res = await inventoryService.stockOut(
+        {
+          contractId: contractAId,
+          skuId: skuAId,
+          rackTierId: tierA1Id,
+          quantity: 5,
+        },
+        customer1Caller
+      );
+      expect(res.quantity).toBe(5);
     });
 
-    it('blocks Customer from stockAdjust with 403 MESSAGE_CODE_103', async () => {
+    it('allows Customer to stockAdjust on rented rack tier with reason', async () => {
+      const res = await inventoryService.stockAdjust(
+        {
+          contractId: contractAId,
+          skuId: skuAId,
+          rackTierId: tierA1Id,
+          newQuantity: 15,
+          reason: 'Kiểm kê định kỳ thực tế',
+        },
+        customer1Caller
+      );
+      expect(res.quantity).toBe(15);
+    });
+
+    it('blocks Staff of same facility from stockAdjust with 403 MESSAGE_CODE_103 (Zero-Touch)', async () => {
       await expect(
         inventoryService.stockAdjust(
           {
             contractId: contractAId,
             skuId: skuAId,
             rackTierId: tierA1Id,
-            newQuantity: 15,
-            reason: 'Kiểm kê định kỳ thực tế',
+            newQuantity: 20,
+            reason: 'Kiểm kê kho định kỳ cuối tháng',
           },
-          customer1Caller
+          staffACaller
         )
       ).rejects.toMatchObject({
         statusCode: 403,
         messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
       });
-    });
-
-    it('allows Staff of same facility to stockAdjust with reason >= 5 chars', async () => {
-      const result = await inventoryService.stockAdjust(
-        {
-          contractId: contractAId,
-          skuId: skuAId,
-          rackTierId: tierA1Id,
-          newQuantity: 20,
-          reason: 'Kiểm kê kho định kỳ cuối tháng',
-        },
-        staffACaller
-      );
-
-      expect(result.quantity).toBe(20);
     });
 
     it('blocks Staff of different facility from stockAdjust with 403', async () => {

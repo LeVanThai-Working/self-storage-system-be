@@ -27,3 +27,12 @@ export enum InventoryItemStatusEnum {
   DAMAGED = 'damaged',
   DISPUTED = 'disputed',
 }
+
+export enum AccessScheduleStatusEnum {
+  PENDING = 'pending',
+  CHECKED_IN = 'checked_in',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  NO_SHOW = 'no_show',
+  EXPIRED = 'expired',
+}

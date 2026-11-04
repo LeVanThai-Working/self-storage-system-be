@@ -16,10 +16,7 @@ import { StorageUnit } from '../src/modules/storageUnit/storageUnit.model.ts';
 import { Contract } from '../src/modules/contract/contract.model.ts';
 import { CustomerSku } from '../src/modules/customerSku/customerSku.model.ts';
 import { storageRackService } from '../src/modules/storageRack/storageRack.container.ts';
-import {
-  customerInventoryService,
-  inventoryRequestService,
-} from '../src/modules/customerInventory/customerInventory.container.ts';
+import { customerInventoryService } from '../src/modules/customerInventory/customerInventory.container.ts';
 import {
   UnitTypeCategoryEnum,
   UnitTypeStatusEnum,
@@ -322,54 +319,6 @@ describe('Feature Gating: Self-Storage Units Guard (No Racks & No WMS/SKU)', () 
       );
       expect(tree.racks.length).toBe(1);
       expect(tree.summary.totalQuantity).toBe(25);
-    });
-  });
-
-  describe('Inventory Request Service Guards', () => {
-    it('blocks createOutboundRequest with 400 MESSAGE_CODE_650 on a self-storage contract', async () => {
-      await expect(
-        inventoryRequestService.createOutboundRequest(
-          {
-            contractId: String(selfStorageContractId),
-            items: [
-              {
-                skuId: String(skuId),
-                quantity: 5,
-                storageRackId: new Types.ObjectId().toString(),
-                rackTierId: new Types.ObjectId().toString(),
-              },
-            ],
-          },
-          customerCaller
-        )
-      ).rejects.toThrowError(
-        expect.objectContaining({
-          statusCode: 400,
-          messageCode: MESSAGE_CODE.MESSAGE_CODE_650,
-        })
-      );
-    });
-
-    it('blocks createPreAdvisedInboundRequest with 400 MESSAGE_CODE_650 on a self-storage contract', async () => {
-      await expect(
-        inventoryRequestService.createPreAdvisedInboundRequest(
-          {
-            contractId: String(selfStorageContractId),
-            items: [
-              {
-                skuId: String(skuId),
-                quantity: 20,
-              },
-            ],
-          },
-          customerCaller
-        )
-      ).rejects.toThrowError(
-        expect.objectContaining({
-          statusCode: 400,
-          messageCode: MESSAGE_CODE.MESSAGE_CODE_650,
-        })
-      );
     });
   });
 });

@@ -40,9 +40,9 @@ import { customerSkuController } from './modules/customerSku/customerSku.contain
 import { CustomerInventoryController } from './modules/customerInventory/customerInventory.controller.ts';
 import {
   customerInventoryController,
-  inventoryRequestController,
+  accessScheduleController,
 } from './modules/customerInventory/customerInventory.container.ts';
-import { InventoryRequestController } from './modules/customerInventory/inventoryRequest.controller.ts';
+import { AccessScheduleController } from './modules/customerInventory/accessSchedule.controller.ts';
 import { UploadController } from './modules/upload/upload.controller.ts';
 import { uploadController } from './modules/upload/upload.container.ts';
 import { RefundRequestController } from './modules/refundRequest/refundRequest.controller.ts';
@@ -120,8 +120,8 @@ export const iocContainer: IocContainer = {
     if (controller === CustomerInventoryController) {
       return customerInventoryController as unknown as T;
     }
-    if (controller === InventoryRequestController) {
-      return inventoryRequestController as unknown as T;
+    if (controller === AccessScheduleController) {
+      return accessScheduleController as unknown as T;
     }
     if (controller === UploadController) {
       return uploadController as unknown as T;

@@ -86,6 +86,11 @@ export enum AuditActionEnum {
   CANCEL_INVOICE = 'cancel_invoice',
   VOID_INVOICE = 'void_invoice',
   SEND_INVOICE = 'send_invoice',
+  CREATE_ACCESS_SCHEDULE = 'create_access_schedule',
+  CHECK_IN_ACCESS_SCHEDULE = 'check_in_access_schedule',
+  CHECK_OUT_ACCESS_SCHEDULE = 'check_out_access_schedule',
+  CANCEL_ACCESS_SCHEDULE = 'cancel_access_schedule',
+  NO_SHOW_ACCESS_SCHEDULE = 'no_show_access_schedule',
 }
 
 export enum AuditResourceEnum {
@@ -116,6 +121,7 @@ export enum AuditResourceEnum {
   SIGNING_AUTHORIZATION = 'signing_authorization',
   CONTRACT_TEMPLATE = 'contract_template',
   INVOICE = 'invoice',
+  ACCESS_SCHEDULE = 'access_schedule',
 }
 
 export enum AuditStatusEnum {
