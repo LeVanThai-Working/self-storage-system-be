@@ -62,6 +62,28 @@ export const contractRefSchema = z.object({
   endDate: z.string().optional(),
 });
 
+export const preEvacuationItemSchema = z.object({
+  skuId: z.string(),
+  skuCode: z.string().optional(),
+  skuName: z.string().optional(),
+  systemQuantity: z.number(),
+  actualQuantity: z.number(),
+  discrepancy: z.number(),
+  condition: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const preEvacuationManifestResponseSchema = z.object({
+  evacuatedAt: z.string(),
+  evacuatedBy: z.union([userRefSchema, z.string()]),
+  evidenceImages: z.array(z.string()),
+  items: z.array(preEvacuationItemSchema),
+  totalSystemQuantity: z.number(),
+  totalActualQuantity: z.number(),
+  totalDiscrepancy: z.number(),
+  notes: z.string().optional(),
+});
+
 export const incidentResolutionResponseSchema = z.object({
   investigationNotes: z.string().optional(),
   staffEvidenceImages: z.array(z.string()),
@@ -94,6 +116,21 @@ export const incidentResponseSchema = z.object({
   requiresRelocation: z.boolean(),
   investigationNotes: z.string().nullable().optional(),
   resolution: incidentResolutionResponseSchema.nullable().optional(),
+  preEvacuationManifest: preEvacuationManifestResponseSchema
+    .nullable()
+    .optional(),
+  restorationManifestDocUrl: z.string().nullable().optional(),
+  restorationUploadedAt: z.string().nullable().optional(),
+  restorationUploadedBy: z
+    .union([userRefSchema, z.string()])
+    .nullable()
+    .optional(),
+  customerAcknowledgedAt: z.string().nullable().optional(),
+  customerAcknowledgedBy: z
+    .union([userRefSchema, z.string()])
+    .nullable()
+    .optional(),
+  customerAcknowledgeNotes: z.string().nullable().optional(),
   closedAt: z.string().nullable().optional(),
   cancelledAt: z.string().nullable().optional(),
   cancellationReason: z.string().nullable().optional(),
@@ -106,6 +143,10 @@ export const paginatedIncidentResponseSchema = z.object({
   pagination: paginationMetadataSchema,
 });
 
+export type PreEvacuationItem = z.infer<typeof preEvacuationItemSchema>;
+export type PreEvacuationManifestResponse = z.infer<
+  typeof preEvacuationManifestResponseSchema
+>;
 export type IncidentResolutionResponse = z.infer<
   typeof incidentResolutionResponseSchema
 >;

@@ -72,6 +72,8 @@ export enum AuditActionEnum {
   ASSIGN_INCIDENT = 'assign_incident',
   INVESTIGATE_INCIDENT = 'investigate_incident',
   RESOLVE_INCIDENT = 'resolve_incident',
+  UPLOAD_RESTORATION_MANIFEST = 'upload_restoration_manifest',
+  CUSTOMER_ACKNOWLEDGE_INCIDENT = 'customer_acknowledge_incident',
   CLOSE_INCIDENT = 'close_incident',
   CANCEL_INCIDENT = 'cancel_incident',
   CREATE_SUPPORT_TICKET = 'create_support_ticket',

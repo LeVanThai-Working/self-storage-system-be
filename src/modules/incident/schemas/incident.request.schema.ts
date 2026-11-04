@@ -93,6 +93,44 @@ export const cancelIncidentSchema = z.object({
     .max(500, 'Cancellation reason cannot exceed 500 characters'),
 });
 
+export const evacuateIncidentRackItemSchema = z.object({
+  skuId: objectIdSchema,
+  actualQuantity: z
+    .number()
+    .int('Actual quantity must be an integer')
+    .min(0, 'Actual quantity must be >= 0'),
+  condition: z.string().trim().max(200).optional(),
+  notes: z.string().trim().max(500).optional(),
+});
+
+export const evacuateIncidentRackSchema = z.object({
+  fromRackId: objectIdSchema.optional(),
+  evidenceImages: z
+    .array(z.string().url('Evidence image must be a valid URL'))
+    .min(1, 'At least 1 evidence image is required before evacuation'),
+  emergencyReason: z
+    .string()
+    .trim()
+    .min(10, 'Emergency reason must be at least 10 characters')
+    .max(2000, 'Emergency reason cannot exceed 2000 characters'),
+  requiresRelocation: z.boolean().optional(),
+  items: z
+    .array(evacuateIncidentRackItemSchema)
+    .min(1, 'At least 1 item count is required in pre-evacuation manifest'),
+  notes: z.string().trim().max(1000).optional(),
+});
+
+export const uploadRestorationManifestSchema = z.object({
+  restorationManifestDocUrl: z
+    .string()
+    .url('Restoration manifest doc URL must be a valid URL'),
+  notes: z.string().trim().max(1000).optional(),
+});
+
+export const customerAcknowledgeIncidentSchema = z.object({
+  notes: z.string().trim().max(1000).optional(),
+});
+
 export const incidentQuerySchema = paginationQuerySchema.extend({
   facilityId: objectIdSchema.optional(),
   storageUnitId: objectIdSchema.optional(),
@@ -116,4 +154,13 @@ export type InvestigateIncidentRequest = z.infer<
 export type ResolveIncidentRequest = z.infer<typeof resolveIncidentSchema>;
 export type CloseIncidentRequest = z.infer<typeof closeIncidentSchema>;
 export type CancelIncidentRequest = z.infer<typeof cancelIncidentSchema>;
+export type EvacuateIncidentRackRequest = z.infer<
+  typeof evacuateIncidentRackSchema
+>;
+export type UploadRestorationManifestRequest = z.infer<
+  typeof uploadRestorationManifestSchema
+>;
+export type CustomerAcknowledgeIncidentRequest = z.infer<
+  typeof customerAcknowledgeIncidentSchema
+>;
 export type IncidentQuery = z.infer<typeof incidentQuerySchema>;

@@ -404,6 +404,20 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_708: 'MESSAGE_CODE_708',
   // Storage Rack Or Tier Does Not Belong To Contract
   MESSAGE_CODE_709: 'MESSAGE_CODE_709',
+  // Incident Rack Evacuation Already Performed
+  MESSAGE_CODE_710: 'MESSAGE_CODE_710',
+  // Storage Rack Required For Evacuation
+  MESSAGE_CODE_711: 'MESSAGE_CODE_711',
+  // Restoration Manifest Document Required Before Close
+  MESSAGE_CODE_712: 'MESSAGE_CODE_712',
+  // Customer Acknowledgement Required Before Close
+  MESSAGE_CODE_713: 'MESSAGE_CODE_713',
+  // Restoration Manifest Already Uploaded
+  MESSAGE_CODE_714: 'MESSAGE_CODE_714',
+  // Customer Has Already Acknowledged Restoration
+  MESSAGE_CODE_715: 'MESSAGE_CODE_715',
+  // Incident Cannot Be Evacuated In Current Status
+  MESSAGE_CODE_716: 'MESSAGE_CODE_716',
 
   // ==========================================
   // SUPPORT TICKET (720 - 726)
@@ -679,6 +693,13 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_707: 'Only Assignee Or Facility Manager Can Update Incident',
   MESSAGE_CODE_708: 'Assigned Staff Does Not Belong To Facility',
   MESSAGE_CODE_709: 'Storage Rack Or Tier Does Not Belong To Contract',
+  MESSAGE_CODE_710: 'Incident Rack Evacuation Already Performed',
+  MESSAGE_CODE_711: 'Storage Rack Required For Evacuation',
+  MESSAGE_CODE_712: 'Restoration Manifest Document Required Before Close',
+  MESSAGE_CODE_713: 'Customer Acknowledgement Required Before Close',
+  MESSAGE_CODE_714: 'Restoration Manifest Already Uploaded',
+  MESSAGE_CODE_715: 'Customer Has Already Acknowledged Restoration',
+  MESSAGE_CODE_716: 'Incident Cannot Be Evacuated In Current Status',
 
   // Support Ticket
   MESSAGE_CODE_720: 'Support Ticket Not Found',

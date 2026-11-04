@@ -384,7 +384,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","expire_inventory_request","assign_inventory_request","batch_migrate_rack","evacuate_rack_to_holding","update_inventory_status","report_incident","assign_incident","investigate_incident","resolve_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum","generate_invoice","pay_invoice","cancel_invoice","void_invoice","send_invoice","create_access_schedule","check_in_access_schedule","check_out_access_schedule","cancel_access_schedule","no_show_access_schedule"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","expire_inventory_request","assign_inventory_request","batch_migrate_rack","evacuate_rack_to_holding","update_inventory_status","report_incident","assign_incident","investigate_incident","resolve_incident","upload_restoration_manifest","customer_acknowledge_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum","generate_invoice","pay_invoice","cancel_invoice","void_invoice","send_invoice","create_access_schedule","check_in_access_schedule","check_out_access_schedule","cancel_access_schedule","no_show_access_schedule"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
@@ -1924,7 +1924,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofincidentResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"closedAt":{"dataType":"string"},"resolution":{"dataType":"nestedObjectLiteral","nestedProperties":{"resolvedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"investigationNotes":{"dataType":"string"},"resolvedAt":{"dataType":"string","required":true},"damageFee":{"dataType":"double","required":true},"liableParty":{"ref":"IncidentLiablePartyEnum","required":true},"repairCost":{"dataType":"double","required":true},"resolutionNotes":{"dataType":"string","required":true},"staffEvidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true}}},"investigationNotes":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"reporter":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string"},"contractCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"tierNumber":{"dataType":"double"},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"name":{"dataType":"string"},"code":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"requiresRelocation":{"dataType":"boolean","required":true},"putUnitUnderMaintenance":{"dataType":"boolean","required":true},"status":{"ref":"IncidentStatusEnum","required":true},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"severity":{"ref":"IncidentSeverityEnum","required":true},"category":{"ref":"IncidentCategoryEnum","required":true},"reporterRole":{"ref":"RoleEnum","required":true},"incidentCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"closedAt":{"dataType":"string"},"customerAcknowledgeNotes":{"dataType":"string"},"customerAcknowledgedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"customerAcknowledgedAt":{"dataType":"string"},"restorationUploadedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"restorationUploadedAt":{"dataType":"string"},"restorationManifestDocUrl":{"dataType":"string"},"preEvacuationManifest":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"evacuatedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"totalDiscrepancy":{"dataType":"double","required":true},"totalActualQuantity":{"dataType":"double","required":true},"totalSystemQuantity":{"dataType":"double","required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"condition":{"dataType":"string"},"skuName":{"dataType":"string"},"skuCode":{"dataType":"string"},"discrepancy":{"dataType":"double","required":true},"actualQuantity":{"dataType":"double","required":true},"systemQuantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"evidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true},"evacuatedAt":{"dataType":"string","required":true}}},"resolution":{"dataType":"nestedObjectLiteral","nestedProperties":{"resolvedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"investigationNotes":{"dataType":"string"},"resolvedAt":{"dataType":"string","required":true},"damageFee":{"dataType":"double","required":true},"liableParty":{"ref":"IncidentLiablePartyEnum","required":true},"repairCost":{"dataType":"double","required":true},"resolutionNotes":{"dataType":"string","required":true},"staffEvidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true}}},"investigationNotes":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"reporter":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string"},"contractCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"tierNumber":{"dataType":"double"},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"name":{"dataType":"string"},"code":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"requiresRelocation":{"dataType":"boolean","required":true},"putUnitUnderMaintenance":{"dataType":"boolean","required":true},"status":{"ref":"IncidentStatusEnum","required":true},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"severity":{"ref":"IncidentSeverityEnum","required":true},"category":{"ref":"IncidentCategoryEnum","required":true},"reporterRole":{"ref":"RoleEnum","required":true},"incidentCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "IncidentResponse": {
@@ -1956,7 +1956,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofpaginatedIncidentResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"pagination":{"dataType":"nestedObjectLiteral","nestedProperties":{"hasPrevPage":{"dataType":"boolean","required":true},"hasNextPage":{"dataType":"boolean","required":true},"totalPages":{"dataType":"double","required":true},"totalItems":{"dataType":"double","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"closedAt":{"dataType":"string"},"resolution":{"dataType":"nestedObjectLiteral","nestedProperties":{"resolvedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"investigationNotes":{"dataType":"string"},"resolvedAt":{"dataType":"string","required":true},"damageFee":{"dataType":"double","required":true},"liableParty":{"ref":"IncidentLiablePartyEnum","required":true},"repairCost":{"dataType":"double","required":true},"resolutionNotes":{"dataType":"string","required":true},"staffEvidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true}}},"investigationNotes":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"reporter":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string"},"contractCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"tierNumber":{"dataType":"double"},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"name":{"dataType":"string"},"code":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"requiresRelocation":{"dataType":"boolean","required":true},"putUnitUnderMaintenance":{"dataType":"boolean","required":true},"status":{"ref":"IncidentStatusEnum","required":true},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"severity":{"ref":"IncidentSeverityEnum","required":true},"category":{"ref":"IncidentCategoryEnum","required":true},"reporterRole":{"ref":"RoleEnum","required":true},"incidentCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"pagination":{"dataType":"nestedObjectLiteral","nestedProperties":{"hasPrevPage":{"dataType":"boolean","required":true},"hasNextPage":{"dataType":"boolean","required":true},"totalPages":{"dataType":"double","required":true},"totalItems":{"dataType":"double","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"cancellationReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"closedAt":{"dataType":"string"},"customerAcknowledgeNotes":{"dataType":"string"},"customerAcknowledgedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"customerAcknowledgedAt":{"dataType":"string"},"restorationUploadedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"restorationUploadedAt":{"dataType":"string"},"restorationManifestDocUrl":{"dataType":"string"},"preEvacuationManifest":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"evacuatedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"totalDiscrepancy":{"dataType":"double","required":true},"totalActualQuantity":{"dataType":"double","required":true},"totalSystemQuantity":{"dataType":"double","required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"condition":{"dataType":"string"},"skuName":{"dataType":"string"},"skuCode":{"dataType":"string"},"discrepancy":{"dataType":"double","required":true},"actualQuantity":{"dataType":"double","required":true},"systemQuantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"evidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true},"evacuatedAt":{"dataType":"string","required":true}}},"resolution":{"dataType":"nestedObjectLiteral","nestedProperties":{"resolvedBy":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"investigationNotes":{"dataType":"string"},"resolvedAt":{"dataType":"string","required":true},"damageFee":{"dataType":"double","required":true},"liableParty":{"ref":"IncidentLiablePartyEnum","required":true},"repairCost":{"dataType":"double","required":true},"resolutionNotes":{"dataType":"string","required":true},"staffEvidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true}}},"investigationNotes":{"dataType":"string"},"assignedStaff":{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"reporter":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"role":{"dataType":"string"},"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string"},"contractCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"tierNumber":{"dataType":"double"},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string"},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"name":{"dataType":"string"},"code":{"dataType":"string"},"id":{"dataType":"string","required":true}}}]},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"requiresRelocation":{"dataType":"boolean","required":true},"putUnitUnderMaintenance":{"dataType":"boolean","required":true},"status":{"ref":"IncidentStatusEnum","required":true},"images":{"dataType":"array","array":{"dataType":"string"},"required":true},"description":{"dataType":"string","required":true},"title":{"dataType":"string","required":true},"severity":{"ref":"IncidentSeverityEnum","required":true},"category":{"ref":"IncidentCategoryEnum","required":true},"reporterRole":{"ref":"RoleEnum","required":true},"incidentCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "PaginatedIncidentResponse": {
@@ -2034,6 +2034,36 @@ const models: TsoaRoute.Models = {
     "CancelIncidentRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofcancelIncidentSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofevacuateIncidentRackSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"requiresRelocation":{"dataType":"boolean"},"fromRackId":{"dataType":"string"},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"condition":{"dataType":"string"},"actualQuantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true}}},"required":true},"emergencyReason":{"dataType":"string","required":true},"evidenceImages":{"dataType":"array","array":{"dataType":"string"},"required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "EvacuateIncidentRackRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofevacuateIncidentRackSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofuploadRestorationManifestSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"restorationManifestDocUrl":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UploadRestorationManifestRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofuploadRestorationManifestSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcustomerAcknowledgeIncidentSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "CustomerAcknowledgeIncidentRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcustomerAcknowledgeIncidentSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "FacilityUnitTypeOfferingStatusEnum": {
@@ -2786,38 +2816,6 @@ const models: TsoaRoute.Models = {
             "userId": {"dataType":"string"},
         },
         "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofevacuateRackResponseSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true},"movementsGenerated":{"dataType":"array","array":{"dataType":"string"},"required":true},"totalQuantityEvacuated":{"dataType":"double","required":true},"evacuatedItemsCount":{"dataType":"double","required":true},"rackStatus":{"dataType":"string","required":true},"fromRackCode":{"dataType":"string","required":true},"fromRackId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "EvacuateRackResponse": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofevacuateRackResponseSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ApiResponse_EvacuateRackResponse_": {
-        "dataType": "refObject",
-        "properties": {
-            "success": {"dataType":"boolean","required":true},
-            "statusCode": {"dataType":"double","required":true},
-            "messageCode": {"dataType":"string","required":true},
-            "message": {"dataType":"string","required":true},
-            "data": {"ref":"EvacuateRackResponse","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofevacuateRackToHoldingRequestSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"incidentId":{"dataType":"string"},"emergencyReason":{"dataType":"string"},"fromRackId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "EvacuateRackToHoldingRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofevacuateRackToHoldingRequestSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofupdateInventoryStatusRequestSchema_": {
@@ -7714,6 +7712,117 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_evacuateRack: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"EvacuateIncidentRackRequest"},
+        };
+        app.post('/incidents/:id/evacuate-rack',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.evacuateRack)),
+
+            async function IncidentController_evacuateRack(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_evacuateRack, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'evacuateRack',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_uploadRestorationManifest: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"UploadRestorationManifestRequest"},
+        };
+        app.post('/incidents/:id/restoration-manifest',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.uploadRestorationManifest)),
+
+            async function IncidentController_uploadRestorationManifest(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_uploadRestorationManifest, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'uploadRestorationManifest',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsIncidentController_customerAcknowledge: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"CustomerAcknowledgeIncidentRequest"},
+        };
+        app.post('/incidents/:id/customer-acknowledge',
+            ...(fetchMiddlewares<RequestHandler>(IncidentController)),
+            ...(fetchMiddlewares<RequestHandler>(IncidentController.prototype.customerAcknowledge)),
+
+            async function IncidentController_customerAcknowledge(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsIncidentController_customerAcknowledge, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<IncidentController>(IncidentController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'customerAcknowledge',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsFacilityUnitTypeOfferingController_getOfferings: Record<string, TsoaRoute.ParameterSchema> = {
                 query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"maxPrice":{"dataType":"double"},"minPrice":{"dataType":"double"},"status":{"ref":"FacilityUnitTypeOfferingStatusEnum"},"billingUnit":{"ref":"BillingUnitEnum"},"unitTypeId":{"dataType":"string"},"facilityId":{"dataType":"string"},"search":{"dataType":"string"},"sortOrder":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}],"required":true},"sortBy":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["createdAt"]},{"dataType":"enum","enums":["updatedAt"]},{"dataType":"enum","enums":["pricePerUnit"]},{"dataType":"enum","enums":["minRentalDays"]}],"required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
         };
@@ -9486,42 +9595,6 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'findInventoryById',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: undefined,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsCustomerInventoryController_evacuateRackToHolding: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"ref":"EvacuateRackToHoldingRequest"},
-        };
-        app.post('/customer-inventories/racks/evacuate-to-holding',
-            ...(fetchMiddlewares<RequestHandler>(CustomerInventoryController)),
-            ...(fetchMiddlewares<RequestHandler>(CustomerInventoryController.prototype.evacuateRackToHolding)),
-
-            async function CustomerInventoryController_evacuateRackToHolding(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsCustomerInventoryController_evacuateRackToHolding, request, response });
-
-                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
-
-                const controller: any = await container.get<CustomerInventoryController>(CustomerInventoryController);
-                if (typeof controller['setStatus'] === 'function') {
-                controller.setStatus(undefined);
-                }
-
-              await templateService.apiHandler({
-                methodName: 'evacuateRackToHolding',
                 controller,
                 response,
                 next,

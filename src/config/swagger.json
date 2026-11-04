@@ -933,6 +933,8 @@
 					"assign_incident",
 					"investigate_incident",
 					"resolve_incident",
+					"upload_restoration_manifest",
+					"customer_acknowledge_incident",
 					"close_incident",
 					"cancel_incident",
 					"create_support_ticket",
@@ -8123,6 +8125,186 @@
 					"closedAt": {
 						"type": "string"
 					},
+					"customerAcknowledgeNotes": {
+						"type": "string"
+					},
+					"customerAcknowledgedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"customerAcknowledgedAt": {
+						"type": "string"
+					},
+					"restorationUploadedBy": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"restorationUploadedAt": {
+						"type": "string"
+					},
+					"restorationManifestDocUrl": {
+						"type": "string"
+					},
+					"preEvacuationManifest": {
+						"properties": {
+							"notes": {
+								"type": "string"
+							},
+							"evacuatedBy": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"properties": {
+											"role": {
+												"type": "string"
+											},
+											"phoneNumber": {
+												"type": "string"
+											},
+											"email": {
+												"type": "string"
+											},
+											"name": {
+												"type": "string"
+											},
+											"id": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"id"
+										],
+										"type": "object"
+									}
+								]
+							},
+							"totalDiscrepancy": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalActualQuantity": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalSystemQuantity": {
+								"type": "number",
+								"format": "double"
+							},
+							"items": {
+								"items": {
+									"properties": {
+										"notes": {
+											"type": "string"
+										},
+										"condition": {
+											"type": "string"
+										},
+										"skuName": {
+											"type": "string"
+										},
+										"skuCode": {
+											"type": "string"
+										},
+										"discrepancy": {
+											"type": "number",
+											"format": "double"
+										},
+										"actualQuantity": {
+											"type": "number",
+											"format": "double"
+										},
+										"systemQuantity": {
+											"type": "number",
+											"format": "double"
+										},
+										"skuId": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"discrepancy",
+										"actualQuantity",
+										"systemQuantity",
+										"skuId"
+									],
+									"type": "object"
+								},
+								"type": "array"
+							},
+							"evidenceImages": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"evacuatedAt": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"totalDiscrepancy",
+							"totalActualQuantity",
+							"totalSystemQuantity",
+							"items",
+							"evidenceImages",
+							"evacuatedAt"
+						],
+						"type": "object"
+					},
 					"resolution": {
 						"properties": {
 							"resolvedBy": {
@@ -8564,6 +8746,186 @@
 								},
 								"closedAt": {
 									"type": "string"
+								},
+								"customerAcknowledgeNotes": {
+									"type": "string"
+								},
+								"customerAcknowledgedBy": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"role": {
+													"type": "string"
+												},
+												"phoneNumber": {
+													"type": "string"
+												},
+												"email": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"customerAcknowledgedAt": {
+									"type": "string"
+								},
+								"restorationUploadedBy": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"role": {
+													"type": "string"
+												},
+												"phoneNumber": {
+													"type": "string"
+												},
+												"email": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"restorationUploadedAt": {
+									"type": "string"
+								},
+								"restorationManifestDocUrl": {
+									"type": "string"
+								},
+								"preEvacuationManifest": {
+									"properties": {
+										"notes": {
+											"type": "string"
+										},
+										"evacuatedBy": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"properties": {
+														"role": {
+															"type": "string"
+														},
+														"phoneNumber": {
+															"type": "string"
+														},
+														"email": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"id": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"id"
+													],
+													"type": "object"
+												}
+											]
+										},
+										"totalDiscrepancy": {
+											"type": "number",
+											"format": "double"
+										},
+										"totalActualQuantity": {
+											"type": "number",
+											"format": "double"
+										},
+										"totalSystemQuantity": {
+											"type": "number",
+											"format": "double"
+										},
+										"items": {
+											"items": {
+												"properties": {
+													"notes": {
+														"type": "string"
+													},
+													"condition": {
+														"type": "string"
+													},
+													"skuName": {
+														"type": "string"
+													},
+													"skuCode": {
+														"type": "string"
+													},
+													"discrepancy": {
+														"type": "number",
+														"format": "double"
+													},
+													"actualQuantity": {
+														"type": "number",
+														"format": "double"
+													},
+													"systemQuantity": {
+														"type": "number",
+														"format": "double"
+													},
+													"skuId": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"discrepancy",
+													"actualQuantity",
+													"systemQuantity",
+													"skuId"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										},
+										"evidenceImages": {
+											"items": {
+												"type": "string"
+											},
+											"type": "array"
+										},
+										"evacuatedAt": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"totalDiscrepancy",
+										"totalActualQuantity",
+										"totalSystemQuantity",
+										"items",
+										"evidenceImages",
+										"evacuatedAt"
+									],
+									"type": "object"
 								},
 								"resolution": {
 									"properties": {
@@ -9071,6 +9433,90 @@
 			},
 			"CancelIncidentRequest": {
 				"$ref": "#/components/schemas/infer_typeofcancelIncidentSchema_"
+			},
+			"infer_typeofevacuateIncidentRackSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"requiresRelocation": {
+						"type": "boolean"
+					},
+					"fromRackId": {
+						"type": "string"
+					},
+					"items": {
+						"items": {
+							"properties": {
+								"notes": {
+									"type": "string"
+								},
+								"condition": {
+									"type": "string"
+								},
+								"actualQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"skuId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"actualQuantity",
+								"skuId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"emergencyReason": {
+						"type": "string"
+					},
+					"evidenceImages": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"items",
+					"emergencyReason",
+					"evidenceImages"
+				],
+				"type": "object"
+			},
+			"EvacuateIncidentRackRequest": {
+				"$ref": "#/components/schemas/infer_typeofevacuateIncidentRackSchema_"
+			},
+			"infer_typeofuploadRestorationManifestSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					},
+					"restorationManifestDocUrl": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"restorationManifestDocUrl"
+				],
+				"type": "object"
+			},
+			"UploadRestorationManifestRequest": {
+				"$ref": "#/components/schemas/infer_typeofuploadRestorationManifestSchema_"
+			},
+			"infer_typeofcustomerAcknowledgeIncidentSchema_": {
+				"properties": {
+					"notes": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			},
+			"CustomerAcknowledgeIncidentRequest": {
+				"$ref": "#/components/schemas/infer_typeofcustomerAcknowledgeIncidentSchema_"
 			},
 			"FacilityUnitTypeOfferingStatusEnum": {
 				"enum": [
@@ -13459,101 +13905,6 @@
 				},
 				"type": "object",
 				"additionalProperties": false
-			},
-			"infer_typeofevacuateRackResponseSchema_": {
-				"properties": {
-					"message": {
-						"type": "string"
-					},
-					"movementsGenerated": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"totalQuantityEvacuated": {
-						"type": "number",
-						"format": "double"
-					},
-					"evacuatedItemsCount": {
-						"type": "number",
-						"format": "double"
-					},
-					"rackStatus": {
-						"type": "string"
-					},
-					"fromRackCode": {
-						"type": "string"
-					},
-					"fromRackId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"message",
-					"movementsGenerated",
-					"totalQuantityEvacuated",
-					"evacuatedItemsCount",
-					"rackStatus",
-					"fromRackCode",
-					"fromRackId"
-				],
-				"type": "object"
-			},
-			"EvacuateRackResponse": {
-				"$ref": "#/components/schemas/infer_typeofevacuateRackResponseSchema_"
-			},
-			"ApiResponse_EvacuateRackResponse_": {
-				"properties": {
-					"success": {
-						"type": "boolean"
-					},
-					"statusCode": {
-						"type": "number",
-						"format": "double"
-					},
-					"messageCode": {
-						"type": "string"
-					},
-					"message": {
-						"type": "string"
-					},
-					"data": {
-						"$ref": "#/components/schemas/EvacuateRackResponse"
-					}
-				},
-				"required": [
-					"success",
-					"statusCode",
-					"messageCode",
-					"message",
-					"data"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
-			"infer_typeofevacuateRackToHoldingRequestSchema_": {
-				"properties": {
-					"notes": {
-						"type": "string"
-					},
-					"incidentId": {
-						"type": "string"
-					},
-					"emergencyReason": {
-						"type": "string"
-					},
-					"fromRackId": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"fromRackId"
-				],
-				"type": "object"
-			},
-			"EvacuateRackToHoldingRequest": {
-				"$ref": "#/components/schemas/infer_typeofevacuateRackToHoldingRequestSchema_"
 			},
 			"infer_typeofupdateInventoryStatusRequestSchema_": {
 				"properties": {
@@ -24880,6 +25231,252 @@
 				}
 			}
 		},
+		"/incidents/{id}/evacuate-rack": {
+			"post": {
+				"operationId": "EvacuateRack",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Emergency evacuation of goods from affected self-managed rack to TEMPORARY_HOLDING zone.\nGenerates physical vs system discrepancy manifest and sets rack to MAINTENANCE.",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/EvacuateIncidentRackRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/incidents/{id}/restoration-manifest": {
+			"post": {
+				"operationId": "UploadRestorationManifest",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Upload scanned paper restoration/handover manifest with ink signatures.",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UploadRestorationManifestRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/incidents/{id}/customer-acknowledge": {
+			"post": {
+				"operationId": "CustomerAcknowledge",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_IncidentResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Customer in-app acknowledgment of rack restoration or item handover.",
+				"tags": [
+					"Incident"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CustomerAcknowledgeIncidentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/facility-unit-type-offerings": {
 			"get": {
 				"operationId": "GetOfferings",
@@ -28310,79 +28907,6 @@
 						}
 					}
 				]
-			}
-		},
-		"/customer-inventories/racks/evacuate-to-holding": {
-			"post": {
-				"operationId": "EvacuateRackToHolding",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiResponse_EvacuateRackResponse_"
-								}
-							}
-						}
-					},
-					"400": {
-						"description": "Bad Request",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"401": {
-						"description": "Unauthorized",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Forbidden",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Not Found",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ApiErrorResponse"
-								}
-							}
-						}
-					}
-				},
-				"description": "12. Evacuate Rack To Holding Area (Task 7G)\nEmergency evacuation of all items from a damaged rack to the holding area (rackTierId: null, status: TEMPORARY_HOLDING)\nand setting rack status to MAINTENANCE.",
-				"tags": [
-					"Customer Inventories"
-				],
-				"security": [],
-				"parameters": [],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/EvacuateRackToHoldingRequest"
-							}
-						}
-					}
-				}
 			}
 		},
 		"/customer-inventories/{id}/status": {
