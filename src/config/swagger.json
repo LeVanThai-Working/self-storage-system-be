@@ -3578,6 +3578,1887 @@
 			"UpdateRackTierRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateRackTierSchema_"
 			},
+			"OverviewStatisticsResponse": {
+				"properties": {
+					"period": {
+						"properties": {
+							"scopedFacilityId": {
+								"type": "string",
+								"nullable": true
+							},
+							"toDate": {
+								"type": "string"
+							},
+							"fromDate": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"scopedFacilityId",
+							"toDate",
+							"fromDate"
+						],
+						"type": "object"
+					},
+					"facilities": {
+						"properties": {
+							"totalActive": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"totalActive"
+						],
+						"type": "object"
+					},
+					"occupancy": {
+						"properties": {
+							"storageRacks": {
+								"properties": {
+									"occupancyRate": {
+										"type": "number",
+										"format": "double"
+									},
+									"inactive": {
+										"type": "number",
+										"format": "double"
+									},
+									"maintenance": {
+										"type": "number",
+										"format": "double"
+									},
+									"reserved": {
+										"type": "number",
+										"format": "double"
+									},
+									"rented": {
+										"type": "number",
+										"format": "double"
+									},
+									"available": {
+										"type": "number",
+										"format": "double"
+									},
+									"total": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"occupancyRate",
+									"inactive",
+									"maintenance",
+									"reserved",
+									"rented",
+									"available",
+									"total"
+								],
+								"type": "object"
+							},
+							"storageUnits": {
+								"properties": {
+									"occupiedAreaM2": {
+										"type": "number",
+										"format": "double"
+									},
+									"totalAreaM2": {
+										"type": "number",
+										"format": "double"
+									},
+									"areaOccupancyRate": {
+										"type": "number",
+										"format": "double"
+									},
+									"occupancyRate": {
+										"type": "number",
+										"format": "double"
+									},
+									"inactive": {
+										"type": "number",
+										"format": "double"
+									},
+									"pendingClearance": {
+										"type": "number",
+										"format": "double"
+									},
+									"underMaintenance": {
+										"type": "number",
+										"format": "double"
+									},
+									"reserved": {
+										"type": "number",
+										"format": "double"
+									},
+									"occupied": {
+										"type": "number",
+										"format": "double"
+									},
+									"available": {
+										"type": "number",
+										"format": "double"
+									},
+									"total": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"occupiedAreaM2",
+									"totalAreaM2",
+									"areaOccupancyRate",
+									"occupancyRate",
+									"inactive",
+									"pendingClearance",
+									"underMaintenance",
+									"reserved",
+									"occupied",
+									"available",
+									"total"
+								],
+								"type": "object"
+							}
+						},
+						"required": [
+							"storageRacks",
+							"storageUnits"
+						],
+						"type": "object"
+					},
+					"financials": {
+						"properties": {
+							"forfeitedAmount": {
+								"type": "number",
+								"format": "double"
+							},
+							"overdueReceivables": {
+								"type": "number",
+								"format": "double"
+							},
+							"heldDeposits": {
+								"type": "number",
+								"format": "double"
+							},
+							"netRevenue": {
+								"type": "number",
+								"format": "double"
+							},
+							"refundedAmount": {
+								"type": "number",
+								"format": "double"
+							},
+							"revenueGrowthPercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"previousPeriodCollectedRevenue": {
+								"type": "number",
+								"format": "double"
+							},
+							"collectedRevenue": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"forfeitedAmount",
+							"overdueReceivables",
+							"heldDeposits",
+							"netRevenue",
+							"refundedAmount",
+							"revenueGrowthPercent",
+							"previousPeriodCollectedRevenue",
+							"collectedRevenue"
+						],
+						"type": "object"
+					},
+					"contractsAndBookings": {
+						"properties": {
+							"completedReservationsInPeriod": {
+								"type": "number",
+								"format": "double"
+							},
+							"newReservationsInPeriod": {
+								"type": "number",
+								"format": "double"
+							},
+							"overdueContracts": {
+								"type": "number",
+								"format": "double"
+							},
+							"activeContracts": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"completedReservationsInPeriod",
+							"newReservationsInPeriod",
+							"overdueContracts",
+							"activeContracts"
+						],
+						"type": "object"
+					},
+					"actionRequired": {
+						"properties": {
+							"openHighCriticalIncidents": {
+								"type": "number",
+								"format": "double"
+							},
+							"unmatchedSepayTransactions": {
+								"type": "number",
+								"format": "double"
+							},
+							"pendingOpsRefunds": {
+								"type": "number",
+								"format": "double"
+							},
+							"pendingApprovals": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"openHighCriticalIncidents",
+							"unmatchedSepayTransactions",
+							"pendingOpsRefunds",
+							"pendingApprovals"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"period",
+					"facilities",
+					"occupancy",
+					"financials",
+					"contractsAndBookings",
+					"actionRequired"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_OverviewStatisticsResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/OverviewStatisticsResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"StatisticsBaseQueryDto": {
+				"properties": {
+					"fromDate": {
+						"type": "string"
+					},
+					"toDate": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"StatisticsGranularityEnum": {
+				"enum": [
+					"day",
+					"week",
+					"month",
+					"quarter"
+				],
+				"type": "string"
+			},
+			"RentalTrendPoint": {
+				"properties": {
+					"period": {
+						"type": "string"
+					},
+					"reservationsCreated": {
+						"type": "number",
+						"format": "double"
+					},
+					"completedReservations": {
+						"type": "number",
+						"format": "double"
+					},
+					"cancelledReservations": {
+						"type": "number",
+						"format": "double"
+					},
+					"contractsCheckedIn": {
+						"type": "number",
+						"format": "double"
+					},
+					"contractsEnded": {
+						"type": "number",
+						"format": "double"
+					},
+					"collectedRevenue": {
+						"type": "number",
+						"format": "double"
+					},
+					"varianceFromAvgPercent": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"period",
+					"reservationsCreated",
+					"completedReservations",
+					"cancelledReservations",
+					"contractsCheckedIn",
+					"contractsEnded",
+					"collectedRevenue",
+					"varianceFromAvgPercent"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DayOfWeekItem": {
+				"properties": {
+					"dayOfWeek": {
+						"type": "number",
+						"format": "double"
+					},
+					"dayName": {
+						"type": "string"
+					},
+					"reservationsCreated": {
+						"type": "number",
+						"format": "double"
+					},
+					"contractsCheckedIn": {
+						"type": "number",
+						"format": "double"
+					},
+					"accessSchedulesCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalActivity": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"dayOfWeek",
+					"dayName",
+					"reservationsCreated",
+					"contractsCheckedIn",
+					"accessSchedulesCount",
+					"totalActivity"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"TimeSlotDemandItem": {
+				"properties": {
+					"timeSlot": {
+						"type": "string"
+					},
+					"reservationCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"completedReservationCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"accessScheduleCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalDemandCount": {
+						"type": "number",
+						"format": "double"
+					},
+					"configuredMaxCapacityPerDay": {
+						"type": "number",
+						"format": "double"
+					},
+					"demandSharePercent": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"timeSlot",
+					"reservationCount",
+					"completedReservationCount",
+					"accessScheduleCount",
+					"totalDemandCount",
+					"configuredMaxCapacityPerDay",
+					"demandSharePercent"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"HourOfDayItem": {
+				"properties": {
+					"hour": {
+						"type": "number",
+						"format": "double"
+					},
+					"label": {
+						"type": "string"
+					},
+					"reservationCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"hour",
+					"label",
+					"reservationCount"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"BillingUnitEnum": {
+				"enum": [
+					"day",
+					"month",
+					"one_time"
+				],
+				"type": "string"
+			},
+			"RentalTrendsResponse": {
+				"properties": {
+					"period": {
+						"properties": {
+							"scopedFacilityId": {
+								"type": "string",
+								"nullable": true
+							},
+							"granularity": {
+								"$ref": "#/components/schemas/StatisticsGranularityEnum"
+							},
+							"toDate": {
+								"type": "string"
+							},
+							"fromDate": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"scopedFacilityId",
+							"granularity",
+							"toDate",
+							"fromDate"
+						],
+						"type": "object"
+					},
+					"timeSeries": {
+						"items": {
+							"$ref": "#/components/schemas/RentalTrendPoint"
+						},
+						"type": "array"
+					},
+					"peakAndLowAnalysis": {
+						"properties": {
+							"lowPeriods": {
+								"items": {
+									"$ref": "#/components/schemas/RentalTrendPoint"
+								},
+								"type": "array"
+							},
+							"peakPeriods": {
+								"items": {
+									"$ref": "#/components/schemas/RentalTrendPoint"
+								},
+								"type": "array"
+							},
+							"averageReservationsPerPeriod": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"lowPeriods",
+							"peakPeriods",
+							"averageReservationsPerPeriod"
+						],
+						"type": "object"
+					},
+					"dayOfWeekDistribution": {
+						"properties": {
+							"items": {
+								"items": {
+									"$ref": "#/components/schemas/DayOfWeekItem"
+								},
+								"type": "array"
+							},
+							"quietestDay": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/DayOfWeekItem"
+									}
+								],
+								"nullable": true
+							},
+							"busiestDay": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/DayOfWeekItem"
+									}
+								],
+								"nullable": true
+							}
+						},
+						"required": [
+							"items",
+							"quietestDay",
+							"busiestDay"
+						],
+						"type": "object"
+					},
+					"timeSlotDemand": {
+						"items": {
+							"$ref": "#/components/schemas/TimeSlotDemandItem"
+						},
+						"type": "array"
+					},
+					"hourOfDayDistribution": {
+						"items": {
+							"$ref": "#/components/schemas/HourOfDayItem"
+						},
+						"type": "array"
+					},
+					"durationBreakdown": {
+						"properties": {
+							"byDurationBucket": {
+								"items": {
+									"properties": {
+										"sharePercent": {
+											"type": "number",
+											"format": "double"
+										},
+										"reservationCount": {
+											"type": "number",
+											"format": "double"
+										},
+										"label": {
+											"type": "string"
+										},
+										"bucket": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"sharePercent",
+										"reservationCount",
+										"label",
+										"bucket"
+									],
+									"type": "object"
+								},
+								"type": "array"
+							},
+							"byBillingUnit": {
+								"items": {
+									"properties": {
+										"totalDepositAmount": {
+											"type": "number",
+											"format": "double"
+										},
+										"sharePercent": {
+											"type": "number",
+											"format": "double"
+										},
+										"reservationCount": {
+											"type": "number",
+											"format": "double"
+										},
+										"billingUnit": {
+											"$ref": "#/components/schemas/BillingUnitEnum"
+										}
+									},
+									"required": [
+										"totalDepositAmount",
+										"sharePercent",
+										"reservationCount",
+										"billingUnit"
+									],
+									"type": "object"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"byDurationBucket",
+							"byBillingUnit"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"period",
+					"timeSeries",
+					"peakAndLowAnalysis",
+					"dayOfWeekDistribution",
+					"timeSlotDemand",
+					"hourOfDayDistribution",
+					"durationBreakdown"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_RentalTrendsResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RentalTrendsResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RentalTrendsQueryDto": {
+				"properties": {
+					"fromDate": {
+						"type": "string"
+					},
+					"toDate": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"granularity": {
+						"$ref": "#/components/schemas/StatisticsGranularityEnum"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FacilityKpiTierEnum": {
+				"enum": [
+					"excellent",
+					"good",
+					"average",
+					"needs_improvement"
+				],
+				"type": "string"
+			},
+			"FacilityKpiItem": {
+				"properties": {
+					"rank": {
+						"type": "number",
+						"format": "double"
+					},
+					"facility": {
+						"properties": {
+							"status": {
+								"type": "string"
+							},
+							"city": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							},
+							"code": {
+								"type": "string",
+								"nullable": true
+							},
+							"id": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"status",
+							"city",
+							"name",
+							"code",
+							"id"
+						],
+						"type": "object"
+					},
+					"kpiScore": {
+						"type": "number",
+						"format": "double"
+					},
+					"kpiTier": {
+						"$ref": "#/components/schemas/FacilityKpiTierEnum"
+					},
+					"componentScores": {
+						"properties": {
+							"operationalQualityScore": {
+								"type": "number",
+								"format": "double"
+							},
+							"conversionAndRetentionScore": {
+								"type": "number",
+								"format": "double"
+							},
+							"collectionScore": {
+								"type": "number",
+								"format": "double"
+							},
+							"occupancyScore": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"operationalQualityScore",
+							"conversionAndRetentionScore",
+							"collectionScore",
+							"occupancyScore"
+						],
+						"type": "object"
+					},
+					"occupancy": {
+						"properties": {
+							"areaOccupancyRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"rackOccupancyRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"rentedOrReservedRacks": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalActiveRacks": {
+								"type": "number",
+								"format": "double"
+							},
+							"maintenanceDragRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"unitOccupancyRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"maintenanceOrClearanceUnits": {
+								"type": "number",
+								"format": "double"
+							},
+							"occupiedOrReservedUnits": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalActiveUnits": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"areaOccupancyRate",
+							"rackOccupancyRate",
+							"rentedOrReservedRacks",
+							"totalActiveRacks",
+							"maintenanceDragRate",
+							"unitOccupancyRate",
+							"maintenanceOrClearanceUnits",
+							"occupiedOrReservedUnits",
+							"totalActiveUnits"
+						],
+						"type": "object"
+					},
+					"financial": {
+						"properties": {
+							"invoiceCollectionRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"overdueAmount": {
+								"type": "number",
+								"format": "double"
+							},
+							"invoicedAmount": {
+								"type": "number",
+								"format": "double"
+							},
+							"revPAM": {
+								"type": "number",
+								"format": "double"
+							},
+							"revPAU": {
+								"type": "number",
+								"format": "double"
+							},
+							"netRevenue": {
+								"type": "number",
+								"format": "double"
+							},
+							"refundedAmount": {
+								"type": "number",
+								"format": "double"
+							},
+							"collectedRevenue": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"invoiceCollectionRate",
+							"overdueAmount",
+							"invoicedAmount",
+							"revPAM",
+							"revPAU",
+							"netRevenue",
+							"refundedAmount",
+							"collectedRevenue"
+						],
+						"type": "object"
+					},
+					"conversionAndRetention": {
+						"properties": {
+							"renewalRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"renewedContracts": {
+								"type": "number",
+								"format": "double"
+							},
+							"walkInRatioPercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"walkInContracts": {
+								"type": "number",
+								"format": "double"
+							},
+							"contractsCreated": {
+								"type": "number",
+								"format": "double"
+							},
+							"reservationConversionRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"reservationsCompleted": {
+								"type": "number",
+								"format": "double"
+							},
+							"reservationsPaid": {
+								"type": "number",
+								"format": "double"
+							},
+							"reservationsCreated": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"renewalRate",
+							"renewedContracts",
+							"walkInRatioPercent",
+							"walkInContracts",
+							"contractsCreated",
+							"reservationConversionRate",
+							"reservationsCompleted",
+							"reservationsPaid",
+							"reservationsCreated"
+						],
+						"type": "object"
+					},
+					"operations": {
+						"properties": {
+							"supportCompletionRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"avgIncidentResolveHours": {
+								"type": "number",
+								"format": "double",
+								"nullable": true
+							},
+							"avgReservationConfirmMinutes": {
+								"type": "number",
+								"format": "double",
+								"nullable": true
+							},
+							"totalRepairCost": {
+								"type": "number",
+								"format": "double"
+							},
+							"facilityLiableIncidents": {
+								"type": "number",
+								"format": "double"
+							},
+							"openIncidents": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalIncidents": {
+								"type": "number",
+								"format": "double"
+							},
+							"facilityFaultCount": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"supportCompletionRate",
+							"avgIncidentResolveHours",
+							"avgReservationConfirmMinutes",
+							"totalRepairCost",
+							"facilityLiableIncidents",
+							"openIncidents",
+							"totalIncidents",
+							"facilityFaultCount"
+						],
+						"type": "object"
+					},
+					"alerts": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"rank",
+					"facility",
+					"kpiScore",
+					"kpiTier",
+					"componentScores",
+					"occupancy",
+					"financial",
+					"conversionAndRetention",
+					"operations",
+					"alerts"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FacilitiesKpiResponse": {
+				"properties": {
+					"period": {
+						"properties": {
+							"scopedFacilityId": {
+								"type": "string",
+								"nullable": true
+							},
+							"toDate": {
+								"type": "string"
+							},
+							"fromDate": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"scopedFacilityId",
+							"toDate",
+							"fromDate"
+						],
+						"type": "object"
+					},
+					"summary": {
+						"properties": {
+							"needsImprovementCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"averageCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"goodCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"excellentCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"averageKpiScore": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalFacilitiesEvaluated": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"needsImprovementCount",
+							"averageCount",
+							"goodCount",
+							"excellentCount",
+							"averageKpiScore",
+							"totalFacilitiesEvaluated"
+						],
+						"type": "object"
+					},
+					"highlights": {
+						"properties": {
+							"underperformers": {
+								"items": {
+									"$ref": "#/components/schemas/FacilityKpiItem"
+								},
+								"type": "array"
+							},
+							"topPerformers": {
+								"items": {
+									"$ref": "#/components/schemas/FacilityKpiItem"
+								},
+								"type": "array"
+							}
+						},
+						"required": [
+							"underperformers",
+							"topPerformers"
+						],
+						"type": "object"
+					},
+					"items": {
+						"items": {
+							"$ref": "#/components/schemas/FacilityKpiItem"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"period",
+					"summary",
+					"highlights",
+					"items"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_FacilitiesKpiResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FacilitiesKpiResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FacilityKpiSortByEnum": {
+				"enum": [
+					"kpiScore",
+					"occupancyRate",
+					"collectedRevenue",
+					"conversionRate",
+					"collectionRate"
+				],
+				"type": "string"
+			},
+			"FacilitiesKpiQueryDto": {
+				"properties": {
+					"fromDate": {
+						"type": "string"
+					},
+					"toDate": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"city": {
+						"type": "string"
+					},
+					"tier": {
+						"$ref": "#/components/schemas/FacilityKpiTierEnum"
+					},
+					"sortBy": {
+						"$ref": "#/components/schemas/FacilityKpiSortByEnum"
+					},
+					"sortOrder": {
+						"type": "string",
+						"enum": [
+							"asc",
+							"desc"
+						]
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"InvoiceItemTypeEnum": {
+				"enum": [
+					"rent",
+					"amenity",
+					"damage_fee",
+					"overdue_fee",
+					"discount",
+					"other"
+				],
+				"type": "string"
+			},
+			"PaymentMethodEnum": {
+				"enum": [
+					"sepay_qr",
+					"cash",
+					"bank_transfer"
+				],
+				"type": "string"
+			},
+			"PaymentTransactionResultEnum": {
+				"description": "Outcome of processing a single bank transaction received from SePay.\nRECEIVED is the initial state (stored before processing) and also marks\ntransactions whose processing was interrupted, so a retry can resume them.",
+				"enum": [
+					"received",
+					"matched",
+					"partially_matched",
+					"unmatched",
+					"amount_mismatch",
+					"late",
+					"ignored"
+				],
+				"type": "string"
+			},
+			"RefundRequestReasonEnum": {
+				"enum": [
+					"customer_cancel",
+					"facility_cancel",
+					"system_cancel",
+					"late_payment",
+					"amount_mismatch",
+					"deposit_settlement",
+					"facility_fault"
+				],
+				"type": "string"
+			},
+			"FinancialAnalyticsResponse": {
+				"properties": {
+					"period": {
+						"properties": {
+							"scopedFacilityId": {
+								"type": "string",
+								"nullable": true
+							},
+							"granularity": {
+								"$ref": "#/components/schemas/StatisticsGranularityEnum"
+							},
+							"toDate": {
+								"type": "string"
+							},
+							"fromDate": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"scopedFacilityId",
+							"granularity",
+							"toDate",
+							"fromDate"
+						],
+						"type": "object"
+					},
+					"revenueTimeSeries": {
+						"items": {
+							"properties": {
+								"netCollectedAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"refundedAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"collectedAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"invoicedAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"period": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"netCollectedAmount",
+								"refundedAmount",
+								"collectedAmount",
+								"invoicedAmount",
+								"period"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"revenueByItemType": {
+						"items": {
+							"properties": {
+								"sharePercent": {
+									"type": "number",
+									"format": "double"
+								},
+								"itemCount": {
+									"type": "number",
+									"format": "double"
+								},
+								"paidAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"invoicedAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"itemType": {
+									"$ref": "#/components/schemas/InvoiceItemTypeEnum"
+								}
+							},
+							"required": [
+								"sharePercent",
+								"itemCount",
+								"paidAmount",
+								"invoicedAmount",
+								"itemType"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"paymentMethodBreakdown": {
+						"items": {
+							"properties": {
+								"sharePercent": {
+									"type": "number",
+									"format": "double"
+								},
+								"totalPaidAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"count": {
+									"type": "number",
+									"format": "double"
+								},
+								"method": {
+									"$ref": "#/components/schemas/PaymentMethodEnum"
+								}
+							},
+							"required": [
+								"sharePercent",
+								"totalPaidAmount",
+								"count",
+								"method"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"sepayReconciliation": {
+						"items": {
+							"properties": {
+								"totalTransferAmount": {
+									"type": "number",
+									"format": "double"
+								},
+								"count": {
+									"type": "number",
+									"format": "double"
+								},
+								"result": {
+									"$ref": "#/components/schemas/PaymentTransactionResultEnum"
+								}
+							},
+							"required": [
+								"totalTransferAmount",
+								"count",
+								"result"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"overdueAging": {
+						"properties": {
+							"buckets": {
+								"items": {
+									"properties": {
+										"overdueAmount": {
+											"type": "number",
+											"format": "double"
+										},
+										"invoiceCount": {
+											"type": "number",
+											"format": "double"
+										},
+										"label": {
+											"type": "string"
+										},
+										"bucket": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"overdueAmount",
+										"invoiceCount",
+										"label",
+										"bucket"
+									],
+									"type": "object"
+								},
+								"type": "array"
+							},
+							"totalOverdueAmount": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalOverdueInvoices": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"buckets",
+							"totalOverdueAmount",
+							"totalOverdueInvoices"
+						],
+						"type": "object"
+					},
+					"refundAnalytics": {
+						"properties": {
+							"byReason": {
+								"items": {
+									"properties": {
+										"paidAmount": {
+											"type": "number",
+											"format": "double"
+										},
+										"totalAmount": {
+											"type": "number",
+											"format": "double"
+										},
+										"count": {
+											"type": "number",
+											"format": "double"
+										},
+										"reason": {
+											"$ref": "#/components/schemas/RefundRequestReasonEnum"
+										}
+									},
+									"required": [
+										"paidAmount",
+										"totalAmount",
+										"count",
+										"reason"
+									],
+									"type": "object"
+								},
+								"type": "array"
+							},
+							"totalPaidAmount": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalRequestedAmount": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalRequests": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"byReason",
+							"totalPaidAmount",
+							"totalRequestedAmount",
+							"totalRequests"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"period",
+					"revenueTimeSeries",
+					"revenueByItemType",
+					"paymentMethodBreakdown",
+					"sepayReconciliation",
+					"overdueAging",
+					"refundAnalytics"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_FinancialAnalyticsResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/FinancialAnalyticsResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"FinancialAnalyticsQueryDto": {
+				"properties": {
+					"fromDate": {
+						"type": "string"
+					},
+					"toDate": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"granularity": {
+						"$ref": "#/components/schemas/StatisticsGranularityEnum"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ProductAndOperationsResponse": {
+				"properties": {
+					"period": {
+						"properties": {
+							"scopedFacilityId": {
+								"type": "string",
+								"nullable": true
+							},
+							"toDate": {
+								"type": "string"
+							},
+							"fromDate": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"scopedFacilityId",
+							"toDate",
+							"fromDate"
+						],
+						"type": "object"
+					},
+					"unitTypePerformance": {
+						"items": {
+							"properties": {
+								"periodicRevenue": {
+									"type": "number",
+									"format": "double"
+								},
+								"activeContractCount": {
+									"type": "number",
+									"format": "double"
+								},
+								"occupancyRate": {
+									"type": "number",
+									"format": "double"
+								},
+								"maintenanceUnits": {
+									"type": "number",
+									"format": "double"
+								},
+								"occupiedOrReservedUnits": {
+									"type": "number",
+									"format": "double"
+								},
+								"availableUnits": {
+									"type": "number",
+									"format": "double"
+								},
+								"totalUnits": {
+									"type": "number",
+									"format": "double"
+								},
+								"area": {
+									"type": "number",
+									"format": "double"
+								},
+								"category": {
+									"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+								},
+								"name": {
+									"type": "string"
+								},
+								"unitTypeId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"periodicRevenue",
+								"activeContractCount",
+								"occupancyRate",
+								"maintenanceUnits",
+								"occupiedOrReservedUnits",
+								"availableUnits",
+								"totalUnits",
+								"area",
+								"category",
+								"name",
+								"unitTypeId"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"rackZonePerformance": {
+						"items": {
+							"properties": {
+								"occupancyRate": {
+									"type": "number",
+									"format": "double"
+								},
+								"maintenanceRacks": {
+									"type": "number",
+									"format": "double"
+								},
+								"reservedRacks": {
+									"type": "number",
+									"format": "double"
+								},
+								"rentedRacks": {
+									"type": "number",
+									"format": "double"
+								},
+								"availableRacks": {
+									"type": "number",
+									"format": "double"
+								},
+								"totalRacks": {
+									"type": "number",
+									"format": "double"
+								},
+								"zone": {
+									"$ref": "#/components/schemas/RackZoneEnum"
+								}
+							},
+							"required": [
+								"occupancyRate",
+								"maintenanceRacks",
+								"reservedRacks",
+								"rentedRacks",
+								"availableRacks",
+								"totalRacks",
+								"zone"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"amenityPerformance": {
+						"properties": {
+							"topAmenities": {
+								"items": {
+									"properties": {
+										"totalRevenue": {
+											"type": "number",
+											"format": "double"
+										},
+										"totalQuantity": {
+											"type": "number",
+											"format": "double"
+										},
+										"name": {
+											"type": "string"
+										},
+										"amenityId": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"totalRevenue",
+										"totalQuantity",
+										"name",
+										"amenityId"
+									],
+									"type": "object"
+								},
+								"type": "array"
+							},
+							"contractAttachRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"utilizationRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"inUseQuantity": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalQuantity": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalOfferings": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"topAmenities",
+							"contractAttachRate",
+							"utilizationRate",
+							"inUseQuantity",
+							"totalQuantity",
+							"totalOfferings"
+						],
+						"type": "object"
+					},
+					"bookingFunnel": {
+						"properties": {
+							"overallConversionRate": {
+								"type": "number",
+								"format": "double"
+							},
+							"overdueCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"facilityFaultCancelCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"cancelledCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"expiredCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"completedCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"arrivedCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"confirmedCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"paidCount": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalCreated": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"overallConversionRate",
+							"overdueCount",
+							"facilityFaultCancelCount",
+							"cancelledCount",
+							"expiredCount",
+							"completedCount",
+							"arrivedCount",
+							"confirmedCount",
+							"paidCount",
+							"totalCreated"
+						],
+						"type": "object"
+					},
+					"warehouseTraffic": {
+						"properties": {
+							"inventoryMovements": {
+								"properties": {
+									"adjustCount": {
+										"type": "number",
+										"format": "double"
+									},
+									"moveCount": {
+										"type": "number",
+										"format": "double"
+									},
+									"outboundQuantity": {
+										"type": "number",
+										"format": "double"
+									},
+									"outboundCount": {
+										"type": "number",
+										"format": "double"
+									},
+									"inboundQuantity": {
+										"type": "number",
+										"format": "double"
+									},
+									"inboundCount": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"adjustCount",
+									"moveCount",
+									"outboundQuantity",
+									"outboundCount",
+									"inboundQuantity",
+									"inboundCount"
+								],
+								"type": "object"
+							},
+							"accessSchedules": {
+								"properties": {
+									"completionRate": {
+										"type": "number",
+										"format": "double"
+									},
+									"totalVisitors": {
+										"type": "number",
+										"format": "double"
+									},
+									"cancelledCount": {
+										"type": "number",
+										"format": "double"
+									},
+									"noShowCount": {
+										"type": "number",
+										"format": "double"
+									},
+									"completedCount": {
+										"type": "number",
+										"format": "double"
+									},
+									"totalScheduled": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"completionRate",
+									"totalVisitors",
+									"cancelledCount",
+									"noShowCount",
+									"completedCount",
+									"totalScheduled"
+								],
+								"type": "object"
+							}
+						},
+						"required": [
+							"inventoryMovements",
+							"accessSchedules"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"period",
+					"unitTypePerformance",
+					"rackZonePerformance",
+					"amenityPerformance",
+					"bookingFunnel",
+					"warehouseTraffic"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_ProductAndOperationsResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ProductAndOperationsResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"infer_typeofsigningAuthorizationResponseSchema_": {
 				"properties": {
 					"notes": {
@@ -3843,14 +5724,6 @@
 			},
 			"UpdateSigningAuthorizationRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateSigningAuthorizationSchema_"
-			},
-			"BillingUnitEnum": {
-				"enum": [
-					"day",
-					"month",
-					"one_time"
-				],
-				"type": "string"
 			},
 			"ReservationStatusEnum": {
 				"enum": [
@@ -5265,18 +7138,6 @@
 			"ExtendGracePeriodRequest": {
 				"$ref": "#/components/schemas/infer_typeofextendGracePeriodSchema_"
 			},
-			"RefundRequestReasonEnum": {
-				"enum": [
-					"customer_cancel",
-					"facility_cancel",
-					"system_cancel",
-					"late_payment",
-					"amount_mismatch",
-					"deposit_settlement",
-					"facility_fault"
-				],
-				"type": "string"
-			},
 			"RefundRequestStatusEnum": {
 				"enum": [
 					"pending_approval",
@@ -5874,14 +7735,6 @@
 				],
 				"type": "string"
 			},
-			"PaymentMethodEnum": {
-				"enum": [
-					"sepay_qr",
-					"cash",
-					"bank_transfer"
-				],
-				"type": "string"
-			},
 			"PaymentStatusEnum": {
 				"enum": [
 					"pending",
@@ -6280,19 +8133,6 @@
 			},
 			"PaymentQuery": {
 				"$ref": "#/components/schemas/infer_typeofpaymentQuerySchema_"
-			},
-			"PaymentTransactionResultEnum": {
-				"description": "Outcome of processing a single bank transaction received from SePay.\nRECEIVED is the initial state (stored before processing) and also marks\ntransactions whose processing was interrupted, so a retry can resume them.",
-				"enum": [
-					"received",
-					"matched",
-					"partially_matched",
-					"unmatched",
-					"amount_mismatch",
-					"late",
-					"ignored"
-				],
-				"type": "string"
 			},
 			"infer_typeofpaymentTransactionResponseSchema_": {
 				"properties": {
@@ -7253,17 +9093,6 @@
 					"overdue",
 					"cancelled",
 					"void"
-				],
-				"type": "string"
-			},
-			"InvoiceItemTypeEnum": {
-				"enum": [
-					"rent",
-					"amenity",
-					"damage_fee",
-					"overdue_fee",
-					"discount",
-					"other"
 				],
 				"type": "string"
 			},
@@ -20824,6 +22653,498 @@
 						"in": "path",
 						"name": "id",
 						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/statistics/overview": {
+			"get": {
+				"operationId": "GetOverview",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_OverviewStatisticsResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Date Range Or Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Tổng quan điều hành toàn chuỗi (Executive Overview):\nTỷ lệ lấp đầy kho/kệ/diện tích, doanh thu thực thu & tăng trưởng so với kỳ trước,\ntiền cọc đang giữ, nợ quá hạn và danh sách công việc cần xử lý ngay (Action Required).",
+				"tags": [
+					"Statistics & KPI"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "fromDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "toDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/statistics/rental-trends": {
+			"get": {
+				"operationId": "GetRentalTrends",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RentalTrendsResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Date Range Or Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Phân tích xu hướng thuê theo thời gian (Rental Trends & Temporal Demand):\nChuỗi thời gian theo ngày/tuần/tháng/quý, tự động chỉ ra khoảng thời gian cao điểm (peakPeriods)\nvà ít người thuê (lowPeriods), phân bổ nhu cầu theo thứ trong tuần, khung giờ hẹn check-in/ra vào kho,\ngiờ đặt đơn online trong ngày và độ dài kỳ thuê.",
+				"tags": [
+					"Statistics & KPI"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "fromDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "toDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "granularity",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/StatisticsGranularityEnum"
+						}
+					}
+				]
+			}
+		},
+		"/statistics/facilities-kpi": {
+			"get": {
+				"operationId": "GetFacilitiesKpi",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FacilitiesKpiResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Date Range Or Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Bảng xếp hạng & Chấm điểm KPI Chi nhánh (Facility KPI Scorecard & Leaderboard):\nChấm điểm KPI tổng hợp (0-100), xếp hạng rank, phân loại tier (EXCELLENT/GOOD/AVERAGE/NEEDS_IMPROVEMENT)\ndựa trên 4 trụ cột: Lấp đầy, Tài chính & Thu hồi nợ, Chuyển đổi & Giữ chân, Chất lượng vận hành & SLA.",
+				"tags": [
+					"Statistics & KPI"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "fromDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "toDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "city",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "tier",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/FacilityKpiTierEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortBy",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/FacilityKpiSortByEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "sortOrder",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"asc",
+								"desc"
+							]
+						}
+					}
+				]
+			}
+		},
+		"/statistics/financial-analytics": {
+			"get": {
+				"operationId": "GetFinancialAnalytics",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_FinancialAnalyticsResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Date Range Or Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Phân tích tài chính chuyên sâu (Financial, AR Overdue Aging & Refund Analytics):\nChuỗi thời gian doanh thu phát hành vs thực thu vs hoàn tiền, cơ cấu nguồn thu theo khoản mục hóa đơn,\ntỷ trọng phương thức thanh toán, đối soát cổng SePay, báo cáo tuổi nợ hóa đơn và hoàn tiền theo lý do.",
+				"tags": [
+					"Statistics & KPI"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "fromDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "toDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "granularity",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/StatisticsGranularityEnum"
+						}
+					}
+				]
+			}
+		},
+		"/statistics/product-and-operations": {
+			"get": {
+				"operationId": "GetProductAndOperations",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ProductAndOperationsResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Date Range Or Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Phân tích hiệu suất sản phẩm & vận hành kho (Product Mix, Booking Funnel & Warehouse Traffic):\nHiệu suất lấp đầy và doanh thu theo Loại kho (UnitType), Phân khu kệ (RackZone), Tiện ích bán kèm (Amenity Attach Rate),\nPhễu chuyển đổi đặt chỗ (Booking Funnel) và Lưu lượng ra vào kho tự quản (AccessSchedule & InventoryMovement).",
+				"tags": [
+					"Statistics & KPI"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "fromDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "toDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
 						"schema": {
 							"type": "string"
 						}

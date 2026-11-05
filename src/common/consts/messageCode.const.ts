@@ -466,6 +466,12 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_809: 'MESSAGE_CODE_809',
   // Invoice Code Already Exists
   MESSAGE_CODE_810: 'MESSAGE_CODE_810',
+
+  // ==========================================
+  // STATISTICS (820 - 825)
+  // ==========================================
+  // Invalid Statistics Date Range Or Exceeds Maximum Allowed Days
+  MESSAGE_CODE_820: 'MESSAGE_CODE_820',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -726,4 +732,8 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_808: 'Invoice Items Cannot Be Empty',
   MESSAGE_CODE_809: 'Cannot Void Already Paid Invoice',
   MESSAGE_CODE_810: 'Invoice Code Already Exists',
+
+  // Statistics
+  MESSAGE_CODE_820:
+    'Invalid Statistics Date Range Or Exceeds Maximum Allowed Days',
 };

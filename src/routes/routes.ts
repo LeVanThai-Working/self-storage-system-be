@@ -22,6 +22,8 @@ import { StorageUnitController } from './../modules/storageUnit/storageUnit.cont
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { StorageRackController } from './../modules/storageRack/storageRack.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { StatisticsController } from './../modules/statistics/statistics.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { SigningAuthorizationController } from './../modules/signingAuthorization/signingAuthorization.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { ReservationController } from './../modules/reservation/reservation.controller.js';
@@ -953,6 +955,286 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofupdateRackTierSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "OverviewStatisticsResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "period": {"dataType":"nestedObjectLiteral","nestedProperties":{"scopedFacilityId":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"toDate":{"dataType":"string","required":true},"fromDate":{"dataType":"string","required":true}},"required":true},
+            "facilities": {"dataType":"nestedObjectLiteral","nestedProperties":{"totalActive":{"dataType":"double","required":true}},"required":true},
+            "occupancy": {"dataType":"nestedObjectLiteral","nestedProperties":{"storageRacks":{"dataType":"nestedObjectLiteral","nestedProperties":{"occupancyRate":{"dataType":"double","required":true},"inactive":{"dataType":"double","required":true},"maintenance":{"dataType":"double","required":true},"reserved":{"dataType":"double","required":true},"rented":{"dataType":"double","required":true},"available":{"dataType":"double","required":true},"total":{"dataType":"double","required":true}},"required":true},"storageUnits":{"dataType":"nestedObjectLiteral","nestedProperties":{"occupiedAreaM2":{"dataType":"double","required":true},"totalAreaM2":{"dataType":"double","required":true},"areaOccupancyRate":{"dataType":"double","required":true},"occupancyRate":{"dataType":"double","required":true},"inactive":{"dataType":"double","required":true},"pendingClearance":{"dataType":"double","required":true},"underMaintenance":{"dataType":"double","required":true},"reserved":{"dataType":"double","required":true},"occupied":{"dataType":"double","required":true},"available":{"dataType":"double","required":true},"total":{"dataType":"double","required":true}},"required":true}},"required":true},
+            "financials": {"dataType":"nestedObjectLiteral","nestedProperties":{"forfeitedAmount":{"dataType":"double","required":true},"overdueReceivables":{"dataType":"double","required":true},"heldDeposits":{"dataType":"double","required":true},"netRevenue":{"dataType":"double","required":true},"refundedAmount":{"dataType":"double","required":true},"revenueGrowthPercent":{"dataType":"double","required":true},"previousPeriodCollectedRevenue":{"dataType":"double","required":true},"collectedRevenue":{"dataType":"double","required":true}},"required":true},
+            "contractsAndBookings": {"dataType":"nestedObjectLiteral","nestedProperties":{"completedReservationsInPeriod":{"dataType":"double","required":true},"newReservationsInPeriod":{"dataType":"double","required":true},"overdueContracts":{"dataType":"double","required":true},"activeContracts":{"dataType":"double","required":true}},"required":true},
+            "actionRequired": {"dataType":"nestedObjectLiteral","nestedProperties":{"openHighCriticalIncidents":{"dataType":"double","required":true},"unmatchedSepayTransactions":{"dataType":"double","required":true},"pendingOpsRefunds":{"dataType":"double","required":true},"pendingApprovals":{"dataType":"double","required":true}},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_OverviewStatisticsResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"OverviewStatisticsResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "StatisticsBaseQueryDto": {
+        "dataType": "refObject",
+        "properties": {
+            "fromDate": {"dataType":"string"},
+            "toDate": {"dataType":"string"},
+            "facilityId": {"dataType":"string"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "StatisticsGranularityEnum": {
+        "dataType": "refEnum",
+        "enums": ["day","week","month","quarter"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RentalTrendPoint": {
+        "dataType": "refObject",
+        "properties": {
+            "period": {"dataType":"string","required":true},
+            "reservationsCreated": {"dataType":"double","required":true},
+            "completedReservations": {"dataType":"double","required":true},
+            "cancelledReservations": {"dataType":"double","required":true},
+            "contractsCheckedIn": {"dataType":"double","required":true},
+            "contractsEnded": {"dataType":"double","required":true},
+            "collectedRevenue": {"dataType":"double","required":true},
+            "varianceFromAvgPercent": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DayOfWeekItem": {
+        "dataType": "refObject",
+        "properties": {
+            "dayOfWeek": {"dataType":"double","required":true},
+            "dayName": {"dataType":"string","required":true},
+            "reservationsCreated": {"dataType":"double","required":true},
+            "contractsCheckedIn": {"dataType":"double","required":true},
+            "accessSchedulesCount": {"dataType":"double","required":true},
+            "totalActivity": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "TimeSlotDemandItem": {
+        "dataType": "refObject",
+        "properties": {
+            "timeSlot": {"dataType":"string","required":true},
+            "reservationCount": {"dataType":"double","required":true},
+            "completedReservationCount": {"dataType":"double","required":true},
+            "accessScheduleCount": {"dataType":"double","required":true},
+            "totalDemandCount": {"dataType":"double","required":true},
+            "configuredMaxCapacityPerDay": {"dataType":"double","required":true},
+            "demandSharePercent": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "HourOfDayItem": {
+        "dataType": "refObject",
+        "properties": {
+            "hour": {"dataType":"double","required":true},
+            "label": {"dataType":"string","required":true},
+            "reservationCount": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "BillingUnitEnum": {
+        "dataType": "refEnum",
+        "enums": ["day","month","one_time"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RentalTrendsResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "period": {"dataType":"nestedObjectLiteral","nestedProperties":{"scopedFacilityId":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"granularity":{"ref":"StatisticsGranularityEnum","required":true},"toDate":{"dataType":"string","required":true},"fromDate":{"dataType":"string","required":true}},"required":true},
+            "timeSeries": {"dataType":"array","array":{"dataType":"refObject","ref":"RentalTrendPoint"},"required":true},
+            "peakAndLowAnalysis": {"dataType":"nestedObjectLiteral","nestedProperties":{"lowPeriods":{"dataType":"array","array":{"dataType":"refObject","ref":"RentalTrendPoint"},"required":true},"peakPeriods":{"dataType":"array","array":{"dataType":"refObject","ref":"RentalTrendPoint"},"required":true},"averageReservationsPerPeriod":{"dataType":"double","required":true}},"required":true},
+            "dayOfWeekDistribution": {"dataType":"nestedObjectLiteral","nestedProperties":{"items":{"dataType":"array","array":{"dataType":"refObject","ref":"DayOfWeekItem"},"required":true},"quietestDay":{"dataType":"union","subSchemas":[{"ref":"DayOfWeekItem"},{"dataType":"enum","enums":[null]}],"required":true},"busiestDay":{"dataType":"union","subSchemas":[{"ref":"DayOfWeekItem"},{"dataType":"enum","enums":[null]}],"required":true}},"required":true},
+            "timeSlotDemand": {"dataType":"array","array":{"dataType":"refObject","ref":"TimeSlotDemandItem"},"required":true},
+            "hourOfDayDistribution": {"dataType":"array","array":{"dataType":"refObject","ref":"HourOfDayItem"},"required":true},
+            "durationBreakdown": {"dataType":"nestedObjectLiteral","nestedProperties":{"byDurationBucket":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"sharePercent":{"dataType":"double","required":true},"reservationCount":{"dataType":"double","required":true},"label":{"dataType":"string","required":true},"bucket":{"dataType":"string","required":true}}},"required":true},"byBillingUnit":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalDepositAmount":{"dataType":"double","required":true},"sharePercent":{"dataType":"double","required":true},"reservationCount":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true}}},"required":true}},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_RentalTrendsResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"RentalTrendsResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RentalTrendsQueryDto": {
+        "dataType": "refObject",
+        "properties": {
+            "fromDate": {"dataType":"string"},
+            "toDate": {"dataType":"string"},
+            "facilityId": {"dataType":"string"},
+            "granularity": {"ref":"StatisticsGranularityEnum"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FacilityKpiTierEnum": {
+        "dataType": "refEnum",
+        "enums": ["excellent","good","average","needs_improvement"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FacilityKpiItem": {
+        "dataType": "refObject",
+        "properties": {
+            "rank": {"dataType":"double","required":true},
+            "facility": {"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string","required":true},"city":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"code":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"id":{"dataType":"string","required":true}},"required":true},
+            "kpiScore": {"dataType":"double","required":true},
+            "kpiTier": {"ref":"FacilityKpiTierEnum","required":true},
+            "componentScores": {"dataType":"nestedObjectLiteral","nestedProperties":{"operationalQualityScore":{"dataType":"double","required":true},"conversionAndRetentionScore":{"dataType":"double","required":true},"collectionScore":{"dataType":"double","required":true},"occupancyScore":{"dataType":"double","required":true}},"required":true},
+            "occupancy": {"dataType":"nestedObjectLiteral","nestedProperties":{"areaOccupancyRate":{"dataType":"double","required":true},"rackOccupancyRate":{"dataType":"double","required":true},"rentedOrReservedRacks":{"dataType":"double","required":true},"totalActiveRacks":{"dataType":"double","required":true},"maintenanceDragRate":{"dataType":"double","required":true},"unitOccupancyRate":{"dataType":"double","required":true},"maintenanceOrClearanceUnits":{"dataType":"double","required":true},"occupiedOrReservedUnits":{"dataType":"double","required":true},"totalActiveUnits":{"dataType":"double","required":true}},"required":true},
+            "financial": {"dataType":"nestedObjectLiteral","nestedProperties":{"invoiceCollectionRate":{"dataType":"double","required":true},"overdueAmount":{"dataType":"double","required":true},"invoicedAmount":{"dataType":"double","required":true},"revPAM":{"dataType":"double","required":true},"revPAU":{"dataType":"double","required":true},"netRevenue":{"dataType":"double","required":true},"refundedAmount":{"dataType":"double","required":true},"collectedRevenue":{"dataType":"double","required":true}},"required":true},
+            "conversionAndRetention": {"dataType":"nestedObjectLiteral","nestedProperties":{"renewalRate":{"dataType":"double","required":true},"renewedContracts":{"dataType":"double","required":true},"walkInRatioPercent":{"dataType":"double","required":true},"walkInContracts":{"dataType":"double","required":true},"contractsCreated":{"dataType":"double","required":true},"reservationConversionRate":{"dataType":"double","required":true},"reservationsCompleted":{"dataType":"double","required":true},"reservationsPaid":{"dataType":"double","required":true},"reservationsCreated":{"dataType":"double","required":true}},"required":true},
+            "operations": {"dataType":"nestedObjectLiteral","nestedProperties":{"supportCompletionRate":{"dataType":"double","required":true},"avgIncidentResolveHours":{"dataType":"union","subSchemas":[{"dataType":"double"},{"dataType":"enum","enums":[null]}],"required":true},"avgReservationConfirmMinutes":{"dataType":"union","subSchemas":[{"dataType":"double"},{"dataType":"enum","enums":[null]}],"required":true},"totalRepairCost":{"dataType":"double","required":true},"facilityLiableIncidents":{"dataType":"double","required":true},"openIncidents":{"dataType":"double","required":true},"totalIncidents":{"dataType":"double","required":true},"facilityFaultCount":{"dataType":"double","required":true}},"required":true},
+            "alerts": {"dataType":"array","array":{"dataType":"string"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FacilitiesKpiResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "period": {"dataType":"nestedObjectLiteral","nestedProperties":{"scopedFacilityId":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"toDate":{"dataType":"string","required":true},"fromDate":{"dataType":"string","required":true}},"required":true},
+            "summary": {"dataType":"nestedObjectLiteral","nestedProperties":{"needsImprovementCount":{"dataType":"double","required":true},"averageCount":{"dataType":"double","required":true},"goodCount":{"dataType":"double","required":true},"excellentCount":{"dataType":"double","required":true},"averageKpiScore":{"dataType":"double","required":true},"totalFacilitiesEvaluated":{"dataType":"double","required":true}},"required":true},
+            "highlights": {"dataType":"nestedObjectLiteral","nestedProperties":{"underperformers":{"dataType":"array","array":{"dataType":"refObject","ref":"FacilityKpiItem"},"required":true},"topPerformers":{"dataType":"array","array":{"dataType":"refObject","ref":"FacilityKpiItem"},"required":true}},"required":true},
+            "items": {"dataType":"array","array":{"dataType":"refObject","ref":"FacilityKpiItem"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_FacilitiesKpiResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"FacilitiesKpiResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FacilityKpiSortByEnum": {
+        "dataType": "refEnum",
+        "enums": ["kpiScore","occupancyRate","collectedRevenue","conversionRate","collectionRate"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FacilitiesKpiQueryDto": {
+        "dataType": "refObject",
+        "properties": {
+            "fromDate": {"dataType":"string"},
+            "toDate": {"dataType":"string"},
+            "facilityId": {"dataType":"string"},
+            "city": {"dataType":"string"},
+            "tier": {"ref":"FacilityKpiTierEnum"},
+            "sortBy": {"ref":"FacilityKpiSortByEnum"},
+            "sortOrder": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}]},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "InvoiceItemTypeEnum": {
+        "dataType": "refEnum",
+        "enums": ["rent","amenity","damage_fee","overdue_fee","discount","other"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaymentMethodEnum": {
+        "dataType": "refEnum",
+        "enums": ["sepay_qr","cash","bank_transfer"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "PaymentTransactionResultEnum": {
+        "dataType": "refEnum",
+        "enums": ["received","matched","partially_matched","unmatched","amount_mismatch","late","ignored"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RefundRequestReasonEnum": {
+        "dataType": "refEnum",
+        "enums": ["customer_cancel","facility_cancel","system_cancel","late_payment","amount_mismatch","deposit_settlement","facility_fault"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FinancialAnalyticsResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "period": {"dataType":"nestedObjectLiteral","nestedProperties":{"scopedFacilityId":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"granularity":{"ref":"StatisticsGranularityEnum","required":true},"toDate":{"dataType":"string","required":true},"fromDate":{"dataType":"string","required":true}},"required":true},
+            "revenueTimeSeries": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"netCollectedAmount":{"dataType":"double","required":true},"refundedAmount":{"dataType":"double","required":true},"collectedAmount":{"dataType":"double","required":true},"invoicedAmount":{"dataType":"double","required":true},"period":{"dataType":"string","required":true}}},"required":true},
+            "revenueByItemType": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"sharePercent":{"dataType":"double","required":true},"itemCount":{"dataType":"double","required":true},"paidAmount":{"dataType":"double","required":true},"invoicedAmount":{"dataType":"double","required":true},"itemType":{"ref":"InvoiceItemTypeEnum","required":true}}},"required":true},
+            "paymentMethodBreakdown": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"sharePercent":{"dataType":"double","required":true},"totalPaidAmount":{"dataType":"double","required":true},"count":{"dataType":"double","required":true},"method":{"ref":"PaymentMethodEnum","required":true}}},"required":true},
+            "sepayReconciliation": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalTransferAmount":{"dataType":"double","required":true},"count":{"dataType":"double","required":true},"result":{"ref":"PaymentTransactionResultEnum","required":true}}},"required":true},
+            "overdueAging": {"dataType":"nestedObjectLiteral","nestedProperties":{"buckets":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"overdueAmount":{"dataType":"double","required":true},"invoiceCount":{"dataType":"double","required":true},"label":{"dataType":"string","required":true},"bucket":{"dataType":"string","required":true}}},"required":true},"totalOverdueAmount":{"dataType":"double","required":true},"totalOverdueInvoices":{"dataType":"double","required":true}},"required":true},
+            "refundAnalytics": {"dataType":"nestedObjectLiteral","nestedProperties":{"byReason":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"paidAmount":{"dataType":"double","required":true},"totalAmount":{"dataType":"double","required":true},"count":{"dataType":"double","required":true},"reason":{"ref":"RefundRequestReasonEnum","required":true}}},"required":true},"totalPaidAmount":{"dataType":"double","required":true},"totalRequestedAmount":{"dataType":"double","required":true},"totalRequests":{"dataType":"double","required":true}},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_FinancialAnalyticsResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"FinancialAnalyticsResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "FinancialAnalyticsQueryDto": {
+        "dataType": "refObject",
+        "properties": {
+            "fromDate": {"dataType":"string"},
+            "toDate": {"dataType":"string"},
+            "facilityId": {"dataType":"string"},
+            "granularity": {"ref":"StatisticsGranularityEnum"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ProductAndOperationsResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "period": {"dataType":"nestedObjectLiteral","nestedProperties":{"scopedFacilityId":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"toDate":{"dataType":"string","required":true},"fromDate":{"dataType":"string","required":true}},"required":true},
+            "unitTypePerformance": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"periodicRevenue":{"dataType":"double","required":true},"activeContractCount":{"dataType":"double","required":true},"occupancyRate":{"dataType":"double","required":true},"maintenanceUnits":{"dataType":"double","required":true},"occupiedOrReservedUnits":{"dataType":"double","required":true},"availableUnits":{"dataType":"double","required":true},"totalUnits":{"dataType":"double","required":true},"area":{"dataType":"double","required":true},"category":{"ref":"UnitTypeCategoryEnum","required":true},"name":{"dataType":"string","required":true},"unitTypeId":{"dataType":"string","required":true}}},"required":true},
+            "rackZonePerformance": {"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"occupancyRate":{"dataType":"double","required":true},"maintenanceRacks":{"dataType":"double","required":true},"reservedRacks":{"dataType":"double","required":true},"rentedRacks":{"dataType":"double","required":true},"availableRacks":{"dataType":"double","required":true},"totalRacks":{"dataType":"double","required":true},"zone":{"ref":"RackZoneEnum","required":true}}},"required":true},
+            "amenityPerformance": {"dataType":"nestedObjectLiteral","nestedProperties":{"topAmenities":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalRevenue":{"dataType":"double","required":true},"totalQuantity":{"dataType":"double","required":true},"name":{"dataType":"string","required":true},"amenityId":{"dataType":"string","required":true}}},"required":true},"contractAttachRate":{"dataType":"double","required":true},"utilizationRate":{"dataType":"double","required":true},"inUseQuantity":{"dataType":"double","required":true},"totalQuantity":{"dataType":"double","required":true},"totalOfferings":{"dataType":"double","required":true}},"required":true},
+            "bookingFunnel": {"dataType":"nestedObjectLiteral","nestedProperties":{"overallConversionRate":{"dataType":"double","required":true},"overdueCount":{"dataType":"double","required":true},"facilityFaultCancelCount":{"dataType":"double","required":true},"cancelledCount":{"dataType":"double","required":true},"expiredCount":{"dataType":"double","required":true},"completedCount":{"dataType":"double","required":true},"arrivedCount":{"dataType":"double","required":true},"confirmedCount":{"dataType":"double","required":true},"paidCount":{"dataType":"double","required":true},"totalCreated":{"dataType":"double","required":true}},"required":true},
+            "warehouseTraffic": {"dataType":"nestedObjectLiteral","nestedProperties":{"inventoryMovements":{"dataType":"nestedObjectLiteral","nestedProperties":{"adjustCount":{"dataType":"double","required":true},"moveCount":{"dataType":"double","required":true},"outboundQuantity":{"dataType":"double","required":true},"outboundCount":{"dataType":"double","required":true},"inboundQuantity":{"dataType":"double","required":true},"inboundCount":{"dataType":"double","required":true}},"required":true},"accessSchedules":{"dataType":"nestedObjectLiteral","nestedProperties":{"completionRate":{"dataType":"double","required":true},"totalVisitors":{"dataType":"double","required":true},"cancelledCount":{"dataType":"double","required":true},"noShowCount":{"dataType":"double","required":true},"completedCount":{"dataType":"double","required":true},"totalScheduled":{"dataType":"double","required":true}},"required":true}},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_ProductAndOperationsResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"ProductAndOperationsResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofsigningAuthorizationResponseSchema_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"fileHash":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["revoked"]},{"dataType":"enum","enums":["expired"]}],"required":true},"documentUrl":{"dataType":"string","required":true},"validTo":{"dataType":"string","required":true},"validFrom":{"dataType":"string","required":true},"issuedDate":{"dataType":"string","required":true},"authorizationNumber":{"dataType":"string","required":true},"facilityIds":{"dataType":"array","array":{"dataType":"any"},"required":true},"authorizedUserId":{"dataType":"any","required":true},"legalEntityId":{"dataType":"any","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
@@ -1024,11 +1306,6 @@ const models: TsoaRoute.Models = {
     "UpdateSigningAuthorizationRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofupdateSigningAuthorizationSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "BillingUnitEnum": {
-        "dataType": "refEnum",
-        "enums": ["day","month","one_time"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ReservationStatusEnum": {
@@ -1228,11 +1505,6 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofextendGracePeriodSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "RefundRequestReasonEnum": {
-        "dataType": "refEnum",
-        "enums": ["customer_cancel","facility_cancel","system_cancel","late_payment","amount_mismatch","deposit_settlement","facility_fault"],
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "RefundRequestStatusEnum": {
         "dataType": "refEnum",
         "enums": ["pending_approval","approved","paid","rejected","cancelled"],
@@ -1365,11 +1637,6 @@ const models: TsoaRoute.Models = {
         "enums": ["reservation_deposit","contract_deposit","rent_first_period","invoice_payment"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "PaymentMethodEnum": {
-        "dataType": "refEnum",
-        "enums": ["sepay_qr","cash","bank_transfer"],
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "PaymentStatusEnum": {
         "dataType": "refEnum",
         "enums": ["pending","partially_paid","paid","expired","cancelled"],
@@ -1436,11 +1703,6 @@ const models: TsoaRoute.Models = {
     "PaymentQuery": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofpaymentQuerySchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "PaymentTransactionResultEnum": {
-        "dataType": "refEnum",
-        "enums": ["received","matched","partially_matched","unmatched","amount_mismatch","late","ignored"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofpaymentTransactionResponseSchema_": {
@@ -1729,11 +1991,6 @@ const models: TsoaRoute.Models = {
     "InvoiceStatusEnum": {
         "dataType": "refEnum",
         "enums": ["draft","issued","paid","overdue","cancelled","void"],
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "InvoiceItemTypeEnum": {
-        "dataType": "refEnum",
-        "enums": ["rent","amenity","damage_fee","overdue_fee","discount","other"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofinvoiceResponseSchema_": {
@@ -5393,6 +5650,186 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'restoreStorageRack',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStatisticsController_getOverview: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"ref":"StatisticsBaseQueryDto"},
+        };
+        app.get('/statistics/overview',
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController)),
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController.prototype.getOverview)),
+
+            async function StatisticsController_getOverview(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStatisticsController_getOverview, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StatisticsController>(StatisticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getOverview',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStatisticsController_getRentalTrends: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"ref":"RentalTrendsQueryDto"},
+        };
+        app.get('/statistics/rental-trends',
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController)),
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController.prototype.getRentalTrends)),
+
+            async function StatisticsController_getRentalTrends(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStatisticsController_getRentalTrends, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StatisticsController>(StatisticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getRentalTrends',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStatisticsController_getFacilitiesKpi: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"ref":"FacilitiesKpiQueryDto"},
+        };
+        app.get('/statistics/facilities-kpi',
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController)),
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController.prototype.getFacilitiesKpi)),
+
+            async function StatisticsController_getFacilitiesKpi(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStatisticsController_getFacilitiesKpi, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StatisticsController>(StatisticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getFacilitiesKpi',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStatisticsController_getFinancialAnalytics: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"ref":"FinancialAnalyticsQueryDto"},
+        };
+        app.get('/statistics/financial-analytics',
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController)),
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController.prototype.getFinancialAnalytics)),
+
+            async function StatisticsController_getFinancialAnalytics(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStatisticsController_getFinancialAnalytics, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StatisticsController>(StatisticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getFinancialAnalytics',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStatisticsController_getProductAndOperations: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"ref":"StatisticsBaseQueryDto"},
+        };
+        app.get('/statistics/product-and-operations',
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController)),
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController.prototype.getProductAndOperations)),
+
+            async function StatisticsController_getProductAndOperations(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStatisticsController_getProductAndOperations, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StatisticsController>(StatisticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getProductAndOperations',
                 controller,
                 response,
                 next,
