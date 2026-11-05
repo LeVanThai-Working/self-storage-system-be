@@ -22,6 +22,28 @@ export interface IIncidentResolution {
   resolvedAt: Date;
 }
 
+export interface IPreEvacuationItem {
+  skuId: Types.ObjectId;
+  skuCode?: string;
+  skuName?: string;
+  systemQuantity: number;
+  actualQuantity: number;
+  discrepancy: number;
+  condition?: string;
+  notes?: string;
+}
+
+export interface IPreEvacuationManifest {
+  evacuatedAt: Date;
+  evacuatedBy: Types.ObjectId;
+  evidenceImages: string[];
+  items: IPreEvacuationItem[];
+  totalSystemQuantity: number;
+  totalActualQuantity: number;
+  totalDiscrepancy: number;
+  notes?: string;
+}
+
 export interface IIncident extends SoftDeleteDocument {
   _id: Types.ObjectId;
   incidentCode: string;
@@ -43,6 +65,13 @@ export interface IIncident extends SoftDeleteDocument {
   requiresRelocation: boolean;
   investigationNotes?: string;
   resolution?: IIncidentResolution;
+  preEvacuationManifest?: IPreEvacuationManifest | null;
+  restorationManifestDocUrl?: string | null;
+  restorationUploadedAt?: Date | null;
+  restorationUploadedBy?: Types.ObjectId | null;
+  customerAcknowledgedAt?: Date | null;
+  customerAcknowledgedBy?: Types.ObjectId | null;
+  customerAcknowledgeNotes?: string | null;
   closedAt?: Date;
   cancelledAt?: Date;
   cancellationReason?: string;
@@ -95,6 +124,34 @@ const incidentResolutionSchema = new Schema<IIncidentResolution>(
       required: true,
       default: Date.now,
     },
+  },
+  { _id: false }
+);
+
+const preEvacuationItemSchema = new Schema<IPreEvacuationItem>(
+  {
+    skuId: { type: Schema.Types.ObjectId, ref: 'CustomerSku', required: true },
+    skuCode: { type: String, trim: true },
+    skuName: { type: String, trim: true },
+    systemQuantity: { type: Number, required: true, default: 0 },
+    actualQuantity: { type: Number, required: true, default: 0 },
+    discrepancy: { type: Number, required: true, default: 0 },
+    condition: { type: String, trim: true },
+    notes: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
+const preEvacuationManifestSchema = new Schema<IPreEvacuationManifest>(
+  {
+    evacuatedAt: { type: Date, required: true, default: Date.now },
+    evacuatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    evidenceImages: { type: [String], default: [] },
+    items: { type: [preEvacuationItemSchema], default: [] },
+    totalSystemQuantity: { type: Number, required: true, default: 0 },
+    totalActualQuantity: { type: Number, required: true, default: 0 },
+    totalDiscrepancy: { type: Number, required: true, default: 0 },
+    notes: { type: String, trim: true },
   },
   { _id: false }
 );
@@ -210,6 +267,38 @@ const incidentSchema = new Schema<IIncident>(
     },
     resolution: {
       type: incidentResolutionSchema,
+      default: null,
+    },
+    preEvacuationManifest: {
+      type: preEvacuationManifestSchema,
+      default: null,
+    },
+    restorationManifestDocUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    restorationUploadedAt: {
+      type: Date,
+      default: null,
+    },
+    restorationUploadedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    customerAcknowledgedAt: {
+      type: Date,
+      default: null,
+    },
+    customerAcknowledgedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    customerAcknowledgeNotes: {
+      type: String,
+      trim: true,
       default: null,
     },
     closedAt: {

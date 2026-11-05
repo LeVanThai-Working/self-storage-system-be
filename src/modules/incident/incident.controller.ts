@@ -26,6 +26,9 @@ import {
   resolveIncidentSchema,
   closeIncidentSchema,
   cancelIncidentSchema,
+  evacuateIncidentRackSchema,
+  uploadRestorationManifestSchema,
+  customerAcknowledgeIncidentSchema,
   incidentIdParamSchema,
   incidentQuerySchema,
   type ReportIncidentRequest,
@@ -34,6 +37,9 @@ import {
   type ResolveIncidentRequest,
   type CloseIncidentRequest,
   type CancelIncidentRequest,
+  type EvacuateIncidentRackRequest,
+  type UploadRestorationManifestRequest,
+  type CustomerAcknowledgeIncidentRequest,
   type IncidentQuery,
 } from './schemas/incident.request.schema.ts';
 import type {
@@ -364,6 +370,114 @@ export class IncidentController extends Controller {
   ): Promise<ApiResponse<IncidentResponse>> {
     const caller = extractCaller(req);
     const incident = await this.incidentService.cancelIncident(
+      caller,
+      id,
+      body
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Incident']),
+      data: incident,
+    };
+  }
+
+  /**
+   * Emergency evacuation of goods from affected self-managed rack to TEMPORARY_HOLDING zone.
+   * Generates physical vs system discrepancy manifest and sets rack to MAINTENANCE.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Post('{id}/evacuate-rack')
+  @Middlewares(
+    validateRequest({
+      params: incidentIdParamSchema,
+      body: evacuateIncidentRackSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async evacuateRack(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: EvacuateIncidentRackRequest
+  ): Promise<ApiResponse<IncidentResponse>> {
+    const caller = extractCaller(req);
+    const incident = await this.incidentService.evacuateRack(caller, id, body);
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Incident']),
+      data: incident,
+    };
+  }
+
+  /**
+   * Upload scanned paper restoration/handover manifest with ink signatures.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Post('{id}/restoration-manifest')
+  @Middlewares(
+    validateRequest({
+      params: incidentIdParamSchema,
+      body: uploadRestorationManifestSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async uploadRestorationManifest(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: UploadRestorationManifestRequest
+  ): Promise<ApiResponse<IncidentResponse>> {
+    const caller = extractCaller(req);
+    const incident = await this.incidentService.uploadRestorationManifest(
+      caller,
+      id,
+      body
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_003,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_003, ['Incident']),
+      data: incident,
+    };
+  }
+
+  /**
+   * Customer in-app acknowledgment of rack restoration or item handover.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER
+  @Post('{id}/customer-acknowledge')
+  @Middlewares(
+    validateRequest({
+      params: incidentIdParamSchema,
+      body: customerAcknowledgeIncidentSchema,
+    })
+  )
+  @Response<ApiErrorResponse>(400, 'Bad Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async customerAcknowledge(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: CustomerAcknowledgeIncidentRequest
+  ): Promise<ApiResponse<IncidentResponse>> {
+    const caller = extractCaller(req);
+    const incident = await this.incidentService.customerAcknowledge(
       caller,
       id,
       body

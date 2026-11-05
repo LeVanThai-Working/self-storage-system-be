@@ -360,6 +360,28 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_650: 'MESSAGE_CODE_650',
 
   // ==========================================
+  // ACCESS SCHEDULE (651 - 659)
+  // ==========================================
+  // Access Schedule Not Found
+  MESSAGE_CODE_651: 'MESSAGE_CODE_651',
+  // Time Slot Is Fully Booked
+  MESSAGE_CODE_652: 'MESSAGE_CODE_652',
+  // Invalid Access Schedule Status Transition
+  MESSAGE_CODE_653: 'MESSAGE_CODE_653',
+  // Check-in Time Has Not Started Yet
+  MESSAGE_CODE_654: 'MESSAGE_CODE_654',
+  // Check-in Grace Period Has Expired
+  MESSAGE_CODE_655: 'MESSAGE_CODE_655',
+  // Cannot Cancel Access Schedule Too Close To Start Time
+  MESSAGE_CODE_656: 'MESSAGE_CODE_656',
+  // Customer Already Has An Active Schedule In This Time Slot
+  MESSAGE_CODE_657: 'MESSAGE_CODE_657',
+  // Access Schedule Does Not Belong To Facility
+  MESSAGE_CODE_658: 'MESSAGE_CODE_658',
+  // Invalid Or Expired Access QR Token Or OTP
+  MESSAGE_CODE_659: 'MESSAGE_CODE_659',
+
+  // ==========================================
   // INCIDENT (700 - 709)
   // ==========================================
   // Incident Not Found
@@ -382,6 +404,20 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_708: 'MESSAGE_CODE_708',
   // Storage Rack Or Tier Does Not Belong To Contract
   MESSAGE_CODE_709: 'MESSAGE_CODE_709',
+  // Incident Rack Evacuation Already Performed
+  MESSAGE_CODE_710: 'MESSAGE_CODE_710',
+  // Storage Rack Required For Evacuation
+  MESSAGE_CODE_711: 'MESSAGE_CODE_711',
+  // Restoration Manifest Document Required Before Close
+  MESSAGE_CODE_712: 'MESSAGE_CODE_712',
+  // Customer Acknowledgement Required Before Close
+  MESSAGE_CODE_713: 'MESSAGE_CODE_713',
+  // Restoration Manifest Already Uploaded
+  MESSAGE_CODE_714: 'MESSAGE_CODE_714',
+  // Customer Has Already Acknowledged Restoration
+  MESSAGE_CODE_715: 'MESSAGE_CODE_715',
+  // Incident Cannot Be Evacuated In Current Status
+  MESSAGE_CODE_716: 'MESSAGE_CODE_716',
 
   // ==========================================
   // SUPPORT TICKET (720 - 726)
@@ -635,6 +671,17 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_650:
     'Self Storage Units Do Not Support Inventory And SKU Management',
 
+  // Access Schedule
+  MESSAGE_CODE_651: 'Access Schedule Not Found',
+  MESSAGE_CODE_652: 'Time Slot Is Fully Booked',
+  MESSAGE_CODE_653: 'Invalid Access Schedule Status Transition',
+  MESSAGE_CODE_654: 'Check-in Time Has Not Started Yet',
+  MESSAGE_CODE_655: 'Check-in Grace Period Has Expired',
+  MESSAGE_CODE_656: 'Cannot Cancel Access Schedule Too Close To Start Time',
+  MESSAGE_CODE_657: 'Customer Already Has An Active Schedule In This Time Slot',
+  MESSAGE_CODE_658: 'Access Schedule Does Not Belong To Facility',
+  MESSAGE_CODE_659: 'Invalid Or Expired Access QR Token Or OTP',
+
   // Incident
   MESSAGE_CODE_700: 'Incident Not Found',
   MESSAGE_CODE_701: 'Invalid Incident Status Transition',
@@ -646,6 +693,13 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_707: 'Only Assignee Or Facility Manager Can Update Incident',
   MESSAGE_CODE_708: 'Assigned Staff Does Not Belong To Facility',
   MESSAGE_CODE_709: 'Storage Rack Or Tier Does Not Belong To Contract',
+  MESSAGE_CODE_710: 'Incident Rack Evacuation Already Performed',
+  MESSAGE_CODE_711: 'Storage Rack Required For Evacuation',
+  MESSAGE_CODE_712: 'Restoration Manifest Document Required Before Close',
+  MESSAGE_CODE_713: 'Customer Acknowledgement Required Before Close',
+  MESSAGE_CODE_714: 'Restoration Manifest Already Uploaded',
+  MESSAGE_CODE_715: 'Customer Has Already Acknowledged Restoration',
+  MESSAGE_CODE_716: 'Incident Cannot Be Evacuated In Current Status',
 
   // Support Ticket
   MESSAGE_CODE_720: 'Support Ticket Not Found',

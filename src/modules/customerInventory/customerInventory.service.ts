@@ -217,16 +217,21 @@ export class CustomerInventoryService {
    *   + Only allow CUSTOMER (inventory owner) or system admins
    */
   /**
-   * Block direct Stock In / Out for Customers and Staff;
-   * Only Business Ops Manager and System Admin can call direct in/out.
+   * Zero-Touch Staff Policy:
+   * Block mutation operations for Staff and FM (Zero-Touch Staff Policy).
+   * Customer, Business Ops Manager, and System Admin are allowed.
    */
-  private validateDirectStockInOutAccess(caller: CallerContext): void {
+  private validateStockMutationCaller(caller: CallerContext): void {
     if (
-      caller.role !== RoleEnum.BUSINESS_OPS_MANAGER &&
-      caller.role !== RoleEnum.SYSTEM_ADMIN
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
     ) {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
+  }
+
+  private validateDirectStockInOutAccess(caller: CallerContext): void {
+    this.validateStockMutationCaller(caller);
   }
 
   private validatePrivacy(caller: CallerContext, isMutation = false): void {
@@ -367,6 +372,12 @@ export class CustomerInventoryService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_650);
     }
 
+    // Prohibit direct stockIn without rack tier for contracts renting racks
+    const rentedRackIds = (contract.rentedRackIds || []).map((id) => toId(id));
+    if (op === MovementTypeEnum.IN && rentedRackIds.length > 0 && !rackTierId) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_601);
+    }
+
     // 4. Verify RackTier if specified
     let storageRackId: string | null = null;
     if (rackTierId) {
@@ -390,10 +401,16 @@ export class CustomerInventoryService {
 
       storageRackId = toId(tier.storageRackId);
 
-      // 5. Rack Ownership Guard (Rule 637)
+      // 5. Rack Ownership Guard & Status Guard (Rule 637 & 625)
       if (storageRackId) {
         const rack = await this.storageRackRepository.findById(storageRackId);
         if (rack) {
+          if (
+            rack.status === RackStatusEnum.MAINTENANCE ||
+            rack.status === RackStatusEnum.INACTIVE
+          ) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_625);
+          }
           const rentedRackIds = (contract.rentedRackIds || []).map((id) =>
             toId(id)
           );
@@ -697,14 +714,15 @@ export class CustomerInventoryService {
     caller: CallerContext,
     session?: ClientSession
   ): Promise<CustomerInventoryResponse> {
-    // Rule D7G.1: Block CUSTOMER to prevent virtual data moves; only STAFF, FM, OPS, ADMIN are allowed
-    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
-    if (isCustomer) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-    }
+    this.validateStockMutationCaller(caller);
 
     const fromTierId = data.fromRackTierId || null;
     const toTierId = data.toRackTierId || null;
+
+    // Block movements to/from holding area in self-managed daily operations (Full Freeze)
+    if (!fromTierId || !toTierId) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
+    }
 
     if (fromTierId === toTierId) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_627);
@@ -751,11 +769,17 @@ export class CustomerInventoryService {
       }
       toStorageRackId = toId(destTier.storageRackId);
 
-      // Rack Ownership Guard for destination tier (Rule 637)
+      // Rack Ownership Guard for destination tier (Rule 637 & 625)
       if (toStorageRackId) {
         const destRack =
           await this.storageRackRepository.findById(toStorageRackId);
         if (destRack) {
+          if (
+            destRack.status === RackStatusEnum.MAINTENANCE ||
+            destRack.status === RackStatusEnum.INACTIVE
+          ) {
+            throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_625);
+          }
           const rentedRackIds = (contract.rentedRackIds || []).map((id) =>
             toId(id)
           );
@@ -788,10 +812,10 @@ export class CustomerInventoryService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
     }
 
-    // Operation Guard: Cannot move DAMAGED or DISPUTED items
+    // Operation Guard: Cannot move non-NORMAL items (TEMPORARY_HOLDING, DAMAGED, DISPUTED)
     if (
-      sourceInventory.status === InventoryItemStatusEnum.DAMAGED ||
-      sourceInventory.status === InventoryItemStatusEnum.DISPUTED
+      sourceInventory.status &&
+      sourceInventory.status !== InventoryItemStatusEnum.NORMAL
     ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
     }
@@ -966,9 +990,11 @@ export class CustomerInventoryService {
     caller: CallerContext,
     session?: ClientSession
   ): Promise<CustomerInventoryResponse> {
-    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
-    if (isCustomer) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    this.validateStockMutationCaller(caller);
+
+    // Block adjust on holding area / unracked stock in daily operations (Full Freeze)
+    if (!data.rackTierId) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
     }
 
     const { contractCustomerId, storageUnitId, facilityId, storageRackId } =
@@ -981,17 +1007,6 @@ export class CustomerInventoryService {
         session
       );
 
-    if (
-      caller.role === RoleEnum.FACILITY_STAFF ||
-      caller.role === RoleEnum.FACILITY_MANAGER
-    ) {
-      const staffFacilityId =
-        await this.resolveCallerAssignedFacilityId(caller);
-      if (!staffFacilityId || String(staffFacilityId) !== String(facilityId)) {
-        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
-      }
-    }
-
     const existing = await this.inventoryRepository.findByPosition(
       data.contractId,
       data.skuId,
@@ -999,6 +1014,15 @@ export class CustomerInventoryService {
       data.rackTierId || null,
       session
     );
+
+    // Operation Guard: Cannot adjust non-NORMAL items (TEMPORARY_HOLDING, DAMAGED, DISPUTED)
+    if (
+      existing &&
+      existing.status &&
+      existing.status !== InventoryItemStatusEnum.NORMAL
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
+    }
 
     let inventoryId: string;
     let previousQuantity = 0;
@@ -1595,12 +1619,17 @@ export class CustomerInventoryService {
     const items = await this.inventoryRepository.findLocationsBySkuId(skuId);
 
     let filteredItems = items;
-    if (caller.role === RoleEnum.FACILITY_MANAGER) {
-      if (!caller.assignedFacilityId) {
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
       filteredItems = items.filter(
-        (i) => toId(i.facilityId) === caller.assignedFacilityId
+        (i) => toId(i.facilityId) === staffFacilityId
       );
       if (filteredItems.length === 0 && items.length > 0) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
@@ -1711,10 +1740,7 @@ export class CustomerInventoryService {
     caller: CallerContext,
     query?: CustomerInventorySummaryQuery
   ): Promise<CustomerInventorySummaryResponse> {
-    if (
-      caller.role === RoleEnum.FACILITY_STAFF ||
-      caller.role === RoleEnum.FACILITY_MANAGER
-    ) {
+    if (caller.role === RoleEnum.FACILITY_STAFF) {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
@@ -1723,7 +1749,24 @@ export class CustomerInventoryService {
       caller.role === RoleEnum.BUSINESS_OPS_MANAGER ||
       caller.role === RoleEnum.SYSTEM_ADMIN;
 
-    if (isPrivileged && (query?.customerId || query?.userId)) {
+    if (caller.role === RoleEnum.FACILITY_MANAGER) {
+      if (!query?.customerId && !query?.userId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_200, ['Customer ID']);
+      }
+      customerId = (query.customerId || query.userId)!;
+      const fmFacilityId = await this.resolveCallerAssignedFacilityId(caller);
+      if (!fmFacilityId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+      const hasContract =
+        await this.contractRepository.hasActiveContractAtFacility(
+          customerId,
+          fmFacilityId
+        );
+      if (!hasContract) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else if (isPrivileged && (query?.customerId || query?.userId)) {
       customerId = (query.customerId || query.userId)!;
     }
 

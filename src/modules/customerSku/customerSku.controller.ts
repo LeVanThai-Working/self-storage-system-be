@@ -130,7 +130,7 @@ export class CustomerSkuController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('')
   @Middlewares(validateRequest({ body: createCustomerSkuSchema }))
   @Response<ApiErrorResponse>(
@@ -249,7 +249,7 @@ export class CustomerSkuController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Patch('{id}')
   @Middlewares(
     validateRequest({

@@ -184,6 +184,13 @@ export class CustomerSkuService {
     data: CreateCustomerSkuRequest,
     caller: CallerContext
   ): Promise<CustomerSkuResponse> {
+    // Zero-Touch Staff Policy: Staff and FM are blocked from mutating customer SKU catalog
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
     this.validateRoleAccess(caller);
 
     const customerId = await this.resolveAndAssertCustomerId(
@@ -348,6 +355,13 @@ export class CustomerSkuService {
     data: UpdateCustomerSkuRequest,
     caller: CallerContext
   ): Promise<CustomerSkuResponse> {
+    // Zero-Touch Staff Policy: Staff and FM are blocked from mutating customer SKU catalog
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
     this.validateRoleAccess(caller);
 
     const existing = await this.customerSkuRepository.findById(id);
@@ -440,6 +454,13 @@ export class CustomerSkuService {
    * Guard: Only owning Customer or Ops/Admin can delete; blocked if inventory exists
    */
   async deleteSku(id: string, caller: CallerContext): Promise<void> {
+    // Zero-Touch Staff Policy: Staff and FM are blocked from mutating customer SKU catalog
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
     this.validateRoleAccess(caller);
 
     const existing = await this.customerSkuRepository.findById(id);

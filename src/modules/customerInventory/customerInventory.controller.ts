@@ -35,8 +35,6 @@ import {
   storageUnitTreeParamSchema,
   skuLocationsParamSchema,
   barcodeParamSchema,
-  batchMigrateRackRequestSchema,
-  evacuateRackToHoldingRequestSchema,
   updateInventoryStatusRequestSchema,
   type StockInRequest,
   type StockOutRequest,
@@ -45,8 +43,6 @@ import {
   type CustomerInventoryQuery,
   type CustomerInventorySummaryQuery,
   type InventoryMovementQuery,
-  type BatchMigrateRackRequest,
-  type EvacuateRackToHoldingRequest,
   type UpdateInventoryStatusRequest,
 } from './schemas/customerInventory.request.schema.ts';
 import type {
@@ -55,8 +51,6 @@ import type {
   StorageUnitInventoryTreeResponse,
   SkuLocationsResponse,
   CustomerInventorySummaryResponse,
-  BatchMigrateRackResponse,
-  EvacuateRackResponse,
 } from './schemas/customerInventory.response.schema.ts';
 import type {
   ApiResponse,
@@ -209,13 +203,13 @@ export class CustomerInventoryController extends Controller {
   }
 
   /**
-   * 3. Internal Stock Move (Stock Move)
-   * Internal warehouse operation: Staff/FM/Ops/Admin relocates items between locations or from holding area onto a rack tier.
-   * Permitted when contract status is ACTIVE or OVERDUE.
+   * 3. Stock Move (Stock Move)
+   * Customer relocates items between their rented rack tiers within an active contract.
+   * Permitted when contract status is ACTIVE.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Post('move')
   @Middlewares(validateRequest({ body: stockMoveRequestSchema }))
   @Response<ApiErrorResponse>(400, 'Bad Request')
@@ -335,7 +329,7 @@ export class CustomerInventoryController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('unit/{storageUnitId}/tree')
   @Middlewares(validateRequest({ params: storageUnitTreeParamSchema }))
   @Response<ApiErrorResponse>(401, 'Unauthorized')
@@ -366,7 +360,7 @@ export class CustomerInventoryController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('sku/{skuId}/locations')
   @Middlewares(validateRequest({ params: skuLocationsParamSchema }))
   @Response<ApiErrorResponse>(401, 'Unauthorized')
@@ -427,7 +421,7 @@ export class CustomerInventoryController extends Controller {
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: CUSTOMER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: CUSTOMER, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('summary')
   @Middlewares(validateRequest({ query: customerInventorySummaryQuerySchema }))
   @Response<ApiErrorResponse>(401, 'Unauthorized')
@@ -469,72 +463,6 @@ export class CustomerInventoryController extends Controller {
     const caller = extractCaller(req);
     const data = await this.customerInventoryService.findInventoryById(
       id,
-      caller
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
-      data,
-    };
-  }
-
-  /**
-   * 8. Batch Rack Migration
-   * Internal warehouse operation for Staff/FM/Ops/Admin to migrate all active inventory
-   * from source rack to an identical, vacant destination rack with valid legal basis.
-   */
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
-  @Post('racks/batch-migrate')
-  @Middlewares(validateRequest({ body: batchMigrateRackRequestSchema }))
-  @Response<ApiErrorResponse>(400, 'Bad Request')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Not Found')
-  public async batchMigrateRack(
-    @Request() req: ExpressRequest,
-    @Body() body: BatchMigrateRackRequest
-  ): Promise<ApiResponse<BatchMigrateRackResponse>> {
-    const caller = extractCaller(req);
-    const data = await this.customerInventoryService.batchMigrateRack(
-      body,
-      caller
-    );
-
-    return {
-      success: true,
-      statusCode: 200,
-      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
-      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
-      data,
-    };
-  }
-
-  /**
-   * 12. Evacuate Rack To Holding Area (Task 7G)
-   * Emergency evacuation of all items from a damaged rack to the holding area (rackTierId: null, status: TEMPORARY_HOLDING)
-   * and setting rack status to MAINTENANCE.
-   */
-  // @Security('bearerAuth')
-  // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
-  @Post('racks/evacuate-to-holding')
-  @Middlewares(validateRequest({ body: evacuateRackToHoldingRequestSchema }))
-  @Response<ApiErrorResponse>(400, 'Bad Request')
-  @Response<ApiErrorResponse>(401, 'Unauthorized')
-  @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Not Found')
-  public async evacuateRackToHolding(
-    @Request() req: ExpressRequest,
-    @Body() body: EvacuateRackToHoldingRequest
-  ): Promise<ApiResponse<EvacuateRackResponse>> {
-    const caller = extractCaller(req);
-    const data = await this.customerInventoryService.evacuateRackToHolding(
-      body,
       caller
     );
 

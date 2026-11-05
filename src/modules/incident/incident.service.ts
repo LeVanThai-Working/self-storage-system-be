@@ -20,6 +20,18 @@ import {
   NotificationPriorityEnum,
   NotificationTypeEnum,
 } from '../../common/enums/notification.enum.ts';
+import {
+  RackStatusEnum,
+  RackTierStatusEnum,
+} from '../../common/enums/storageRack.enum.ts';
+import {
+  InventoryItemStatusEnum,
+  MovementTypeEnum,
+} from '../../common/enums/customerInventory.enum.ts';
+import type { StorageRackRepository } from '../storageRack/storageRack.repository.ts';
+import type { RackTierRepository } from '../storageRack/rackTier.repository.ts';
+import type { InventoryMovementRepository } from '../customerInventory/inventoryMovement.repository.ts';
+import type { CustomerSkuRepository } from '../customerSku/customerSku.repository.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import type { IncidentRepository } from './incident.repository.ts';
 import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
@@ -42,6 +54,9 @@ import type {
   InvestigateIncidentRequest,
   ReportIncidentRequest,
   ResolveIncidentRequest,
+  EvacuateIncidentRackRequest,
+  UploadRestorationManifestRequest,
+  CustomerAcknowledgeIncidentRequest,
 } from './schemas/incident.request.schema.ts';
 
 export interface CallerContext {
@@ -65,7 +80,11 @@ export class IncidentService {
     private readonly userRepository?: UserRepository,
     private readonly notificationService?: NotificationService,
     private readonly auditLogService?: AuditLogService,
-    private readonly customerInventoryRepository?: CustomerInventoryRepository
+    private readonly customerInventoryRepository?: CustomerInventoryRepository,
+    private readonly storageRackRepository?: StorageRackRepository,
+    private readonly rackTierRepository?: RackTierRepository,
+    private readonly inventoryMovementRepository?: InventoryMovementRepository,
+    private readonly customerSkuRepository?: CustomerSkuRepository
   ) {}
 
   private async resolveCallerAssignedFacilityId(
@@ -129,6 +148,10 @@ export class IncidentService {
     };
 
     const resolutionObj = raw.resolution as Record<string, unknown> | null;
+    const manifestObj = raw.preEvacuationManifest as Record<
+      string,
+      unknown
+    > | null;
 
     return {
       ...raw,
@@ -150,6 +173,38 @@ export class IncidentService {
                 : String(resolutionObj.resolvedAt || ''),
           }
         : null,
+      preEvacuationManifest: manifestObj
+        ? {
+            ...manifestObj,
+            evacuatedBy: formatRef(manifestObj.evacuatedBy),
+            evacuatedAt:
+              manifestObj.evacuatedAt instanceof Date
+                ? manifestObj.evacuatedAt.toISOString()
+                : String(manifestObj.evacuatedAt || ''),
+            items: Array.isArray(manifestObj.items)
+              ? manifestObj.items.map((it: Record<string, unknown>) => ({
+                  ...it,
+                  skuId: String(it.skuId || ''),
+                }))
+              : [],
+          }
+        : null,
+      restorationManifestDocUrl: raw.restorationManifestDocUrl || null,
+      restorationUploadedAt:
+        raw.restorationUploadedAt instanceof Date
+          ? raw.restorationUploadedAt.toISOString()
+          : raw.restorationUploadedAt
+            ? String(raw.restorationUploadedAt)
+            : null,
+      restorationUploadedBy: formatRef(raw.restorationUploadedBy),
+      customerAcknowledgedAt:
+        raw.customerAcknowledgedAt instanceof Date
+          ? raw.customerAcknowledgedAt.toISOString()
+          : raw.customerAcknowledgedAt
+            ? String(raw.customerAcknowledgedAt)
+            : null,
+      customerAcknowledgedBy: formatRef(raw.customerAcknowledgedBy),
+      customerAcknowledgeNotes: raw.customerAcknowledgeNotes || null,
       closedAt:
         raw.closedAt instanceof Date
           ? raw.closedAt.toISOString()
@@ -723,9 +778,26 @@ export class IncidentService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
+    // Two-Layer Acknowledgment verification if rack evacuation occurred
+    if (incident.preEvacuationManifest) {
+      if (!incident.restorationManifestDocUrl) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_712);
+      }
+      if (!incident.customerAcknowledgedAt) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_713);
+      }
+    }
+
+    // Allowed previous statuses:
+    // If requiresRelocation is true (unrepairable / rack change / cancellation), allow closing directly from IN_PROGRESS or RESOLVED.
+    // If standard incident, require RESOLVED.
+    const allowedPreviousStatuses = incident.requiresRelocation
+      ? [IncidentStatusEnum.RESOLVED, IncidentStatusEnum.IN_PROGRESS]
+      : [IncidentStatusEnum.RESOLVED];
+
     const updated = await this.incidentRepository.atomicUpdateStatus(
       id,
-      IncidentStatusEnum.RESOLVED,
+      allowedPreviousStatuses,
       {
         $set: {
           status: IncidentStatusEnum.CLOSED,
@@ -973,5 +1045,512 @@ export class IncidentService {
       items: formattedItems,
       pagination: paginated.pagination,
     });
+  }
+
+  /**
+   * 9. Emergency Rack Evacuation (Task T-SMR.3)
+   */
+  @Transactional()
+  async evacuateRack(
+    caller: CallerContext,
+    id: string,
+    data: EvacuateIncidentRackRequest,
+    session?: ClientSession
+  ): Promise<IncidentResponse> {
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (isCustomer) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const incident = await this.incidentRepository.findById(id, session);
+    if (!incident || incident.deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_700);
+    }
+
+    if (
+      incident.status === IncidentStatusEnum.CLOSED ||
+      incident.status === IncidentStatusEnum.CANCELLED
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_716);
+    }
+
+    if (incident.preEvacuationManifest) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_710);
+    }
+
+    const fromRackId =
+      data.fromRackId ||
+      (incident.storageRackId ? toId(incident.storageRackId) : undefined);
+    if (!fromRackId) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_711);
+    }
+
+    // Facility scope check
+    const facilityId = toId(incident.facilityId);
+    if (
+      caller.role === RoleEnum.FACILITY_STAFF ||
+      caller.role === RoleEnum.FACILITY_MANAGER
+    ) {
+      const staffFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (!staffFacilityId || String(staffFacilityId) !== String(facilityId)) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    }
+
+    if (!this.storageRackRepository || !this.customerInventoryRepository) {
+      throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106, [
+        'StorageRackRepository or CustomerInventoryRepository not injected',
+      ]);
+    }
+
+    const fromRack = await this.storageRackRepository.findById(fromRackId);
+    if (!fromRack || (fromRack as unknown as { deleted?: boolean }).deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
+    }
+
+    const activeItems =
+      await this.customerInventoryRepository.findActiveByRackId(
+        fromRackId,
+        session
+      );
+    if (activeItems.length === 0) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_638);
+    }
+
+    // Build preEvacuationManifest
+    const manifestItems = [];
+    let totalSystemQuantity = 0;
+    let totalActualQuantity = 0;
+
+    for (const item of activeItems) {
+      const itemSkuId = toId(item.skuId);
+      const reportedItem = data.items.find(
+        (i) => String(i.skuId) === String(itemSkuId)
+      );
+      const actualQty =
+        reportedItem !== undefined
+          ? reportedItem.actualQuantity
+          : item.quantity;
+      const discrepancy = actualQty - item.quantity;
+
+      totalSystemQuantity += item.quantity;
+      totalActualQuantity += actualQty;
+
+      let skuCode: string | undefined;
+      let skuName: string | undefined;
+      if (this.customerSkuRepository) {
+        const skuDoc = await this.customerSkuRepository.findById(itemSkuId);
+        if (skuDoc) {
+          skuCode = skuDoc.skuCode;
+          skuName = skuDoc.name;
+        }
+      }
+
+      manifestItems.push({
+        skuId: item.skuId as unknown as Types.ObjectId,
+        skuCode,
+        skuName,
+        systemQuantity: item.quantity,
+        actualQuantity: actualQty,
+        discrepancy,
+        condition: reportedItem?.condition,
+        notes: reportedItem?.notes,
+      });
+
+      // Move inventory to holding
+      const fromTierId = toId(item.rackTierId);
+      const existingHolding =
+        await this.customerInventoryRepository.findByPosition(
+          toId(item.contractId),
+          itemSkuId,
+          toId(item.storageUnitId),
+          null,
+          session
+        );
+
+      let holdingInventoryId: string;
+      if (!existingHolding) {
+        const updated = await this.customerInventoryRepository.update(
+          String(item._id),
+          {
+            storageRackId: null,
+            rackTierId: null,
+            status: InventoryItemStatusEnum.TEMPORARY_HOLDING,
+            holdingReason: data.emergencyReason.trim(),
+            relatedIncidentId: new Types.ObjectId(id),
+          },
+          session
+        );
+        holdingInventoryId = String(updated!._id);
+      } else {
+        await this.customerInventoryRepository.incrementQuantity(
+          String(existingHolding._id),
+          item.quantity,
+          session
+        );
+        await this.customerInventoryRepository.update(
+          String(existingHolding._id),
+          {
+            status: InventoryItemStatusEnum.TEMPORARY_HOLDING,
+            holdingReason: data.emergencyReason.trim(),
+            relatedIncidentId: new Types.ObjectId(id),
+          },
+          session
+        );
+        await this.customerInventoryRepository.updateQuantity(
+          String(item._id),
+          0,
+          session
+        );
+        holdingInventoryId = String(existingHolding._id);
+      }
+
+      // Record movement
+      if (this.inventoryMovementRepository) {
+        const movementCode =
+          await this.inventoryMovementRepository.generateMovementCode(session);
+        await this.inventoryMovementRepository.create(
+          {
+            movementCode,
+            type: MovementTypeEnum.MOVE,
+            customerInventoryId: new Types.ObjectId(holdingInventoryId),
+            customerId: item.customerId as unknown as Types.ObjectId,
+            contractId: item.contractId as unknown as Types.ObjectId,
+            facilityId: item.facilityId as unknown as Types.ObjectId,
+            storageUnitId: item.storageUnitId as unknown as Types.ObjectId,
+            skuId: item.skuId as unknown as Types.ObjectId,
+            fromRackTierId: fromTierId ? new Types.ObjectId(fromTierId) : null,
+            toRackTierId: null,
+            quantity: item.quantity,
+            previousQuantity: item.quantity,
+            newQuantity: item.quantity,
+            performedBy: new Types.ObjectId(caller.id),
+            reason: data.emergencyReason.trim(),
+            notes: data.notes?.trim() || null,
+          },
+          session
+        );
+      }
+    }
+
+    // Free rack tiers
+    if (this.rackTierRepository) {
+      const tiers = await this.rackTierRepository.findByRackId(fromRackId);
+      for (const t of tiers) {
+        await this.rackTierRepository.update(
+          String(t._id),
+          { status: RackTierStatusEnum.AVAILABLE },
+          session
+        );
+      }
+    }
+
+    // Set rack to MAINTENANCE
+    await this.storageRackRepository.update(
+      fromRackId,
+      { status: RackStatusEnum.MAINTENANCE },
+      session
+    );
+
+    const requiresRelocation =
+      data.requiresRelocation !== undefined
+        ? data.requiresRelocation
+        : incident.requiresRelocation;
+
+    const preEvacuationManifest = {
+      evacuatedAt: new Date(),
+      evacuatedBy: new Types.ObjectId(caller.id),
+      evidenceImages: data.evidenceImages,
+      items: manifestItems,
+      totalSystemQuantity,
+      totalActualQuantity,
+      totalDiscrepancy: totalActualQuantity - totalSystemQuantity,
+      notes: data.notes?.trim() || undefined,
+    };
+
+    // Atomic update incident
+    const updated = await this.incidentRepository.atomicUpdateStatus(
+      id,
+      [
+        IncidentStatusEnum.REPORTED,
+        IncidentStatusEnum.ASSIGNED,
+        IncidentStatusEnum.INVESTIGATING,
+        IncidentStatusEnum.IN_PROGRESS,
+      ],
+      {
+        $set: {
+          status: IncidentStatusEnum.IN_PROGRESS,
+          preEvacuationManifest,
+          storageRackId: new Types.ObjectId(fromRackId),
+          requiresRelocation,
+        },
+      },
+      session
+    );
+
+    if (!updated) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_716);
+    }
+
+    // Audit Log
+    this.auditLogService?.record({
+      action: AuditActionEnum.EVACUATE_RACK_TO_HOLDING,
+      resourceType: AuditResourceEnum.INCIDENT,
+      resourceId: id,
+      before: incident,
+      after: updated,
+      metadata: {
+        fromRackId,
+        totalSystemQuantity,
+        totalActualQuantity,
+        requiresRelocation,
+      },
+    });
+
+    // Notification to Customer
+    if (this.notificationService) {
+      const rackCode = fromRack.rackCode || 'Kệ kho';
+      if (requiresRelocation) {
+        this.notificationService.sendNotification({
+          recipientId: toId(incident.reporterId),
+          facilityId: toId(incident.facilityId),
+          title: `[Khẩn cấp] Mời quý khách đến chi nhánh giải quyết sự cố Kệ ${rackCode}`,
+          content: `Kệ ${rackCode} gặp sự cố kỹ thuật không thể tiếp tục sử dụng. Toàn bộ hàng hóa đã được sơ tán an toàn về Khu lưu tạm. Kính mời quý khách tạo lịch hẹn (AccessSchedule) đến chi nhánh gặp Quản lý để thống nhất phương án xử lý: Đổi sang Kệ mới tương đương HOẶC Thanh lý hợp đồng nhận lại 100% tiền cọc.`,
+          type: NotificationTypeEnum.INCIDENT,
+          priority: NotificationPriorityEnum.HIGH,
+          channels: [
+            NotificationChannelEnum.IN_APP,
+            NotificationChannelEnum.EMAIL,
+          ],
+          metadata: {
+            incidentId: id,
+            incidentCode: incident.incidentCode,
+            requiresRelocation: true,
+          },
+        });
+      } else {
+        this.notificationService.sendNotification({
+          recipientId: toId(incident.reporterId),
+          facilityId: toId(incident.facilityId),
+          title: `[Khẩn cấp] Đã sơ tán hàng hóa tại Kệ ${rackCode} xuống khu lưu tạm`,
+          content: `Do sự cố kỹ thuật tại Kệ ${rackCode}, nhân viên đã sơ tán khẩn cấp hàng hóa xuống khu vực lưu tạm để sửa chữa. Chúng tôi sẽ thông báo ngay khi hoàn tất.`,
+          type: NotificationTypeEnum.INCIDENT,
+          priority: NotificationPriorityEnum.HIGH,
+          channels: [
+            NotificationChannelEnum.IN_APP,
+            NotificationChannelEnum.EMAIL,
+          ],
+          metadata: {
+            incidentId: id,
+            incidentCode: incident.incidentCode,
+            requiresRelocation: false,
+          },
+        });
+      }
+    }
+
+    return validateResponse(
+      incidentResponseSchema,
+      this.formatIncident(updated)
+    );
+  }
+
+  /**
+   * 10. Upload Restoration Manifest Document with Customer Ink Signature (Task T-SMR.3)
+   */
+  @Transactional()
+  async uploadRestorationManifest(
+    caller: CallerContext,
+    id: string,
+    data: UploadRestorationManifestRequest,
+    session?: ClientSession
+  ): Promise<IncidentResponse> {
+    const isFM = caller.role === RoleEnum.FACILITY_MANAGER;
+    const isOpsOrAdmin =
+      caller.role === RoleEnum.BUSINESS_OPS_MANAGER ||
+      caller.role === RoleEnum.SYSTEM_ADMIN;
+
+    if (!isFM && !isOpsOrAdmin) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const incident = await this.incidentRepository.findById(id, session);
+    if (!incident || incident.deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_700);
+    }
+
+    if (
+      incident.status === IncidentStatusEnum.CLOSED ||
+      incident.status === IncidentStatusEnum.CANCELLED
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_701);
+    }
+
+    if (isFM) {
+      const assignedFacilityId =
+        await this.resolveCallerAssignedFacilityId(caller);
+      if (
+        !assignedFacilityId ||
+        assignedFacilityId !== toId(incident.facilityId)
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, ['Facility']);
+      }
+    }
+
+    const updated = await this.incidentRepository.update(
+      id,
+      {
+        restorationManifestDocUrl: data.restorationManifestDocUrl,
+        restorationUploadedAt: new Date(),
+        restorationUploadedBy: new Types.ObjectId(caller.id),
+      },
+      session
+    );
+
+    if (!updated) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_701);
+    }
+
+    // Audit Log
+    this.auditLogService?.record({
+      action: AuditActionEnum.UPLOAD_RESTORATION_MANIFEST,
+      resourceType: AuditResourceEnum.INCIDENT,
+      resourceId: id,
+      before: incident,
+      after: updated,
+      metadata: {
+        restorationManifestDocUrl: data.restorationManifestDocUrl,
+        notes: data.notes,
+      },
+    });
+
+    // Notify Customer to acknowledge in App
+    if (this.notificationService) {
+      this.notificationService.sendNotification({
+        recipientId: toId(incident.reporterId),
+        facilityId: toId(incident.facilityId),
+        title: `[Biên bản bàn giao] Quản lý đã tải lên biên bản kiểm kê sự cố ${incident.incidentCode}`,
+        content: `Biên bản kiểm kê bàn giao hàng hóa đã được Quản lý tải lên. Kính mời quý khách mở ứng dụng kiểm tra và bấm nút [Xác nhận nghiệm thu].`,
+        type: NotificationTypeEnum.INCIDENT,
+        priority: NotificationPriorityEnum.HIGH,
+        channels: [
+          NotificationChannelEnum.IN_APP,
+          NotificationChannelEnum.EMAIL,
+        ],
+        metadata: {
+          incidentId: id,
+          incidentCode: incident.incidentCode,
+          restorationManifestDocUrl: data.restorationManifestDocUrl,
+        },
+      });
+    }
+
+    return validateResponse(
+      incidentResponseSchema,
+      this.formatIncident(updated)
+    );
+  }
+
+  /**
+   * 11. Customer Acknowledges Restoration on App (Task T-SMR.3)
+   */
+  @Transactional()
+  async customerAcknowledge(
+    caller: CallerContext,
+    id: string,
+    data?: CustomerAcknowledgeIncidentRequest,
+    session?: ClientSession
+  ): Promise<IncidentResponse> {
+    const incident = await this.incidentRepository.findById(id, session);
+    if (!incident || incident.deleted) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_700);
+    }
+
+    if (
+      incident.status === IncidentStatusEnum.CLOSED ||
+      incident.status === IncidentStatusEnum.CANCELLED
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_701);
+    }
+
+    if (!incident.restorationManifestDocUrl) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_712);
+    }
+
+    if (incident.customerAcknowledgedAt) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_715);
+    }
+
+    // Scope check: Customer must be owner of contract or reporter
+    if (caller.role === RoleEnum.CUSTOMER) {
+      let isAuthorized = toId(incident.reporterId) === caller.id;
+      if (!isAuthorized && incident.contractId && this.contractRepository) {
+        const contract = await this.contractRepository.findById(
+          toId(incident.contractId),
+          session
+        );
+        if (contract && toId(contract.customerId) === caller.id) {
+          isAuthorized = true;
+        }
+      }
+      if (!isAuthorized) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else if (
+      caller.role !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      caller.role !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      // Staff/FM cannot acknowledge on behalf of customer
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const updated = await this.incidentRepository.update(
+      id,
+      {
+        customerAcknowledgedAt: new Date(),
+        customerAcknowledgedBy: new Types.ObjectId(caller.id),
+        customerAcknowledgeNotes: data?.notes?.trim() || null,
+      },
+      session
+    );
+
+    if (!updated) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_701);
+    }
+
+    // Audit Log
+    this.auditLogService?.record({
+      action: AuditActionEnum.CUSTOMER_ACKNOWLEDGE_INCIDENT,
+      resourceType: AuditResourceEnum.INCIDENT,
+      resourceId: id,
+      before: incident,
+      after: updated,
+      metadata: {
+        notes: data?.notes,
+      },
+    });
+
+    // Notify FM & Assigned Staff
+    if (this.notificationService && incident.assignedStaffId) {
+      this.notificationService.sendNotification({
+        recipientId: toId(incident.assignedStaffId),
+        facilityId: toId(incident.facilityId),
+        title: `[Khách hàng xác nhận] Sự cố ${incident.incidentCode} đã được nghiệm thu`,
+        content: `Khách hàng đã bấm xác nhận nghiệm thu trên ứng dụng cho sự cố ${incident.incidentCode}. Quản lý có thể tiến hành đóng hồ sơ.`,
+        type: NotificationTypeEnum.INCIDENT,
+        priority: NotificationPriorityEnum.NORMAL,
+        channels: [NotificationChannelEnum.IN_APP],
+        metadata: {
+          incidentId: id,
+          incidentCode: incident.incidentCode,
+        },
+      });
+    }
+
+    return validateResponse(
+      incidentResponseSchema,
+      this.formatIncident(updated)
+    );
   }
 }
