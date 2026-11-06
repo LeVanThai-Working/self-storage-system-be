@@ -1227,7 +1227,7 @@ export class CustomerInventoryService {
       );
       if (contract?.storageUnitId) {
         const unit = await this.storageUnitRepository.findById(
-          String(contract.storageUnitId)
+          toId(contract.storageUnitId)
         );
         if (unit) {
           const category = await this.getUnitCategory(unit);

@@ -350,6 +350,25 @@ describe('Customer stock across several contracts of one storage unit', () => {
     });
   });
 
+  describe('Inventory list of one contract', () => {
+    it('returns only the stock of that contract', async () => {
+      const sku = await createSku('SKU-LIST', 'Hàng theo hợp đồng');
+      await stock(contractAId, sku, 5, { rackId: rackAId, tierId: tierAId });
+      await stock(contractBId, sku, 7, { rackId: rackBId, tierId: tierBId });
+
+      const res = await request(app)
+        .get('/customer-inventories')
+        .query({ contractId: contractAId, minQuantity: 1, limit: 100 })
+        .set('x-user-id', caller.id)
+        .set('x-user-role', caller.role);
+
+      expect(res.status).toBe(200);
+      expect(
+        res.body.data.items.map((item: { quantity: number }) => item.quantity)
+      ).toEqual([5]);
+    });
+  });
+
   describe('SKU locator', () => {
     it('finds a SKU on every contract, with facility, area, rack and tier', async () => {
       const sku = await createSku('SKU-TRA', 'Bộ tách trà');
