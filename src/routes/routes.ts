@@ -2849,7 +2849,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcustomerInventoryResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"maxWeightKg":{"dataType":"double"},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"name":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"relatedIncidentId":{"dataType":"string"},"holdingReason":{"dataType":"string"},"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"status":{"ref":"InventoryItemStatusEnum","required":true},"availableQuantity":{"dataType":"double","required":true},"pendingOutboundQuantity":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"updatedAt":{"dataType":"string"},"createdAt":{"dataType":"string"},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"maxWeightKg":{"dataType":"double"},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"status":{"dataType":"string"},"name":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"customer":{"dataType":"nestedObjectLiteral","nestedProperties":{"phoneNumber":{"dataType":"string"},"email":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"relatedIncidentId":{"dataType":"string"},"holdingReason":{"dataType":"string"},"rackTierId":{"dataType":"string"},"storageRackId":{"dataType":"string"},"status":{"ref":"InventoryItemStatusEnum","required":true},"availableQuantity":{"dataType":"double","required":true},"pendingOutboundQuantity":{"dataType":"double","required":true},"quantity":{"dataType":"double","required":true},"skuId":{"dataType":"string","required":true},"storageUnitId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CustomerInventoryResponse": {
@@ -3022,9 +3022,46 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofskuLocatorResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"counts":{"dataType":"nestedObjectLiteral","nestedProperties":{"notStored":{"dataType":"double","required":true},"holding":{"dataType":"double","required":true},"onRack":{"dataType":"double","required":true},"all":{"dataType":"double","required":true}},"required":true},"pagination":{"dataType":"nestedObjectLiteral","nestedProperties":{"hasPrevPage":{"dataType":"boolean","required":true},"hasNextPage":{"dataType":"boolean","required":true},"totalPages":{"dataType":"double","required":true},"totalItems":{"dataType":"double","required":true},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"required":true},"items":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"locations":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"maxWeightKg":{"dataType":"double"},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"status":{"dataType":"string"},"name":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"status":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"inventoryId":{"dataType":"string","required":true}}},"required":true},"holdingQuantity":{"dataType":"double","required":true},"rackQuantity":{"dataType":"double","required":true},"totalQuantity":{"dataType":"double","required":true},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true}}},"required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SkuLocatorResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofskuLocatorResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_SkuLocatorResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"SkuLocatorResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SkuPlacementEnum": {
+        "dataType": "refEnum",
+        "enums": ["on_rack","holding","not_stored"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofskuLocatorQuerySchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"placement":{"ref":"SkuPlacementEnum"},"search":{"dataType":"string"},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "SkuLocatorQuery": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofskuLocatorQuerySchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofskuLocationsResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"locations":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"maxWeightKg":{"dataType":"double"},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"name":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"inventoryId":{"dataType":"string","required":true}}},"required":true},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"totalQuantity":{"dataType":"double","required":true},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"locations":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"rackTier":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"maxWeightKg":{"dataType":"double"},"tierCode":{"dataType":"string","required":true},"tierNumber":{"dataType":"double","required":true},"id":{"dataType":"string","required":true}}},"storageRack":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"double"},"aisle":{"dataType":"string"},"status":{"dataType":"string"},"name":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"storageUnit":{"dataType":"nestedObjectLiteral","nestedProperties":{"status":{"dataType":"string"},"zone":{"dataType":"string"},"floor":{"dataType":"double"},"unitNumber":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"contract":{"dataType":"nestedObjectLiteral","nestedProperties":{"endDate":{"dataType":"string"},"startDate":{"dataType":"string"},"status":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"facility":{"dataType":"nestedObjectLiteral","nestedProperties":{"address":{"dataType":"string"},"city":{"dataType":"string"},"code":{"dataType":"string"},"name":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}}},"notes":{"dataType":"string"},"lastMovementAt":{"dataType":"string"},"status":{"dataType":"string"},"quantity":{"dataType":"double","required":true},"inventoryId":{"dataType":"string","required":true}}},"required":true},"sku":{"dataType":"nestedObjectLiteral","nestedProperties":{"imageUrl":{"dataType":"string"},"barcode":{"dataType":"string"},"category":{"dataType":"string"},"totalQuantity":{"dataType":"double","required":true},"uom":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"skuCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SkuLocationsResponse": {
@@ -9866,6 +9903,7 @@ export function RegisterRoutes(app: Router) {
         const argsCustomerInventoryController_getStorageUnitTree: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
                 storageUnitId: {"in":"path","name":"storageUnitId","required":true,"dataType":"string"},
+                contractId: {"in":"query","name":"contractId","dataType":"string"},
         };
         app.get('/customer-inventories/unit/:storageUnitId/tree',
             ...(fetchMiddlewares<RequestHandler>(CustomerInventoryController)),
@@ -9888,6 +9926,42 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getStorageUnitTree',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsCustomerInventoryController_findSkuLocator: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"placement":{"ref":"SkuPlacementEnum"},"search":{"dataType":"string"},"limit":{"dataType":"double","required":true},"page":{"dataType":"double","required":true}}},
+        };
+        app.get('/customer-inventories/sku-locator',
+            ...(fetchMiddlewares<RequestHandler>(CustomerInventoryController)),
+            ...(fetchMiddlewares<RequestHandler>(CustomerInventoryController.prototype.findSkuLocator)),
+
+            async function CustomerInventoryController_findSkuLocator(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsCustomerInventoryController_findSkuLocator, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<CustomerInventoryController>(CustomerInventoryController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'findSkuLocator',
                 controller,
                 response,
                 next,

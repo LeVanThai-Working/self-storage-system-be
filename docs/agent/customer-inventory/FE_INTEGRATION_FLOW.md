@@ -155,8 +155,10 @@ Trước khi xếp hàng vào kệ, khách hàng cần định nghĩa mặt hàn
 #### 1. Gọi API Sơ đồ cây khoang chứa:
 
 ```http
-GET /api/v1/customer-inventories/unit/{storageUnitId}/tree
+GET /api/v1/customer-inventories/unit/{storageUnitId}/tree?contractId={contractId}
 ```
+
+> Một khách có thể thuê nhiều kệ của cùng một phòng bằng nhiều hợp đồng. Màn hình sơ đồ kệ, phiếu xuất, phiếu đảo vị trí và báo sự cố **phải truyền `contractId`**: API chỉ trả kệ, hàng trên kệ, hàng ở khu lưu tạm và `summary` của đúng hợp đồng đó. Không truyền `contractId` thì trả toàn bộ phòng (dành cho nhân viên). Hợp đồng của khách khác trả `403`, hợp đồng không thuộc phòng trả `404`.
 
 #### 2. Cấu trúc Response và cách FE Render:
 
@@ -405,6 +407,18 @@ FE tích hợp tính năng tìm kiếm siêu nhanh cho khách hàng khi đứng 
   }
   ```
 - **Hành vi UI:** FE hiển thị thông báo: _"Mặt hàng này đang nằm ở [HN01-A101-R1-T1] (10 bộ) và [HN01-A101-R1-T3] (15 bộ)"_. Sơ đồ kệ tự động nhấp nháy (highlight) 2 ngăn này.
+
+#### 3. Tìm vị trí hàng trên tất cả hợp đồng của khách:
+
+```http
+GET /api/v1/customer-inventories/sku-locator?search={từ khoá}&placement={on_rack|holding|not_stored}&page=1&limit=20
+```
+
+- Chỉ dành cho khách hàng, luôn giới hạn trong SKU của người gọi và không phụ thuộc hợp đồng.
+- `search` tìm theo tên, mã SKU hoặc barcode.
+- Mỗi phần tử gồm `sku`, `totalQuantity`, `rackQuantity`, `holdingQuantity` và `locations[]` (kho, phòng, dãy, kệ, tầng, hợp đồng).
+- SKU không có tồn vẫn được trả về với `locations: []`, xếp sau cùng: đây là mã hàng tạo dư, chưa lên kệ.
+- `counts` (`all`, `onRack`, `holding`, `notStored`) tính theo `search`, không đổi theo `placement`, dùng để hiện số trên các chip lọc. Một SKU có thể vừa trên kệ vừa ở khu lưu tạm nên `onRack` và `holding` có thể trùng nhau.
 
 ---
 

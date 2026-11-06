@@ -469,8 +469,19 @@ export class CustomerInventoryRepository {
     customerId?: string,
     session?: ClientSession
   ) {
+    return this.findLocationsBySkuIds([skuId], customerId, session);
+  }
+
+  /**
+   * Look up all storage locations of several SKUs at once.
+   */
+  async findLocationsBySkuIds(
+    skuIds: string[],
+    customerId?: string,
+    session?: ClientSession
+  ) {
     const filter: FilterQuery<ICustomerInventory> = {
-      skuId: new Types.ObjectId(skuId),
+      skuId: { $in: skuIds.map((id) => new Types.ObjectId(id)) },
       quantity: { $gt: 0 },
       deleted: { $ne: true },
     };
@@ -480,10 +491,10 @@ export class CustomerInventoryRepository {
 
     const query = this.inventory
       .find(filter)
-      .populate('facilityId', 'name city address')
+      .populate('facilityId', 'name code city address')
       .populate('contractId', 'contractCode status startDate endDate')
       .populate('storageUnitId', 'unitNumber floor zone status')
-      .populate('storageRackId', 'rackCode name status')
+      .populate('storageRackId', 'rackCode name status aisle bay zone')
       .populate('rackTierId', 'tierNumber tierCode maxWeightKg status')
       .sort({ lastMovementAt: -1 });
 
@@ -491,6 +502,43 @@ export class CustomerInventoryRepository {
       query.session(session);
     }
     return query.exec();
+  }
+
+  /**
+   * Stock of every SKU of a customer, split between rack tiers and the holding area.
+   * SKUs without stock are absent from the result.
+   */
+  async sumStockBySku(
+    customerId: string,
+    session?: ClientSession
+  ): Promise<
+    Array<{
+      _id: Types.ObjectId;
+      rackQuantity: number;
+      holdingQuantity: number;
+    }>
+  > {
+    const isOnRack = { $ifNull: ['$rackTierId', false] };
+    const pipeline = [
+      {
+        $match: {
+          customerId: new Types.ObjectId(customerId),
+          quantity: { $gt: 0 },
+          deleted: { $ne: true },
+        },
+      },
+      {
+        $group: {
+          _id: '$skuId',
+          rackQuantity: { $sum: { $cond: [isOnRack, '$quantity', 0] } },
+          holdingQuantity: { $sum: { $cond: [isOnRack, 0, '$quantity'] } },
+        },
+      },
+    ];
+
+    return session
+      ? this.inventory.aggregate(pipeline).session(session)
+      : this.inventory.aggregate(pipeline);
   }
 
   /**

@@ -3,6 +3,7 @@ import { paginationQuerySchema } from '../../../common/schemas/pagination.schema
 import {
   MovementTypeEnum,
   InventoryItemStatusEnum,
+  SkuPlacementEnum,
 } from '../../../common/enums/customerInventory.enum.ts';
 
 const objectIdRegex = /^[0-9a-fA-F]{24}$/;
@@ -146,6 +147,19 @@ export const storageUnitTreeParamSchema = z.object({
     .regex(objectIdRegex, 'Invalid storageUnitId format'),
 });
 
+export const storageUnitTreeQuerySchema = z.object({
+  contractId: z
+    .string()
+    .regex(objectIdRegex, 'Invalid contractId format')
+    .optional(),
+});
+
+export const skuLocatorQuerySchema = paginationQuerySchema
+  .pick({ page: true, limit: true, search: true })
+  .extend({
+    placement: z.nativeEnum(SkuPlacementEnum).optional(),
+  });
+
 export const skuLocationsParamSchema = z.object({
   skuId: z.string().regex(objectIdRegex, 'Invalid skuId format'),
 });
@@ -206,6 +220,7 @@ export type InventoryMovementQuery = z.infer<
 >;
 export type InventoryIdParam = z.infer<typeof inventoryIdParamSchema>;
 export type StorageUnitTreeParam = z.infer<typeof storageUnitTreeParamSchema>;
+export type SkuLocatorQuery = z.infer<typeof skuLocatorQuerySchema>;
 export type SkuLocationsParam = z.infer<typeof skuLocationsParamSchema>;
 export type BarcodeParam = z.infer<typeof barcodeParamSchema>;
 

@@ -49,6 +49,9 @@ export const inventoryStorageRackSummarySchema = z.object({
   rackCode: z.string(),
   name: z.string().optional().nullable(),
   status: z.string().optional().nullable(),
+  aisle: z.string().optional().nullable(),
+  bay: z.number().optional().nullable(),
+  zone: z.string().optional().nullable(),
 });
 
 export const inventoryRackTierSummarySchema = z.object({
@@ -263,6 +266,7 @@ export const storageUnitInventoryTreeResponseSchema = z.object({
 export const skuLocationItemSchema = z.object({
   inventoryId: z.string(),
   quantity: z.number(),
+  status: z.string().optional().nullable(),
   lastMovementAt: z.union([
     z.date().transform((d) => d.toISOString()),
     z.string(),
@@ -289,6 +293,33 @@ export const skuLocationsResponseSchema = z.object({
   locations: z.array(skuLocationItemSchema),
 });
 
+export const skuLocatorItemSchema = z.object({
+  sku: z.object({
+    id: z.string(),
+    skuCode: z.string(),
+    name: z.string(),
+    category: z.string().optional().nullable(),
+    barcode: z.string().optional().nullable(),
+    uom: z.string(),
+    imageUrl: z.string().optional().nullable(),
+  }),
+  totalQuantity: z.number(),
+  rackQuantity: z.number(),
+  holdingQuantity: z.number(),
+  locations: z.array(skuLocationItemSchema),
+});
+
+export const skuLocatorResponseSchema = z.object({
+  items: z.array(skuLocatorItemSchema),
+  pagination: paginationMetadataSchema,
+  counts: z.object({
+    all: z.number(),
+    onRack: z.number(),
+    holding: z.number(),
+    notStored: z.number(),
+  }),
+});
+
 export const categoryBreakdownSchema = z.object({
   category: z.string(),
   skuCount: z.number(),
@@ -312,6 +343,8 @@ export type StorageUnitInventoryTreeResponse = z.infer<
 >;
 export type SkuLocationItem = z.infer<typeof skuLocationItemSchema>;
 export type SkuLocationsResponse = z.infer<typeof skuLocationsResponseSchema>;
+export type SkuLocatorItem = z.infer<typeof skuLocatorItemSchema>;
+export type SkuLocatorResponse = z.infer<typeof skuLocatorResponseSchema>;
 export type CategoryBreakdown = z.infer<typeof categoryBreakdownSchema>;
 export type CustomerInventorySummaryResponse = z.infer<
   typeof customerInventorySummaryResponseSchema

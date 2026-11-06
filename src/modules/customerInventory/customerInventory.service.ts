@@ -8,7 +8,9 @@ import { ContractStatusEnum } from '../../common/enums/contract.enum.ts';
 import {
   MovementTypeEnum,
   InventoryItemStatusEnum,
+  SkuPlacementEnum,
 } from '../../common/enums/customerInventory.enum.ts';
+import { RentalTargetTypeEnum } from '../../common/enums/rental.enum.ts';
 import { UnitTypeCategoryEnum } from '../../common/enums/unitType.enum.ts';
 import { UnitType } from '../unitType/unitType.model.ts';
 import {
@@ -48,6 +50,7 @@ import {
   paginatedInventoryMovementResponseSchema,
   storageUnitInventoryTreeResponseSchema,
   skuLocationsResponseSchema,
+  skuLocatorResponseSchema,
   customerInventorySummaryResponseSchema,
   batchMigrateRackResponseSchema,
   evacuateRackResponseSchema,
@@ -55,7 +58,9 @@ import {
   type PaginatedCustomerInventoryResponse,
   type PaginatedInventoryMovementResponse,
   type StorageUnitInventoryTreeResponse,
+  type SkuLocationItem,
   type SkuLocationsResponse,
+  type SkuLocatorResponse,
   type CustomerInventorySummaryResponse,
   type BatchMigrateRackResponse,
   type EvacuateRackResponse,
@@ -67,6 +72,7 @@ import type {
   CustomerInventoryQuery,
   CustomerInventorySummaryQuery,
   InventoryMovementQuery,
+  SkuLocatorQuery,
   StockAdjustRequest,
   StockInRequest,
   StockMoveRequest,
@@ -98,6 +104,8 @@ interface PopulatedRef {
   floor?: number | null;
   zone?: string | null;
   rackCode?: string;
+  aisle?: string | null;
+  bay?: number | null;
   tierNumber?: number;
   tierCode?: string;
   maxWeightKg?: number | null;
@@ -167,6 +175,36 @@ function toPopulated(ref: unknown): PopulatedRef | null {
     return ref as PopulatedRef;
   }
   return null;
+}
+
+/**
+ * Racks a contract covers: its rented racks, or every rack of the unit for a whole-unit rental.
+ */
+function selectContractRacks<T extends { currentContractId?: unknown }>(
+  racks: T[],
+  contract: { rentedRackIds?: unknown[]; rentalTargetType?: string }
+): T[] {
+  const contractId = toId(contract);
+  const rentedRackIds = new Set((contract.rentedRackIds || []).map(toId));
+  const contractRacks = racks.filter(
+    (rack) =>
+      rentedRackIds.has(toId(rack)) ||
+      toId(rack.currentContractId) === contractId
+  );
+
+  return contractRacks.length === 0 &&
+    contract.rentalTargetType === RentalTargetTypeEnum.STORAGE_UNIT
+    ? racks
+    : contractRacks;
+}
+
+function matchesSkuPlacement(
+  stock: { rackQuantity: number; holdingQuantity: number },
+  placement: SkuPlacementEnum
+): boolean {
+  if (placement === SkuPlacementEnum.ON_RACK) return stock.rackQuantity > 0;
+  if (placement === SkuPlacementEnum.HOLDING) return stock.holdingQuantity > 0;
+  return stock.rackQuantity + stock.holdingQuantity === 0;
 }
 
 /**
@@ -1290,10 +1328,13 @@ export class CustomerInventoryService {
   /**
    * 8. Multi-tier storage unit inventory tree (Storage Unit Inventory Tree)
    * Unit -> Racks -> Tiers -> SKUs + Unracked Items + Summary
+   * A customer can hold several contracts in one unit, so `contractId` narrows the tree,
+   * summary included, to the racks and stock of that contract.
    */
   async getStorageUnitTree(
     storageUnitId: string,
-    caller: CallerContext
+    caller: CallerContext,
+    contractId?: string
   ): Promise<StorageUnitInventoryTreeResponse> {
     const unit = await this.storageUnitRepository.findById(storageUnitId);
     if (!unit) {
@@ -1314,7 +1355,15 @@ export class CustomerInventoryService {
 
     const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
     let contract;
-    if (isCustomer) {
+    if (contractId) {
+      contract = await this.contractRepository.findById(contractId);
+      if (!contract || toId(contract.storageUnitId) !== storageUnitId) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Contract']);
+      }
+      if (isCustomer && toId(contract.customerId) !== caller.id) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
+    } else if (isCustomer) {
       contract =
         await this.contractRepository.findCurrentByStorageUnitAndCustomerId(
           storageUnitId,
@@ -1400,11 +1449,23 @@ export class CustomerInventoryService {
       });
     }
 
-    const [racks, allTiers, items] = await Promise.all([
+    const [unitRacks, unitTiers, unitItems] = await Promise.all([
       this.storageRackRepository.findByStorageUnitId(storageUnitId),
       this.rackTierRepository.findByStorageUnitId(storageUnitId),
       this.inventoryRepository.findItemsByStorageUnitId(storageUnitId),
     ]);
+
+    const scopeContract = contractId ? contract : null;
+    const racks = scopeContract
+      ? selectContractRacks(unitRacks, scopeContract)
+      : unitRacks;
+    const rackIds = new Set(racks.map((rack) => String(rack._id)));
+    const allTiers = unitTiers.filter((tier) =>
+      rackIds.has(String(tier.storageRackId))
+    );
+    const items = scopeContract
+      ? unitItems.filter((item) => toId(item.contractId) === contractId)
+      : unitItems;
 
     const itemsByTierMap = new Map<string, TreeTierItem[]>();
     const unrackedItems: TreeTierItem[] = [];
@@ -1477,7 +1538,9 @@ export class CustomerInventoryService {
         const tierId = String(tier._id);
         // G6: If caller is CUSTOMER and this rack does not belong to them, mask SKUs
         const tierItems =
-          isCustomer && !isMine ? [] : itemsByTierMap.get(tierId) || [];
+          isCustomer && !isMine && !scopeContract
+            ? []
+            : itemsByTierMap.get(tierId) || [];
         return {
           id: tierId,
           tierNumber: tier.tierNumber,
@@ -1636,66 +1699,9 @@ export class CustomerInventoryService {
       }
     }
 
-    const locations = filteredItems.map((item) => {
-      const doc = item as unknown as FormattableInventory;
-      const fac = toPopulated(doc.facilityId);
-      const ctr = toPopulated(doc.contractId);
-      const unt = toPopulated(doc.storageUnitId);
-      const rck = toPopulated(doc.storageRackId);
-      const tier = toPopulated(doc.rackTierId);
-
-      return {
-        inventoryId: String(doc._id),
-        quantity: doc.quantity,
-        lastMovementAt: new Date(doc.lastMovementAt).toISOString(),
-        notes: doc.notes || null,
-        facility: fac
-          ? {
-              id: String(fac._id),
-              name: fac.name || '',
-              city: fac.city || null,
-              address: fac.address || null,
-            }
-          : null,
-        contract: ctr
-          ? {
-              id: String(ctr._id),
-              contractCode: ctr.contractCode || '',
-              status: ctr.status || '',
-              startDate: ctr.startDate
-                ? new Date(ctr.startDate).toISOString()
-                : null,
-              endDate: ctr.endDate ? new Date(ctr.endDate).toISOString() : null,
-            }
-          : null,
-        storageUnit: unt
-          ? {
-              id: String(unt._id),
-              unitNumber: unt.unitNumber || '',
-              floor: unt.floor ?? null,
-              zone: unt.zone || null,
-              status: unt.status || null,
-            }
-          : null,
-        storageRack: rck
-          ? {
-              id: String(rck._id),
-              rackCode: rck.rackCode || '',
-              name: rck.name || null,
-              status: rck.status || null,
-            }
-          : null,
-        rackTier: tier
-          ? {
-              id: String(tier._id),
-              tierCode: tier.tierCode || '',
-              tierNumber: tier.tierNumber ?? 0,
-              maxWeightKg: tier.maxWeightKg ?? null,
-              status: tier.status || null,
-            }
-          : null,
-      };
-    });
+    const locations = filteredItems.map((item) =>
+      this.formatSkuLocation(item as unknown as FormattableInventory)
+    );
 
     const totalQuantity = locations.reduce((sum, l) => sum + l.quantity, 0);
 
@@ -1711,6 +1717,163 @@ export class CustomerInventoryService {
         totalQuantity,
       },
       locations,
+    });
+  }
+
+  private formatSkuLocation(doc: FormattableInventory): SkuLocationItem {
+    const fac = toPopulated(doc.facilityId);
+    const ctr = toPopulated(doc.contractId);
+    const unt = toPopulated(doc.storageUnitId);
+    const rck = toPopulated(doc.storageRackId);
+    const tier = toPopulated(doc.rackTierId);
+
+    return {
+      inventoryId: String(doc._id),
+      quantity: doc.quantity,
+      status: doc.status || InventoryItemStatusEnum.NORMAL,
+      lastMovementAt: new Date(doc.lastMovementAt).toISOString(),
+      notes: doc.notes || null,
+      facility: fac
+        ? {
+            id: String(fac._id),
+            name: fac.name || '',
+            code: fac.code || null,
+            city: fac.city || null,
+            address: fac.address || null,
+          }
+        : null,
+      contract: ctr
+        ? {
+            id: String(ctr._id),
+            contractCode: ctr.contractCode || '',
+            status: ctr.status || '',
+            startDate: ctr.startDate
+              ? new Date(ctr.startDate).toISOString()
+              : null,
+            endDate: ctr.endDate ? new Date(ctr.endDate).toISOString() : null,
+          }
+        : null,
+      storageUnit: unt
+        ? {
+            id: String(unt._id),
+            unitNumber: unt.unitNumber || '',
+            floor: unt.floor ?? null,
+            zone: unt.zone || null,
+            status: unt.status || null,
+          }
+        : null,
+      storageRack: rck
+        ? {
+            id: String(rck._id),
+            rackCode: rck.rackCode || '',
+            name: rck.name || null,
+            status: rck.status || null,
+            aisle: rck.aisle || null,
+            bay: rck.bay ?? null,
+            zone: rck.zone || null,
+          }
+        : null,
+      rackTier: tier
+        ? {
+            id: String(tier._id),
+            tierCode: tier.tierCode || '',
+            tierNumber: tier.tierNumber ?? 0,
+            maxWeightKg: tier.maxWeightKg ?? null,
+            status: tier.status || null,
+          }
+        : null,
+    };
+  }
+
+  /**
+   * 9b. Customer SKU locator
+   * Every SKU of the caller with its positions, whichever contract they fall under.
+   * SKUs with no stock are kept and listed last: they were created but never put in storage.
+   */
+  async findSkuLocator(
+    query: SkuLocatorQuery,
+    caller: CallerContext
+  ): Promise<SkuLocatorResponse> {
+    const isCustomer = !caller.role || caller.role === RoleEnum.CUSTOMER;
+    if (!isCustomer) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const [skus, stockRows] = await Promise.all([
+      this.skuRepository.findForLocator(caller.id, query.search),
+      this.inventoryRepository.sumStockBySku(caller.id),
+    ]);
+
+    const stockBySku = new Map(stockRows.map((row) => [String(row._id), row]));
+    const rows = skus.map((sku) => {
+      const stock = stockBySku.get(String(sku._id));
+      return {
+        sku,
+        rackQuantity: stock?.rackQuantity ?? 0,
+        holdingQuantity: stock?.holdingQuantity ?? 0,
+      };
+    });
+
+    const countPlacement = (placement: SkuPlacementEnum) =>
+      rows.filter((row) => matchesSkuPlacement(row, placement)).length;
+    const notStored = (row: (typeof rows)[number]) =>
+      matchesSkuPlacement(row, SkuPlacementEnum.NOT_STORED);
+
+    const { placement } = query;
+    const matched = (
+      placement
+        ? rows.filter((row) => matchesSkuPlacement(row, placement))
+        : [...rows]
+    ).sort((a, b) => Number(notStored(a)) - Number(notStored(b)));
+
+    const { page, limit } = query;
+    const pageRows = matched.slice((page - 1) * limit, page * limit);
+    const totalPages = Math.ceil(matched.length / limit) || 1;
+
+    const locationDocs = await this.inventoryRepository.findLocationsBySkuIds(
+      pageRows.map((row) => String(row.sku._id)),
+      caller.id
+    );
+    const locationsBySku = new Map<string, SkuLocationItem[]>();
+    for (const item of locationDocs) {
+      const doc = item as unknown as FormattableInventory;
+      const skuId = toId(doc.skuId);
+      locationsBySku.set(skuId, [
+        ...(locationsBySku.get(skuId) ?? []),
+        this.formatSkuLocation(doc),
+      ]);
+    }
+
+    return validateResponse(skuLocatorResponseSchema, {
+      items: pageRows.map(({ sku, rackQuantity, holdingQuantity }) => ({
+        sku: {
+          id: String(sku._id),
+          skuCode: sku.skuCode,
+          name: sku.name,
+          category: sku.category || null,
+          barcode: sku.barcode || null,
+          uom: sku.uom,
+          imageUrl: sku.imageUrl || null,
+        },
+        totalQuantity: rackQuantity + holdingQuantity,
+        rackQuantity,
+        holdingQuantity,
+        locations: locationsBySku.get(String(sku._id)) ?? [],
+      })),
+      pagination: {
+        page,
+        limit,
+        totalItems: matched.length,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+      counts: {
+        all: rows.length,
+        onRack: countPlacement(SkuPlacementEnum.ON_RACK),
+        holding: countPlacement(SkuPlacementEnum.HOLDING),
+        notStored: countPlacement(SkuPlacementEnum.NOT_STORED),
+      },
     });
   }
 
