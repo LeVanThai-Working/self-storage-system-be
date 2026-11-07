@@ -28,6 +28,13 @@ export enum InventoryItemStatusEnum {
   DISPUTED = 'disputed',
 }
 
+/** Where a customer's SKU sits: on a rack tier, in the holding area, or not in storage at all. */
+export enum SkuPlacementEnum {
+  ON_RACK = 'on_rack',
+  HOLDING = 'holding',
+  NOT_STORED = 'not_stored',
+}
+
 export enum AccessScheduleStatusEnum {
   PENDING = 'pending',
   CHECKED_IN = 'checked_in',

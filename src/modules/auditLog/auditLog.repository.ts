@@ -2,6 +2,7 @@ import { Types, type FilterQuery, type Model } from 'mongoose';
 import type { IAuditLog } from './auditLog.model.ts';
 import type { AuditLogQuery } from './schemas/auditLog.request.schema.ts';
 import { paginate, type PaginateResult } from '../../utils/pagination.util.ts';
+import { escapeRegex } from '../../utils/format.util.ts';
 
 export type AuditLogCreateData = Partial<
   Pick<
@@ -25,10 +26,6 @@ export type AuditLogCreateData = Partial<
 > & { actorId: string | null };
 
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 export class AuditLogRepository {
   constructor(private readonly auditLog: Model<IAuditLog>) {}

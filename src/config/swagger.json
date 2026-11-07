@@ -13759,6 +13759,16 @@
 					},
 					"storageRack": {
 						"properties": {
+							"zone": {
+								"type": "string"
+							},
+							"bay": {
+								"type": "number",
+								"format": "double"
+							},
+							"aisle": {
+								"type": "string"
+							},
 							"status": {
 								"type": "string"
 							},
@@ -15126,6 +15136,364 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"infer_typeofskuLocatorResponseSchema_": {
+				"properties": {
+					"counts": {
+						"properties": {
+							"notStored": {
+								"type": "number",
+								"format": "double"
+							},
+							"holding": {
+								"type": "number",
+								"format": "double"
+							},
+							"onRack": {
+								"type": "number",
+								"format": "double"
+							},
+							"all": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"notStored",
+							"holding",
+							"onRack",
+							"all"
+						],
+						"type": "object"
+					},
+					"pagination": {
+						"properties": {
+							"hasPrevPage": {
+								"type": "boolean"
+							},
+							"hasNextPage": {
+								"type": "boolean"
+							},
+							"totalPages": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalItems": {
+								"type": "number",
+								"format": "double"
+							},
+							"limit": {
+								"type": "number",
+								"format": "double"
+							},
+							"page": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"hasPrevPage",
+							"hasNextPage",
+							"totalPages",
+							"totalItems",
+							"limit",
+							"page"
+						],
+						"type": "object"
+					},
+					"items": {
+						"items": {
+							"properties": {
+								"locations": {
+									"items": {
+										"properties": {
+											"rackTier": {
+												"properties": {
+													"status": {
+														"type": "string"
+													},
+													"maxWeightKg": {
+														"type": "number",
+														"format": "double"
+													},
+													"tierCode": {
+														"type": "string"
+													},
+													"tierNumber": {
+														"type": "number",
+														"format": "double"
+													},
+													"id": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"tierCode",
+													"tierNumber",
+													"id"
+												],
+												"type": "object"
+											},
+											"storageRack": {
+												"properties": {
+													"zone": {
+														"type": "string"
+													},
+													"bay": {
+														"type": "number",
+														"format": "double"
+													},
+													"aisle": {
+														"type": "string"
+													},
+													"status": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"rackCode": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"rackCode",
+													"id"
+												],
+												"type": "object"
+											},
+											"storageUnit": {
+												"properties": {
+													"status": {
+														"type": "string"
+													},
+													"zone": {
+														"type": "string"
+													},
+													"floor": {
+														"type": "number",
+														"format": "double"
+													},
+													"unitNumber": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"unitNumber",
+													"id"
+												],
+												"type": "object"
+											},
+											"contract": {
+												"properties": {
+													"endDate": {
+														"type": "string"
+													},
+													"startDate": {
+														"type": "string"
+													},
+													"status": {
+														"type": "string"
+													},
+													"contractCode": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"status",
+													"contractCode",
+													"id"
+												],
+												"type": "object"
+											},
+											"facility": {
+												"properties": {
+													"address": {
+														"type": "string"
+													},
+													"city": {
+														"type": "string"
+													},
+													"code": {
+														"type": "string"
+													},
+													"name": {
+														"type": "string"
+													},
+													"id": {
+														"type": "string"
+													}
+												},
+												"required": [
+													"name",
+													"id"
+												],
+												"type": "object"
+											},
+											"notes": {
+												"type": "string"
+											},
+											"lastMovementAt": {
+												"type": "string"
+											},
+											"status": {
+												"type": "string"
+											},
+											"quantity": {
+												"type": "number",
+												"format": "double"
+											},
+											"inventoryId": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"quantity",
+											"inventoryId"
+										],
+										"type": "object"
+									},
+									"type": "array"
+								},
+								"holdingQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"rackQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"totalQuantity": {
+									"type": "number",
+									"format": "double"
+								},
+								"sku": {
+									"properties": {
+										"imageUrl": {
+											"type": "string"
+										},
+										"barcode": {
+											"type": "string"
+										},
+										"category": {
+											"type": "string"
+										},
+										"uom": {
+											"type": "string"
+										},
+										"name": {
+											"type": "string"
+										},
+										"skuCode": {
+											"type": "string"
+										},
+										"id": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"uom",
+										"name",
+										"skuCode",
+										"id"
+									],
+									"type": "object"
+								}
+							},
+							"required": [
+								"locations",
+								"holdingQuantity",
+								"rackQuantity",
+								"totalQuantity",
+								"sku"
+							],
+							"type": "object"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"counts",
+					"pagination",
+					"items"
+				],
+				"type": "object"
+			},
+			"SkuLocatorResponse": {
+				"$ref": "#/components/schemas/infer_typeofskuLocatorResponseSchema_"
+			},
+			"ApiResponse_SkuLocatorResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/SkuLocatorResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"SkuPlacementEnum": {
+				"description": "Where a customer's SKU sits: on a rack tier, in the holding area, or not in storage at all.",
+				"enum": [
+					"on_rack",
+					"holding",
+					"not_stored"
+				],
+				"type": "string"
+			},
+			"infer_typeofskuLocatorQuerySchema_": {
+				"properties": {
+					"placement": {
+						"$ref": "#/components/schemas/SkuPlacementEnum"
+					},
+					"search": {
+						"type": "string"
+					},
+					"limit": {
+						"type": "number",
+						"format": "double"
+					},
+					"page": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"limit",
+					"page"
+				],
+				"type": "object"
+			},
+			"SkuLocatorQuery": {
+				"$ref": "#/components/schemas/infer_typeofskuLocatorQuerySchema_"
+			},
 			"infer_typeofskuLocationsResponseSchema_": {
 				"properties": {
 					"locations": {
@@ -15160,6 +15528,16 @@
 								},
 								"storageRack": {
 									"properties": {
+										"zone": {
+											"type": "string"
+										},
+										"bay": {
+											"type": "number",
+											"format": "double"
+										},
+										"aisle": {
+											"type": "string"
+										},
 										"status": {
 											"type": "string"
 										},
@@ -15257,6 +15635,9 @@
 									"type": "string"
 								},
 								"lastMovementAt": {
+									"type": "string"
+								},
+								"status": {
 									"type": "string"
 								},
 								"quantity": {
@@ -30957,7 +31338,7 @@
 						}
 					},
 					"404": {
-						"description": "Storage Unit not found",
+						"description": "Storage Unit or Contract not found",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -30967,7 +31348,7 @@
 						}
 					}
 				},
-				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.",
+				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.\nWith contractId, only the racks and stock of that contract are returned.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -30979,6 +31360,92 @@
 						"required": true,
 						"schema": {
 							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "contractId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/customer-inventories/sku-locator": {
+			"get": {
+				"operationId": "FindSkuLocator",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_SkuLocatorResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "8b. Customer SKU locator\nSearch the caller's SKUs and where each one is stored, across all of their contracts.\nSKUs with no stock stay in the result: they were created but never put in storage.",
+				"tags": [
+					"Customer Inventories"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "placement",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/SkuPlacementEnum"
+						}
+					},
+					{
+						"in": "query",
+						"name": "search",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "limit",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					},
+					{
+						"in": "query",
+						"name": "page",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
 						}
 					}
 				]

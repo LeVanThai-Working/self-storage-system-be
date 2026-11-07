@@ -4,6 +4,7 @@ import type { ICustomerSku } from './customerSku.model.ts';
 import { paginate, type PaginateResult } from '../../utils/pagination.util.ts';
 import type { CustomerSkuQuery } from './schemas/customerSku.request.schema.ts';
 import { CustomerSkuStatusEnum } from '../../common/enums/customerSku.enum.ts';
+import { escapeRegex } from '../../utils/format.util.ts';
 
 const POPULATE_CUSTOMER = {
   path: 'customerId',
@@ -49,12 +50,7 @@ export class CustomerSkuRepository {
 
     // Search keyword tìm trên name, skuCode hoặc barcode
     if (query.search) {
-      const searchRegex = { $regex: query.search.trim(), $options: 'i' };
-      filter.$or = [
-        { name: searchRegex },
-        { skuCode: searchRegex },
-        { barcode: searchRegex },
-      ];
+      filter.$or = this.buildSearchFilter(query.search);
     } else {
       if (query.skuCode) {
         filter.skuCode = { $regex: query.skuCode.trim(), $options: 'i' };
@@ -75,6 +71,34 @@ export class CustomerSkuRepository {
       filter,
       populate: [POPULATE_CUSTOMER],
     });
+  }
+
+  /**
+   * The whole catalog of a customer, matching the keyword on name, skuCode or barcode.
+   * Unpaginated on purpose: the locator classifies SKUs by stock before it can paginate.
+   */
+  async findForLocator(customerId: string, search?: string) {
+    const filter: FilterQuery<ICustomerSku> = {
+      customerId: new Types.ObjectId(customerId),
+    };
+    if (search) {
+      filter.$or = this.buildSearchFilter(search);
+    }
+
+    return this.customerSku
+      .find(filter)
+      .select('skuCode name category barcode uom imageUrl')
+      .sort({ skuCode: 1 })
+      .lean();
+  }
+
+  private buildSearchFilter(search: string): FilterQuery<ICustomerSku>[] {
+    const searchRegex = { $regex: escapeRegex(search.trim()), $options: 'i' };
+    return [
+      { name: searchRegex },
+      { skuCode: searchRegex },
+      { barcode: searchRegex },
+    ];
   }
 
   async findById(id: string, includeDeleted = false) {

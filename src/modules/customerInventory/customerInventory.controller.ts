@@ -8,6 +8,7 @@ import {
   Body,
   Queries,
   Path,
+  Query,
   Response,
   // Security,
   Middlewares,
@@ -33,6 +34,8 @@ import {
   customerInventorySummaryQuerySchema,
   inventoryIdParamSchema,
   storageUnitTreeParamSchema,
+  storageUnitTreeQuerySchema,
+  skuLocatorQuerySchema,
   skuLocationsParamSchema,
   barcodeParamSchema,
   updateInventoryStatusRequestSchema,
@@ -43,6 +46,7 @@ import {
   type CustomerInventoryQuery,
   type CustomerInventorySummaryQuery,
   type InventoryMovementQuery,
+  type SkuLocatorQuery,
   type UpdateInventoryStatusRequest,
 } from './schemas/customerInventory.request.schema.ts';
 import type {
@@ -50,6 +54,7 @@ import type {
   InventoryMovementResponse,
   StorageUnitInventoryTreeResponse,
   SkuLocationsResponse,
+  SkuLocatorResponse,
   CustomerInventorySummaryResponse,
 } from './schemas/customerInventory.response.schema.ts';
 import type {
@@ -326,22 +331,61 @@ export class CustomerInventoryController extends Controller {
   /**
    * 8. Storage Unit Inventory Tree
    * Visual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.
+   * With contractId, only the racks and stock of that contract are returned.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
   // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
   @Get('unit/{storageUnitId}/tree')
-  @Middlewares(validateRequest({ params: storageUnitTreeParamSchema }))
+  @Middlewares(
+    validateRequest({
+      params: storageUnitTreeParamSchema,
+      query: storageUnitTreeQuerySchema,
+    })
+  )
   @Response<ApiErrorResponse>(401, 'Unauthorized')
   @Response<ApiErrorResponse>(403, 'Forbidden')
-  @Response<ApiErrorResponse>(404, 'Storage Unit not found')
+  @Response<ApiErrorResponse>(404, 'Storage Unit or Contract not found')
   public async getStorageUnitTree(
     @Request() req: ExpressRequest,
-    @Path() storageUnitId: string
+    @Path() storageUnitId: string,
+    @Query() contractId?: string
   ): Promise<ApiResponse<StorageUnitInventoryTreeResponse>> {
     const caller = extractCaller(req);
     const data = await this.customerInventoryService.getStorageUnitTree(
       storageUnitId,
+      caller,
+      contractId
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * 8b. Customer SKU locator
+   * Search the caller's SKUs and where each one is stored, across all of their contracts.
+   * SKUs with no stock stay in the result: they were created but never put in storage.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER
+  @Get('sku-locator')
+  @Middlewares(validateRequest({ query: skuLocatorQuerySchema }))
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  public async findSkuLocator(
+    @Request() req: ExpressRequest,
+    @Queries() query: SkuLocatorQuery
+  ): Promise<ApiResponse<SkuLocatorResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.customerInventoryService.findSkuLocator(
+      query,
       caller
     );
 
