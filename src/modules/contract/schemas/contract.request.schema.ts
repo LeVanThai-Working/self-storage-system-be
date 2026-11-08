@@ -190,6 +190,8 @@ export const createContractAddendumSchema = z
     type: z.nativeEnum(ContractAddendumTypeEnum),
     newEndDate: dateStringSchema.optional(),
     newStorageUnitId: objectIdSchema.optional(),
+    previousRackId: objectIdSchema.optional(),
+    newRackId: objectIdSchema.optional(),
     notes: z.string().max(1000).optional(),
   })
   .superRefine((data, ctx) => {
@@ -208,6 +210,22 @@ export const createContractAddendumSchema = z
           message:
             'newStorageUnitId is required when addendum type is UNIT_CHANGE',
           path: ['newStorageUnitId'],
+        });
+      }
+    } else if (data.type === ContractAddendumTypeEnum.RACK_CHANGE) {
+      if (!data.previousRackId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            'previousRackId is required when addendum type is RACK_CHANGE',
+          path: ['previousRackId'],
+        });
+      }
+      if (!data.newRackId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'newRackId is required when addendum type is RACK_CHANGE',
+          path: ['newRackId'],
         });
       }
     }

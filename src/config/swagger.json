@@ -9954,6 +9954,9 @@
 					"closedAt": {
 						"type": "string"
 					},
+					"readyAt": {
+						"type": "string"
+					},
 					"customerAcknowledgeNotes": {
 						"type": "string"
 					},
@@ -10574,6 +10577,9 @@
 									"type": "string"
 								},
 								"closedAt": {
+									"type": "string"
+								},
+								"readyAt": {
 									"type": "string"
 								},
 								"customerAcknowledgeNotes": {
@@ -16877,7 +16883,8 @@
 			"ContractAddendumTypeEnum": {
 				"enum": [
 					"renew",
-					"unit_change"
+					"unit_change",
+					"rack_change"
 				],
 				"type": "string"
 			},
@@ -17485,6 +17492,14 @@
 						"type": "number",
 						"format": "double"
 					},
+					"accumulatedFacilityDamageFee": {
+						"type": "number",
+						"format": "double"
+					},
+					"accumulatedInterruptedRefund": {
+						"type": "number",
+						"format": "double"
+					},
 					"damageFee": {
 						"type": "number",
 						"format": "double"
@@ -17700,6 +17715,12 @@
 										"id"
 									],
 									"type": "object"
+								},
+								"newRackId": {
+									"type": "string"
+								},
+								"previousRackId": {
+									"type": "string"
 								},
 								"newStorageUnit": {
 									"properties": {
@@ -17991,6 +18012,8 @@
 					"forfeitedAmount",
 					"refundAmount",
 					"overdueFee",
+					"accumulatedFacilityDamageFee",
+					"accumulatedInterruptedRefund",
 					"damageFee",
 					"renewalCount",
 					"renewals",
@@ -18438,6 +18461,12 @@
 			"infer_typeofcreateContractAddendumSchema_": {
 				"properties": {
 					"notes": {
+						"type": "string"
+					},
+					"newRackId": {
+						"type": "string"
+					},
+					"previousRackId": {
 						"type": "string"
 					},
 					"newStorageUnitId": {

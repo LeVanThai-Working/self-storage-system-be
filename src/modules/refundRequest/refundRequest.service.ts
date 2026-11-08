@@ -250,8 +250,11 @@ export class RefundRequestService {
               session
             );
 
-          const totalDeposit = Number(contract.depositAmount || 0);
-          if (existingValidRefunds + data.amount > totalDeposit) {
+          const totalEligibleCredit =
+            Number(contract.depositAmount || 0) +
+            Number(contract.accumulatedInterruptedRefund || 0) +
+            Number(contract.accumulatedFacilityDamageFee || 0);
+          if (existingValidRefunds + data.amount > totalEligibleCredit) {
             throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_513);
           }
         }
