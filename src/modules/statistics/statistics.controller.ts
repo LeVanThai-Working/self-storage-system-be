@@ -3,6 +3,8 @@ import {
   Route,
   Tags,
   Get,
+  Post,
+  Body,
   Queries,
   Middlewares,
   Request,
@@ -21,12 +23,14 @@ import {
   StatisticsGranularityEnum,
   FacilityKpiTierEnum,
   FacilityKpiSortByEnum,
+  AiInsightFocusAreaEnum,
 } from '../../common/enums/statistics.enum.ts';
 import {
   statisticsBaseQuerySchema,
   rentalTrendsQuerySchema,
   facilitiesKpiQuerySchema,
   financialAnalyticsQuerySchema,
+  ragAdvisorRequestSchema,
 } from './schemas/statistics.request.schema.ts';
 import type {
   OverviewStatisticsResponse,
@@ -34,6 +38,8 @@ import type {
   FacilitiesKpiResponse,
   FinancialAnalyticsResponse,
   ProductAndOperationsResponse,
+  RagAdvisorResponse,
+  RagEvalResponse,
 } from './schemas/statistics.response.schema.ts';
 import type {
   ApiResponse,
@@ -59,6 +65,13 @@ export interface FacilitiesKpiQueryDto extends StatisticsBaseQueryDto {
 
 export interface FinancialAnalyticsQueryDto extends StatisticsBaseQueryDto {
   granularity?: StatisticsGranularityEnum;
+}
+
+export interface RagAdvisorRequestDto extends StatisticsBaseQueryDto {
+  question: string;
+  focusArea?: AiInsightFocusAreaEnum;
+  topK?: number;
+  refresh?: boolean;
 }
 
 interface CallerInfo {
@@ -278,6 +291,74 @@ export class StatisticsController extends Controller {
   ): Promise<ApiResponse<ProductAndOperationsResponse>> {
     const caller = extractCaller(req);
     const data = await this.statisticsService.getProductAndOperations(
+      caller.userId,
+      query
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * Trợ lý RAG Tư vấn Tối ưu hóa Lợi nhuận cho Ops & Quản lý Cơ sở (AI RAG Profit Advisor):
+   * Thực hiện Hybrid Retrieval (Gemini Embedding + BM25 Lexical) trên 5 báo cáo thống kê + 4 Playbook nghiệp vụ,
+   * định tuyến mô hình thông minh (Fast vs Reasoning), kiểm chứng nguồn trích dẫn (Citations) và đề xuất hành động tăng lợi nhuận.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: BUSINESS_OPS_MANAGER, SYSTEM_ADMIN, FACILITY_MANAGER
+  @Post('ai-rag-advisor')
+  @Middlewares(validateRequest({ body: ragAdvisorRequestSchema }))
+  @Response<ApiErrorResponse>(
+    400,
+    'Invalid Request Or Prompt Injection Detected'
+  )
+  @Response<ApiErrorResponse>(401, 'Unauthorized Access')
+  @Response<ApiErrorResponse>(403, 'Access Denied Or Cross-Facility Violation')
+  @Response<ApiErrorResponse>(404, 'Facility Not Found')
+  public async askRagAdvisor(
+    @Request() req: ExpressRequest,
+    @Body() body: RagAdvisorRequestDto
+  ): Promise<ApiResponse<RagAdvisorResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.statisticsService.askRagAdvisor(caller.userId, {
+      ...body,
+      focusArea: body.focusArea ?? AiInsightFocusAreaEnum.ALL,
+      topK: body.topK ?? 5,
+      refresh: body.refresh ?? false,
+    });
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+
+  /**
+   * Kiểm định Tự động Chất lượng Hệ thống RAG (Automated RAG Evaluation Suite):
+   * Chạy Golden Dataset (10 kịch bản) để đo lường Retrieval Hit Rate, Citation Faithfulness,
+   * Complexity Router Accuracy và Prompt Injection Guardrail Defense Rate. Chỉ dành cho Ops & System Admin.
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Get('ai-rag-eval')
+  @Middlewares(validateRequest({ query: statisticsBaseQuerySchema }))
+  @Response<ApiErrorResponse>(400, 'Invalid Date Range Or Request')
+  @Response<ApiErrorResponse>(401, 'Unauthorized Access')
+  @Response<ApiErrorResponse>(403, 'Access Denied')
+  public async evaluateRagAdvisor(
+    @Request() req: ExpressRequest,
+    @Queries() query: StatisticsBaseQueryDto
+  ): Promise<ApiResponse<RagEvalResponse>> {
+    const caller = extractCaller(req);
+    const data = await this.statisticsService.evaluateRagAdvisor(
       caller.userId,
       query
     );

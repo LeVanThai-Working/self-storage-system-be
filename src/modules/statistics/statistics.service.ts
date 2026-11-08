@@ -6,6 +6,9 @@ import {
   StatisticsGranularityEnum,
   FacilityKpiTierEnum,
   FacilityKpiSortByEnum,
+  AiInsightFocusAreaEnum,
+  RagGroundingStatusEnum,
+  AiAdvisorProviderEnum,
 } from '../../common/enums/statistics.enum.ts';
 import { InvoiceItemTypeEnum } from '../../common/enums/billing.enum.ts';
 import { PaymentMethodEnum } from '../../common/enums/payment.enum.ts';
@@ -28,6 +31,7 @@ import type {
   RentalTrendsQuery,
   FacilitiesKpiQuery,
   FinancialAnalyticsQuery,
+  RagAdvisorRequest,
 } from './schemas/statistics.request.schema.ts';
 import {
   overviewStatisticsResponseSchema,
@@ -35,6 +39,8 @@ import {
   facilitiesKpiResponseSchema,
   financialAnalyticsResponseSchema,
   productAndOperationsResponseSchema,
+  ragAdvisorResponseSchema,
+  ragEvalResponseSchema,
   type OverviewStatisticsResponse,
   type RentalTrendsResponse,
   type RentalTrendPoint,
@@ -43,7 +49,26 @@ import {
   type FacilityKpiItem,
   type FinancialAnalyticsResponse,
   type ProductAndOperationsResponse,
+  type RagAdvisorResponse,
+  type RagEvalResponse,
 } from './schemas/statistics.response.schema.ts';
+import {
+  normalizeQuestionForCache,
+  buildRagCacheKey,
+  inspectQuerySafetyAndScope,
+  assertQuestionFacilityScope,
+  routeQueryComplexity,
+  computeProfitOpportunityMetrics,
+  buildKnowledgeChunks,
+  retrieveTopKChunks,
+  generateGroundedRagResponse,
+  runRagEvaluationSuite,
+} from './services/statisticsRagEngine.util.ts';
+
+export interface RagRedisCacheClient {
+  get(key: string): Promise<string | null>;
+  setex(key: string, seconds: number, value: string): Promise<unknown>;
+}
 
 const DAY_NAMES_VN: Record<number, string> = {
   1: 'Chủ Nhật',
@@ -82,7 +107,8 @@ export class StatisticsService {
   constructor(
     private readonly statisticsRepository: StatisticsRepository,
     private readonly userRepository: UserRepository,
-    private readonly facilityRepository: FacilityRepository
+    private readonly facilityRepository: FacilityRepository,
+    private readonly redisClient?: RagRedisCacheClient | null
   ) {}
 
   private async resolveAndAuthorizeScope(
@@ -91,6 +117,7 @@ export class StatisticsService {
   ): Promise<{
     scopedFacilityId: string | null;
     facilityObjectIds: Types.ObjectId[] | undefined;
+    callerRole: RoleEnum;
   }> {
     const caller = await this.userRepository.findById(callerId);
     if (!caller) {
@@ -116,11 +143,13 @@ export class StatisticsService {
         return {
           scopedFacilityId: facility._id.toString(),
           facilityObjectIds: [new Types.ObjectId(facility._id.toString())],
+          callerRole: role,
         };
       }
       return {
         scopedFacilityId: null,
         facilityObjectIds: undefined,
+        callerRole: role,
       };
     }
 
@@ -150,6 +179,7 @@ export class StatisticsService {
       return {
         scopedFacilityId: assignedId,
         facilityObjectIds: [new Types.ObjectId(assignedId)],
+        callerRole: role,
       };
     }
 
@@ -1451,5 +1481,274 @@ export class StatisticsService {
     };
 
     return validateResponse(productAndOperationsResponseSchema, responseData);
+  }
+
+  /**
+   * 6. Trợ lý RAG Tư vấn Tối ưu hóa Lợi nhuận cho Ops & Quản lý Cơ sở (Pillar #1 -> #7)
+   */
+  async askRagAdvisor(
+    callerId: string,
+    body: RagAdvisorRequest
+  ): Promise<RagAdvisorResponse> {
+    const config = getStatisticsConfig();
+    const focusArea = body.focusArea ?? AiInsightFocusAreaEnum.ALL;
+    const topK = body.topK ?? config.ragAdvisor.topKChunks;
+    const refresh = body.refresh === true;
+
+    const { scopedFacilityId, callerRole } =
+      await this.resolveAndAuthorizeScope(callerId, body.facilityId);
+
+    // Chặn FACILITY_MANAGER hỏi số liệu mã chi nhánh khác trong văn bản câu hỏi (Rule 14)
+    if (callerRole === RoleEnum.FACILITY_MANAGER && scopedFacilityId) {
+      const allFacilitiesResult = await this.facilityRepository.findAll({
+        page: 1,
+        limit: 100,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      const scopedFacility = allFacilitiesResult.items.find(
+        (f) => f._id.toString() === scopedFacilityId
+      );
+      const allFacilityCodes = allFacilitiesResult.items
+        .map((f) => f.code)
+        .filter((c): c is string => Boolean(c));
+
+      assertQuestionFacilityScope(
+        body.question,
+        scopedFacility?.code ?? null,
+        allFacilityCodes
+      );
+    }
+
+    const { fromDateVN, toDateVN } = this.resolveDateRange(
+      body.fromDate,
+      body.toDate
+    );
+
+    const normalizedQuestion = normalizeQuestionForCache(body.question);
+    const safety = inspectQuerySafetyAndScope(body.question);
+    const routerDecision = routeQueryComplexity(
+      body.question,
+      config.ragAdvisor
+    );
+
+    // Nếu câu hỏi ngoài phạm vi hoặc hỏi dữ liệu hệ thống không lưu trữ -> trả lời từ chối trung thực ngay lập tức
+    if (safety.groundingStatus !== RagGroundingStatusEnum.GROUNDED) {
+      const rejectedResponse: RagAdvisorResponse = {
+        period: {
+          fromDate: fromDateVN,
+          toDate: toDateVN,
+          scopedFacilityId,
+          focusArea,
+        },
+        queryInfo: {
+          question: body.question.trim(),
+          normalizedQuestion,
+          groundingStatus: safety.groundingStatus,
+          router: {
+            complexity: routerDecision.complexity,
+            selectedModel: routerDecision.selectedModel,
+            provider: AiAdvisorProviderEnum.GROUNDED_DETERMINISTIC_FALLBACK,
+            reason: routerDecision.reason,
+          },
+          cached: false,
+          generatedAt: new Date().toISOString(),
+        },
+        answer:
+          safety.rejectionReason ??
+          'Câu hỏi nằm ngoài phạm vi dữ liệu báo cáo thống kê của hệ thống.',
+        opportunityMetrics: {
+          recoverableOverdueVnd: 0,
+          maintenanceRevenueLossVnd: 0,
+          idleCapacityOpportunityVnd: 0,
+          totalOpportunityVnd: 0,
+        },
+        recommendations: [],
+        citations: [],
+        retrievedChunkIds: [],
+      };
+      return validateResponse(ragAdvisorResponseSchema, rejectedResponse);
+    }
+
+    const cacheKey = buildRagCacheKey({
+      scopedFacilityId,
+      fromDate: fromDateVN,
+      toDate: toDateVN,
+      focusArea,
+      normalizedQuestion,
+    });
+
+    if (!refresh && this.redisClient) {
+      try {
+        const cachedRaw = await this.redisClient.get(cacheKey);
+        if (cachedRaw) {
+          const parsed = JSON.parse(cachedRaw) as RagAdvisorResponse;
+          parsed.queryInfo.cached = true;
+          parsed.queryInfo.question = body.question.trim();
+          return validateResponse(ragAdvisorResponseSchema, parsed);
+        }
+      } catch {
+        // Bỏ qua lỗi đọc Redis để không gián đoạn luồng tư vấn
+      }
+    }
+
+    const baseSubQuery: StatisticsBaseQuery = {
+      fromDate: body.fromDate,
+      toDate: body.toDate,
+      facilityId: scopedFacilityId ?? undefined,
+    };
+
+    const [
+      overview,
+      rentalTrends,
+      facilitiesKpi,
+      financialAnalytics,
+      productAndOperations,
+    ] = await Promise.all([
+      this.getOverview(callerId, baseSubQuery),
+      this.getRentalTrends(callerId, {
+        ...baseSubQuery,
+        granularity: StatisticsGranularityEnum.MONTH,
+      }),
+      this.getFacilitiesKpi(callerId, {
+        ...baseSubQuery,
+        sortBy: FacilityKpiSortByEnum.KPI_SCORE,
+        sortOrder: 'desc',
+      }),
+      this.getFinancialAnalytics(callerId, {
+        ...baseSubQuery,
+        granularity: StatisticsGranularityEnum.MONTH,
+      }),
+      this.getProductAndOperations(callerId, baseSubQuery),
+    ]);
+
+    const reports = {
+      overview,
+      rentalTrends,
+      facilitiesKpi,
+      financialAnalytics,
+      productAndOperations,
+    };
+
+    const opportunityMetrics = computeProfitOpportunityMetrics(reports);
+    const allChunks = buildKnowledgeChunks(reports, opportunityMetrics);
+    const retrievedChunks = await retrieveTopKChunks(
+      body.question,
+      allChunks,
+      topK,
+      config.ragAdvisor
+    );
+
+    const generated = await generateGroundedRagResponse({
+      question: body.question,
+      retrievedChunks,
+      opportunityMetrics,
+      complexity: routerDecision.complexity,
+      config: config.ragAdvisor,
+    });
+
+    const responseData: RagAdvisorResponse = {
+      period: {
+        fromDate: fromDateVN,
+        toDate: toDateVN,
+        scopedFacilityId,
+        focusArea,
+      },
+      queryInfo: {
+        question: body.question.trim(),
+        normalizedQuestion,
+        groundingStatus: RagGroundingStatusEnum.GROUNDED,
+        router: {
+          complexity: routerDecision.complexity,
+          selectedModel: generated.selectedModel,
+          provider: generated.provider,
+          reason: routerDecision.reason,
+        },
+        cached: false,
+        generatedAt: new Date().toISOString(),
+      },
+      answer: generated.answer,
+      opportunityMetrics,
+      recommendations: generated.recommendations,
+      citations: generated.citations,
+      retrievedChunkIds: retrievedChunks.map((c) => c.chunkId),
+    };
+
+    if (this.redisClient) {
+      try {
+        await this.redisClient.setex(
+          cacheKey,
+          config.ragAdvisor.cacheTtlSeconds,
+          JSON.stringify(responseData)
+        );
+      } catch {
+        // Bỏ qua lỗi ghi Redis để không làm gián đoạn nghiệp vụ
+      }
+    }
+
+    return validateResponse(ragAdvisorResponseSchema, responseData);
+  }
+
+  /**
+   * 7. Kiểm định Tự động Chất lượng Hệ thống RAG (Automated RAG Evaluation Suite — Pillar #8)
+   *    Chỉ dành cho BUSINESS_OPS_MANAGER và SYSTEM_ADMIN
+   */
+  async evaluateRagAdvisor(
+    callerId: string,
+    query: StatisticsBaseQuery
+  ): Promise<RagEvalResponse> {
+    const { scopedFacilityId, callerRole } =
+      await this.resolveAndAuthorizeScope(callerId, query.facilityId);
+
+    if (
+      callerRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+      callerRole !== RoleEnum.SYSTEM_ADMIN
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
+
+    const baseSubQuery: StatisticsBaseQuery = {
+      fromDate: query.fromDate,
+      toDate: query.toDate,
+      facilityId: scopedFacilityId ?? undefined,
+    };
+
+    const [
+      overview,
+      rentalTrends,
+      facilitiesKpi,
+      financialAnalytics,
+      productAndOperations,
+    ] = await Promise.all([
+      this.getOverview(callerId, baseSubQuery),
+      this.getRentalTrends(callerId, {
+        ...baseSubQuery,
+        granularity: StatisticsGranularityEnum.MONTH,
+      }),
+      this.getFacilitiesKpi(callerId, {
+        ...baseSubQuery,
+        sortBy: FacilityKpiSortByEnum.KPI_SCORE,
+        sortOrder: 'desc',
+      }),
+      this.getFinancialAnalytics(callerId, {
+        ...baseSubQuery,
+        granularity: StatisticsGranularityEnum.MONTH,
+      }),
+      this.getProductAndOperations(callerId, baseSubQuery),
+    ]);
+
+    const config = getStatisticsConfig();
+    const evalResult = await runRagEvaluationSuite(
+      {
+        overview,
+        rentalTrends,
+        facilitiesKpi,
+        financialAnalytics,
+        productAndOperations,
+      },
+      config.ragAdvisor
+    );
+
+    return validateResponse(ragEvalResponseSchema, evalResult);
   }
 }

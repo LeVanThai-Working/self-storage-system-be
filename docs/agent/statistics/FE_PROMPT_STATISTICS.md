@@ -27,6 +27,8 @@ Cung cấp bộ API thống kê điều hành chuỗi kho tự quản cho `busin
 | GET    | `/statistics/facilities-kpi`         | Bảng xếp hạng & chấm điểm KPI các chi nhánh (0–100 điểm, 4 trụ cột, phân hạng `kpiTier`, `RevPAU`, `RevPAM`)     | `business_ops_manager`, `system_admin`, `facility_manager` | —          |
 | GET    | `/statistics/financial-analytics`    | Phân tích doanh thu theo khoản mục hóa đơn, kênh thanh toán, đối soát SePay, tuổi nợ quá hạn (AR Aging) & hoàn   | `business_ops_manager`, `system_admin`, `facility_manager` | —          |
 | GET    | `/statistics/product-and-operations` | Hiệu suất loại kho (`UnitType`), phân khu kệ (`RackZone`), tỷ lệ gắn tiện ích (`Amenity`), phễu đặt chỗ & ra/vào | `business_ops_manager`, `system_admin`, `facility_manager` | —          |
+| POST   | `/statistics/ai-rag-advisor`         | Trợ lý AI RAG phân tích 5 báo cáo + 4 Playbook và tư vấn hành động tối ưu lợi nhuận có trích dẫn `[CHUNK-...]`   | `business_ops_manager`, `system_admin`, `facility_manager` | —          |
+| GET    | `/statistics/ai-rag-eval`            | Bộ kiểm định chất lượng RAG tự động trên Golden Dataset (10 kịch bản)                                            | `business_ops_manager`, `system_admin`                     | —          |
 
 Query cho API `GET /statistics/facilities-kpi`:
 
@@ -130,12 +132,34 @@ export const financialAnalyticsQuerySchema = statisticsBaseQuerySchema.extend({
     .optional(),
 });
 
+export const ragAdvisorRequestSchema = statisticsBaseQuerySchema.extend({
+  question: z
+    .string()
+    .trim()
+    .min(3, 'Question must be at least 3 characters')
+    .max(1000, 'Question cannot exceed 1000 characters'),
+  focusArea: z
+    .enum([
+      AiInsightFocusAreaEnum.ALL,
+      AiInsightFocusAreaEnum.OCCUPANCY_AND_CAPACITY,
+      AiInsightFocusAreaEnum.PRICING_AND_PROMOTION,
+      AiInsightFocusAreaEnum.CASHFLOW_AND_DEBT,
+      AiInsightFocusAreaEnum.OPERATIONS_AND_SLA,
+      AiInsightFocusAreaEnum.UPSELL_AND_RETENTION,
+    ])
+    .default(AiInsightFocusAreaEnum.ALL)
+    .optional(),
+  topK: z.coerce.number().int().min(1).max(8).default(5).optional(),
+  refresh: z.boolean().default(false).optional(),
+});
+
 export type StatisticsBaseQuery = z.infer<typeof statisticsBaseQuerySchema>;
 export type RentalTrendsQuery = z.infer<typeof rentalTrendsQuerySchema>;
 export type FacilitiesKpiQuery = z.infer<typeof facilitiesKpiQuerySchema>;
 export type FinancialAnalyticsQuery = z.infer<
   typeof financialAnalyticsQuerySchema
 >;
+export type RagAdvisorRequest = z.infer<typeof ragAdvisorRequestSchema>;
 ```
 
 ## Response (hình dạng dữ liệu, cập nhật `packages/shared/src/types/`)
@@ -505,9 +529,102 @@ export interface ProductAndOperationsResponse {
 }
 ```
 
+### `POST /statistics/ai-rag-advisor` → `RagAdvisorResponse`
+
+```ts
+export interface RagChunkCitation {
+  chunkId: string;
+  category: string;
+  title: string;
+  excerpt: string;
+  relevanceScore: number;
+}
+
+export interface AiRecommendationItem {
+  id: string;
+  category: AiInsightCategoryEnum;
+  priority: AiInsightPriorityEnum;
+  title: string;
+  dataEvidence: string;
+  actionSteps: string[];
+  expectedProfitImpact: string;
+  estimatedImpactVnd: number;
+  targetFacilityCodes: string[];
+}
+
+export interface RagOpportunityMetrics {
+  recoverableOverdueVnd: number;
+  maintenanceRevenueLossVnd: number;
+  idleCapacityOpportunityVnd: number;
+  totalOpportunityVnd: number;
+}
+
+export interface RagAdvisorResponse {
+  period: {
+    fromDate: string;
+    toDate: string;
+    scopedFacilityId: string | null;
+    focusArea: AiInsightFocusAreaEnum;
+  };
+  queryInfo: {
+    question: string;
+    normalizedQuestion: string;
+    groundingStatus: RagGroundingStatusEnum;
+    router: {
+      complexity: RagQueryComplexityEnum;
+      selectedModel: string;
+      provider: AiAdvisorProviderEnum;
+      reason: string;
+    };
+    cached: boolean;
+    generatedAt: string;
+  };
+  answer: string;
+  opportunityMetrics: RagOpportunityMetrics;
+  recommendations: AiRecommendationItem[];
+  citations: RagChunkCitation[];
+  retrievedChunkIds: string[];
+}
+```
+
+### `GET /statistics/ai-rag-eval` → `RagEvalResponse`
+
+```ts
+export interface RagEvalCaseResult {
+  caseId: string;
+  category: string;
+  question: string;
+  expectedComplexity: RagQueryComplexityEnum;
+  actualComplexity: RagQueryComplexityEnum;
+  expectedGroundingStatus: RagGroundingStatusEnum;
+  actualGroundingStatus: RagGroundingStatusEnum;
+  expectedChunkIds: string[];
+  retrievedChunkIds: string[];
+  retrievalHit: boolean;
+  citationFaithful: boolean;
+  routerMatched: boolean;
+  guardrailPassed: boolean;
+  passed: boolean;
+}
+
+export interface RagEvalResponse {
+  summary: {
+    totalCases: number;
+    passedCases: number;
+    retrievalHitRatePercent: number;
+    citationFaithfulnessPercent: number;
+    routerAccuracyPercent: number;
+    guardrailDefenseRatePercent: number;
+    overallPassRatePercent: number;
+    evaluatedAt: string;
+  };
+  cases: RagEvalCaseResult[];
+}
+```
+
 ## Enums (cập nhật `packages/shared/src/enums/`)
 
-### `StatisticsGranularityEnum`, `FacilityKpiTierEnum`, `FacilityKpiSortByEnum` (File BE: `src/common/enums/statistics.enum.ts`)
+### `StatisticsGranularityEnum`, `FacilityKpiTierEnum`, `FacilityKpiSortByEnum`, `RagQueryComplexityEnum`, `RagGroundingStatusEnum`, `AiInsightCategoryEnum`, `AiInsightPriorityEnum`, `AiInsightFocusAreaEnum`, `AiAdvisorProviderEnum` (File BE: `src/common/enums/statistics.enum.ts`)
 
 ```ts
 export enum StatisticsGranularityEnum {
@@ -531,16 +648,56 @@ export enum FacilityKpiSortByEnum {
   CONVERSION_RATE = 'conversionRate',
   COLLECTION_RATE = 'collectionRate',
 }
+
+export enum RagQueryComplexityEnum {
+  SIMPLE = 'simple',
+  COMPLEX = 'complex',
+}
+
+export enum RagGroundingStatusEnum {
+  GROUNDED = 'grounded',
+  INSUFFICIENT_DATA = 'insufficient_data',
+  OUT_OF_SCOPE_REJECTED = 'out_of_scope_rejected',
+}
+
+export enum AiInsightCategoryEnum {
+  OCCUPANCY_AND_CAPACITY = 'occupancy_and_capacity',
+  PRICING_AND_PROMOTION = 'pricing_and_promotion',
+  CASHFLOW_AND_DEBT = 'cashflow_and_debt',
+  OPERATIONS_AND_SLA = 'operations_and_sla',
+  UPSELL_AND_RETENTION = 'upsell_and_retention',
+}
+
+export enum AiInsightPriorityEnum {
+  HIGH = 'high',
+  MEDIUM = 'medium',
+  LOW = 'low',
+}
+
+export enum AiInsightFocusAreaEnum {
+  ALL = 'all',
+  OCCUPANCY_AND_CAPACITY = 'occupancy_and_capacity',
+  PRICING_AND_PROMOTION = 'pricing_and_promotion',
+  CASHFLOW_AND_DEBT = 'cashflow_and_debt',
+  OPERATIONS_AND_SLA = 'operations_and_sla',
+  UPSELL_AND_RETENTION = 'upsell_and_retention',
+}
+
+export enum AiAdvisorProviderEnum {
+  GEMINI = 'gemini',
+  GROUNDED_DETERMINISTIC_FALLBACK = 'grounded_deterministic_fallback',
+}
 ```
 
 ## Error codes và thông báo (cập nhật `MESSAGE_CODE`, `MESSAGE_DICTIONARY_EN/VI`, `ENTITY_SUBJECT_DICTIONARY`)
 
-| Message Code     | HTTP | Mẫu EN                                                        | Mẫu VI (đề xuất, cần xác nhận)                                               | Chủ thể `{0}` |
-| ---------------- | ---- | ------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------- |
-| MESSAGE_CODE_820 | 400  | Invalid Statistics Date Range Or Exceeds Maximum Allowed Days | Khoảng thời gian thống kê không hợp lệ hoặc vượt quá số ngày tối đa cho phép | —             |
-| MESSAGE_CODE_102 | 401  | Unauthorized Access                                           | Truy cập trái phép (chưa xác thực)                                           | —             |
-| MESSAGE_CODE_103 | 403  | Access Denied                                                 | Từ chối truy cập (không có quyền xem thống kê)                               | —             |
-| MESSAGE_CODE_122 | 403  | {0} Is Not Assigned To This Facility                          | {0} không được phân công phụ trách cơ sở này                                 | User          |
+| Message Code     | HTTP | Mẫu EN                                                        | Mẫu VI (đề xuất, cần xác nhận)                                               | Chủ thể `{0}`       |
+| ---------------- | ---- | ------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------- |
+| MESSAGE_CODE_820 | 400  | Invalid Statistics Date Range Or Exceeds Maximum Allowed Days | Khoảng thời gian thống kê không hợp lệ hoặc vượt quá số ngày tối đa cho phép | —                   |
+| MESSAGE_CODE_821 | 400  | Prompt Injection Or Unsafe Instruction Detected In AI Query   | Phát hiện lệnh tấn công Prompt Injection hoặc chỉ thị không an toàn          | —                   |
+| MESSAGE_CODE_102 | 401  | Unauthorized Access                                           | Truy cập trái phép (chưa xác thực)                                           | —                   |
+| MESSAGE_CODE_103 | 403  | Access Denied                                                 | Từ chối truy cập (không có quyền xem thống kê)                               | —                   |
+| MESSAGE_CODE_122 | 403  | {0} Is Not Assigned To This Facility                          | {0} không được phân công phụ trách cơ sở này                                 | Facility Statistics |
 
 ## Quy tắc validate/nghiệp vụ bổ sung (không nằm trong schema)
 
@@ -553,6 +710,10 @@ export enum FacilityKpiSortByEnum {
 - **Công thức chấm điểm KPI chi nhánh (`kpiScore` thang 0–100):**
   - 4 trụ cột: Hiệu suất lấp đầy (`30%`, mục tiêu chuẩn `80%`), Hiệu quả thu phí & kiểm soát nợ (`25%`), Chuyển đổi & giữ chân khách hàng (`20%`, mục tiêu chuyển đổi `70%`), Chất lượng vận hành & SLA (`25%`, trừ điểm khi có hủy do lỗi cơ sở `FACILITY_FAULT`, sự cố `FACILITY_LIABLE` hoặc trễ SLA).
   - Phân hạng `kpiTier`: `excellent` (`>= 85`), `good` (`70` – `< 85`), `average` (`50` – `< 70`), `needs_improvement` (`< 50`).
+- **Quy tắc AI RAG Profit Advisor (`POST /statistics/ai-rag-advisor` & `GET /statistics/ai-rag-eval`):**
+  - **Guardrails & Phạm vi:** Câu hỏi chứa Prompt Injection bị chặn ngay lập tức với `400 MESSAGE_CODE_821`. Câu hỏi ngoài lề trả về HTTP 200 với `groundingStatus: 'out_of_scope_rejected'`. Câu hỏi về chi phí ngoài hệ thống (lương nhân sự, quảng cáo, điện nước) trả về `groundingStatus: 'insufficient_data'`.
+  - **RBAC 2 Lớp:** `facility_manager` tự động bị khóa vào `assignedFacilityId` và bị chặn `403 MESSAGE_CODE_122` nếu truyền `facilityId` khác hoặc nhắc mã chi nhánh khác trong nội dung `question`.
+  - **Redis Query Cache:** Mặc định lưu cache 30 phút (`queryInfo.cached = true`). Truyền `refresh: true` trong body để buộc hệ thống tính toán và gọi AI mới.
 
 ## Hành vi UI/UX mong muốn (người dùng cung cấp)
 
@@ -562,4 +723,5 @@ export enum FacilityKpiSortByEnum {
 
 ## Thay đổi so với contract trước
 
-- Không có (module mới `statistics`).
+- Bổ sung 2 endpoints mới: `POST /statistics/ai-rag-advisor` và `GET /statistics/ai-rag-eval`.
+- Bổ sung `ragAdvisorRequestSchema`, `RagAdvisorResponse`, `RagEvalResponse`, 6 enums RAG mới và `MESSAGE_CODE_821`.

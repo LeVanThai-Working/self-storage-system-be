@@ -478,6 +478,8 @@ export const MESSAGE_CODE = {
   // ==========================================
   // Invalid Statistics Date Range Or Exceeds Maximum Allowed Days
   MESSAGE_CODE_820: 'MESSAGE_CODE_820',
+  // Prompt Injection Or Unsafe Instruction Detected In AI Query
+  MESSAGE_CODE_821: 'MESSAGE_CODE_821',
 } as const;
 
 export const MESSAGE_DICTIONARY: Record<string, string> = {
@@ -745,4 +747,6 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   // Statistics
   MESSAGE_CODE_820:
     'Invalid Statistics Date Range Or Exceeds Maximum Allowed Days',
+  MESSAGE_CODE_821:
+    'Prompt Injection Or Unsafe Instruction Detected In AI Query',
 };

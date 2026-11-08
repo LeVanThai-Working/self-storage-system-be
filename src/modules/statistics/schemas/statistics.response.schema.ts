@@ -2,6 +2,12 @@ import { z } from 'zod';
 import {
   StatisticsGranularityEnum,
   FacilityKpiTierEnum,
+  RagQueryComplexityEnum,
+  RagGroundingStatusEnum,
+  AiInsightCategoryEnum,
+  AiInsightPriorityEnum,
+  AiInsightFocusAreaEnum,
+  AiAdvisorProviderEnum,
 } from '../../../common/enums/statistics.enum.ts';
 import {
   BillingUnitEnum,
@@ -730,4 +736,177 @@ export interface ProductAndOperationsResponse {
       adjustCount: number;
     };
   };
+}
+
+// ==========================================
+// 6. AI RAG PROFIT ADVISOR & EVALUATION
+// ==========================================
+export const ragChunkCitationSchema = z.object({
+  chunkId: z.string(),
+  category: z.string(),
+  title: z.string(),
+  excerpt: z.string(),
+  relevanceScore: z.number(),
+});
+
+export const aiRecommendationItemSchema = z.object({
+  id: z.string(),
+  category: z.nativeEnum(AiInsightCategoryEnum),
+  priority: z.nativeEnum(AiInsightPriorityEnum),
+  title: z.string(),
+  dataEvidence: z.string(),
+  actionSteps: z.array(z.string()),
+  expectedProfitImpact: z.string(),
+  estimatedImpactVnd: z.number().int().nonnegative(),
+  targetFacilityCodes: z.array(z.string()),
+});
+
+export const ragOpportunityMetricsSchema = z.object({
+  recoverableOverdueVnd: z.number().int().nonnegative(),
+  maintenanceRevenueLossVnd: z.number().int().nonnegative(),
+  idleCapacityOpportunityVnd: z.number().int().nonnegative(),
+  totalOpportunityVnd: z.number().int().nonnegative(),
+});
+
+export const ragAdvisorResponseSchema = z.object({
+  period: z.object({
+    fromDate: z.string(),
+    toDate: z.string(),
+    scopedFacilityId: z.string().nullable(),
+    focusArea: z.nativeEnum(AiInsightFocusAreaEnum),
+  }),
+  queryInfo: z.object({
+    question: z.string(),
+    normalizedQuestion: z.string(),
+    groundingStatus: z.nativeEnum(RagGroundingStatusEnum),
+    router: z.object({
+      complexity: z.nativeEnum(RagQueryComplexityEnum),
+      selectedModel: z.string(),
+      provider: z.nativeEnum(AiAdvisorProviderEnum),
+      reason: z.string(),
+    }),
+    cached: z.boolean(),
+    generatedAt: z.string(),
+  }),
+  answer: z.string(),
+  opportunityMetrics: ragOpportunityMetricsSchema,
+  recommendations: z.array(aiRecommendationItemSchema),
+  citations: z.array(ragChunkCitationSchema),
+  retrievedChunkIds: z.array(z.string()),
+});
+
+export interface RagChunkCitation {
+  chunkId: string;
+  category: string;
+  title: string;
+  excerpt: string;
+  relevanceScore: number;
+}
+
+export interface AiRecommendationItem {
+  id: string;
+  category: AiInsightCategoryEnum;
+  priority: AiInsightPriorityEnum;
+  title: string;
+  dataEvidence: string;
+  actionSteps: string[];
+  expectedProfitImpact: string;
+  estimatedImpactVnd: number;
+  targetFacilityCodes: string[];
+}
+
+export interface RagOpportunityMetrics {
+  recoverableOverdueVnd: number;
+  maintenanceRevenueLossVnd: number;
+  idleCapacityOpportunityVnd: number;
+  totalOpportunityVnd: number;
+}
+
+export interface RagAdvisorResponse {
+  period: {
+    fromDate: string;
+    toDate: string;
+    scopedFacilityId: string | null;
+    focusArea: AiInsightFocusAreaEnum;
+  };
+  queryInfo: {
+    question: string;
+    normalizedQuestion: string;
+    groundingStatus: RagGroundingStatusEnum;
+    router: {
+      complexity: RagQueryComplexityEnum;
+      selectedModel: string;
+      provider: AiAdvisorProviderEnum;
+      reason: string;
+    };
+    cached: boolean;
+    generatedAt: string;
+  };
+  answer: string;
+  opportunityMetrics: RagOpportunityMetrics;
+  recommendations: AiRecommendationItem[];
+  citations: RagChunkCitation[];
+  retrievedChunkIds: string[];
+}
+
+export const ragEvalCaseResultSchema = z.object({
+  caseId: z.string(),
+  category: z.string(),
+  question: z.string(),
+  expectedComplexity: z.nativeEnum(RagQueryComplexityEnum),
+  actualComplexity: z.nativeEnum(RagQueryComplexityEnum),
+  expectedGroundingStatus: z.nativeEnum(RagGroundingStatusEnum),
+  actualGroundingStatus: z.nativeEnum(RagGroundingStatusEnum),
+  expectedChunkIds: z.array(z.string()),
+  retrievedChunkIds: z.array(z.string()),
+  retrievalHit: z.boolean(),
+  citationFaithful: z.boolean(),
+  routerMatched: z.boolean(),
+  guardrailPassed: z.boolean(),
+  passed: z.boolean(),
+});
+
+export const ragEvalResponseSchema = z.object({
+  summary: z.object({
+    totalCases: z.number().int().nonnegative(),
+    passedCases: z.number().int().nonnegative(),
+    retrievalHitRatePercent: z.number(),
+    citationFaithfulnessPercent: z.number(),
+    routerAccuracyPercent: z.number(),
+    guardrailDefenseRatePercent: z.number(),
+    overallPassRatePercent: z.number(),
+    evaluatedAt: z.string(),
+  }),
+  cases: z.array(ragEvalCaseResultSchema),
+});
+
+export interface RagEvalCaseResult {
+  caseId: string;
+  category: string;
+  question: string;
+  expectedComplexity: RagQueryComplexityEnum;
+  actualComplexity: RagQueryComplexityEnum;
+  expectedGroundingStatus: RagGroundingStatusEnum;
+  actualGroundingStatus: RagGroundingStatusEnum;
+  expectedChunkIds: string[];
+  retrievedChunkIds: string[];
+  retrievalHit: boolean;
+  citationFaithful: boolean;
+  routerMatched: boolean;
+  guardrailPassed: boolean;
+  passed: boolean;
+}
+
+export interface RagEvalResponse {
+  summary: {
+    totalCases: number;
+    passedCases: number;
+    retrievalHitRatePercent: number;
+    citationFaithfulnessPercent: number;
+    routerAccuracyPercent: number;
+    guardrailDefenseRatePercent: number;
+    overallPassRatePercent: number;
+    evaluatedAt: string;
+  };
+  cases: RagEvalCaseResult[];
 }
