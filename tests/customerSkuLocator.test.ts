@@ -396,6 +396,116 @@ describe('Customer stock across several contracts of one storage unit', () => {
       expect(location?.quantity).toBe(16);
     });
 
+    it('finds a SKU in several warehouses, each with its own area and rack', async () => {
+      const sku = await createSku('SKU-TRA', 'Bộ tách trà');
+      await stock(contractAId, sku, 16, { rackId: rackAId, tierId: tierAId });
+
+      const otherFacility = await Facility.create({
+        name: 'Kho Thủ Đức',
+        code: 'TD',
+        address: '9 Võ Văn Ngân',
+        city: 'Ho Chi Minh',
+        status: FacilityStatusEnum.ACTIVE,
+      });
+      const unitType = await UnitType.findOne();
+      const otherUnit = await StorageUnit.create({
+        facilityId: otherFacility._id,
+        unitTypeId: unitType?._id,
+        unitNumber: 'C301',
+        floor: 3,
+        zone: 'C',
+        status: StorageUnitStatusEnum.OCCUPIED,
+      });
+      const rack = await StorageRack.create({
+        facilityId: otherFacility._id,
+        storageUnitId: otherUnit._id,
+        rackCode: 'R07',
+        aisle: 'D',
+        bay: 7,
+        tierCount: 1,
+        status: RackStatusEnum.RENTED,
+        currentCustomerId: customerId,
+      });
+      const tier = await RackTier.create({
+        facilityId: otherFacility._id,
+        storageUnitId: otherUnit._id,
+        storageRackId: rack._id,
+        tierNumber: 2,
+        tierCode: 'R07-T02',
+        status: RackTierStatusEnum.OCCUPIED,
+      });
+      const contractC = await createContract(
+        'CTR-C',
+        customerId,
+        otherUnit._id as Types.ObjectId,
+        [rack._id as Types.ObjectId]
+      );
+      await Contract.updateOne(
+        { _id: contractC._id },
+        { facilityId: otherFacility._id }
+      );
+      await CustomerInventory.create({
+        customerId,
+        contractId: contractC._id,
+        facilityId: otherFacility._id,
+        storageUnitId: otherUnit._id,
+        storageRackId: rack._id,
+        rackTierId: tier._id,
+        skuId: sku,
+        quantity: 5,
+        status: InventoryItemStatusEnum.NORMAL,
+        lastMovementAt: new Date(),
+      });
+
+      const { items } = await search({ search: 'SKU-TRA' });
+
+      expect(items[0].totalQuantity).toBe(21);
+      const byFacility = Object.fromEntries(
+        items[0].locations.map((l) => [l.facility?.code, l])
+      );
+      expect(Object.keys(byFacility).sort()).toEqual(['Q7', 'TD']);
+      expect(byFacility.Q7.storageRack?.rackCode).toBe('R01');
+      expect(byFacility.Q7.contract?.contractCode).toBe('CTR-A');
+      expect(byFacility.TD.facility?.name).toBe('Kho Thủ Đức');
+      expect(byFacility.TD.storageUnit?.unitNumber).toBe('C301');
+      expect(byFacility.TD.storageUnit?.zone).toBe('C');
+      expect(byFacility.TD.storageRack?.rackCode).toBe('R07');
+      expect(byFacility.TD.storageRack?.aisle).toBe('D');
+      expect(byFacility.TD.rackTier?.tierNumber).toBe(2);
+      expect(byFacility.TD.contract?.contractCode).toBe('CTR-C');
+      expect(byFacility.TD.quantity).toBe(5);
+    });
+
+    it('shows only the current tier of a SKU that was moved', async () => {
+      const sku = await createSku('SKU-MOVE', 'Hàng đã đảo vị trí');
+      // A move empties the old row and fills the new one; the old row stays at 0.
+      await stock(contractAId, sku, 0, { rackId: rackAId, tierId: tierAId });
+      await stock(contractBId, sku, 6, { rackId: rackBId, tierId: tierBId });
+
+      const { items } = await search({ search: 'SKU-MOVE' });
+
+      expect(items[0].rackQuantity).toBe(6);
+      expect(items[0].locations).toHaveLength(1);
+      expect(items[0].locations[0].rackTier?.id).toBe(String(tierBId));
+      expect(items[0].locations[0].contract?.contractCode).toBe('CTR-B');
+    });
+
+    it('keeps stock left on the rack of an ended contract, with that contract status', async () => {
+      const sku = await createSku('SKU-LEFT', 'Hàng chưa lấy về');
+      await stock(contractAId, sku, 3, { rackId: rackAId, tierId: tierAId });
+      await Contract.updateOne(
+        { _id: contractAId },
+        { status: ContractStatusEnum.COMPLETED }
+      );
+
+      const { items } = await search({ search: 'SKU-LEFT' });
+
+      expect(items[0].locations).toHaveLength(1);
+      expect(items[0].locations[0].contract?.status).toBe(
+        ContractStatusEnum.COMPLETED
+      );
+    });
+
     it('classifies racked, holding and never stored SKUs', async () => {
       const racked = await createSku('SKU-1-RACK', 'Trên kệ');
       const holding = await createSku('SKU-2-HOLD', 'Lưu tạm');

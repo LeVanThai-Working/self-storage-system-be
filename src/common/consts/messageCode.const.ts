@@ -208,6 +208,12 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_434: 'MESSAGE_CODE_434',
   // Contract Template Not Found Or Inactive
   MESSAGE_CODE_435: 'MESSAGE_CODE_435',
+  // Replacement Rack Not Available Or Invalid
+  MESSAGE_CODE_436: 'MESSAGE_CODE_436',
+  // Replacement Rack Must Match Tier Count
+  MESSAGE_CODE_437: 'MESSAGE_CODE_437',
+  // Contract Does Not Rent Previous Rack
+  MESSAGE_CODE_438: 'MESSAGE_CODE_438',
 
   // ==========================================
   // PAYMENT (500 - 508)
@@ -598,6 +604,9 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
     'Signed Addendum Document Required For Activation (At Least 1 File Scan/Photo)',
   MESSAGE_CODE_434: 'Customer Identity KYC Information Required',
   MESSAGE_CODE_435: 'Contract Template Not Found Or Inactive',
+  MESSAGE_CODE_436: 'Replacement Rack Not Available Or Invalid',
+  MESSAGE_CODE_437: 'Replacement Rack Must Match Tier Count',
+  MESSAGE_CODE_438: 'Contract Does Not Rent Previous Rack',
 
   // Payment
   MESSAGE_CODE_500: 'Payment Not Found',

@@ -357,6 +357,55 @@ export class ContractRepository {
     return query.exec();
   }
 
+  /**
+   * Atomically accumulates facility compensations (interrupted days refund and facility damage fee)
+   * onto a contract within an optional transaction session (T-SMR.4).
+   *
+   * Targets contracts in `ACTIVE` or `OVERDUE`.
+   */
+  async accumulateFacilityCompensationAtomic(
+    id: string,
+    interruptedRefund: number,
+    facilityDamageFee: number,
+    session?: ClientSession
+  ) {
+    if (!Types.ObjectId.isValid(id)) {
+      return null;
+    }
+
+    const incDoc: Record<string, number> = {};
+    if (interruptedRefund > 0) {
+      incDoc.accumulatedInterruptedRefund = Math.round(interruptedRefund);
+    }
+    if (facilityDamageFee > 0) {
+      incDoc.accumulatedFacilityDamageFee = Math.round(facilityDamageFee);
+    }
+
+    if (Object.keys(incDoc).length === 0) {
+      return this.findById(id, session);
+    }
+
+    const query = this.contract.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(id),
+        status: {
+          $in: [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE],
+        },
+      },
+      {
+        $inc: incDoc,
+      },
+      {
+        returnDocument: 'after',
+      }
+    );
+
+    if (session) {
+      query.session(session);
+    }
+    return query.exec();
+  }
+
   async findExpiredActiveContracts(
     now: Date = new Date(),
     options?: { limit?: number; skip?: number },

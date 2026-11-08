@@ -65,10 +65,11 @@ export class StorageRackRepository {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: string, session?: ClientSession) {
     if (!Types.ObjectId.isValid(id)) return null;
     return this.storageRack
       .findById(id)
+      .session(session ?? null)
       .populate(POPULATE_FACILITY)
       .populate(POPULATE_STORAGE_UNIT);
   }

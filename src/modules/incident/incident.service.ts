@@ -28,6 +28,7 @@ import {
   InventoryItemStatusEnum,
   MovementTypeEnum,
 } from '../../common/enums/customerInventory.enum.ts';
+import { calculateInterruptedRefundAmount } from '../../utils/interruptedDays.util.ts';
 import type { StorageRackRepository } from '../storageRack/storageRack.repository.ts';
 import type { RackTierRepository } from '../storageRack/rackTier.repository.ts';
 import type { InventoryMovementRepository } from '../customerInventory/inventoryMovement.repository.ts';
@@ -205,6 +206,12 @@ export class IncidentService {
             : null,
       customerAcknowledgedBy: formatRef(raw.customerAcknowledgedBy),
       customerAcknowledgeNotes: raw.customerAcknowledgeNotes || null,
+      readyAt:
+        raw.readyAt instanceof Date
+          ? raw.readyAt.toISOString()
+          : raw.readyAt
+            ? String(raw.readyAt)
+            : null,
       closedAt:
         raw.closedAt instanceof Date
           ? raw.closedAt.toISOString()
@@ -635,11 +642,9 @@ export class IncidentService {
       }
     }
 
-    // Enforce damageFee = 0 if liable party is not CUSTOMER
-    const damageFee =
-      data.liableParty === IncidentLiablePartyEnum.CUSTOMER
-        ? data.damageFee
-        : 0;
+    // Support damageFee for both CUSTOMER (customer pays facility) and FACILITY (facility compensates customer)
+    const damageFee = Math.max(0, Math.round(data.damageFee || 0));
+    const now = new Date();
 
     const resolutionDoc = {
       investigationNotes:
@@ -652,7 +657,7 @@ export class IncidentService {
       liableParty: data.liableParty,
       damageFee,
       resolvedBy: new Types.ObjectId(caller.id),
-      resolvedAt: new Date(),
+      resolvedAt: now,
     };
 
     const updated = await this.incidentRepository.atomicUpdateStatus(
@@ -666,6 +671,7 @@ export class IncidentService {
         $set: {
           status: IncidentStatusEnum.RESOLVED,
           resolution: resolutionDoc,
+          readyAt: now,
         },
       },
       session
@@ -855,6 +861,80 @@ export class IncidentService {
           totalDamageFee: updatedContract.damageFee,
         },
       });
+    }
+
+    // Accumulate facility compensations (interrupted days refund & facility damage fee) onto Contract (T-SMR.4)
+    if (incident.contractId && this.contractRepository) {
+      const contractIdStr = toId(incident.contractId);
+      let interruptedRefund = 0;
+      let facilityDamageFee = 0;
+
+      if (resolution?.liableParty === IncidentLiablePartyEnum.FACILITY) {
+        facilityDamageFee = resolution.damageFee ?? 0;
+      }
+
+      // If rack evacuation occurred, compute interrupted refund
+      if (incident.preEvacuationManifest) {
+        const evacuatedAt = incident.preEvacuationManifest.evacuatedAt;
+        const readyAt =
+          incident.readyAt || incident.resolution?.resolvedAt || null;
+        const actualEndAt = incident.customerAcknowledgedAt || new Date();
+
+        const linkedContract = await this.contractRepository.findById(
+          contractIdStr,
+          effectiveSession
+        );
+        if (linkedContract) {
+          const rackCount = Math.max(
+            1,
+            linkedContract.rentedRackIds?.length || 1
+          );
+          const rackMonthlyPrice = Math.round(
+            (linkedContract.rentalPrice || 0) / rackCount
+          );
+
+          interruptedRefund = calculateInterruptedRefundAmount({
+            evacuatedAt,
+            readyAt,
+            actualEndAt,
+            monthlyRentalPrice: rackMonthlyPrice,
+          });
+        }
+      }
+
+      if (interruptedRefund > 0 || facilityDamageFee > 0) {
+        const oldContract = await this.contractRepository.findById(
+          contractIdStr,
+          effectiveSession
+        );
+        const updatedContract =
+          await this.contractRepository.accumulateFacilityCompensationAtomic(
+            contractIdStr,
+            interruptedRefund,
+            facilityDamageFee,
+            effectiveSession
+          );
+
+        if (updatedContract) {
+          this.auditLogService?.record({
+            action: AuditActionEnum.UPDATE,
+            resourceType: AuditResourceEnum.CONTRACT,
+            resourceId: contractIdStr,
+            before: oldContract,
+            after: updatedContract,
+            metadata: {
+              incidentId: id,
+              incidentCode: incident.incidentCode,
+              interruptedRefund,
+              facilityDamageFee,
+              totalInterruptedRefund:
+                updatedContract.accumulatedInterruptedRefund,
+              totalFacilityDamageFee:
+                updatedContract.accumulatedFacilityDamageFee,
+            },
+          });
+        }
+      }
     }
 
     // Audit Log

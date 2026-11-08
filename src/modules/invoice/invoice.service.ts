@@ -1588,12 +1588,16 @@ export class InvoiceService {
     const overdueFee = Math.max(0, Math.round(settlementData.overdueFee || 0));
     const totalDeductions = damageFee + overdueFee;
     const depositAmount = Math.max(0, Math.round(contract.depositAmount || 0));
+    const totalCredit =
+      depositAmount +
+      Math.max(0, Math.round(contract.accumulatedInterruptedRefund || 0)) +
+      Math.max(0, Math.round(contract.accumulatedFacilityDamageFee || 0));
 
     const additionalPaymentRequired = Math.max(
       0,
-      totalDeductions - depositAmount
+      totalDeductions - totalCredit
     );
-    const deductedFromDeposit = Math.min(depositAmount, totalDeductions);
+    const deductedFromCredit = Math.min(totalCredit, totalDeductions);
 
     const items: IInvoiceItem[] = [];
 
@@ -1662,7 +1666,7 @@ export class InvoiceService {
         dueDate: now,
         items,
         subtotal: totalDeductions,
-        discountAmount: deductedFromDeposit,
+        discountAmount: deductedFromCredit,
         taxAmount: 0,
         totalAmount,
         paidAmount,

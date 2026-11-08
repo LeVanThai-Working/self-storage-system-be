@@ -37,6 +37,7 @@ import {
   ViolationCategoryEnum,
 } from '../../common/enums/contract.enum.ts';
 import { StorageUnitStatusEnum } from '../../common/enums/storageUnit.enum.ts';
+import { RackStatusEnum } from '../../common/enums/storageRack.enum.ts';
 import {
   ReservationCancelSourceEnum,
   ReservationStatusEnum,
@@ -1702,117 +1703,282 @@ export class ContractService {
       return validateResponse(contractResponseSchema, formatted);
     }
 
-    // data.type === ContractAddendumTypeEnum.UNIT_CHANGE
-    if (
-      actorRole !== RoleEnum.FACILITY_MANAGER &&
-      actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
-      actorRole !== RoleEnum.SYSTEM_ADMIN
-    ) {
-      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
-        RoleEnum.FACILITY_MANAGER,
-      ]);
-    }
+    if (data.type === ContractAddendumTypeEnum.UNIT_CHANGE) {
+      if (
+        actorRole !== RoleEnum.FACILITY_MANAGER &&
+        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        actorRole !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
+          RoleEnum.FACILITY_MANAGER,
+        ]);
+      }
 
-    await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+      await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
 
-    if (contract.status !== ContractStatusEnum.ACTIVE) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
-    }
+      if (contract.status !== ContractStatusEnum.ACTIVE) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+      }
 
-    if (!data.newStorageUnitId) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-        'newStorageUnitId is required for UNIT_CHANGE addendum',
-      ]);
-    }
+      if (!data.newStorageUnitId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+          'newStorageUnitId is required for UNIT_CHANGE addendum',
+        ]);
+      }
 
-    const currentStorageUnitIdStr = this.extractIdStr(contract.storageUnitId);
-    if (data.newStorageUnitId === currentStorageUnitIdStr) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
-        'New storage unit must be different from current storage unit',
-      ]);
-    }
+      const currentStorageUnitIdStr = this.extractIdStr(contract.storageUnitId);
+      if (data.newStorageUnitId === currentStorageUnitIdStr) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+          'New storage unit must be different from current storage unit',
+        ]);
+      }
 
-    const newUnit = await this.storageUnitRepository.findById(
-      data.newStorageUnitId,
-      session
-    );
-    if (!newUnit) {
-      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
-    }
-
-    const newUnitFacilityIdStr = this.extractIdStr(newUnit.facilityId);
-    if (newUnitFacilityIdStr !== facilityIdStr) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
-    }
-
-    const reservedUnit =
-      await this.storageUnitRepository.findAndReserveUnitAtomic(
+      const newUnit = await this.storageUnitRepository.findById(
         data.newStorageUnitId,
-        facilityIdStr,
         session
       );
-    if (!reservedUnit) {
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_402);
+      if (!newUnit) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
+          'Storage Unit',
+        ]);
+      }
+
+      const newUnitFacilityIdStr = this.extractIdStr(newUnit.facilityId);
+      if (newUnitFacilityIdStr !== facilityIdStr) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
+      }
+
+      const reservedUnit =
+        await this.storageUnitRepository.findAndReserveUnitAtomic(
+          data.newStorageUnitId,
+          facilityIdStr,
+          session
+        );
+      if (!reservedUnit) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_402);
+      }
+
+      const newAddendum: IContractAddendum = {
+        _id: new Types.ObjectId(),
+        addendumCode: this.generateAddendumCode(),
+        type: ContractAddendumTypeEnum.UNIT_CHANGE,
+        previousEndDate: null,
+        newEndDate: null,
+        previousStorageUnitId: new Types.ObjectId(currentStorageUnitIdStr),
+        newStorageUnitId: new Types.ObjectId(data.newStorageUnitId),
+        amenities: [],
+        totalPeriodicPrice: 0,
+        damageFee: 0,
+        status: ContractAddendumStatusEnum.DRAFT,
+        requestedBy: new Types.ObjectId(actorId),
+        requestedAt: now,
+        approvedBy: new Types.ObjectId(actorId),
+        approvedAt: now,
+        assignedStaffId: new Types.ObjectId(actorId),
+        customerSigned: false,
+        customerSignedAt: null,
+        staffSigned: false,
+        staffSignedAt: null,
+        completedAt: null,
+        rejectionReason: null,
+        rejectedBy: null,
+        rejectedAt: null,
+        cancellationReason: null,
+        cancelledBy: null,
+        cancelledAt: null,
+        expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000),
+        notes: data.notes || null,
+      };
+
+      const updated = await this.contractRepository.update(
+        id,
+        {
+          addendums: [...(contract.addendums || []), newAddendum],
+        },
+        session
+      );
+
+      const populated = await this.contractRepository.findById(id, session);
+      const formatted = this.formatContract(populated || updated!);
+
+      this.auditLogService?.record({
+        action: AuditActionEnum.CREATE_ADDENDUM,
+        resourceType: AuditResourceEnum.CONTRACT,
+        resourceId: id,
+        before: this.formatContract(contract),
+        after: formatted,
+        metadata: {
+          addendumCode: newAddendum.addendumCode,
+          type: newAddendum.type,
+          previousStorageUnitId: currentStorageUnitIdStr,
+          newStorageUnitId: data.newStorageUnitId,
+        },
+      });
+
+      return validateResponse(contractResponseSchema, formatted);
     }
 
-    const newAddendum: IContractAddendum = {
-      _id: new Types.ObjectId(),
-      addendumCode: this.generateAddendumCode(),
-      type: ContractAddendumTypeEnum.UNIT_CHANGE,
-      previousEndDate: null,
-      newEndDate: null,
-      previousStorageUnitId: new Types.ObjectId(currentStorageUnitIdStr),
-      newStorageUnitId: new Types.ObjectId(data.newStorageUnitId),
-      amenities: [],
-      totalPeriodicPrice: 0,
-      damageFee: 0,
-      status: ContractAddendumStatusEnum.DRAFT,
-      requestedBy: new Types.ObjectId(actorId),
-      requestedAt: now,
-      approvedBy: new Types.ObjectId(actorId),
-      approvedAt: now,
-      assignedStaffId: new Types.ObjectId(actorId),
-      customerSigned: false,
-      customerSignedAt: null,
-      staffSigned: false,
-      staffSignedAt: null,
-      completedAt: null,
-      rejectionReason: null,
-      rejectedBy: null,
-      rejectedAt: null,
-      cancellationReason: null,
-      cancelledBy: null,
-      cancelledAt: null,
-      expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000),
-      notes: data.notes || null,
-    };
+    if (data.type === ContractAddendumTypeEnum.RACK_CHANGE) {
+      if (
+        actorRole !== RoleEnum.CUSTOMER &&
+        actorRole !== RoleEnum.FACILITY_STAFF &&
+        actorRole !== RoleEnum.FACILITY_MANAGER &&
+        actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
+        actorRole !== RoleEnum.SYSTEM_ADMIN
+      ) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
 
-    const updated = await this.contractRepository.update(
-      id,
-      {
-        addendums: [...(contract.addendums || []), newAddendum],
-      },
-      session
-    );
+      if (actorRole === RoleEnum.CUSTOMER) {
+        const customerIdStr = this.extractIdStr(contract.customerId);
+        if (actorId !== customerIdStr) {
+          throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+        }
+      } else {
+        await this.assertFacilityAccess(actorId, actorRole, facilityIdStr);
+      }
 
-    const populated = await this.contractRepository.findById(id, session);
-    const formatted = this.formatContract(populated || updated!);
+      if (
+        contract.status !== ContractStatusEnum.ACTIVE &&
+        contract.status !== ContractStatusEnum.OVERDUE
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_401);
+      }
 
-    this.auditLogService?.record({
-      action: AuditActionEnum.CREATE_ADDENDUM,
-      resourceType: AuditResourceEnum.CONTRACT,
-      resourceId: id,
-      before: this.formatContract(contract),
-      after: formatted,
-      metadata: {
-        addendumCode: newAddendum.addendumCode,
-        type: newAddendum.type,
-        previousStorageUnitId: currentStorageUnitIdStr,
-        newStorageUnitId: data.newStorageUnitId,
-      },
-    });
+      if (!data.previousRackId || !data.newRackId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+          'previousRackId and newRackId are required for RACK_CHANGE addendum',
+        ]);
+      }
 
-    return validateResponse(contractResponseSchema, formatted);
+      if (data.previousRackId === data.newRackId) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+          'New storage rack must be different from previous storage rack',
+        ]);
+      }
+
+      const rentedRackIds = (contract.rentedRackIds || []).map((r) =>
+        this.extractIdStr(r)
+      );
+      if (!rentedRackIds.includes(data.previousRackId)) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_438);
+      }
+
+      if (!this.storageRackRepository) {
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106);
+      }
+
+      const prevRack = await this.storageRackRepository.findById(
+        data.previousRackId,
+        session
+      );
+      if (!prevRack || prevRack.deleted) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_630);
+      }
+
+      const newRack = await this.storageRackRepository.findById(
+        data.newRackId,
+        session
+      );
+      if (!newRack || newRack.deleted) {
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_630);
+      }
+
+      const newRackFacilityIdStr = this.extractIdStr(newRack.facilityId);
+      if (newRackFacilityIdStr !== facilityIdStr) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
+      }
+
+      if (newRack.tierCount !== prevRack.tierCount) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_437);
+      }
+
+      if (newRack.status !== RackStatusEnum.AVAILABLE) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_436);
+      }
+
+      const reservedRacks =
+        await this.storageRackRepository.findAndReserveRacksAtomic(
+          [data.newRackId],
+          facilityIdStr,
+          this.extractIdStr(newRack.storageUnitId),
+          session
+        );
+      if (!reservedRacks || reservedRacks.length === 0) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_436);
+      }
+
+      await this.storageRackRepository.update(
+        data.newRackId,
+        { currentContractId: contract._id },
+        session
+      );
+
+      const newAddendum: IContractAddendum = {
+        _id: new Types.ObjectId(),
+        addendumCode: this.generateAddendumCode(),
+        type: ContractAddendumTypeEnum.RACK_CHANGE,
+        previousEndDate: null,
+        newEndDate: null,
+        previousStorageUnitId: null,
+        newStorageUnitId: null,
+        previousRackId: new Types.ObjectId(data.previousRackId),
+        newRackId: new Types.ObjectId(data.newRackId),
+        amenities: [],
+        totalPeriodicPrice: 0,
+        damageFee: 0,
+        status: ContractAddendumStatusEnum.DRAFT,
+        requestedBy: new Types.ObjectId(actorId),
+        requestedAt: now,
+        approvedBy: new Types.ObjectId(actorId),
+        approvedAt: now,
+        assignedStaffId: new Types.ObjectId(actorId),
+        customerSigned: false,
+        customerSignedAt: null,
+        staffSigned: false,
+        staffSignedAt: null,
+        completedAt: null,
+        rejectionReason: null,
+        rejectedBy: null,
+        rejectedAt: null,
+        cancellationReason: null,
+        cancelledBy: null,
+        cancelledAt: null,
+        expiresAt: new Date(now.getTime() + 48 * 60 * 60 * 1000),
+        notes: data.notes || null,
+      };
+
+      const updated = await this.contractRepository.update(
+        id,
+        {
+          addendums: [...(contract.addendums || []), newAddendum],
+        },
+        session
+      );
+
+      const populated = await this.contractRepository.findById(id, session);
+      const formatted = this.formatContract(populated || updated!);
+
+      this.auditLogService?.record({
+        action: AuditActionEnum.CREATE_ADDENDUM,
+        resourceType: AuditResourceEnum.CONTRACT,
+        resourceId: id,
+        before: this.formatContract(contract),
+        after: formatted,
+        metadata: {
+          addendumCode: newAddendum.addendumCode,
+          type: newAddendum.type,
+          previousRackId: data.previousRackId,
+          newRackId: data.newRackId,
+        },
+      });
+
+      return validateResponse(contractResponseSchema, formatted);
+    }
+
+    throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [
+      'Invalid addendum type',
+    ]);
   }
 
   // 5b. Manager approves addendum request (PENDING_APPROVAL -> DRAFT)
@@ -1974,6 +2140,27 @@ export class ContractService {
       );
     }
 
+    if (
+      target.type === ContractAddendumTypeEnum.RACK_CHANGE &&
+      target.newRackId &&
+      this.storageRackRepository
+    ) {
+      await this.storageRackRepository.vacateRacksAtomic(
+        [this.extractIdStr(target.newRackId)],
+        id,
+        session
+      );
+      await this.storageRackRepository.update(
+        this.extractIdStr(target.newRackId),
+        {
+          status: RackStatusEnum.AVAILABLE,
+          currentContractId: null,
+          currentCustomerId: null,
+        },
+        session
+      );
+    }
+
     addendums[index] = {
       ...(typeof (target as { toObject?: () => IContractAddendum }).toObject ===
       'function'
@@ -2067,6 +2254,7 @@ export class ContractService {
 
     if (
       actorRole !== RoleEnum.CUSTOMER &&
+      actorRole !== RoleEnum.FACILITY_STAFF &&
       actorRole !== RoleEnum.FACILITY_MANAGER &&
       actorRole !== RoleEnum.BUSINESS_OPS_MANAGER &&
       actorRole !== RoleEnum.SYSTEM_ADMIN
@@ -2108,6 +2296,27 @@ export class ContractService {
       await this.storageUnitRepository.releaseReservedUnitAtomic(
         this.extractIdStr(target.newStorageUnitId),
         StorageUnitStatusEnum.AVAILABLE,
+        session
+      );
+    }
+
+    if (
+      target.type === ContractAddendumTypeEnum.RACK_CHANGE &&
+      target.newRackId &&
+      this.storageRackRepository
+    ) {
+      await this.storageRackRepository.vacateRacksAtomic(
+        [this.extractIdStr(target.newRackId)],
+        id,
+        session
+      );
+      await this.storageRackRepository.update(
+        this.extractIdStr(target.newRackId),
+        {
+          status: RackStatusEnum.AVAILABLE,
+          currentContractId: null,
+          currentCustomerId: null,
+        },
         session
       );
     }
@@ -2218,14 +2427,22 @@ export class ContractService {
     const damageFee = (contract.damageFee || 0) + (data.damageFee || 0);
     const totalDeductions = damageFee + overdueFee;
 
-    const refundAmount = Math.max(0, contract.depositAmount - totalDeductions);
+    const accumulatedInterruptedRefund =
+      contract.accumulatedInterruptedRefund || 0;
+    const accumulatedFacilityDamageFee =
+      contract.accumulatedFacilityDamageFee || 0;
+    const totalFacilityCompensation =
+      accumulatedInterruptedRefund + accumulatedFacilityDamageFee;
+    const totalCredit = contract.depositAmount + totalFacilityCompensation;
+
+    const refundAmount = Math.max(0, totalCredit - totalDeductions);
     const additionalPaymentRequired = Math.max(
       0,
-      totalDeductions - contract.depositAmount
+      totalDeductions - totalCredit
     );
 
     let depositStatus: ContractDepositStatusEnum;
-    if (refundAmount === contract.depositAmount) {
+    if (refundAmount >= contract.depositAmount) {
       depositStatus = ContractDepositStatusEnum.REFUNDED;
     } else if (refundAmount > 0) {
       depositStatus = ContractDepositStatusEnum.PARTIALLY_REFUNDED;
@@ -3572,6 +3789,57 @@ export class ContractService {
             session
           );
         }
+      } else if (addendumType === ContractAddendumTypeEnum.RACK_CHANGE) {
+        const oldRackIdStr = this.extractIdStr(rawTarget.previousRackId);
+        const newRackIdStr = this.extractIdStr(rawTarget.newRackId);
+
+        if (!this.storageRackRepository) {
+          throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106);
+        }
+
+        const customerIdStr = this.extractIdStr(contract.customerId);
+
+        // Occupy new rack
+        await this.storageRackRepository.occupyRacksAtomic(
+          [newRackIdStr],
+          id,
+          customerIdStr,
+          session
+        );
+
+        // Update old rack: remove from current contract/customer.
+        // If it was in MAINTENANCE (e.g. damaged rack), keep status MAINTENANCE.
+        // Otherwise set to AVAILABLE.
+        const oldRack = await this.storageRackRepository.findById(
+          oldRackIdStr,
+          session
+        );
+        const nextOldRackStatus =
+          oldRack?.status === RackStatusEnum.MAINTENANCE
+            ? RackStatusEnum.MAINTENANCE
+            : RackStatusEnum.AVAILABLE;
+
+        await this.storageRackRepository.update(
+          oldRackIdStr,
+          {
+            status: nextOldRackStatus,
+            currentContractId: null,
+            currentCustomerId: null,
+          },
+          session
+        );
+
+        // Update contract rentedRackIds
+        const existingRentedRackIds = (contract.rentedRackIds || []).map((r) =>
+          this.extractIdStr(r)
+        );
+        const nextRentedRackIds = existingRentedRackIds
+          .filter((rId) => rId !== oldRackIdStr)
+          .concat(newRackIdStr)
+          .map((rId) => new Types.ObjectId(rId));
+
+        updatePayload.rentedRackIds = nextRentedRackIds;
+        updatePayload.status = ContractStatusEnum.ACTIVE;
       }
     }
 
@@ -3814,6 +4082,18 @@ export class ContractService {
         previousStorageUnit: formatStorageUnitSnap(ad.previousStorageUnitId),
         newStorageUnitId: nextUnitIdStr,
         newStorageUnit: formatStorageUnitSnap(ad.newStorageUnitId),
+        previousRackId: ad.previousRackId
+          ? typeof ad.previousRackId === 'object' &&
+            '_id' in (ad.previousRackId as Record<string, unknown>)
+            ? String((ad.previousRackId as Record<string, unknown>)._id)
+            : String(ad.previousRackId)
+          : null,
+        newRackId: ad.newRackId
+          ? typeof ad.newRackId === 'object' &&
+            '_id' in (ad.newRackId as Record<string, unknown>)
+            ? String((ad.newRackId as Record<string, unknown>)._id)
+            : String(ad.newRackId)
+          : null,
         amenities: formatAmenityList(ad.amenities),
         totalPeriodicPrice: Number(ad.totalPeriodicPrice || 0),
         damageFee: Number(ad.damageFee || 0),
@@ -3974,6 +4254,12 @@ export class ContractService {
       renewalCount: Number(raw.renewalCount || 0),
       inspectedBy,
       damageFee: Number(raw.damageFee || 0),
+      accumulatedInterruptedRefund: Number(
+        raw.accumulatedInterruptedRefund || 0
+      ),
+      accumulatedFacilityDamageFee: Number(
+        raw.accumulatedFacilityDamageFee || 0
+      ),
       overdueFee: Number(raw.overdueFee || 0),
       refundAmount: Number(raw.refundAmount || 0),
       forfeitedAmount: Number(raw.forfeitedAmount || 0),

@@ -36,6 +36,8 @@ export interface IContractAddendum {
   newEndDate?: Date | null;
   previousStorageUnitId?: Types.ObjectId | null;
   newStorageUnitId?: Types.ObjectId | null;
+  previousRackId?: Types.ObjectId | null;
+  newRackId?: Types.ObjectId | null;
   amenities: IContractAmenity[];
   totalPeriodicPrice: number;
   damageFee: number;
@@ -174,6 +176,8 @@ export interface IContract extends SoftDeleteDocument {
 
   inspectedBy?: Types.ObjectId | null;
   damageFee: number;
+  accumulatedInterruptedRefund: number;
+  accumulatedFacilityDamageFee: number;
   overdueFee: number;
   refundAmount: number;
   forfeitedAmount?: number;
@@ -380,6 +384,16 @@ const contractAddendumSchema = new Schema<IContractAddendum>(
     newStorageUnitId: {
       type: Schema.Types.ObjectId,
       ref: 'StorageUnit',
+      default: null,
+    },
+    previousRackId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StorageRack',
+      default: null,
+    },
+    newRackId: {
+      type: Schema.Types.ObjectId,
+      ref: 'StorageRack',
       default: null,
     },
     amenities: {
@@ -742,6 +756,16 @@ const contractSchema = new Schema<IContract>(
       default: null,
     },
     damageFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    accumulatedInterruptedRefund: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    accumulatedFacilityDamageFee: {
       type: Number,
       default: 0,
       min: 0,

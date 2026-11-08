@@ -131,6 +131,7 @@ export const incidentResponseSchema = z.object({
     .nullable()
     .optional(),
   customerAcknowledgeNotes: z.string().nullable().optional(),
+  readyAt: z.string().nullable().optional(),
   closedAt: z.string().nullable().optional(),
   cancelledAt: z.string().nullable().optional(),
   cancellationReason: z.string().nullable().optional(),

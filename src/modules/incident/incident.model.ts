@@ -72,6 +72,7 @@ export interface IIncident extends SoftDeleteDocument {
   customerAcknowledgedAt?: Date | null;
   customerAcknowledgedBy?: Types.ObjectId | null;
   customerAcknowledgeNotes?: string | null;
+  readyAt?: Date | null;
   closedAt?: Date;
   cancelledAt?: Date;
   cancellationReason?: string;
@@ -299,6 +300,10 @@ const incidentSchema = new Schema<IIncident>(
     customerAcknowledgeNotes: {
       type: String,
       trim: true,
+      default: null,
+    },
+    readyAt: {
+      type: Date,
       default: null,
     },
     closedAt: {
