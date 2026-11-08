@@ -7,6 +7,8 @@ import {
   beforeEach,
   vi,
 } from 'vitest';
+import express, { type Express } from 'express';
+import request from 'supertest';
 import { Types } from 'mongoose';
 import {
   setupTestDB,
@@ -19,6 +21,9 @@ import {
   TEST_FACILITY_A_ID,
   TEST_FACILITY_B_ID,
 } from './helpers/auth.helper.ts';
+import { RegisterRoutes } from '../src/routes/routes.ts';
+import { errorMiddleware } from '../src/middlewares/error.middleware.ts';
+import { User } from '../src/modules/user/user.model.ts';
 import { Facility } from '../src/modules/facility/facility.model.ts';
 import {
   Contract,
@@ -742,6 +747,97 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
         adminCaller
       );
       expect(adminRes.items.length).toBe(1);
+    });
+  });
+  describe('8. HTTP: nullable optional fields & gate staff names', () => {
+    let app: Express;
+
+    beforeEach(() => {
+      app = express();
+      app.use(express.json());
+      RegisterRoutes(app);
+      app.use(errorMiddleware);
+    });
+
+    it('accepts null vehicle/purpose fields and returns phone and gate staff names in detail', async () => {
+      await User.findByIdAndUpdate(TEST_USERS.customer1.id, {
+        phoneNumber: '0901234567',
+      });
+
+      const createRes = await request(app)
+        .post('/access-schedules')
+        .set('x-user-id', customer1Caller.userId)
+        .set('x-user-role', customer1Caller.role)
+        .send({
+          contractId: String(activeContractA._id),
+          timeSlotId: String(timeSlot1A._id),
+          scheduledDate: futureDateStr,
+          vehicleType: null,
+          vehiclePlate: null,
+          purpose: null,
+        });
+
+      expect(createRes.status).toBe(201);
+      expect(createRes.body.data.vehicleType).toBeNull();
+      const scheduleId: string = createRes.body.data.id;
+
+      // Only fake Date so supertest/mongoose timers keep running
+      vi.useFakeTimers({ toFake: ['Date'] });
+      try {
+        vi.setSystemTime(new Date(`${futureDateStr}T08:10:00.000+07:00`));
+        const checkInRes = await request(app)
+          .post('/access-schedules/check-in')
+          .set('x-user-id', staffACaller.userId)
+          .set('x-user-role', staffACaller.role)
+          .set('x-facility-id', staffACaller.assignedFacilityId)
+          .send({ code: createRes.body.data.qrPayload, staffNotes: null });
+        expect(checkInRes.status).toBe(200);
+
+        vi.setSystemTime(new Date(`${futureDateStr}T09:30:00.000+07:00`));
+        const checkOutRes = await request(app)
+          .post(`/access-schedules/${scheduleId}/check-out`)
+          .set('x-user-id', managerACaller.userId)
+          .set('x-user-role', managerACaller.role)
+          .set('x-facility-id', managerACaller.assignedFacilityId)
+          .send({ staffNotes: null });
+        expect(checkOutRes.status).toBe(200);
+      } finally {
+        vi.useRealTimers();
+      }
+
+      const detailRes = await request(app)
+        .get(`/access-schedules/${scheduleId}`)
+        .set('x-user-id', customer1Caller.userId)
+        .set('x-user-role', customer1Caller.role);
+
+      expect(detailRes.status).toBe(200);
+      expect(detailRes.body.data).toMatchObject({
+        status: AccessScheduleStatusEnum.COMPLETED,
+        customerName: TEST_USERS.customer1.name,
+        customerPhone: '0901234567',
+        checkedInByName: TEST_USERS.staffFacilityA.name,
+        checkedOutByName: TEST_USERS.managerFacilityA.name,
+      });
+    });
+
+    it('accepts a null cancel reason', async () => {
+      const schedule = await accessScheduleService.createAccessSchedule(
+        {
+          contractId: String(activeContractA._id),
+          timeSlotId: String(timeSlot1A._id),
+          scheduledDate: futureDateStr,
+        },
+        customer1Caller
+      );
+
+      const res = await request(app)
+        .post(`/access-schedules/${schedule.id}/cancel`)
+        .set('x-user-id', customer1Caller.userId)
+        .set('x-user-role', customer1Caller.role)
+        .send({ reason: null });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe(AccessScheduleStatusEnum.CANCELLED);
     });
   });
 });
