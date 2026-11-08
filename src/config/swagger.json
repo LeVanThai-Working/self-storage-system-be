@@ -9954,6 +9954,9 @@
 					"closedAt": {
 						"type": "string"
 					},
+					"readyAt": {
+						"type": "string"
+					},
 					"customerAcknowledgeNotes": {
 						"type": "string"
 					},
@@ -10574,6 +10577,9 @@
 									"type": "string"
 								},
 								"closedAt": {
+									"type": "string"
+								},
+								"readyAt": {
 									"type": "string"
 								},
 								"customerAcknowledgeNotes": {
@@ -16877,7 +16883,8 @@
 			"ContractAddendumTypeEnum": {
 				"enum": [
 					"renew",
-					"unit_change"
+					"unit_change",
+					"rack_change"
 				],
 				"type": "string"
 			},
@@ -17485,6 +17492,14 @@
 						"type": "number",
 						"format": "double"
 					},
+					"accumulatedFacilityDamageFee": {
+						"type": "number",
+						"format": "double"
+					},
+					"accumulatedInterruptedRefund": {
+						"type": "number",
+						"format": "double"
+					},
 					"damageFee": {
 						"type": "number",
 						"format": "double"
@@ -17700,6 +17715,12 @@
 										"id"
 									],
 									"type": "object"
+								},
+								"newRackId": {
+									"type": "string"
+								},
+								"previousRackId": {
+									"type": "string"
 								},
 								"newStorageUnit": {
 									"properties": {
@@ -17991,6 +18012,8 @@
 					"forfeitedAmount",
 					"refundAmount",
 					"overdueFee",
+					"accumulatedFacilityDamageFee",
+					"accumulatedInterruptedRefund",
 					"damageFee",
 					"renewalCount",
 					"renewals",
@@ -18438,6 +18461,12 @@
 			"infer_typeofcreateContractAddendumSchema_": {
 				"properties": {
 					"notes": {
+						"type": "string"
+					},
+					"newRackId": {
+						"type": "string"
+					},
+					"previousRackId": {
 						"type": "string"
 					},
 					"newStorageUnitId": {
@@ -23096,7 +23125,7 @@
 						}
 					}
 				},
-				"description": "Tổng quan điều hành toàn chuỗi (Executive Overview):\nTỷ lệ lấp đầy kho/kệ/diện tích, doanh thu thực thu & tăng trưởng so với kỳ trước,\ntiền cọc đang giữ, nợ quá hạn và danh sách công việc cần xử lý ngay (Action Required).",
+				"description": "Tổng quan điều hành toàn chuỗi (Executive Overview):\r\nTỷ lệ lấp đầy kho/kệ/diện tích, doanh thu thực thu & tăng trưởng so với kỳ trước,\r\ntiền cọc đang giữ, nợ quá hạn và danh sách công việc cần xử lý ngay (Action Required).",
 				"tags": [
 					"Statistics & KPI"
 				],
@@ -23184,7 +23213,7 @@
 						}
 					}
 				},
-				"description": "Phân tích xu hướng thuê theo thời gian (Rental Trends & Temporal Demand):\nChuỗi thời gian theo ngày/tuần/tháng/quý, tự động chỉ ra khoảng thời gian cao điểm (peakPeriods)\nvà ít người thuê (lowPeriods), phân bổ nhu cầu theo thứ trong tuần, khung giờ hẹn check-in/ra vào kho,\ngiờ đặt đơn online trong ngày và độ dài kỳ thuê.",
+				"description": "Phân tích xu hướng thuê theo thời gian (Rental Trends & Temporal Demand):\r\nChuỗi thời gian theo ngày/tuần/tháng/quý, tự động chỉ ra khoảng thời gian cao điểm (peakPeriods)\r\nvà ít người thuê (lowPeriods), phân bổ nhu cầu theo thứ trong tuần, khung giờ hẹn check-in/ra vào kho,\r\ngiờ đặt đơn online trong ngày và độ dài kỳ thuê.",
 				"tags": [
 					"Statistics & KPI"
 				],
@@ -23280,7 +23309,7 @@
 						}
 					}
 				},
-				"description": "Bảng xếp hạng & Chấm điểm KPI Chi nhánh (Facility KPI Scorecard & Leaderboard):\nChấm điểm KPI tổng hợp (0-100), xếp hạng rank, phân loại tier (EXCELLENT/GOOD/AVERAGE/NEEDS_IMPROVEMENT)\ndựa trên 4 trụ cột: Lấp đầy, Tài chính & Thu hồi nợ, Chuyển đổi & Giữ chân, Chất lượng vận hành & SLA.",
+				"description": "Bảng xếp hạng & Chấm điểm KPI Chi nhánh (Facility KPI Scorecard & Leaderboard):\r\nChấm điểm KPI tổng hợp (0-100), xếp hạng rank, phân loại tier (EXCELLENT/GOOD/AVERAGE/NEEDS_IMPROVEMENT)\r\ndựa trên 4 trụ cột: Lấp đầy, Tài chính & Thu hồi nợ, Chuyển đổi & Giữ chân, Chất lượng vận hành & SLA.",
 				"tags": [
 					"Statistics & KPI"
 				],
@@ -23404,7 +23433,7 @@
 						}
 					}
 				},
-				"description": "Phân tích tài chính chuyên sâu (Financial, AR Overdue Aging & Refund Analytics):\nChuỗi thời gian doanh thu phát hành vs thực thu vs hoàn tiền, cơ cấu nguồn thu theo khoản mục hóa đơn,\ntỷ trọng phương thức thanh toán, đối soát cổng SePay, báo cáo tuổi nợ hóa đơn và hoàn tiền theo lý do.",
+				"description": "Phân tích tài chính chuyên sâu (Financial, AR Overdue Aging & Refund Analytics):\r\nChuỗi thời gian doanh thu phát hành vs thực thu vs hoàn tiền, cơ cấu nguồn thu theo khoản mục hóa đơn,\r\ntỷ trọng phương thức thanh toán, đối soát cổng SePay, báo cáo tuổi nợ hóa đơn và hoàn tiền theo lý do.",
 				"tags": [
 					"Statistics & KPI"
 				],
@@ -23500,7 +23529,7 @@
 						}
 					}
 				},
-				"description": "Phân tích hiệu suất sản phẩm & vận hành kho (Product Mix, Booking Funnel & Warehouse Traffic):\nHiệu suất lấp đầy và doanh thu theo Loại kho (UnitType), Phân khu kệ (RackZone), Tiện ích bán kèm (Amenity Attach Rate),\nPhễu chuyển đổi đặt chỗ (Booking Funnel) và Lưu lượng ra vào kho tự quản (AccessSchedule & InventoryMovement).",
+				"description": "Phân tích hiệu suất sản phẩm & vận hành kho (Product Mix, Booking Funnel & Warehouse Traffic):\r\nHiệu suất lấp đầy và doanh thu theo Loại kho (UnitType), Phân khu kệ (RackZone), Tiện ích bán kèm (Amenity Attach Rate),\r\nPhễu chuyển đổi đặt chỗ (Booking Funnel) và Lưu lượng ra vào kho tự quản (AccessSchedule & InventoryMovement).",
 				"tags": [
 					"Statistics & KPI"
 				],
@@ -27988,7 +28017,7 @@
 						}
 					}
 				},
-				"description": "Emergency evacuation of goods from affected self-managed rack to TEMPORARY_HOLDING zone.\nGenerates physical vs system discrepancy manifest and sets rack to MAINTENANCE.",
+				"description": "Emergency evacuation of goods from affected self-managed rack to TEMPORARY_HOLDING zone.\r\nGenerates physical vs system discrepancy manifest and sets rack to MAINTENANCE.",
 				"tags": [
 					"Incident"
 				],
@@ -30250,7 +30279,7 @@
 						}
 					}
 				},
-				"description": "Create a new Customer SKU\nDedicated for Customer self-registration or staff delegation",
+				"description": "Create a new Customer SKU\r\nDedicated for Customer self-registration or staff delegation",
 				"tags": [
 					"Customer SKU"
 				],
@@ -30311,7 +30340,7 @@
 						}
 					}
 				},
-				"description": "Get paginated SKU list with filters\nCustomer views only their own; FM/Staff views by customerId within assigned facility; Ops/Admin full scope",
+				"description": "Get paginated SKU list with filters\r\nCustomer views only their own; FM/Staff views by customerId within assigned facility; Ops/Admin full scope",
 				"tags": [
 					"Customer SKU"
 				],
@@ -30557,7 +30586,7 @@
 						}
 					}
 				},
-				"description": "Update SKU details\nFor owning Customer or staff under assigned facility",
+				"description": "Update SKU details\r\nFor owning Customer or staff under assigned facility",
 				"tags": [
 					"Customer SKU"
 				],
@@ -30627,7 +30656,7 @@
 						}
 					}
 				},
-				"description": "Soft-delete SKU\nPrevent deletion if SKU has active inventory",
+				"description": "Soft-delete SKU\r\nPrevent deletion if SKU has active inventory",
 				"tags": [
 					"Customer SKU"
 				],
@@ -30751,7 +30780,7 @@
 						}
 					}
 				},
-				"description": "1. Stock In (Stock In)\nCustomer stores new items into their unit or rack tier.\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
+				"description": "1. Stock In (Stock In)\r\nCustomer stores new items into their unit or rack tier.\r\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -30824,7 +30853,7 @@
 						}
 					}
 				},
-				"description": "2. Stock Out (Stock Out)\nCustomer retrieves items from their unit or rack tier.\nPermitted when contract status is ACTIVE or OVERDUE.",
+				"description": "2. Stock Out (Stock Out)\r\nCustomer retrieves items from their unit or rack tier.\r\nPermitted when contract status is ACTIVE or OVERDUE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -30897,7 +30926,7 @@
 						}
 					}
 				},
-				"description": "3. Stock Move (Stock Move)\nCustomer relocates items between their rented rack tiers within an active contract.\nPermitted when contract status is ACTIVE.",
+				"description": "3. Stock Move (Stock Move)\r\nCustomer relocates items between their rented rack tiers within an active contract.\r\nPermitted when contract status is ACTIVE.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -30970,7 +30999,7 @@
 						}
 					}
 				},
-				"description": "4. Stock Adjust (Stock Adjust)\nCustomer counts and updates physical inventory with mandatory reason.\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
+				"description": "4. Stock Adjust (Stock Adjust)\r\nCustomer counts and updates physical inventory with mandatory reason.\r\nRequires contract status to be ACTIVE (returns 400 MESSAGE_CODE_644 when OVERDUE, or 400 MESSAGE_CODE_622 for other non-active statuses).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -31013,7 +31042,7 @@
 						}
 					}
 				},
-				"description": "5. Inventory Movement Ledger\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
+				"description": "5. Inventory Movement Ledger\r\nLedger transaction history of IN, OUT, MOVE, and ADJUST actions.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -31170,7 +31199,7 @@
 						}
 					}
 				},
-				"description": "6. Query current inventory list\nView current stock quantities of SKUs across units and rack tiers.",
+				"description": "6. Query current inventory list\r\nView current stock quantities of SKUs across units and rack tiers.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -31348,7 +31377,7 @@
 						}
 					}
 				},
-				"description": "8. Storage Unit Inventory Tree\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.\nWith contractId, only the racks and stock of that contract are returned.",
+				"description": "8. Storage Unit Inventory Tree\r\nVisual tree structure: Unit -> Racks -> Tiers -> SKUs + floor items + summary.\r\nWith contractId, only the racks and stock of that contract are returned.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -31408,7 +31437,7 @@
 						}
 					}
 				},
-				"description": "8b. Customer SKU locator\nSearch the caller's SKUs and where each one is stored, across all of their contracts.\nSKUs with no stock stay in the result: they were created but never put in storage.",
+				"description": "8b. Customer SKU locator\r\nSearch the caller's SKUs and where each one is stored, across all of their contracts.\r\nSKUs with no stock stay in the result: they were created but never put in storage.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -31496,7 +31525,7 @@
 						}
 					}
 				},
-				"description": "9. Query SKU storage locations by SKU ID\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
+				"description": "9. Query SKU storage locations by SKU ID\r\nList of all locations (facility, unit, rack, tier) where the SKU is present.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -31610,7 +31639,7 @@
 						}
 					}
 				},
-				"description": "11. Customer Personal Inventory Dashboard Summary\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
+				"description": "11. Customer Personal Inventory Dashboard Summary\r\nSummary of total SKUs, total items, active contracts, units, category breakdown, and recent movements.",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -31752,7 +31781,7 @@
 						}
 					}
 				},
-				"description": "13. Update Inventory Item Status (Task 7G)\nUpdate item status (e.g. DAMAGED, DISPUTED, or back to NORMAL).",
+				"description": "13. Update Inventory Item Status (Task 7G)\r\nUpdate item status (e.g. DAMAGED, DISPUTED, or back to NORMAL).",
 				"tags": [
 					"Customer Inventories"
 				],
@@ -31794,7 +31823,7 @@
 						}
 					}
 				},
-				"description": "1. Register a new Access Schedule to visit the warehouse rack\nCustomer books an access time slot and receives an Access QR Token + 6-digit OTP",
+				"description": "1. Register a new Access Schedule to visit the warehouse rack\r\nCustomer books an access time slot and receives an Access QR Token + 6-digit OTP",
 				"tags": [
 					"Access Schedules"
 				],
@@ -31977,7 +32006,7 @@
 						}
 					}
 				},
-				"description": "3. Gate Staff verifies Check-in (Supports EITHER QR code scan OR 6-digit OTP)\nOpens gate and returns rented rack locations and vehicle info for loading bay direction",
+				"description": "3. Gate Staff verifies Check-in (Supports EITHER QR code scan OR 6-digit OTP)\r\nOpens gate and returns rented rack locations and vehicle info for loading bay direction",
 				"tags": [
 					"Access Schedules"
 				],

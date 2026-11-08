@@ -23,6 +23,7 @@ export enum ContractAddendumStatusEnum {
 export enum ContractAddendumTypeEnum {
   RENEW = 'renew',
   UNIT_CHANGE = 'unit_change',
+  RACK_CHANGE = 'rack_change',
 }
 
 export enum ContractDepositStatusEnum {

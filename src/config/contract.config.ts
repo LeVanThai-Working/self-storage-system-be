@@ -13,6 +13,8 @@ export interface ContractConfig {
   minCustomerAge: number;
   requireSigningAuthorization: boolean;
   requireSignedContractScan: boolean;
+  rackIncidentInterruptionGraceHours: number;
+  rackIncidentCutoffGraceHours: number;
 }
 
 /**
@@ -74,6 +76,18 @@ export function getContractConfig(): ContractConfig {
     process.env.CONTRACT_REQUIRE_SIGNED_CONTRACT_SCAN === 'true' ||
     process.env.NODE_ENV === 'production';
 
+  const rawRackGrace = Number(
+    process.env.CONTRACT_RACK_INCIDENT_INTERRUPTION_GRACE_HOURS
+  );
+  const rackIncidentInterruptionGraceHours =
+    Number.isInteger(rawRackGrace) && rawRackGrace >= 0 ? rawRackGrace : 8;
+
+  const rawRackCutoff = Number(
+    process.env.CONTRACT_RACK_INCIDENT_CUTOFF_GRACE_HOURS
+  );
+  const rackIncidentCutoffGraceHours =
+    Number.isInteger(rawRackCutoff) && rawRackCutoff > 0 ? rawRackCutoff : 48;
+
   return {
     overduePenaltyMultiplier,
     standardDaysPerMonth,
@@ -81,6 +95,8 @@ export function getContractConfig(): ContractConfig {
     minCustomerAge,
     requireSigningAuthorization,
     requireSignedContractScan,
+    rackIncidentInterruptionGraceHours,
+    rackIncidentCutoffGraceHours,
   };
 }
 
