@@ -146,7 +146,9 @@ export class AccessScheduleService {
       status: raw.status as AccessScheduleStatusEnum,
       customerId: String(customerObj?._id || raw.customerId),
       customerName: customerObj?.name ? String(customerObj.name) : null,
-      customerPhone: customerObj?.phone ? String(customerObj.phone) : null,
+      customerPhone: customerObj?.phoneNumber
+        ? String(customerObj.phoneNumber)
+        : null,
       contractId: String(contractObj?._id || raw.contractId),
       contractCode: contractObj?.contractCode
         ? String(contractObj.contractCode)

@@ -3149,14 +3149,18 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcreateAccessScheduleSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"numberOfPeople":{"dataType":"double"},"scheduledDate":{"dataType":"string","required":true},"timeSlotId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateAccessScheduleRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcreateAccessScheduleSchema_","validators":{}},
+        "dataType": "refObject",
+        "properties": {
+            "contractId": {"dataType":"string","required":true},
+            "timeSlotId": {"dataType":"string","required":true},
+            "scheduledDate": {"dataType":"string","required":true},
+            "numberOfPeople": {"dataType":"double"},
+            "vehicleType": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+            "vehiclePlate": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+            "purpose": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofavailableAccessSlotResponseSchema_": {
@@ -3203,34 +3207,29 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcheckInAccessScheduleSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"staffNotes":{"dataType":"string"},"code":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CheckInAccessScheduleRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcheckInAccessScheduleSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcheckOutAccessScheduleSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"staffNotes":{"dataType":"string"}},"validators":{}},
+        "dataType": "refObject",
+        "properties": {
+            "code": {"dataType":"string","required":true},
+            "staffNotes": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CheckOutAccessScheduleRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcheckOutAccessScheduleSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcancelAccessScheduleSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string"}},"validators":{}},
+        "dataType": "refObject",
+        "properties": {
+            "staffNotes": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CancelAccessScheduleRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcancelAccessScheduleSchema_","validators":{}},
+        "dataType": "refObject",
+        "properties": {
+            "reason": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofaccessScheduleListItemResponseSchema_": {

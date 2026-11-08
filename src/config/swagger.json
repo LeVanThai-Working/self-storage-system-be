@@ -16351,40 +16351,41 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofcreateAccessScheduleSchema_": {
+			"CreateAccessScheduleRequest": {
 				"properties": {
-					"purpose": {
+					"contractId": {
 						"type": "string"
 					},
-					"vehiclePlate": {
+					"timeSlotId": {
 						"type": "string"
 					},
-					"vehicleType": {
+					"scheduledDate": {
 						"type": "string"
 					},
 					"numberOfPeople": {
 						"type": "number",
 						"format": "double"
 					},
-					"scheduledDate": {
-						"type": "string"
+					"vehicleType": {
+						"type": "string",
+						"nullable": true
 					},
-					"timeSlotId": {
-						"type": "string"
+					"vehiclePlate": {
+						"type": "string",
+						"nullable": true
 					},
-					"contractId": {
-						"type": "string"
+					"purpose": {
+						"type": "string",
+						"nullable": true
 					}
 				},
 				"required": [
-					"scheduledDate",
+					"contractId",
 					"timeSlotId",
-					"contractId"
+					"scheduledDate"
 				],
-				"type": "object"
-			},
-			"CreateAccessScheduleRequest": {
-				"$ref": "#/components/schemas/infer_typeofcreateAccessScheduleSchema_"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"infer_typeofavailableAccessSlotResponseSchema_": {
 				"properties": {
@@ -16705,44 +16706,41 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofcheckInAccessScheduleSchema_": {
+			"CheckInAccessScheduleRequest": {
 				"properties": {
-					"staffNotes": {
-						"type": "string"
-					},
 					"code": {
 						"type": "string"
+					},
+					"staffNotes": {
+						"type": "string",
+						"nullable": true
 					}
 				},
 				"required": [
 					"code"
 				],
-				"type": "object"
-			},
-			"CheckInAccessScheduleRequest": {
-				"$ref": "#/components/schemas/infer_typeofcheckInAccessScheduleSchema_"
-			},
-			"infer_typeofcheckOutAccessScheduleSchema_": {
-				"properties": {
-					"staffNotes": {
-						"type": "string"
-					}
-				},
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"CheckOutAccessScheduleRequest": {
-				"$ref": "#/components/schemas/infer_typeofcheckOutAccessScheduleSchema_"
-			},
-			"infer_typeofcancelAccessScheduleSchema_": {
 				"properties": {
-					"reason": {
-						"type": "string"
+					"staffNotes": {
+						"type": "string",
+						"nullable": true
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"CancelAccessScheduleRequest": {
-				"$ref": "#/components/schemas/infer_typeofcancelAccessScheduleSchema_"
+				"properties": {
+					"reason": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"infer_typeofaccessScheduleListItemResponseSchema_": {
 				"properties": {
