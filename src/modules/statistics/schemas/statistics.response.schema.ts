@@ -8,6 +8,7 @@ import {
   AiInsightPriorityEnum,
   AiInsightFocusAreaEnum,
   AiAdvisorProviderEnum,
+  RagChunkTypeEnum,
 } from '../../../common/enums/statistics.enum.ts';
 import {
   BillingUnitEnum,
@@ -743,7 +744,7 @@ export interface ProductAndOperationsResponse {
 // ==========================================
 export const ragChunkCitationSchema = z.object({
   chunkId: z.string(),
-  category: z.string(),
+  category: z.nativeEnum(RagChunkTypeEnum),
   title: z.string(),
   excerpt: z.string(),
   relevanceScore: z.number(),
@@ -797,7 +798,7 @@ export const ragAdvisorResponseSchema = z.object({
 
 export interface RagChunkCitation {
   chunkId: string;
-  category: string;
+  category: RagChunkTypeEnum;
   title: string;
   excerpt: string;
   relevanceScore: number;

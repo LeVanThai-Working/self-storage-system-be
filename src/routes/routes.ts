@@ -1292,11 +1292,16 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagChunkTypeEnum": {
+        "dataType": "refEnum",
+        "enums": ["overview","rental_trends","facility_kpi","financial_analytics","product_and_operations","playbook_pricing","playbook_debt","playbook_operations","playbook_upsell"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "RagChunkCitation": {
         "dataType": "refObject",
         "properties": {
             "chunkId": {"dataType":"string","required":true},
-            "category": {"dataType":"string","required":true},
+            "category": {"ref":"RagChunkTypeEnum","required":true},
             "title": {"dataType":"string","required":true},
             "excerpt": {"dataType":"string","required":true},
             "relevanceScore": {"dataType":"double","required":true},

@@ -57,3 +57,15 @@ export enum AiAdvisorProviderEnum {
   GEMINI = 'gemini',
   GROUNDED_DETERMINISTIC_FALLBACK = 'grounded_deterministic_fallback',
 }
+
+export enum RagChunkTypeEnum {
+  OVERVIEW = 'overview',
+  RENTAL_TRENDS = 'rental_trends',
+  FACILITY_KPI = 'facility_kpi',
+  FINANCIAL_ANALYTICS = 'financial_analytics',
+  PRODUCT_AND_OPERATIONS = 'product_and_operations',
+  PLAYBOOK_PRICING = 'playbook_pricing',
+  PLAYBOOK_DEBT = 'playbook_debt',
+  PLAYBOOK_OPERATIONS = 'playbook_operations',
+  PLAYBOOK_UPSELL = 'playbook_upsell',
+}
