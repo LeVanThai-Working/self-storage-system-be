@@ -5588,13 +5588,27 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"RagChunkTypeEnum": {
+				"enum": [
+					"overview",
+					"rental_trends",
+					"facility_kpi",
+					"financial_analytics",
+					"product_and_operations",
+					"playbook_pricing",
+					"playbook_debt",
+					"playbook_operations",
+					"playbook_upsell"
+				],
+				"type": "string"
+			},
 			"RagChunkCitation": {
 				"properties": {
 					"chunkId": {
 						"type": "string"
 					},
 					"category": {
-						"type": "string"
+						"$ref": "#/components/schemas/RagChunkTypeEnum"
 					},
 					"title": {
 						"type": "string"
