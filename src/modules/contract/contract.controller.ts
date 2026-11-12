@@ -58,6 +58,7 @@ import {
   type WalkInContractRequest,
 } from './schemas/contract.request.schema.ts';
 import type {
+  ContractAddendumDraftPdfResponse,
   ContractResponse,
   ProcessContractOverdueResponse,
 } from './schemas/contract.response.schema.ts';
@@ -732,6 +733,44 @@ export class ContractController extends Controller {
         'Contract Addendum',
       ]),
       data: contract,
+    };
+  }
+
+  /**
+   * Export printable ISO A4 draft PDF / HTML for a contract addendum (RENEW, UNIT_CHANGE, RACK_CHANGE).
+   */
+  // @Security('bearerAuth')
+  // @Security('cookieAuth')
+  // TODO: Role authorization: CUSTOMER, FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  @Get('{id}/addendums/{addendumId}/draft-pdf')
+  @Middlewares(validateRequest({ params: contractAddendumParamSchema }))
+  @SuccessResponse(200, 'Success')
+  @Response<ApiErrorResponse>(401, 'Unauthorized')
+  @Response<ApiErrorResponse>(403, 'Forbidden')
+  @Response<ApiErrorResponse>(404, 'Not Found')
+  public async getAddendumDraftPdf(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Path() addendumId: string
+  ): Promise<ApiResponse<ContractAddendumDraftPdfResponse>> {
+    const caller = extractCaller(req);
+    const result = await this.contractService.getAddendumDraftPdf(
+      id,
+      addendumId,
+      caller.userId,
+      caller.role
+    );
+
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data: {
+        html: result.html,
+        contractCode: result.contractCode,
+        addendumCode: result.addendumCode,
+      },
     };
   }
 

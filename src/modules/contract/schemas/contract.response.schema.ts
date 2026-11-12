@@ -227,6 +227,16 @@ export type ProcessContractOverdueResponse = z.infer<
   typeof processContractOverdueResponseSchema
 >;
 
+export const contractAddendumDraftPdfResponseSchema = z.object({
+  html: z.string(),
+  contractCode: z.string(),
+  addendumCode: z.string(),
+});
+
+export type ContractAddendumDraftPdfResponse = z.infer<
+  typeof contractAddendumDraftPdfResponseSchema
+>;
+
 export type ContractAmenityResponse = z.infer<
   typeof contractAmenityResponseSchema
 >;

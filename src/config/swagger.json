@@ -19061,6 +19061,57 @@
 			"CancelContractAddendumRequest": {
 				"$ref": "#/components/schemas/infer_typeofcancelContractAddendumSchema_"
 			},
+			"infer_typeofcontractAddendumDraftPdfResponseSchema_": {
+				"properties": {
+					"addendumCode": {
+						"type": "string"
+					},
+					"contractCode": {
+						"type": "string"
+					},
+					"html": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"addendumCode",
+					"contractCode",
+					"html"
+				],
+				"type": "object"
+			},
+			"ContractAddendumDraftPdfResponse": {
+				"$ref": "#/components/schemas/infer_typeofcontractAddendumDraftPdfResponseSchema_"
+			},
+			"ApiResponse_ContractAddendumDraftPdfResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/ContractAddendumDraftPdfResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"infer_typeofcheckOutContractSchema_": {
 				"properties": {
 					"actualCheckOutDate": {
@@ -34022,6 +34073,76 @@
 						}
 					}
 				}
+			}
+		},
+		"/contracts/{id}/addendums/{addendumId}/draft-pdf": {
+			"get": {
+				"operationId": "GetAddendumDraftPdf",
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_ContractAddendumDraftPdfResponse_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Export printable ISO A4 draft PDF / HTML for a contract addendum (RENEW, UNIT_CHANGE, RACK_CHANGE).",
+				"tags": [
+					"Contracts"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "path",
+						"name": "addendumId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
 			}
 		},
 		"/contracts/{id}/check-out": {

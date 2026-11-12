@@ -3634,6 +3634,28 @@ const models: TsoaRoute.Models = {
         "type": {"ref":"infer_typeofcancelContractAddendumSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofcontractAddendumDraftPdfResponseSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"addendumCode":{"dataType":"string","required":true},"contractCode":{"dataType":"string","required":true},"html":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ContractAddendumDraftPdfResponse": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofcontractAddendumDraftPdfResponseSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_ContractAddendumDraftPdfResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"ContractAddendumDraftPdfResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofcheckOutContractSchema_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"actualCheckOutDate":{"dataType":"string"},"inspectionPhotos":{"dataType":"array","array":{"dataType":"string"}},"inspectionNotes":{"dataType":"string"},"damageFee":{"dataType":"double","required":true}},"validators":{}},
@@ -11223,6 +11245,43 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'cancelAddendum',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsContractController_getAddendumDraftPdf: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                addendumId: {"in":"path","name":"addendumId","required":true,"dataType":"string"},
+        };
+        app.get('/contracts/:id/addendums/:addendumId/draft-pdf',
+            ...(fetchMiddlewares<RequestHandler>(ContractController)),
+            ...(fetchMiddlewares<RequestHandler>(ContractController.prototype.getAddendumDraftPdf)),
+
+            async function ContractController_getAddendumDraftPdf(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsContractController_getAddendumDraftPdf, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<ContractController>(ContractController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getAddendumDraftPdf',
                 controller,
                 response,
                 next,

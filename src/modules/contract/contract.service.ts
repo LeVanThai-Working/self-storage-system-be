@@ -2963,12 +2963,11 @@ export class ContractService {
     );
   }
 
-  // 10b. Generate printable A4 draft PDF / HTML for in-person signing (T4.4)
-  async getContractDraftPdf(
+  private async loadContractPdfBaseContext(
     id: string,
     callerId: string,
     callerRole: string
-  ): Promise<{ html: string; buffer: Buffer; contractCode: string }> {
+  ) {
     const contract = await this.contractRepository.findById(id);
     if (!contract) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_400);
@@ -2993,30 +2992,27 @@ export class ContractService {
     }
 
     const facility = await this.facilityRepository.findById(facilityIdStr);
-    let legalEntity = null;
-    if (this.legalEntityRepository && facility?.legalEntityId) {
-      legalEntity = await this.legalEntityRepository.findById(
-        String(facility.legalEntityId)
-      );
-    }
-    const customerUser = await this.userRepository.findById(customerIdStr);
-    const profile = this.profileRepository
-      ? await this.profileRepository.findByUserId(customerIdStr)
-      : null;
+    const [legalEntity, customerUser, profile, signingAuth, storageUnit] =
+      await Promise.all([
+        this.legalEntityRepository && facility?.legalEntityId
+          ? this.legalEntityRepository.findById(String(facility.legalEntityId))
+          : Promise.resolve(null),
+        this.userRepository.findById(customerIdStr),
+        this.profileRepository
+          ? this.profileRepository.findByUserId(customerIdStr)
+          : Promise.resolve(null),
+        this.signingAuthRepository
+          ? this.signingAuthRepository.findValidAuthorization(
+              callerId,
+              facilityIdStr
+            )
+          : Promise.resolve(null),
+        this.storageUnitRepository.findById(
+          this.extractIdStr(contract.storageUnitId)
+        ),
+      ]);
 
-    let signingAuth = null;
-    if (this.signingAuthRepository) {
-      signingAuth = await this.signingAuthRepository.findValidAuthorization(
-        callerId,
-        facilityIdStr
-      );
-    }
-
-    const storageUnitIdStr = this.extractIdStr(contract.storageUnitId);
-    const storageUnit =
-      await this.storageUnitRepository.findById(storageUnitIdStr);
-
-    const context = {
+    return {
       contract,
       facility,
       customer: customerUser,
@@ -3025,11 +3021,103 @@ export class ContractService {
       signingAuth,
       storageUnit,
     };
+  }
+
+  // 10b. Generate printable A4 draft PDF / HTML for in-person signing (T4.4)
+  async getContractDraftPdf(
+    id: string,
+    callerId: string,
+    callerRole: string
+  ): Promise<{ html: string; buffer: Buffer; contractCode: string }> {
+    const context = await this.loadContractPdfBaseContext(
+      id,
+      callerId,
+      callerRole
+    );
 
     const html = this.contractPdfService.generateContractHtml(context);
     const buffer = this.contractPdfService.generateContractPdfBuffer(context);
 
-    return { html, buffer, contractCode: contract.contractCode };
+    return { html, buffer, contractCode: context.contract.contractCode };
+  }
+
+  // 10c. Generate printable A4 draft PDF / HTML for contract addendum (T4.5)
+  async getAddendumDraftPdf(
+    id: string,
+    addendumId: string,
+    callerId: string,
+    callerRole: string
+  ): Promise<{
+    html: string;
+    buffer: Buffer;
+    contractCode: string;
+    addendumCode: string;
+  }> {
+    const baseContext = await this.loadContractPdfBaseContext(
+      id,
+      callerId,
+      callerRole
+    );
+    const { contract } = baseContext;
+
+    const targetAddendum = (contract.addendums || []).find(
+      (a) => String(a._id) === String(addendumId)
+    );
+    if (!targetAddendum) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_409);
+    }
+
+    const rawAddendum =
+      typeof (targetAddendum as { toObject?: () => IContractAddendum })
+        .toObject === 'function'
+        ? (
+            targetAddendum as unknown as { toObject: () => IContractAddendum }
+          ).toObject()
+        : targetAddendum;
+
+    const [previousStorageUnit, newStorageUnit, previousRack, newRack] =
+      await Promise.all([
+        rawAddendum.previousStorageUnitId
+          ? this.storageUnitRepository.findById(
+              this.extractIdStr(rawAddendum.previousStorageUnitId)
+            )
+          : Promise.resolve(null),
+        rawAddendum.newStorageUnitId
+          ? this.storageUnitRepository.findById(
+              this.extractIdStr(rawAddendum.newStorageUnitId)
+            )
+          : Promise.resolve(null),
+        rawAddendum.previousRackId && this.storageRackRepository
+          ? this.storageRackRepository.findById(
+              this.extractIdStr(rawAddendum.previousRackId)
+            )
+          : Promise.resolve(null),
+        rawAddendum.newRackId && this.storageRackRepository
+          ? this.storageRackRepository.findById(
+              this.extractIdStr(rawAddendum.newRackId)
+            )
+          : Promise.resolve(null),
+      ]);
+
+    const addendumContext = {
+      ...baseContext,
+      addendum: rawAddendum,
+      previousStorageUnit,
+      newStorageUnit,
+      previousRack,
+      newRack,
+    };
+
+    const html = this.contractPdfService.generateAddendumHtml(addendumContext);
+    const buffer =
+      this.contractPdfService.generateAddendumPdfBuffer(addendumContext);
+
+    return {
+      html,
+      buffer,
+      contractCode: contract.contractCode,
+      addendumCode: rawAddendum.addendumCode,
+    };
   }
 
   // Walk-in contract creation with inline KYC & user provisioning (T4.6 / D10)
