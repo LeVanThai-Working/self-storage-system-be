@@ -1,5 +1,17 @@
 # Kế hoạch Nghiệp vụ & Task cho Agent: Phân hệ Quản lý Kệ kho & Tồn kho Hàng hóa Tự quản (`customer-inventory`)
 
+## Bổ sung đã duyệt — 2026-11-13: Access Schedule OTP và phân công
+
+- P1: bỏ QR, OTP mã hóa và xem lại bởi chủ lịch, index chống trùng OTP theo cơ sở, migration lịch cũ.
+- P2: staff nhận lịch; Manager giao/gỡ phân công trước check-in, bắt buộc lý do gỡ; notification cho khách và tên staff trong chi tiết lịch.
+- Chỉ staff được phân công được check-in; lịch chưa có người nhận được nhận và check-in nguyên tử.
+- Sau check-in không chuyển/gỡ người phụ trách. Chỉ staff đã check-in được check-out; Manager không có ngoại lệ.
+- Nhận/giao lịch bị chặn khi trùng khung giờ đang phụ trách trong cùng ngày; ca liền nhau được phép. Check-in bị chặn khi còn bất kỳ khách nào chưa check-out.
+- Khóa workload theo staff trong transaction để bảo vệ đồng thời giữa nhiều lịch. Cập nhật phân công kiểm tra `assignmentVersion`.
+- Giữ thời gian sớm 30 phút, trễ 45 phút, khách tự hủy trước ít nhất một giờ. Gỡ phân công không đổi OTP hoặc giờ hẹn.
+- API mới: `POST /access-schedules/{id}/claim` (staff), `/assign` (Manager, `staffId`, `assignmentVersion`), `/unassign` (Manager, `reason`, `assignmentVersion`). Tất cả giới hạn cùng cơ sở.
+- Kiểm thử: OTP/privacy, phân quyền, notification, chồng giờ, lượt đang giám sát, concurrent claim, migration idempotent; typecheck/lint/build/full tests; bàn giao FE.
+
 > Tổng hợp từ kiến trúc khoang chứa lớn (`WAREHOUSE_RACK`), danh mục mã hàng SKU khách hàng, vận hành tồn kho và sổ cái biến động. Cập nhật ngày 20/10/2026.
 
 ---

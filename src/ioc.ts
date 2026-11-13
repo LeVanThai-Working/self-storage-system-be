@@ -59,6 +59,7 @@ import { InvoiceController } from './modules/invoice/invoice.controller.ts';
 import { invoiceController } from './modules/invoice/invoice.container.ts';
 import { StatisticsController } from './modules/statistics/statistics.controller.ts';
 import { statisticsController } from './modules/statistics/statistics.container.ts';
+import { SystemSettingsController } from './modules/systemSettings/systemSettings.controller.ts';
 
 export const iocContainer: IocContainer = {
   get: <T>(controller: unknown): T => {
@@ -148,6 +149,9 @@ export const iocContainer: IocContainer = {
     }
     if (controller === StatisticsController) {
       return statisticsController as unknown as T;
+    }
+    if (controller === SystemSettingsController) {
+      return new SystemSettingsController() as unknown as T;
     }
     throw new Error(
       `Controller not found in iocContainer: ${String(controller)}`

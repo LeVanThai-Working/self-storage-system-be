@@ -8,6 +8,11 @@ import {
   vi,
 } from 'vitest';
 import { Types } from 'mongoose';
+import * as systemSettings from '../src/modules/systemSettings/systemSettings.service.ts';
+import { User } from '../src/modules/user/user.model.ts';
+import { Notification } from '../src/modules/notification/notification.model.ts';
+import { migrateAccessSchedules } from '../scripts/migrate-access-schedule-otp-assignment.ts';
+import crypto from 'node:crypto';
 import {
   setupTestDB,
   teardownTestDB,
@@ -215,8 +220,18 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
       expect(schedule.id).toBeDefined();
       expect(schedule.scheduleCode).toMatch(/^ACC-\d{6}-[A-Z0-9]{4}$/);
       expect(schedule.status).toBe(AccessScheduleStatusEnum.PENDING);
-      expect(schedule.qrPayload).toMatch(/^ACCESS:ACC-/);
+      expect(schedule).not.toHaveProperty('qrPayload');
       expect(schedule.rawOtpCode).toMatch(/^\d{6}$/);
+      const reopened = await accessScheduleService.getScheduleById(
+        schedule.id,
+        customer1Caller
+      );
+      expect(reopened.rawOtpCode).toBe(schedule.rawOtpCode);
+      const staffView = await accessScheduleService.getScheduleById(
+        schedule.id,
+        staffACaller
+      );
+      expect(staffView.rawOtpCode).toBeNull();
       expect(schedule.numberOfPeople).toBe(3);
       expect(schedule.vehiclePlate).toBe('51C-123.45');
       expect(schedule.timeSlotSnapshot.slotName).toBe(timeSlot1A.slotName);
@@ -383,8 +398,8 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
     });
   });
 
-  describe('3. Check-in tại cổng (D-SMR.13: HOẶC QR HOẶC OTP 6 số)', () => {
-    it('cho phép bảo vệ quét QR xác thực Check-in thành công trong cửa sổ [-30m, +45m]', async () => {
+  describe('3. Check-in bằng OTP', () => {
+    it('cho phép staff xác thực OTP trong cửa sổ [-30m, +45m]', async () => {
       // Tạo lịch hẹn với timeSlot từ 08:00
       const schedule = await accessScheduleService.createAccessSchedule(
         {
@@ -403,7 +418,7 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
 
       const checkInResult = await accessScheduleService.checkIn(
         {
-          code: schedule.qrPayload!,
+          code: schedule.rawOtpCode!,
           staffNotes: 'Khách đến đúng hẹn, cho xe vào bến A',
         },
         staffACaller
@@ -417,15 +432,15 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
       expect(checkInResult.rentedRacks[0].rackCode).toBe('R01');
       expect(checkInResult.rentedRacks[0].aisle).toBe('A1');
 
-      // Kiểm tra DB: qrToken và otpHash đã bị vô hiệu hóa
+      // OTP is consumed after check-in.
       const inDb = await AccessSchedule.findById(schedule.id);
-      expect(inDb?.qrToken).toBeNull();
+      expect(inDb?.otpEncrypted).toBeNull();
       expect(inDb?.otpHash).toBeNull();
 
       vi.useRealTimers();
     });
 
-    it('cho phép quản lý cơ sở nhập OTP 6 số xác thực Check-in thành công (không cần mã lịch)', async () => {
+    it('cho phép staff nhập OTP không cần mã lịch', async () => {
       const schedule = await accessScheduleService.createAccessSchedule(
         {
           contractId: String(activeContractA._id),
@@ -443,7 +458,7 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
         {
           code: schedule.rawOtpCode!,
         },
-        managerACaller
+        staffACaller
       );
 
       expect(checkInResult.schedule.status).toBe(
@@ -470,18 +485,81 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
       await expect(
         accessScheduleService.checkIn(
           {
-            code: schedule.qrPayload!,
+            code: schedule.rawOtpCode!,
           },
           staffBCaller
         )
       ).rejects.toThrowError(
         expect.objectContaining({
-          statusCode: 403,
-          messageCode: MESSAGE_CODE.MESSAGE_CODE_103,
+          statusCode: 404,
+          messageCode: MESSAGE_CODE.MESSAGE_CODE_659,
         })
       );
 
       vi.useRealTimers();
+    });
+
+    it.each(['07:15', '08:50'])(
+      'allows same-day check-in at %s when admin disables time validation',
+      async (time) => {
+        const schedule = await accessScheduleService.createAccessSchedule(
+          {
+            contractId: String(activeContractA._id),
+            timeSlotId: String(timeSlot1A._id),
+            scheduledDate: futureDateStr,
+          },
+          customer1Caller
+        );
+        const setting = vi
+          .spyOn(systemSettings, 'isCheckInTimeValidationEnabled')
+          .mockResolvedValue(false);
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date(`${futureDateStr}T${time}:00.000+07:00`));
+        try {
+          const result = await accessScheduleService.checkIn(
+            { code: schedule.rawOtpCode! },
+            staffACaller
+          );
+          expect(result.schedule.status).toBe(
+            AccessScheduleStatusEnum.CHECKED_IN
+          );
+        } finally {
+          vi.useRealTimers();
+          setting.mockRestore();
+        }
+      }
+    );
+
+    it('still rejects a different scheduled day when time validation is disabled', async () => {
+      const schedule = await accessScheduleService.createAccessSchedule(
+        {
+          contractId: String(activeContractA._id),
+          timeSlotId: String(timeSlot1A._id),
+          scheduledDate: futureDateStr,
+        },
+        customer1Caller
+      );
+      const setting = vi
+        .spyOn(systemSettings, 'isCheckInTimeValidationEnabled')
+        .mockResolvedValue(false);
+      vi.useFakeTimers();
+      vi.setSystemTime(
+        new Date(
+          new Date(`${futureDateStr}T08:00:00+07:00`).getTime() - 86400000
+        )
+      );
+      try {
+        await expect(
+          accessScheduleService.checkIn(
+            { code: schedule.rawOtpCode! },
+            staffACaller
+          )
+        ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_654 });
+        expect(await accessScheduleService.processNoShowScan()).toBe(0);
+      } finally {
+        vi.useRealTimers();
+        setting.mockRestore();
+      }
     });
 
     it('chặn Check-in quá sớm trước 30 phút (400 MESSAGE_CODE_654)', async () => {
@@ -501,7 +579,7 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
       await expect(
         accessScheduleService.checkIn(
           {
-            code: schedule.qrPayload!,
+            code: schedule.rawOtpCode!,
           },
           staffACaller
         )
@@ -532,7 +610,7 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
       await expect(
         accessScheduleService.checkIn(
           {
-            code: schedule.qrPayload!,
+            code: schedule.rawOtpCode!,
           },
           staffACaller
         )
@@ -565,7 +643,7 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
       vi.setSystemTime(new Date(`${futureDateStr}T08:10:00.000+07:00`));
 
       await accessScheduleService.checkIn(
-        { code: schedule.qrPayload! },
+        { code: schedule.rawOtpCode! },
         staffACaller
       );
 
@@ -742,6 +820,354 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
         adminCaller
       );
       expect(adminRes.items.length).toBe(1);
+    });
+  });
+  describe('OTP assignment and workload', () => {
+    it('manager assigns an active same-facility staff and stale removal is rejected', async () => {
+      const schedule = await create();
+      const assigned = await accessScheduleService.assignSchedule(
+        schedule.id,
+        { staffId: staffACaller.userId, assignmentVersion: 0 },
+        managerACaller
+      );
+      await expect(
+        accessScheduleService.unassignSchedule(
+          schedule.id,
+          { reason: 'Busy', assignmentVersion: 0 },
+          managerACaller
+        )
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_660 });
+      await expect(
+        accessScheduleService.assignSchedule(
+          schedule.id,
+          { staffId: staffBCaller.userId, assignmentVersion: 1 },
+          managerACaller
+        )
+      ).rejects.toMatchObject({ statusCode: 403 });
+      expect(assigned.assignedStaffId).toBe(staffACaller.userId);
+    });
+    it('two concurrent OTP check-ins produce one responsible staff and one notification', async () => {
+      const schedule = await create();
+      const other = await secondStaff();
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(futureDateStr + 'T08:10:00+07:00'));
+      try {
+        const results = await Promise.allSettled([
+          accessScheduleService.checkIn(
+            { code: schedule.rawOtpCode! },
+            staffACaller
+          ),
+          accessScheduleService.checkIn({ code: schedule.rawOtpCode! }, other),
+        ]);
+        expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+        const current = (await AccessSchedule.findById(schedule.id))!;
+        expect(String(current.assignedStaffId)).toBe(
+          String(current.checkedInBy)
+        );
+        expect(
+          await Notification.countDocuments({
+            'metadata.accessScheduleId': schedule.id,
+          })
+        ).toBe(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+    it('regenerates an OTP after a unique-index collision', async () => {
+      await AccessSchedule.init();
+      const random = vi
+        .spyOn(crypto, 'randomInt')
+        .mockReturnValueOnce(123456)
+        .mockReturnValueOnce(123456)
+        .mockReturnValueOnce(654321);
+      try {
+        const first = await create();
+        const second = await accessScheduleService.createAccessSchedule(
+          {
+            contractId: String(activeContractA._id),
+            timeSlotId: String(timeSlot2A._id),
+            scheduledDate: futureDateStr,
+          },
+          customer1Caller
+        );
+        expect(first.rawOtpCode).toBe('123456');
+        expect(second.rawOtpCode).toBe('654321');
+      } finally {
+        random.mockRestore();
+      }
+    });
+    it('blocks a second check-in until the previous visitor checks out', async () => {
+      const first = await create();
+      const second = await accessScheduleService.createAccessSchedule(
+        {
+          contractId: String(activeContractA._id),
+          timeSlotId: String(timeSlot2A._id),
+          scheduledDate: futureDateStr,
+        },
+        customer1Caller
+      );
+      vi.useFakeTimers();
+      try {
+        vi.setSystemTime(new Date(futureDateStr + 'T08:10:00+07:00'));
+        await accessScheduleService.checkIn(
+          { code: first.rawOtpCode! },
+          staffACaller
+        );
+        vi.setSystemTime(new Date(futureDateStr + 'T10:10:00+07:00'));
+        await expect(
+          accessScheduleService.checkIn(
+            { code: second.rawOtpCode! },
+            staffACaller
+          )
+        ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_661 });
+        await accessScheduleService.checkOut(first.id, {}, staffACaller);
+        await expect(
+          accessScheduleService.checkIn(
+            { code: second.rawOtpCode! },
+            staffACaller
+          )
+        ).resolves.toMatchObject({
+          schedule: { assignedStaffId: staffACaller.userId },
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+    it('migrates legacy OTP once without exposing or rotating it on rerun', async () => {
+      const schedule = await create();
+      await AccessSchedule.collection.updateOne(
+        { _id: new Types.ObjectId(schedule.id) },
+        {
+          $unset: { otpEncrypted: '', assignmentVersion: '' },
+          $set: { qrToken: 'legacy-token' },
+        }
+      );
+      await migrateAccessSchedules(false);
+      expect(
+        (await AccessSchedule.findById(schedule.id))?.otpEncrypted
+      ).toBeNull();
+      await migrateAccessSchedules(true);
+      const updated = (await AccessSchedule.findById(schedule.id))!;
+      expect(updated.otpEncrypted).toBeTruthy();
+      expect(updated.assignmentVersion).toBe(0);
+      const raw = await AccessSchedule.collection.findOne({ _id: updated._id });
+      expect(raw).not.toHaveProperty('qrToken');
+      await migrateAccessSchedules(true);
+      expect((await AccessSchedule.findById(schedule.id))?.otpEncrypted).toBe(
+        updated.otpEncrypted
+      );
+      expect(
+        await Notification.countDocuments({
+          'metadata.accessScheduleId': schedule.id,
+        })
+      ).toBe(1);
+    });
+    const create = () =>
+      accessScheduleService.createAccessSchedule(
+        {
+          contractId: String(activeContractA._id),
+          timeSlotId: String(timeSlot1A._id),
+          scheduledDate: futureDateStr,
+        },
+        customer1Caller
+      );
+    async function secondStaff() {
+      const source = (await User.findById(staffACaller.userId))!.toObject();
+      const user = await User.create({
+        ...source,
+        _id: new Types.ObjectId(),
+        email: 'other-staff@example.com',
+        password: 'test-password-hash',
+        googleId: undefined,
+      });
+      return { ...staffACaller, userId: String(user._id) };
+    }
+    async function cloneSchedule(id: string, start = '08:00', end = '09:00') {
+      const source = (await AccessSchedule.findById(id))!.toObject();
+      return AccessSchedule.create({
+        ...source,
+        _id: new Types.ObjectId(),
+        scheduleCode: 'ACC-' + new Types.ObjectId(),
+        customerId: new Types.ObjectId(),
+        otpHash: null,
+        otpEncrypted: null,
+        assignedStaffId: null,
+        assignmentVersion: 0,
+        timeSlotSnapshot: {
+          ...source.timeSlotSnapshot,
+          startTime: start,
+          endTime: end,
+        },
+      });
+    }
+    it('claim notifies the customer and manager unassign preserves OTP', async () => {
+      const schedule = await create();
+      const assigned = await accessScheduleService.assignSchedule(
+        schedule.id,
+        null,
+        staffACaller
+      );
+      expect(assigned.assignedStaffId).toBe(staffACaller.userId);
+      expect(assigned.rawOtpCode).toBeNull();
+      const customer = await accessScheduleService.getScheduleById(
+        schedule.id,
+        customer1Caller
+      );
+      expect(customer.assignedStaffName).toBeTruthy();
+      expect(
+        await Notification.countDocuments({
+          recipientId: customer1Caller.userId,
+          'metadata.accessScheduleId': schedule.id,
+        })
+      ).toBe(1);
+      await accessScheduleService.unassignSchedule(
+        schedule.id,
+        {
+          reason: 'Unavailable',
+          assignmentVersion: assigned.assignmentVersion,
+        },
+        managerACaller
+      );
+      const reopened = await accessScheduleService.getScheduleById(
+        schedule.id,
+        customer1Caller
+      );
+      expect(reopened.assignedStaffId).toBeNull();
+      expect(reopened.rawOtpCode).toBe(schedule.rawOtpCode);
+    });
+    it('rejects cross facility claim, customer claim and staff unassign', async () => {
+      const schedule = await create();
+      await expect(
+        accessScheduleService.assignSchedule(schedule.id, null, staffBCaller)
+      ).rejects.toMatchObject({ statusCode: 403 });
+      await expect(
+        accessScheduleService.assignSchedule(schedule.id, null, customer1Caller)
+      ).rejects.toMatchObject({ statusCode: 403 });
+      await accessScheduleService.assignSchedule(
+        schedule.id,
+        null,
+        staffACaller
+      );
+      await expect(
+        accessScheduleService.unassignSchedule(
+          schedule.id,
+          { reason: 'Busy', assignmentVersion: 1 },
+          staffACaller
+        )
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+    it('rejects overlapping claims and manager assignments, permits adjacent slots', async () => {
+      const schedule = await create();
+      await accessScheduleService.assignSchedule(
+        schedule.id,
+        null,
+        staffACaller
+      );
+      const overlapping = await cloneSchedule(schedule.id);
+      await expect(
+        accessScheduleService.assignSchedule(
+          String(overlapping._id),
+          null,
+          staffACaller
+        )
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_661 });
+      await expect(
+        accessScheduleService.assignSchedule(
+          String(overlapping._id),
+          { staffId: staffACaller.userId, assignmentVersion: 0 },
+          managerACaller
+        )
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_661 });
+      const adjacent = await cloneSchedule(schedule.id, '10:00', '11:00');
+      await expect(
+        accessScheduleService.assignSchedule(
+          String(adjacent._id),
+          null,
+          staffACaller
+        )
+      ).resolves.toMatchObject({ assignedStaffId: staffACaller.userId });
+    });
+    it('serializes concurrent claims of different overlapping schedules', async () => {
+      const schedule = await create();
+      const other = await cloneSchedule(schedule.id);
+      const results = await Promise.allSettled([
+        accessScheduleService.assignSchedule(schedule.id, null, staffACaller),
+        accessScheduleService.assignSchedule(
+          String(other._id),
+          null,
+          staffACaller
+        ),
+      ]);
+      expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+      expect(
+        await AccessSchedule.countDocuments({
+          assignedStaffId: staffACaller.userId,
+        })
+      ).toBe(1);
+    });
+    it('locks responsibility after check-in and only the same staff checks out', async () => {
+      const schedule = await create();
+      const other = await secondStaff();
+      await accessScheduleService.assignSchedule(
+        schedule.id,
+        null,
+        staffACaller
+      );
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(futureDateStr + 'T08:10:00+07:00'));
+      try {
+        await expect(
+          accessScheduleService.checkIn({ code: schedule.rawOtpCode! }, other)
+        ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_662 });
+        await accessScheduleService.checkIn(
+          { code: schedule.rawOtpCode! },
+          staffACaller
+        );
+        await expect(
+          accessScheduleService.unassignSchedule(
+            schedule.id,
+            { reason: 'Busy', assignmentVersion: 2 },
+            managerACaller
+          )
+        ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_660 });
+        for (const caller of [other, managerACaller, adminCaller])
+          await expect(
+            accessScheduleService.checkOut(schedule.id, {}, caller)
+          ).rejects.toMatchObject({ statusCode: 403 });
+        await expect(
+          accessScheduleService.checkOut(schedule.id, {}, staffACaller)
+        ).resolves.toMatchObject({
+          status: AccessScheduleStatusEnum.COMPLETED,
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+    it('allows only one staff to claim the same schedule', async () => {
+      const schedule = await create();
+      const other = await secondStaff();
+      const results = await Promise.allSettled([
+        accessScheduleService.assignSchedule(schedule.id, null, staffACaller),
+        accessScheduleService.assignSchedule(schedule.id, null, other),
+      ]);
+      expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+      expect(
+        await Notification.countDocuments({
+          'metadata.accessScheduleId': schedule.id,
+        })
+      ).toBe(1);
+    });
+    it('rejects QR and does not reveal OTP to another customer', async () => {
+      const schedule = await create();
+      await expect(
+        accessScheduleService.getScheduleById(schedule.id, customer2Caller)
+      ).rejects.toMatchObject({ statusCode: 403 });
+      await expect(
+        accessScheduleService.checkIn(
+          { code: 'ACCESS:old:token' },
+          staffACaller
+        )
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_659 });
     });
   });
 });

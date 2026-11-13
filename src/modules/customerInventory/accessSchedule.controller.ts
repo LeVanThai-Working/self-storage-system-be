@@ -14,6 +14,10 @@ import type { Request as ExpressRequest } from 'express';
 import type { AccessScheduleService } from './accessSchedule.service.ts';
 import { validateRequest } from '../../middlewares/validate.middleware.ts';
 import {
+  assignAccessScheduleSchema,
+  unassignAccessScheduleSchema,
+  type AssignAccessScheduleRequest,
+  type UnassignAccessScheduleRequest,
   createAccessScheduleSchema,
   checkInAccessScheduleSchema,
   checkOutAccessScheduleSchema,
@@ -69,7 +73,11 @@ function extractCaller(req: ExpressRequest): CallerContext {
   const headerUserId = req.headers['x-user-id'] as string;
   const headerRole = req.headers['x-user-role'] as string;
   const headerFacilityId = req.headers['x-facility-id'] as string;
-  if (headerUserId) {
+  if (
+    headerUserId &&
+    process.env.NODE_ENV !== 'production' &&
+    process.env.ALLOW_INSECURE_CALLER_FALLBACK === 'true'
+  ) {
     return {
       userId: headerUserId,
       role: (headerRole as RoleEnum) || RoleEnum.CUSTOMER,
@@ -77,6 +85,11 @@ function extractCaller(req: ExpressRequest): CallerContext {
     };
   }
 
+  if (
+    process.env.NODE_ENV === 'production' ||
+    process.env.ALLOW_INSECURE_CALLER_FALLBACK !== 'true'
+  )
+    throw new AppError(401, MESSAGE_CODE.MESSAGE_CODE_102);
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith('Bearer ')) {
     try {
@@ -125,7 +138,7 @@ export class AccessScheduleController extends Controller {
 
   /**
    * 1. Register a new Access Schedule to visit the warehouse rack
-   * Customer books an access time slot and receives an Access QR Token + 6-digit OTP
+   * Customer books an access time slot and receives a 6-digit OTP
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
@@ -176,12 +189,12 @@ export class AccessScheduleController extends Controller {
   }
 
   /**
-   * 3. Gate Staff verifies Check-in (Supports EITHER QR code scan OR 6-digit OTP)
+   * 3. Responsible staff verifies check-in using a 6-digit OTP
    * Opens gate and returns rented rack locations and vehicle info for loading bay direction
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: FACILITY_STAFF
   @Post('check-in')
   @Middlewares(validateRequest({ body: checkInAccessScheduleSchema }))
   public async checkIn(
@@ -201,11 +214,11 @@ export class AccessScheduleController extends Controller {
   }
 
   /**
-   * 4. Gate Staff scans Check-out when customer departs
+   * 4. The same staff checks out the departing customer
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: FACILITY_STAFF
   @Post('{id}/check-out')
   @Middlewares(
     validateRequest({
@@ -312,7 +325,8 @@ export class AccessScheduleController extends Controller {
     @Query() contractId?: string,
     @Query() status?: string,
     @Query() startDate?: string,
-    @Query() endDate?: string
+    @Query() endDate?: string,
+    @Query() assignmentScope?: 'unassigned' | 'mine' | 'all'
   ): Promise<ApiResponse<PaginatedData<AccessScheduleListItemResponse>>> {
     const caller = extractCaller(req);
     const query: AccessScheduleQuery = {
@@ -326,6 +340,7 @@ export class AccessScheduleController extends Controller {
       status: status as AccessScheduleStatusEnum | undefined,
       startDate,
       endDate,
+      assignmentScope,
     };
 
     const data = await this.accessScheduleService.getSchedules(query, caller);
@@ -339,6 +354,81 @@ export class AccessScheduleController extends Controller {
     };
   }
 
+  // @Security('bearerAuth')
+  // TODO: Role authorization: FACILITY_STAFF
+  @Post('{id}/claim')
+  @Middlewares(validateRequest({ params: accessScheduleIdParamSchema }))
+  public async claim(
+    @Request() req: ExpressRequest,
+    @Path() id: string
+  ): Promise<ApiResponse<AccessScheduleDetailResponse>> {
+    const data = await this.accessScheduleService.assignSchedule(
+      id,
+      null,
+      extractCaller(req)
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+  // @Security('bearerAuth')
+  // TODO: Role authorization: FACILITY_MANAGER
+  @Post('{id}/assign')
+  @Middlewares(
+    validateRequest({
+      params: accessScheduleIdParamSchema,
+      body: assignAccessScheduleSchema,
+    })
+  )
+  public async assign(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: AssignAccessScheduleRequest
+  ): Promise<ApiResponse<AccessScheduleDetailResponse>> {
+    const data = await this.accessScheduleService.assignSchedule(
+      id,
+      body,
+      extractCaller(req)
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
+  // @Security('bearerAuth')
+  // TODO: Role authorization: FACILITY_MANAGER
+  @Post('{id}/unassign')
+  @Middlewares(
+    validateRequest({
+      params: accessScheduleIdParamSchema,
+      body: unassignAccessScheduleSchema,
+    })
+  )
+  public async unassign(
+    @Request() req: ExpressRequest,
+    @Path() id: string,
+    @Body() body: UnassignAccessScheduleRequest
+  ): Promise<ApiResponse<AccessScheduleDetailResponse>> {
+    const data = await this.accessScheduleService.unassignSchedule(
+      id,
+      body,
+      extractCaller(req)
+    );
+    return {
+      success: true,
+      statusCode: 200,
+      messageCode: MESSAGE_CODE.MESSAGE_CODE_001,
+      message: formatMessage(MESSAGE_CODE.MESSAGE_CODE_001),
+      data,
+    };
+  }
   /**
    * 8. Get Access Schedule detail by ID
    */

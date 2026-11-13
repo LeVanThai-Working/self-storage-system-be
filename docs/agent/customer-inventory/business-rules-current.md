@@ -1,5 +1,27 @@
 # business-rules-current.md — Phân hệ Quản lý Kệ kho & Tồn kho Hàng hóa Tự quản (Self-Storage Inventory)
 
+## Access Schedule — cập nhật 2026-11-13
+
+- Chỉ dùng OTP 6 số khi check-in, không còn QR. Customer xem lại `rawOtpCode` trong chi tiết lịch của mình khi `pending` và còn hiệu lực; nhân sự nhận `null`.
+- Staff tự nhận lịch; Manager cùng cơ sở có thể phân công staff hợp lệ. Khách nhận notification in-app và thấy tên staff phụ trách.
+- Manager được gỡ phân công khi còn `pending`, với lý do và phiên bản phân công. Gỡ không đổi OTP/giờ hẹn. Không đặt hạn gỡ trước giờ hẹn.
+- Lịch chưa có người nhận: nhập OTP sẽ nhận và check-in cùng thao tác. Lịch đã có người nhận: chỉ staff đó check-in được.
+- Từ check-in đến check-out, cùng một staff giám sát khách. Không chuyển/gỡ hoặc Manager làm thay sau check-in. Check-out theo ID lịch, không dùng lại OTP đã tiêu thụ.
+- Không nhận/giao lịch chồng giờ cùng ngày. Chặn check-in nếu staff còn một lượt `checked_in` chưa hoàn tất, kể cả khác ca/ngày.
+- Giữ cửa sổ check-in sớm 30 phút, trễ 45 phút; hết hạn được kiểm tra trực tiếp. Lịch hủy/no-show/hoàn tất không chặn workload.
+
+### Migration và phát hành
+
+1. Tạm ngừng ghi AccessSchedule, backup database; triển khai BE/FE đồng bộ vì QR bị xóa.
+2. Cần MongoDB replica set, `ENCRYPTION_KEY` và `OTP_SECRET` ở production. Không thay khóa khi còn lịch chưa dùng.
+3. Chạy dry-run: `npx tsx scripts/migrate-access-schedule-otp-assignment.ts`.
+4. Sau backup: `npx tsx scripts/migrate-access-schedule-otp-assignment.ts --apply --backup-confirmed`.
+5. Lịch pending còn hiệu lực thiếu ciphertext được cấp mã mới và một notification in-app. Script chạy lại không đổi mã đã cấp; backfill người phụ trách từ `checkedInBy`; báo số lịch thiếu staff để xử lý thủ công.
+6. Đồng bộ index OTP unique theo cơ sở trước khi mở lại nhận lịch. Xóa index QR cũ sau khi xác nhận không còn dữ liệu/FE cũ sử dụng. Không gọi `syncIndexes()` toàn hệ thống.
+7. Rollback khi vẫn đang maintenance: khôi phục database từ backup và phiên bản BE/FE trước phát hành cùng nhau. OTP mới bị hủy; không rollback bằng cách giải ngược hash.
+
+Notification dùng in-app/Socket.IO hiện có, chưa có push khi app đóng hoặc outbox retry bền. Script migration chưa chạy trên database thực trong phiên này.
+
 > Mô tả nghiệp vụ do hệ thống ghi nhận. Nếu có điểm khác biệt với code thực tế, code là nguồn sự thật (Single Source of Truth).
 >
 > 💡 **Hướng dẫn Tích hợp Frontend:** Xem toàn bộ luồng chọn loại kho, render sơ đồ trực quan và thêm SKU vào từng ngăn kệ tại [FE_INTEGRATION_FLOW.md](file:///c:/NgocTuyen/selfStorageManagementSystem/self-storage-system-be/docs/agent/customer-inventory/FE_INTEGRATION_FLOW.md).

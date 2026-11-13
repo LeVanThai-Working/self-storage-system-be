@@ -386,6 +386,9 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_658: 'MESSAGE_CODE_658',
   // Invalid Or Expired Access QR Token Or OTP
   MESSAGE_CODE_659: 'MESSAGE_CODE_659',
+  MESSAGE_CODE_660: 'MESSAGE_CODE_660',
+  MESSAGE_CODE_661: 'MESSAGE_CODE_661',
+  MESSAGE_CODE_662: 'MESSAGE_CODE_662',
 
   // ==========================================
   // INCIDENT (700 - 709)
@@ -695,7 +698,10 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_656: 'Cannot Cancel Access Schedule Too Close To Start Time',
   MESSAGE_CODE_657: 'Customer Already Has An Active Schedule In This Time Slot',
   MESSAGE_CODE_658: 'Access Schedule Does Not Belong To Facility',
-  MESSAGE_CODE_659: 'Invalid Or Expired Access QR Token Or OTP',
+  MESSAGE_CODE_659: 'Invalid Or Expired Access OTP',
+  MESSAGE_CODE_660: 'Access Schedule Assignment Changed Or Unavailable',
+  MESSAGE_CODE_661: 'Staff Has Conflicting Access Schedule',
+  MESSAGE_CODE_662: 'Only The Responsible Staff Can Perform This Action',
 
   // Incident
   MESSAGE_CODE_700: 'Incident Not Found',

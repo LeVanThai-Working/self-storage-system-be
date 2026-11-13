@@ -1,5 +1,14 @@
 import crypto from 'node:crypto';
-import { Types } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
+import { isCheckInTimeValidationEnabled } from '../systemSettings/systemSettings.service.ts';
+import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import { encryptText, decryptText } from '../../utils/encryption.util.ts';
+import { runAfterCommit } from '../../utils/transactionScope.util.ts';
+import { NotificationTypeEnum } from '../../common/enums/notification.enum.ts';
+import type {
+  AssignAccessScheduleRequest,
+  UnassignAccessScheduleRequest,
+} from './schemas/accessSchedule.request.schema.ts';
 import type { AccessScheduleRepository } from './accessSchedule.repository.ts';
 import type { ContractRepository } from '../contract/contract.repository.ts';
 import type { FacilityRepository } from '../facility/facility.repository.ts';
@@ -12,7 +21,7 @@ import type { IAccessSchedule } from './accessSchedule.model.ts';
 import { AccessScheduleStatusEnum } from '../../common/enums/customerInventory.enum.ts';
 import { ContractStatusEnum } from '../../common/enums/contract.enum.ts';
 import { FacilityStatusEnum } from '../../common/enums/facility.enum.ts';
-import { RoleEnum } from '../../common/enums/user.enum.ts';
+import { UserStatusEnum, RoleEnum } from '../../common/enums/user.enum.ts';
 import {
   AuditActionEnum,
   AuditResourceEnum,
@@ -66,7 +75,140 @@ export class AccessScheduleService {
     private readonly notificationService?: NotificationService
   ) {}
 
+  private notifyAssignment(schedule: IAccessSchedule, removed = false): void {
+    runAfterCommit(async () => {
+      await this.notificationService?.sendNotification({
+        recipientId: String(schedule.customerId?._id || schedule.customerId),
+        facilityId: String(schedule.facilityId?._id || schedule.facilityId),
+        type: NotificationTypeEnum.ACCESS_SCHEDULE,
+        title: removed ? 'Staff assignment updated' : 'Staff assigned',
+        content: removed
+          ? 'The facility is arranging another staff member for your visit.'
+          : 'Your visit will be supervised by ' +
+            schedule.assignedStaffNameSnapshot +
+            '.',
+        metadata: {
+          accessScheduleId: String(schedule._id),
+          scheduleCode: schedule.scheduleCode,
+        },
+      });
+    });
+  }
+  private async assertWorkload(
+    staffId: string,
+    schedule: IAccessSchedule,
+    session: ClientSession,
+    checkingIn = false
+  ): Promise<void> {
+    const workload = await this.accessScheduleRepository.findStaffWorkload(
+      staffId,
+      String(schedule._id),
+      session
+    );
+    if (
+      workload.some(
+        (other) =>
+          (checkingIn &&
+            other.status === AccessScheduleStatusEnum.CHECKED_IN) ||
+          (getVNDateString(other.scheduledDate) ===
+            getVNDateString(schedule.scheduledDate) &&
+            other.timeSlotSnapshot.startTime <
+              schedule.timeSlotSnapshot.endTime &&
+            other.timeSlotSnapshot.endTime >
+              schedule.timeSlotSnapshot.startTime)
+      )
+    )
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_661);
+  }
+  @Transactional()
+  async assignSchedule(
+    id: string,
+    data: AssignAccessScheduleRequest | null,
+    caller: CallerContext,
+    session?: ClientSession
+  ): Promise<AccessScheduleDetailResponse> {
+    const facilityId = await this.resolveCallerAssignedFacilityId(caller);
+    if (
+      !session ||
+      !facilityId ||
+      (data
+        ? caller.role !== RoleEnum.FACILITY_MANAGER
+        : caller.role !== RoleEnum.FACILITY_STAFF)
+    )
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    const staffId = data?.staffId ?? caller.userId;
+    await this.accessScheduleRepository.lockStaff(staffId, session);
+    const schedule = await this.accessScheduleRepository.findById(id, session);
+    if (!schedule) throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_651);
+    if (String(schedule.facilityId?._id || schedule.facilityId) !== facilityId)
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    const staff = await this.userRepository.findById(staffId);
+    if (
+      !staff ||
+      staff.deleted ||
+      staff.status !== UserStatusEnum.ACTIVE ||
+      staff.role !== RoleEnum.FACILITY_STAFF ||
+      String(staff.assignedFacilityId) !== facilityId
+    )
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    await this.assertWorkload(staffId, schedule, session);
+    const updated = await this.accessScheduleRepository.atomicAssign(
+      id,
+      data?.assignmentVersion ?? schedule.assignmentVersion ?? 0,
+      new Types.ObjectId(staffId),
+      staff.name,
+      new Types.ObjectId(caller.userId),
+      session
+    );
+    if (!updated) throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_660);
+    this.auditLogService?.record({
+      action: AuditActionEnum.ASSIGN_ACCESS_SCHEDULE,
+      resourceType: AuditResourceEnum.ACCESS_SCHEDULE,
+      resourceId: id,
+      before: schedule,
+      after: updated,
+    });
+    this.notifyAssignment(updated);
+    return this.formatDetail(updated);
+  }
+  @Transactional()
+  async unassignSchedule(
+    id: string,
+    data: UnassignAccessScheduleRequest,
+    caller: CallerContext,
+    session?: ClientSession
+  ): Promise<AccessScheduleDetailResponse> {
+    const facilityId = await this.resolveCallerAssignedFacilityId(caller);
+    if (!session || !facilityId || caller.role !== RoleEnum.FACILITY_MANAGER)
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    const schedule = await this.accessScheduleRepository.findById(id, session);
+    if (!schedule) throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_651);
+    if (String(schedule.facilityId?._id || schedule.facilityId) !== facilityId)
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    const updated = await this.accessScheduleRepository.atomicAssign(
+      id,
+      data.assignmentVersion,
+      null,
+      null,
+      new Types.ObjectId(caller.userId),
+      session
+    );
+    if (!updated) throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_660);
+    this.auditLogService?.record({
+      action: AuditActionEnum.UNASSIGN_ACCESS_SCHEDULE,
+      resourceType: AuditResourceEnum.ACCESS_SCHEDULE,
+      resourceId: id,
+      before: schedule,
+      after: updated,
+      metadata: { reason: data.reason },
+    });
+    this.notifyAssignment(updated, true);
+    return this.formatDetail(updated);
+  }
+
   private hashOtp(otp: string): string {
+    if (process.env.NODE_ENV === 'production' && !process.env.OTP_SECRET)
+      throw new Error('OTP_SECRET is required');
     const secret = process.env.OTP_SECRET || 'self-storage-secret-key-2026';
     return crypto.createHmac('sha256', secret).update(otp.trim()).digest('hex');
   }
@@ -136,13 +278,17 @@ export class AccessScheduleService {
     const inByObj = raw.checkedInBy as Record<string, unknown> | undefined;
     const outByObj = raw.checkedOutBy as Record<string, unknown> | undefined;
 
-    const qrPayload = raw.qrToken
-      ? `ACCESS:${raw.scheduleCode}:${raw.qrToken}`
-      : null;
-
     return validateResponse(accessScheduleDetailResponseSchema, {
       id: String(raw._id || raw.id),
       scheduleCode: String(raw.scheduleCode),
+      assignedStaffId: raw.assignedStaffId ? String(raw.assignedStaffId) : null,
+      assignedStaffName: raw.assignedStaffNameSnapshot
+        ? String(raw.assignedStaffNameSnapshot)
+        : null,
+      assignedAt: raw.assignedAt
+        ? (raw.assignedAt as Date).toISOString()
+        : null,
+      assignmentVersion: Number(raw.assignmentVersion ?? 0),
       status: raw.status as AccessScheduleStatusEnum,
       customerId: String(customerObj?._id || raw.customerId),
       customerName: customerObj?.name ? String(customerObj.name) : null,
@@ -168,7 +314,6 @@ export class AccessScheduleService {
       vehicleType: raw.vehicleType ? String(raw.vehicleType) : null,
       vehiclePlate: raw.vehiclePlate ? String(raw.vehiclePlate) : null,
       purpose: raw.purpose ? String(raw.purpose) : null,
-      qrPayload,
       rawOtpCode: rawOtpCode ?? null,
       expiresAt: (raw.expiresAt as Date).toISOString(),
       checkedInAt: raw.checkedInAt
@@ -209,6 +354,14 @@ export class AccessScheduleService {
     return {
       id: String(raw._id || raw.id),
       scheduleCode: String(raw.scheduleCode),
+      assignedStaffId: raw.assignedStaffId ? String(raw.assignedStaffId) : null,
+      assignedStaffName: raw.assignedStaffNameSnapshot
+        ? String(raw.assignedStaffNameSnapshot)
+        : null,
+      assignedAt: raw.assignedAt
+        ? (raw.assignedAt as Date).toISOString()
+        : null,
+      assignmentVersion: Number(raw.assignmentVersion ?? 0),
       status: raw.status as AccessScheduleStatusEnum,
       customerId: String(customerObj?._id || raw.customerId),
       customerName: customerObj?.name ? String(customerObj.name) : null,
@@ -236,12 +389,21 @@ export class AccessScheduleService {
   }
 
   /**
-   * 1. Khách hàng đăng ký lịch vào kho (Cấp mã Access QR & OTP)
+   * Customer schedules a visit and receives a six-digit OTP.
    */
   async createAccessSchedule(
     data: CreateAccessScheduleRequest,
     caller: CallerContext
   ): Promise<AccessScheduleDetailResponse> {
+    if (
+      ![
+        RoleEnum.CUSTOMER,
+        RoleEnum.BUSINESS_OPS_MANAGER,
+        RoleEnum.SYSTEM_ADMIN,
+      ].includes(caller.role)
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
     const contract = await this.contractRepository.findById(data.contractId);
     if (!contract || contract.deleted) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Contract']);
@@ -321,11 +483,10 @@ export class AccessScheduleService {
 
     const scheduleCode =
       await this.accessScheduleRepository.generateScheduleCode();
-    const qrToken = crypto.randomUUID();
-    const rawOtpCode = String(crypto.randomInt(100000, 999999));
+    let rawOtpCode = String(crypto.randomInt(100000, 1000000));
     const otpHash = this.hashOtp(rawOtpCode);
 
-    const created = await this.accessScheduleRepository.create({
+    const payload = {
       scheduleCode,
       status: AccessScheduleStatusEnum.PENDING,
       customerId: new Types.ObjectId(customerId),
@@ -342,10 +503,31 @@ export class AccessScheduleService {
       vehicleType: data.vehicleType ?? null,
       vehiclePlate: data.vehiclePlate ?? null,
       purpose: data.purpose ?? null,
-      qrToken,
+      otpEncrypted: encryptText(rawOtpCode),
       otpHash,
       expiresAt,
-    });
+    };
+    let created: IAccessSchedule | null = null;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      try {
+        created = await this.accessScheduleRepository.create(payload);
+        break;
+      } catch (error: unknown) {
+        if (
+          !(error instanceof Error) ||
+          !('code' in error) ||
+          error.code !== 11000 ||
+          attempt === 9
+        )
+          throw error;
+        rawOtpCode = String(crypto.randomInt(100000, 1000000));
+        payload.otpHash = this.hashOtp(rawOtpCode);
+        payload.otpEncrypted = encryptText(rawOtpCode);
+        payload.scheduleCode =
+          await this.accessScheduleRepository.generateScheduleCode();
+      }
+    }
+    if (!created) throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_660);
 
     this.auditLogService?.record({
       action: AuditActionEnum.CREATE_ACCESS_SCHEDULE,
@@ -358,7 +540,12 @@ export class AccessScheduleService {
       String(created._id)
     );
 
-    return this.formatDetail(populated!, rawOtpCode);
+    return this.formatDetail(
+      populated!,
+      caller.role === RoleEnum.CUSTOMER && caller.userId === customerId
+        ? rawOtpCode
+        : null
+    );
   }
 
   /**
@@ -421,12 +608,41 @@ export class AccessScheduleService {
   }
 
   /**
-   * 3. Nhân viên trực cổng quét Check-in xác thực mở cổng (Hỗ trợ HOẶC quét QR HOẶC nhập OTP 6 số)
+   * Responsible staff verifies the OTP and supervises the visit.
    */
   async checkIn(
     data: CheckInAccessScheduleRequest,
     caller: CallerContext
   ): Promise<AccessScheduleCheckInResponse> {
+    if (caller.role !== RoleEnum.FACILITY_STAFF)
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    const facilityId = await this.resolveCallerAssignedFacilityId(caller);
+    if (!facilityId) throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    if (!/^\d{6}$/.test(data.code.trim()))
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_659);
+    const candidate =
+      await this.accessScheduleRepository.findByFacilityAndOtpHash(
+        facilityId,
+        this.hashOtp(data.code)
+      );
+    if (!candidate) throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_659);
+    // Preserve the caller's original assignment version across transaction retries.
+    const result = await this.checkInTransaction(
+      data,
+      caller,
+      candidate.assignmentVersion ?? 0
+    );
+    if (result instanceof AppError) throw result;
+    return result;
+  }
+
+  @Transactional()
+  private async checkInTransaction(
+    data: CheckInAccessScheduleRequest,
+    caller: CallerContext,
+    expectedAssignmentVersion: number,
+    session?: ClientSession
+  ): Promise<AccessScheduleCheckInResponse | AppError> {
     if (caller.role === RoleEnum.CUSTOMER) {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
@@ -441,39 +657,30 @@ export class AccessScheduleService {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
+    if (caller.role !== RoleEnum.FACILITY_STAFF || !session)
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     const trimmed = data.code.trim();
-    let schedule: IAccessSchedule | null;
-
-    if (trimmed.startsWith('ACCESS:')) {
-      const parts = trimmed.split(':');
-      const token = parts[2] || parts[1];
-      schedule = await this.accessScheduleRepository.findByQrToken(token);
-    } else if (trimmed.length > 10) {
-      schedule = await this.accessScheduleRepository.findByQrToken(trimmed);
-    } else if (/^\d{6}$/.test(trimmed)) {
-      const hash = this.hashOtp(trimmed);
-      schedule = await this.accessScheduleRepository.findByFacilityAndOtpHash(
-        staffFacilityId || '',
-        hash
-      );
-    } else {
+    if (!/^\d{6}$/.test(trimmed))
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_659);
-    }
+    await this.accessScheduleRepository.lockStaff(caller.userId, session);
+    const schedule =
+      await this.accessScheduleRepository.findByFacilityAndOtpHash(
+        staffFacilityId!,
+        this.hashOtp(trimmed),
+        session
+      );
 
     if (!schedule || schedule.deleted) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_659);
     }
+    if ((schedule.assignmentVersion ?? 0) !== expectedAssignmentVersion)
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_660);
 
     // Kiểm tra phạm vi cơ sở
     const scheduleFacilityId = String(
       schedule.facilityId?._id || schedule.facilityId
     );
-    if (
-      staffFacilityId &&
-      scheduleFacilityId !== staffFacilityId &&
-      caller.role !== RoleEnum.SYSTEM_ADMIN &&
-      caller.role !== RoleEnum.BUSINESS_OPS_MANAGER
-    ) {
+    if (staffFacilityId && scheduleFacilityId !== staffFacilityId) {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
     }
 
@@ -489,24 +696,68 @@ export class AccessScheduleService {
 
     const now = new Date();
 
-    if (now.getTime() < earlyAllowed.getTime()) {
+    const validateTime = await isCheckInTimeValidationEnabled();
+    const scheduledDay = getVNDateString(schedule.scheduledDate);
+    const today = getVNDateString(now);
+    if (!validateTime && today !== scheduledDay) {
+      throw new AppError(
+        400,
+        today < scheduledDay
+          ? MESSAGE_CODE.MESSAGE_CODE_654
+          : MESSAGE_CODE.MESSAGE_CODE_655
+      );
+    }
+    if (validateTime && now.getTime() < earlyAllowed.getTime()) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_654);
     }
 
-    if (now.getTime() > expiresAt.getTime()) {
-      await this.accessScheduleRepository.atomicMarkNoShow(
-        String(schedule._id)
+    if (validateTime && now.getTime() > expiresAt.getTime()) {
+      const expired = await this.accessScheduleRepository.atomicMarkNoShow(
+        String(schedule._id),
+        session
       );
-      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_655);
+      if (expired)
+        this.auditLogService?.record({
+          actor: { id: 'SYSTEM', role: 'SYSTEM', email: null },
+          action: AuditActionEnum.NO_SHOW_ACCESS_SCHEDULE,
+          resourceType: AuditResourceEnum.ACCESS_SCHEDULE,
+          resourceId: String(schedule._id),
+          before: schedule,
+          after: expired,
+        });
+      // Commit expiration and audit before the HTTP boundary reports the error.
+      return new AppError(400, MESSAGE_CODE.MESSAGE_CODE_655);
     }
 
+    if (
+      schedule.assignedStaffId &&
+      String(schedule.assignedStaffId) !== caller.userId
+    )
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_662);
+    await this.assertWorkload(caller.userId, schedule, session, true);
+    const staff = await this.userRepository.findById(caller.userId);
+    if (
+      !staff ||
+      staff.deleted ||
+      staff.status !== UserStatusEnum.ACTIVE ||
+      staff.role !== RoleEnum.FACILITY_STAFF ||
+      String(staff.assignedFacilityId) !== staffFacilityId
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+    }
     const updated = await this.accessScheduleRepository.atomicCheckIn(
       String(schedule._id),
       {
         checkedInAt: now,
         checkedInBy: new Types.ObjectId(caller.userId),
+        assignmentVersion: schedule.assignmentVersion ?? 0,
+        assignedStaffNameSnapshot:
+          schedule.assignedStaffNameSnapshot ?? staff.name,
+        assignedAt: schedule.assignedAt ?? now,
+        assignedBy: schedule.assignedBy ?? new Types.ObjectId(caller.userId),
         staffNotes: data.staffNotes ?? null,
-      }
+      },
+      session
     );
 
     if (!updated) {
@@ -545,9 +796,11 @@ export class AccessScheduleService {
     });
 
     const populated = await this.accessScheduleRepository.findById(
-      String(updated._id)
+      String(updated._id),
+      session
     );
 
+    if (!schedule.assignedStaffId) this.notifyAssignment(updated);
     return validateResponse(accessScheduleCheckInResponseSchema, {
       schedule: this.formatDetail(populated!, null, rentedRacks),
       rentedRacks,
@@ -590,6 +843,13 @@ export class AccessScheduleService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_653);
     }
 
+    if (
+      caller.role !== RoleEnum.FACILITY_STAFF ||
+      !staffFacilityId ||
+      String(schedule.assignedStaffId) !== caller.userId ||
+      String(schedule.checkedInBy) !== caller.userId
+    )
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_662);
     const updated = await this.accessScheduleRepository.atomicCheckOut(id, {
       checkedOutAt: new Date(),
       checkedOutBy: new Types.ObjectId(caller.userId),
@@ -669,6 +929,7 @@ export class AccessScheduleService {
    * 6. Job nền BullMQ quét tự động chuyển NO_SHOW các lịch quá hạn 45 phút chưa check-in
    */
   async processNoShowScan(): Promise<number> {
+    if (!(await isCheckInTimeValidationEnabled())) return 0;
     const expiredList = await this.accessScheduleRepository.findExpiredPending(
       new Date(),
       100
@@ -682,6 +943,7 @@ export class AccessScheduleService {
       if (updated) {
         count++;
         this.auditLogService?.record({
+          actor: { id: 'SYSTEM', role: 'SYSTEM', email: null },
           action: AuditActionEnum.NO_SHOW_ACCESS_SCHEDULE,
           resourceType: AuditResourceEnum.ACCESS_SCHEDULE,
           resourceId: String(item._id),
@@ -720,6 +982,9 @@ export class AccessScheduleService {
       if (query.customerId) filter.customerId = query.customerId;
     }
 
+    if (query.assignmentScope === 'mine')
+      filter.assignedStaffId = caller.userId;
+    if (query.assignmentScope === 'unassigned') filter.assignedStaffId = null;
     if (query.contractId) filter.contractId = query.contractId;
     if (query.status) filter.status = query.status;
 
@@ -777,7 +1042,7 @@ export class AccessScheduleService {
     ) {
       const staffFacilityId =
         await this.resolveCallerAssignedFacilityId(caller);
-      if (staffFacilityId && scheduleFacilityId !== staffFacilityId) {
+      if (!staffFacilityId || scheduleFacilityId !== staffFacilityId) {
         throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       }
     }
@@ -804,6 +1069,13 @@ export class AccessScheduleService {
       }
     }
 
-    return this.formatDetail(schedule, null, rentedRacks);
+    const otp =
+      caller.role === RoleEnum.CUSTOMER &&
+      schedule.status === AccessScheduleStatusEnum.PENDING &&
+      new Date() <= schedule.expiresAt &&
+      schedule.otpEncrypted
+        ? decryptText(schedule.otpEncrypted)
+        : null;
+    return this.formatDetail(schedule, otp, rentedRacks);
   }
 }

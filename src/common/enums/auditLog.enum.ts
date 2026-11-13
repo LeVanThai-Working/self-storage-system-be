@@ -88,6 +88,8 @@ export enum AuditActionEnum {
   CANCEL_INVOICE = 'cancel_invoice',
   VOID_INVOICE = 'void_invoice',
   SEND_INVOICE = 'send_invoice',
+  ASSIGN_ACCESS_SCHEDULE = 'assign_access_schedule',
+  UNASSIGN_ACCESS_SCHEDULE = 'unassign_access_schedule',
   CREATE_ACCESS_SCHEDULE = 'create_access_schedule',
   CHECK_IN_ACCESS_SCHEDULE = 'check_in_access_schedule',
   CHECK_OUT_ACCESS_SCHEDULE = 'check_out_access_schedule',

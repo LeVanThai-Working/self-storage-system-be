@@ -16,6 +16,8 @@ import { UploadController } from './../modules/upload/upload.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { UnitTypeController } from './../modules/unitType/unitType.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { SystemSettingsController } from './../modules/systemSettings/systemSettings.controller.js';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { SupportTicketController } from './../modules/support/supportTicket.controller.js';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { StorageUnitController } from './../modules/storageUnit/storageUnit.controller.js';
@@ -386,7 +388,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditActionEnum": {
         "dataType": "refEnum",
-        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","expire_inventory_request","assign_inventory_request","batch_migrate_rack","evacuate_rack_to_holding","update_inventory_status","report_incident","assign_incident","investigate_incident","resolve_incident","upload_restoration_manifest","customer_acknowledge_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum","generate_invoice","pay_invoice","cancel_invoice","void_invoice","send_invoice","create_access_schedule","check_in_access_schedule","check_out_access_schedule","cancel_access_schedule","no_show_access_schedule"],
+        "enums": ["register","login","login_google","logout","send_otp","forgot_password","reset_password","change_password","create","update","delete","restore","assign_manager","toggle_maintenance","approve","reject","cancel","force_cancel","void","check_in","check_out","renew","terminate","add_amenity","remove_amenity","sign_contract","create_addendum","approve_addendum","reject_addendum","sign_addendum","cancel_addendum","confirm_payment","receive_payment","inventory_in","inventory_out","inventory_move","inventory_adjust","reassign_unit","propose_reassign_unit","accept_reassign_unit","reject_reassign_unit","expire","mark_overdue","mark_arrived","extend_grace","refund","approve_refund","reject_refund","pay_refund","assign_transaction","confirm_settlement","dispute_settlement","create_inventory_request","verify_pickup_code","complete_outbound_handover","confirm_inbound_request","dispute_inbound_request","putaway_inbound_request","cancel_inventory_request","expire_inventory_request","assign_inventory_request","batch_migrate_rack","evacuate_rack_to_holding","update_inventory_status","report_incident","assign_incident","investigate_incident","resolve_incident","upload_restoration_manifest","customer_acknowledge_incident","close_incident","cancel_incident","create_support_ticket","process_support_ticket","complete_support_ticket","cancel_support_ticket","revoke_authorization","digitize_contract","digitize_addendum","generate_invoice","pay_invoice","cancel_invoice","void_invoice","send_invoice","assign_access_schedule","unassign_access_schedule","create_access_schedule","check_in_access_schedule","check_out_access_schedule","cancel_access_schedule","no_show_access_schedule"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AuditResourceEnum": {
@@ -570,6 +572,18 @@ const models: TsoaRoute.Models = {
     "UpdateUnitTypeRequest": {
         "dataType": "refAlias",
         "type": {"ref":"infer_typeofupdateUnitTypeSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse__enabled-boolean__": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"dataType":"nestedObjectLiteral","nestedProperties":{"enabled":{"dataType":"boolean","required":true}},"required":true},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "SupportTicketCategoryEnum": {
@@ -1800,7 +1814,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationTypeEnum": {
         "dataType": "refEnum",
-        "enums": ["system","system_alert","approval_request","storage_unit","reservation","contract","payment","invoice","incident","support_ticket","customer_inventory"],
+        "enums": ["access_schedule","system","system_alert","approval_request","storage_unit","reservation","contract","payment","invoice","incident","support_ticket","customer_inventory"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "NotificationPriorityEnum": {
@@ -3129,7 +3143,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofaccessScheduleDetailResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}}},"staffNotes":{"dataType":"string"},"cancelledReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"checkedOutByName":{"dataType":"string"},"checkedOutAt":{"dataType":"string"},"checkedInByName":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"rawOtpCode":{"dataType":"string"},"qrPayload":{"dataType":"string"},"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"facilityCode":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerPhone":{"dataType":"string"},"customerName":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"timeSlotSnapshot":{"dataType":"nestedObjectLiteral","nestedProperties":{"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true}},"required":true},"timeSlotId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}}},"staffNotes":{"dataType":"string"},"cancelledReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"checkedOutByName":{"dataType":"string"},"checkedOutAt":{"dataType":"string"},"checkedInByName":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"rawOtpCode":{"dataType":"string"},"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"facilityCode":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerPhone":{"dataType":"string"},"customerName":{"dataType":"string"},"assignedAt":{"dataType":"string"},"assignedStaffName":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"timeSlotSnapshot":{"dataType":"nestedObjectLiteral","nestedProperties":{"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true}},"required":true},"timeSlotId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"assignmentVersion":{"dataType":"double","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AccessScheduleDetailResponse": {
@@ -3183,7 +3197,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofaccessScheduleCheckInResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true},"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}},"required":true},"schedule":{"dataType":"nestedObjectLiteral","nestedProperties":{"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}}},"staffNotes":{"dataType":"string"},"cancelledReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"checkedOutByName":{"dataType":"string"},"checkedOutAt":{"dataType":"string"},"checkedInByName":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"rawOtpCode":{"dataType":"string"},"qrPayload":{"dataType":"string"},"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"facilityCode":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerPhone":{"dataType":"string"},"customerName":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"timeSlotSnapshot":{"dataType":"nestedObjectLiteral","nestedProperties":{"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true}},"required":true},"timeSlotId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"message":{"dataType":"string","required":true},"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}},"required":true},"schedule":{"dataType":"nestedObjectLiteral","nestedProperties":{"rentedRacks":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"zone":{"dataType":"string"},"bay":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"double"}]},"aisle":{"dataType":"string"},"rackCode":{"dataType":"string","required":true},"rackId":{"dataType":"string","required":true}}}},"staffNotes":{"dataType":"string"},"cancelledReason":{"dataType":"string"},"cancelledAt":{"dataType":"string"},"checkedOutByName":{"dataType":"string"},"checkedOutAt":{"dataType":"string"},"checkedInByName":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"rawOtpCode":{"dataType":"string"},"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"facilityCode":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerPhone":{"dataType":"string"},"customerName":{"dataType":"string"},"assignedAt":{"dataType":"string"},"assignedStaffName":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"timeSlotSnapshot":{"dataType":"nestedObjectLiteral","nestedProperties":{"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true}},"required":true},"timeSlotId":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"assignmentVersion":{"dataType":"double","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AccessScheduleCheckInResponse": {
@@ -3235,7 +3249,7 @@ const models: TsoaRoute.Models = {
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofaccessScheduleListItemResponseSchema_": {
         "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"checkedOutAt":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerName":{"dataType":"string"},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"checkedOutAt":{"dataType":"string"},"checkedInAt":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"facilityName":{"dataType":"string"},"contractCode":{"dataType":"string"},"customerName":{"dataType":"string"},"assignedAt":{"dataType":"string"},"assignedStaffName":{"dataType":"string"},"assignedStaffId":{"dataType":"string"},"createdAt":{"dataType":"string","required":true},"expiresAt":{"dataType":"string","required":true},"numberOfPeople":{"dataType":"double","required":true},"scheduledDate":{"dataType":"string","required":true},"endTime":{"dataType":"string","required":true},"startTime":{"dataType":"string","required":true},"slotName":{"dataType":"string","required":true},"facilityId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true},"customerId":{"dataType":"string","required":true},"status":{"ref":"AccessScheduleStatusEnum","required":true},"assignmentVersion":{"dataType":"double","required":true},"scheduleCode":{"dataType":"string","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AccessScheduleListItemResponse": {
@@ -3262,6 +3276,26 @@ const models: TsoaRoute.Models = {
             "data": {"ref":"PaginatedData_AccessScheduleListItemResponse_","required":true},
         },
         "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofassignAccessScheduleSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignmentVersion":{"dataType":"double","required":true},"staffId":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AssignAccessScheduleRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofassignAccessScheduleSchema_","validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "infer_typeofunassignAccessScheduleSchema_": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"assignmentVersion":{"dataType":"double","required":true},"reason":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UnassignAccessScheduleRequest": {
+        "dataType": "refAlias",
+        "type": {"ref":"infer_typeofunassignAccessScheduleSchema_","validators":{}},
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ContractSourceEnum": {
@@ -4789,6 +4823,77 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'restoreUnitType',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSystemSettingsController_getCheckInTimeValidation: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+        };
+        app.get('/system-settings/check-in-time-validation',
+            ...(fetchMiddlewares<RequestHandler>(SystemSettingsController)),
+            ...(fetchMiddlewares<RequestHandler>(SystemSettingsController.prototype.getCheckInTimeValidation)),
+
+            async function SystemSettingsController_getCheckInTimeValidation(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSystemSettingsController_getCheckInTimeValidation, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SystemSettingsController>(SystemSettingsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'getCheckInTimeValidation',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsSystemSettingsController_setCheckInTimeValidation: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"enabled":{"dataType":"boolean","required":true}}},
+        };
+        app.patch('/system-settings/check-in-time-validation',
+            ...(fetchMiddlewares<RequestHandler>(SystemSettingsController)),
+            ...(fetchMiddlewares<RequestHandler>(SystemSettingsController.prototype.setCheckInTimeValidation)),
+
+            async function SystemSettingsController_setCheckInTimeValidation(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsSystemSettingsController_setCheckInTimeValidation, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<SystemSettingsController>(SystemSettingsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'setCheckInTimeValidation',
                 controller,
                 response,
                 next,
@@ -10383,6 +10488,7 @@ export function RegisterRoutes(app: Router) {
                 status: {"in":"query","name":"status","dataType":"string"},
                 startDate: {"in":"query","name":"startDate","dataType":"string"},
                 endDate: {"in":"query","name":"endDate","dataType":"string"},
+                assignmentScope: {"in":"query","name":"assignmentScope","dataType":"union","subSchemas":[{"dataType":"enum","enums":["unassigned"]},{"dataType":"enum","enums":["mine"]},{"dataType":"enum","enums":["all"]}]},
         };
         app.get('/access-schedules',
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
@@ -10405,6 +10511,116 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getSchedules',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_claim: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+        };
+        app.post('/access-schedules/:id/claim',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.claim)),
+
+            async function AccessScheduleController_claim(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_claim, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'claim',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_assign: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"AssignAccessScheduleRequest"},
+        };
+        app.post('/access-schedules/:id/assign',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.assign)),
+
+            async function AccessScheduleController_assign(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_assign, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'assign',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAccessScheduleController_unassign: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                id: {"in":"path","name":"id","required":true,"dataType":"string"},
+                body: {"in":"body","name":"body","required":true,"ref":"UnassignAccessScheduleRequest"},
+        };
+        app.post('/access-schedules/:id/unassign',
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
+            ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.unassign)),
+
+            async function AccessScheduleController_unassign(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAccessScheduleController_unassign, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<AccessScheduleController>(AccessScheduleController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'unassign',
                 controller,
                 response,
                 next,
