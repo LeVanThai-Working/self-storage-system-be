@@ -241,7 +241,7 @@ async function seedStaffAndTasks() {
       customerId: customer2Id,
       facilityId: facilityQ7Id,
       contractId: contractQ7Id,
-      category: SupportTicketCategoryEnum.FACILITY_ACCESS,
+      category: SupportTicketCategoryEnum.PROCEDURAL_ASSISTANCE,
       priority: SupportTicketPriorityEnum.HIGH,
       title:
         'Đăng ký xe tải 3.5 tấn vào bốc dỡ hàng tại cổng bãi xe Q7 chiều nay',
