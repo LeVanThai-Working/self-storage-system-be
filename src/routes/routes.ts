@@ -1249,6 +1249,162 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AiInsightFocusAreaEnum": {
+        "dataType": "refEnum",
+        "enums": ["all","revenue_growth","occupancy","debt_collection","operational_efficiency"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagGroundingStatusEnum": {
+        "dataType": "refEnum",
+        "enums": ["grounded","insufficient_data","out_of_scope_rejected"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagQueryComplexityEnum": {
+        "dataType": "refEnum",
+        "enums": ["simple","complex"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AiAdvisorProviderEnum": {
+        "dataType": "refEnum",
+        "enums": ["gemini","grounded_deterministic_fallback"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagOpportunityMetrics": {
+        "dataType": "refObject",
+        "properties": {
+            "recoverableOverdueVnd": {"dataType":"double","required":true},
+            "maintenanceRevenueLossVnd": {"dataType":"double","required":true},
+            "idleCapacityOpportunityVnd": {"dataType":"double","required":true},
+            "totalOpportunityVnd": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AiInsightCategoryEnum": {
+        "dataType": "refEnum",
+        "enums": ["pricing_and_promotion","occupancy_and_capacity","upsell_and_product_mix","cashflow_and_debt","operations_and_sla"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AiInsightPriorityEnum": {
+        "dataType": "refEnum",
+        "enums": ["high","medium","low"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AiRecommendationItem": {
+        "dataType": "refObject",
+        "properties": {
+            "id": {"dataType":"string","required":true},
+            "category": {"ref":"AiInsightCategoryEnum","required":true},
+            "priority": {"ref":"AiInsightPriorityEnum","required":true},
+            "title": {"dataType":"string","required":true},
+            "dataEvidence": {"dataType":"string","required":true},
+            "actionSteps": {"dataType":"array","array":{"dataType":"string"},"required":true},
+            "expectedProfitImpact": {"dataType":"string","required":true},
+            "estimatedImpactVnd": {"dataType":"double","required":true},
+            "targetFacilityCodes": {"dataType":"array","array":{"dataType":"string"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagChunkTypeEnum": {
+        "dataType": "refEnum",
+        "enums": ["overview","rental_trends","facility_kpi","financial_analytics","product_and_operations","playbook_pricing","playbook_debt","playbook_operations","playbook_upsell"],
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagChunkCitation": {
+        "dataType": "refObject",
+        "properties": {
+            "chunkId": {"dataType":"string","required":true},
+            "category": {"ref":"RagChunkTypeEnum","required":true},
+            "title": {"dataType":"string","required":true},
+            "excerpt": {"dataType":"string","required":true},
+            "relevanceScore": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagAdvisorResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "period": {"dataType":"nestedObjectLiteral","nestedProperties":{"focusArea":{"ref":"AiInsightFocusAreaEnum","required":true},"scopedFacilityId":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"toDate":{"dataType":"string","required":true},"fromDate":{"dataType":"string","required":true}},"required":true},
+            "queryInfo": {"dataType":"nestedObjectLiteral","nestedProperties":{"generatedAt":{"dataType":"string","required":true},"cached":{"dataType":"boolean","required":true},"router":{"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string","required":true},"provider":{"ref":"AiAdvisorProviderEnum","required":true},"selectedModel":{"dataType":"string","required":true},"complexity":{"ref":"RagQueryComplexityEnum","required":true}},"required":true},"groundingStatus":{"ref":"RagGroundingStatusEnum","required":true},"normalizedQuestion":{"dataType":"string","required":true},"question":{"dataType":"string","required":true}},"required":true},
+            "answer": {"dataType":"string","required":true},
+            "opportunityMetrics": {"ref":"RagOpportunityMetrics","required":true},
+            "recommendations": {"dataType":"array","array":{"dataType":"refObject","ref":"AiRecommendationItem"},"required":true},
+            "citations": {"dataType":"array","array":{"dataType":"refObject","ref":"RagChunkCitation"},"required":true},
+            "retrievedChunkIds": {"dataType":"array","array":{"dataType":"string"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_RagAdvisorResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"RagAdvisorResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagAdvisorRequestDto": {
+        "dataType": "refObject",
+        "properties": {
+            "fromDate": {"dataType":"string"},
+            "toDate": {"dataType":"string"},
+            "facilityId": {"dataType":"string"},
+            "question": {"dataType":"string","required":true},
+            "focusArea": {"ref":"AiInsightFocusAreaEnum"},
+            "topK": {"dataType":"double"},
+            "refresh": {"dataType":"boolean"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagEvalCaseResult": {
+        "dataType": "refObject",
+        "properties": {
+            "caseId": {"dataType":"string","required":true},
+            "category": {"dataType":"string","required":true},
+            "question": {"dataType":"string","required":true},
+            "expectedComplexity": {"ref":"RagQueryComplexityEnum","required":true},
+            "actualComplexity": {"ref":"RagQueryComplexityEnum","required":true},
+            "expectedGroundingStatus": {"ref":"RagGroundingStatusEnum","required":true},
+            "actualGroundingStatus": {"ref":"RagGroundingStatusEnum","required":true},
+            "expectedChunkIds": {"dataType":"array","array":{"dataType":"string"},"required":true},
+            "retrievedChunkIds": {"dataType":"array","array":{"dataType":"string"},"required":true},
+            "retrievalHit": {"dataType":"boolean","required":true},
+            "citationFaithful": {"dataType":"boolean","required":true},
+            "routerMatched": {"dataType":"boolean","required":true},
+            "guardrailPassed": {"dataType":"boolean","required":true},
+            "passed": {"dataType":"boolean","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "RagEvalResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "summary": {"dataType":"nestedObjectLiteral","nestedProperties":{"evaluatedAt":{"dataType":"string","required":true},"overallPassRatePercent":{"dataType":"double","required":true},"guardrailDefenseRatePercent":{"dataType":"double","required":true},"routerAccuracyPercent":{"dataType":"double","required":true},"citationFaithfulnessPercent":{"dataType":"double","required":true},"retrievalHitRatePercent":{"dataType":"double","required":true},"passedCases":{"dataType":"double","required":true},"totalCases":{"dataType":"double","required":true}},"required":true},
+            "cases": {"dataType":"array","array":{"dataType":"refObject","ref":"RagEvalCaseResult"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ApiResponse_RagEvalResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "success": {"dataType":"boolean","required":true},
+            "statusCode": {"dataType":"double","required":true},
+            "messageCode": {"dataType":"string","required":true},
+            "message": {"dataType":"string","required":true},
+            "data": {"ref":"RagEvalResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofsigningAuthorizationResponseSchema_": {
         "dataType": "refAlias",
         "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"notes":{"dataType":"string"},"fileHash":{"dataType":"string"},"updatedAt":{"dataType":"string","required":true},"createdAt":{"dataType":"string","required":true},"status":{"dataType":"union","subSchemas":[{"dataType":"enum","enums":["active"]},{"dataType":"enum","enums":["revoked"]},{"dataType":"enum","enums":["expired"]}],"required":true},"documentUrl":{"dataType":"string","required":true},"validTo":{"dataType":"string","required":true},"validFrom":{"dataType":"string","required":true},"issuedDate":{"dataType":"string","required":true},"authorizationNumber":{"dataType":"string","required":true},"facilityIds":{"dataType":"array","array":{"dataType":"any"},"required":true},"authorizedUserId":{"dataType":"any","required":true},"legalEntityId":{"dataType":"any","required":true},"id":{"dataType":"string","required":true}},"validators":{}},
@@ -3163,14 +3319,18 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcreateAccessScheduleSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"purpose":{"dataType":"string"},"vehiclePlate":{"dataType":"string"},"vehicleType":{"dataType":"string"},"numberOfPeople":{"dataType":"double"},"scheduledDate":{"dataType":"string","required":true},"timeSlotId":{"dataType":"string","required":true},"contractId":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CreateAccessScheduleRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcreateAccessScheduleSchema_","validators":{}},
+        "dataType": "refObject",
+        "properties": {
+            "contractId": {"dataType":"string","required":true},
+            "timeSlotId": {"dataType":"string","required":true},
+            "scheduledDate": {"dataType":"string","required":true},
+            "numberOfPeople": {"dataType":"double"},
+            "vehicleType": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+            "vehiclePlate": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+            "purpose": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofavailableAccessSlotResponseSchema_": {
@@ -3217,34 +3377,29 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcheckInAccessScheduleSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"staffNotes":{"dataType":"string"},"code":{"dataType":"string","required":true}},"validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CheckInAccessScheduleRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcheckInAccessScheduleSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcheckOutAccessScheduleSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"staffNotes":{"dataType":"string"}},"validators":{}},
+        "dataType": "refObject",
+        "properties": {
+            "code": {"dataType":"string","required":true},
+            "staffNotes": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CheckOutAccessScheduleRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcheckOutAccessScheduleSchema_","validators":{}},
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "infer_typeofcancelAccessScheduleSchema_": {
-        "dataType": "refAlias",
-        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"reason":{"dataType":"string"}},"validators":{}},
+        "dataType": "refObject",
+        "properties": {
+            "staffNotes": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "CancelAccessScheduleRequest": {
-        "dataType": "refAlias",
-        "type": {"ref":"infer_typeofcancelAccessScheduleSchema_","validators":{}},
+        "dataType": "refObject",
+        "properties": {
+            "reason": {"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},
+        },
+        "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "infer_typeofaccessScheduleListItemResponseSchema_": {
@@ -5972,6 +6127,78 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'getProductAndOperations',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStatisticsController_askRagAdvisor: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"RagAdvisorRequestDto"},
+        };
+        app.post('/statistics/ai-rag-advisor',
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController)),
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController.prototype.askRagAdvisor)),
+
+            async function StatisticsController_askRagAdvisor(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStatisticsController_askRagAdvisor, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StatisticsController>(StatisticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'askRagAdvisor',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: undefined,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsStatisticsController_evaluateRagAdvisor: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                query: {"in":"queries","name":"query","required":true,"ref":"StatisticsBaseQueryDto"},
+        };
+        app.get('/statistics/ai-rag-eval',
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController)),
+            ...(fetchMiddlewares<RequestHandler>(StatisticsController.prototype.evaluateRagAdvisor)),
+
+            async function StatisticsController_evaluateRagAdvisor(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsStatisticsController_evaluateRagAdvisor, request, response });
+
+                const container: IocContainer = typeof iocContainer === 'function' ? (iocContainer as IocContainerFactory)(request) : iocContainer;
+
+                const controller: any = await container.get<StatisticsController>(StatisticsController);
+                if (typeof controller['setStatus'] === 'function') {
+                controller.setStatus(undefined);
+                }
+
+              await templateService.apiHandler({
+                methodName: 'evaluateRagAdvisor',
                 controller,
                 response,
                 next,

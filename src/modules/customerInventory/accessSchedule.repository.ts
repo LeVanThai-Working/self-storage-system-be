@@ -110,13 +110,15 @@ export class AccessScheduleRepository {
     return this.accessScheduleModel
       .findById(id)
       .session(session ?? null)
-      .populate('customerId', 'name email phone avatar')
+      .populate('customerId', 'name email phoneNumber avatar')
       .populate(
         'contractId',
         'contractCode status startDate endDate rentedRackIds'
       )
       .populate('facilityId', 'name code city address')
-      .populate('timeSlotId', 'slotName startTime endTime maxCapacity');
+      .populate('timeSlotId', 'slotName startTime endTime maxCapacity')
+      .populate('checkedInBy', 'name email')
+      .populate('checkedOutBy', 'name email');
   }
 
   async findByScheduleCode(
@@ -126,7 +128,7 @@ export class AccessScheduleRepository {
     return this.accessScheduleModel
       .findOne({ scheduleCode: code.toUpperCase() })
       .session(session ?? null)
-      .populate('customerId', 'name email phone')
+      .populate('customerId', 'name email phoneNumber')
       .populate(
         'contractId',
         'contractCode status startDate endDate rentedRackIds'
@@ -146,7 +148,7 @@ export class AccessScheduleRepository {
         status: AccessScheduleStatusEnum.PENDING,
       })
       .session(session ?? null)
-      .populate('customerId', 'name email phone')
+      .populate('customerId', 'name email phoneNumber')
       .populate(
         'contractId',
         'contractCode status startDate endDate rentedRackIds'
@@ -247,7 +249,7 @@ export class AccessScheduleRepository {
         },
         { returnDocument: 'after', session: session ?? null }
       )
-      .populate('customerId', 'name email phone')
+      .populate('customerId', 'name email phoneNumber')
       .populate(
         'contractId',
         'contractCode status startDate endDate rentedRackIds'
@@ -289,7 +291,7 @@ export class AccessScheduleRepository {
         },
         { returnDocument: 'after', session: session ?? null }
       )
-      .populate('customerId', 'name email phone')
+      .populate('customerId', 'name email phoneNumber')
       .populate(
         'contractId',
         'contractCode status startDate endDate rentedRackIds'
@@ -325,7 +327,7 @@ export class AccessScheduleRepository {
         },
         { returnDocument: 'after', session: session ?? null }
       )
-      .populate('customerId', 'name email phone')
+      .populate('customerId', 'name email phoneNumber')
       .populate(
         'contractId',
         'contractCode status startDate endDate rentedRackIds'
@@ -391,7 +393,7 @@ export class AccessScheduleRepository {
       sortOrder: pagination.sortOrder || 'desc',
       filter,
       populate: [
-        { path: 'customerId', select: 'name email phone' },
+        { path: 'customerId', select: 'name email phoneNumber' },
         {
           path: 'contractId',
           select: 'contractCode status startDate endDate rentedRackIds',

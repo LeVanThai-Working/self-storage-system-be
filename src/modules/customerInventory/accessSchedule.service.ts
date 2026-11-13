@@ -292,7 +292,9 @@ export class AccessScheduleService {
       status: raw.status as AccessScheduleStatusEnum,
       customerId: String(customerObj?._id || raw.customerId),
       customerName: customerObj?.name ? String(customerObj.name) : null,
-      customerPhone: customerObj?.phone ? String(customerObj.phone) : null,
+      customerPhone: customerObj?.phoneNumber
+        ? String(customerObj.phoneNumber)
+        : null,
       contractId: String(contractObj?._id || raw.contractId),
       contractCode: contractObj?.contractCode
         ? String(contractObj.contractCode)
@@ -847,7 +849,8 @@ export class AccessScheduleService {
       caller.role !== RoleEnum.FACILITY_STAFF ||
       !staffFacilityId ||
       String(schedule.assignedStaffId) !== caller.userId ||
-      String(schedule.checkedInBy) !== caller.userId
+      String(schedule.checkedInBy?._id || schedule.checkedInBy) !==
+        caller.userId
     )
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_662);
     const updated = await this.accessScheduleRepository.atomicCheckOut(id, {

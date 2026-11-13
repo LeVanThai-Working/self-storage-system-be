@@ -70,9 +70,9 @@ sequenceDiagram
   - Khái niệm `maxCapacity` trong mỗi `FacilityTimeSlot` là **số lượng đoàn khách / lượt xe tải tối đa** được phép đặt cùng 1 ca (Ví dụ: `maxCapacity = 3` tức tối đa 3 khách hàng khác nhau được vào cùng 1 lúc để tránh kẹt lối đi Aisle trong kho).
   - Slot hết chỗ (`availableCapacity <= 0`) sẽ tự động hiển thị trạng thái **FULL (Đầy)** và bị vô hiệu hóa trên App.
 - **Thời hạn hiệu lực của Mã QR (`Grace Period & Expiration`):**
-  - **Quét sớm:** Cho phép quét Check-in trước giờ bắt đầu ca tối đa **15 phút** (`startTime - 15m`).
-  - **Ân hạn trễ:** Khách đến muộn trong vòng **30 phút đầu của ca** (`startTime + 30m`) vẫn được phép quét mã vào kho.
-  - **Quá hạn / Hủy hẹn tự động (`NO_SHOW`):** Sau `startTime + 30m` mà khách vẫn chưa quét Check-in, hệ thống tự động hủy mã QR, chuyển trạng thái lịch hẹn sang **`NO_SHOW`** và giải phóng slot trống cho khách khác.
+  - **Quét sớm:** Cho phép quét Check-in trước giờ bắt đầu ca tối đa **30 phút** (`startTime - 30m`).
+  - **Ân hạn trễ:** Khách đến muộn trong vòng **45 phút đầu của ca** (`startTime + 45m`) vẫn được phép quét mã vào kho.
+  - **Quá hạn / Hủy hẹn tự động (`NO_SHOW`):** Sau `startTime + 45m` mà khách vẫn chưa quét Check-in, hệ thống tự động hủy mã QR, chuyển trạng thái lịch hẹn sang **`NO_SHOW`** và giải phóng slot trống cho khách khác.
 - **Quy định Hủy lịch hẹn (`Cancellation Policy`):**
   - Khách hàng được quyền tự hủy lịch hẹn trên App trước giờ bắt đầu ca tối thiểu **1 – 2 tiếng**.
   - Sau khi hủy, slot tự động tăng lại +1 capacity cho người khác đặt.

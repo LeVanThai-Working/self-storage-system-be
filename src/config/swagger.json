@@ -5498,6 +5498,513 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"AiInsightFocusAreaEnum": {
+				"enum": [
+					"all",
+					"revenue_growth",
+					"occupancy",
+					"debt_collection",
+					"operational_efficiency"
+				],
+				"type": "string"
+			},
+			"RagGroundingStatusEnum": {
+				"enum": [
+					"grounded",
+					"insufficient_data",
+					"out_of_scope_rejected"
+				],
+				"type": "string"
+			},
+			"RagQueryComplexityEnum": {
+				"enum": [
+					"simple",
+					"complex"
+				],
+				"type": "string"
+			},
+			"AiAdvisorProviderEnum": {
+				"enum": [
+					"gemini",
+					"grounded_deterministic_fallback"
+				],
+				"type": "string"
+			},
+			"RagOpportunityMetrics": {
+				"properties": {
+					"recoverableOverdueVnd": {
+						"type": "number",
+						"format": "double"
+					},
+					"maintenanceRevenueLossVnd": {
+						"type": "number",
+						"format": "double"
+					},
+					"idleCapacityOpportunityVnd": {
+						"type": "number",
+						"format": "double"
+					},
+					"totalOpportunityVnd": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"recoverableOverdueVnd",
+					"maintenanceRevenueLossVnd",
+					"idleCapacityOpportunityVnd",
+					"totalOpportunityVnd"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AiInsightCategoryEnum": {
+				"enum": [
+					"pricing_and_promotion",
+					"occupancy_and_capacity",
+					"upsell_and_product_mix",
+					"cashflow_and_debt",
+					"operations_and_sla"
+				],
+				"type": "string"
+			},
+			"AiInsightPriorityEnum": {
+				"enum": [
+					"high",
+					"medium",
+					"low"
+				],
+				"type": "string"
+			},
+			"AiRecommendationItem": {
+				"properties": {
+					"id": {
+						"type": "string"
+					},
+					"category": {
+						"$ref": "#/components/schemas/AiInsightCategoryEnum"
+					},
+					"priority": {
+						"$ref": "#/components/schemas/AiInsightPriorityEnum"
+					},
+					"title": {
+						"type": "string"
+					},
+					"dataEvidence": {
+						"type": "string"
+					},
+					"actionSteps": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"expectedProfitImpact": {
+						"type": "string"
+					},
+					"estimatedImpactVnd": {
+						"type": "number",
+						"format": "double"
+					},
+					"targetFacilityCodes": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"id",
+					"category",
+					"priority",
+					"title",
+					"dataEvidence",
+					"actionSteps",
+					"expectedProfitImpact",
+					"estimatedImpactVnd",
+					"targetFacilityCodes"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RagChunkTypeEnum": {
+				"enum": [
+					"overview",
+					"rental_trends",
+					"facility_kpi",
+					"financial_analytics",
+					"product_and_operations",
+					"playbook_pricing",
+					"playbook_debt",
+					"playbook_operations",
+					"playbook_upsell"
+				],
+				"type": "string"
+			},
+			"RagChunkCitation": {
+				"properties": {
+					"chunkId": {
+						"type": "string"
+					},
+					"category": {
+						"$ref": "#/components/schemas/RagChunkTypeEnum"
+					},
+					"title": {
+						"type": "string"
+					},
+					"excerpt": {
+						"type": "string"
+					},
+					"relevanceScore": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"chunkId",
+					"category",
+					"title",
+					"excerpt",
+					"relevanceScore"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RagAdvisorResponse": {
+				"properties": {
+					"period": {
+						"properties": {
+							"focusArea": {
+								"$ref": "#/components/schemas/AiInsightFocusAreaEnum"
+							},
+							"scopedFacilityId": {
+								"type": "string",
+								"nullable": true
+							},
+							"toDate": {
+								"type": "string"
+							},
+							"fromDate": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"focusArea",
+							"scopedFacilityId",
+							"toDate",
+							"fromDate"
+						],
+						"type": "object"
+					},
+					"queryInfo": {
+						"properties": {
+							"generatedAt": {
+								"type": "string"
+							},
+							"cached": {
+								"type": "boolean"
+							},
+							"router": {
+								"properties": {
+									"reason": {
+										"type": "string"
+									},
+									"provider": {
+										"$ref": "#/components/schemas/AiAdvisorProviderEnum"
+									},
+									"selectedModel": {
+										"type": "string"
+									},
+									"complexity": {
+										"$ref": "#/components/schemas/RagQueryComplexityEnum"
+									}
+								},
+								"required": [
+									"reason",
+									"provider",
+									"selectedModel",
+									"complexity"
+								],
+								"type": "object"
+							},
+							"groundingStatus": {
+								"$ref": "#/components/schemas/RagGroundingStatusEnum"
+							},
+							"normalizedQuestion": {
+								"type": "string"
+							},
+							"question": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"generatedAt",
+							"cached",
+							"router",
+							"groundingStatus",
+							"normalizedQuestion",
+							"question"
+						],
+						"type": "object"
+					},
+					"answer": {
+						"type": "string"
+					},
+					"opportunityMetrics": {
+						"$ref": "#/components/schemas/RagOpportunityMetrics"
+					},
+					"recommendations": {
+						"items": {
+							"$ref": "#/components/schemas/AiRecommendationItem"
+						},
+						"type": "array"
+					},
+					"citations": {
+						"items": {
+							"$ref": "#/components/schemas/RagChunkCitation"
+						},
+						"type": "array"
+					},
+					"retrievedChunkIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"period",
+					"queryInfo",
+					"answer",
+					"opportunityMetrics",
+					"recommendations",
+					"citations",
+					"retrievedChunkIds"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_RagAdvisorResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RagAdvisorResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RagAdvisorRequestDto": {
+				"properties": {
+					"fromDate": {
+						"type": "string"
+					},
+					"toDate": {
+						"type": "string"
+					},
+					"facilityId": {
+						"type": "string"
+					},
+					"question": {
+						"type": "string"
+					},
+					"focusArea": {
+						"$ref": "#/components/schemas/AiInsightFocusAreaEnum"
+					},
+					"topK": {
+						"type": "number",
+						"format": "double"
+					},
+					"refresh": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"question"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RagEvalCaseResult": {
+				"properties": {
+					"caseId": {
+						"type": "string"
+					},
+					"category": {
+						"type": "string"
+					},
+					"question": {
+						"type": "string"
+					},
+					"expectedComplexity": {
+						"$ref": "#/components/schemas/RagQueryComplexityEnum"
+					},
+					"actualComplexity": {
+						"$ref": "#/components/schemas/RagQueryComplexityEnum"
+					},
+					"expectedGroundingStatus": {
+						"$ref": "#/components/schemas/RagGroundingStatusEnum"
+					},
+					"actualGroundingStatus": {
+						"$ref": "#/components/schemas/RagGroundingStatusEnum"
+					},
+					"expectedChunkIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"retrievedChunkIds": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"retrievalHit": {
+						"type": "boolean"
+					},
+					"citationFaithful": {
+						"type": "boolean"
+					},
+					"routerMatched": {
+						"type": "boolean"
+					},
+					"guardrailPassed": {
+						"type": "boolean"
+					},
+					"passed": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"caseId",
+					"category",
+					"question",
+					"expectedComplexity",
+					"actualComplexity",
+					"expectedGroundingStatus",
+					"actualGroundingStatus",
+					"expectedChunkIds",
+					"retrievedChunkIds",
+					"retrievalHit",
+					"citationFaithful",
+					"routerMatched",
+					"guardrailPassed",
+					"passed"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"RagEvalResponse": {
+				"properties": {
+					"summary": {
+						"properties": {
+							"evaluatedAt": {
+								"type": "string"
+							},
+							"overallPassRatePercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"guardrailDefenseRatePercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"routerAccuracyPercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"citationFaithfulnessPercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"retrievalHitRatePercent": {
+								"type": "number",
+								"format": "double"
+							},
+							"passedCases": {
+								"type": "number",
+								"format": "double"
+							},
+							"totalCases": {
+								"type": "number",
+								"format": "double"
+							}
+						},
+						"required": [
+							"evaluatedAt",
+							"overallPassRatePercent",
+							"guardrailDefenseRatePercent",
+							"routerAccuracyPercent",
+							"citationFaithfulnessPercent",
+							"retrievalHitRatePercent",
+							"passedCases",
+							"totalCases"
+						],
+						"type": "object"
+					},
+					"cases": {
+						"items": {
+							"$ref": "#/components/schemas/RagEvalCaseResult"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"summary",
+					"cases"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ApiResponse_RagEvalResponse_": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"$ref": "#/components/schemas/RagEvalResponse"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"infer_typeofsigningAuthorizationResponseSchema_": {
 				"properties": {
 					"notes": {
@@ -16402,40 +16909,41 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofcreateAccessScheduleSchema_": {
+			"CreateAccessScheduleRequest": {
 				"properties": {
-					"purpose": {
+					"contractId": {
 						"type": "string"
 					},
-					"vehiclePlate": {
+					"timeSlotId": {
 						"type": "string"
 					},
-					"vehicleType": {
+					"scheduledDate": {
 						"type": "string"
 					},
 					"numberOfPeople": {
 						"type": "number",
 						"format": "double"
 					},
-					"scheduledDate": {
-						"type": "string"
+					"vehicleType": {
+						"type": "string",
+						"nullable": true
 					},
-					"timeSlotId": {
-						"type": "string"
+					"vehiclePlate": {
+						"type": "string",
+						"nullable": true
 					},
-					"contractId": {
-						"type": "string"
+					"purpose": {
+						"type": "string",
+						"nullable": true
 					}
 				},
 				"required": [
-					"scheduledDate",
+					"contractId",
 					"timeSlotId",
-					"contractId"
+					"scheduledDate"
 				],
-				"type": "object"
-			},
-			"CreateAccessScheduleRequest": {
-				"$ref": "#/components/schemas/infer_typeofcreateAccessScheduleSchema_"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"infer_typeofavailableAccessSlotResponseSchema_": {
 				"properties": {
@@ -16767,44 +17275,41 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"infer_typeofcheckInAccessScheduleSchema_": {
+			"CheckInAccessScheduleRequest": {
 				"properties": {
-					"staffNotes": {
-						"type": "string"
-					},
 					"code": {
 						"type": "string"
+					},
+					"staffNotes": {
+						"type": "string",
+						"nullable": true
 					}
 				},
 				"required": [
 					"code"
 				],
-				"type": "object"
-			},
-			"CheckInAccessScheduleRequest": {
-				"$ref": "#/components/schemas/infer_typeofcheckInAccessScheduleSchema_"
-			},
-			"infer_typeofcheckOutAccessScheduleSchema_": {
-				"properties": {
-					"staffNotes": {
-						"type": "string"
-					}
-				},
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"CheckOutAccessScheduleRequest": {
-				"$ref": "#/components/schemas/infer_typeofcheckOutAccessScheduleSchema_"
-			},
-			"infer_typeofcancelAccessScheduleSchema_": {
 				"properties": {
-					"reason": {
-						"type": "string"
+					"staffNotes": {
+						"type": "string",
+						"nullable": true
 					}
 				},
-				"type": "object"
+				"type": "object",
+				"additionalProperties": false
 			},
 			"CancelAccessScheduleRequest": {
-				"$ref": "#/components/schemas/infer_typeofcancelAccessScheduleSchema_"
+				"properties": {
+					"reason": {
+						"type": "string",
+						"nullable": true
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
 			},
 			"infer_typeofaccessScheduleListItemResponseSchema_": {
 				"properties": {
@@ -23704,6 +24209,157 @@
 					}
 				},
 				"description": "Phân tích hiệu suất sản phẩm & vận hành kho (Product Mix, Booking Funnel & Warehouse Traffic):\nHiệu suất lấp đầy và doanh thu theo Loại kho (UnitType), Phân khu kệ (RackZone), Tiện ích bán kèm (Amenity Attach Rate),\nPhễu chuyển đổi đặt chỗ (Booking Funnel) và Lưu lượng ra vào kho tự quản (AccessSchedule & InventoryMovement).",
+				"tags": [
+					"Statistics & KPI"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "query",
+						"name": "fromDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "toDate",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "facilityId",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/statistics/ai-rag-advisor": {
+			"post": {
+				"operationId": "AskRagAdvisor",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RagAdvisorResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Request Or Prompt Injection Detected",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied Or Cross-Facility Violation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Facility Not Found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Trợ lý RAG Tư vấn Tối ưu hóa Lợi nhuận cho Ops & Quản lý Cơ sở (AI RAG Profit Advisor):\nThực hiện Hybrid Retrieval (Gemini Embedding + BM25 Lexical) trên 5 báo cáo thống kê + 4 Playbook nghiệp vụ,\nđịnh tuyến mô hình thông minh (Fast vs Reasoning), kiểm chứng nguồn trích dẫn (Citations) và đề xuất hành động tăng lợi nhuận.",
+				"tags": [
+					"Statistics & KPI"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RagAdvisorRequestDto"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/statistics/ai-rag-eval": {
+			"get": {
+				"operationId": "EvaluateRagAdvisor",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_RagEvalResponse_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid Date Range Or Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized Access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access Denied",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Kiểm định Tự động Chất lượng Hệ thống RAG (Automated RAG Evaluation Suite):\nChạy Golden Dataset (10 kịch bản) để đo lường Retrieval Hit Rate, Citation Faithfulness,\nComplexity Router Accuracy và Prompt Injection Guardrail Defense Rate. Chỉ dành cho Ops & System Admin.",
 				"tags": [
 					"Statistics & KPI"
 				],

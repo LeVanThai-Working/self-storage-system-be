@@ -88,18 +88,29 @@ export const accessScheduleIdParamSchema = z.object({
   id: z.string().regex(objectIdRegex, 'Invalid Access Schedule ID format'),
 });
 
-export type CreateAccessScheduleRequest = z.infer<
-  typeof createAccessScheduleSchema
->;
-export type CheckInAccessScheduleRequest = z.infer<
-  typeof checkInAccessScheduleSchema
->;
-export type CheckOutAccessScheduleRequest = z.infer<
-  typeof checkOutAccessScheduleSchema
->;
-export type CancelAccessScheduleRequest = z.infer<
-  typeof cancelAccessScheduleSchema
->;
+// Explicit interfaces (not z.infer) so tsoa keeps `| null` in route validation
+export interface CreateAccessScheduleRequest {
+  contractId: string;
+  timeSlotId: string;
+  scheduledDate: string;
+  numberOfPeople?: number;
+  vehicleType?: string | null;
+  vehiclePlate?: string | null;
+  purpose?: string | null;
+}
+
+export interface CheckInAccessScheduleRequest {
+  code: string;
+  staffNotes?: string | null;
+}
+
+export interface CheckOutAccessScheduleRequest {
+  staffNotes?: string | null;
+}
+
+export interface CancelAccessScheduleRequest {
+  reason?: string | null;
+}
 export type AvailableAccessSlotsQuery = z.infer<
   typeof availableAccessSlotsQuerySchema
 >;
