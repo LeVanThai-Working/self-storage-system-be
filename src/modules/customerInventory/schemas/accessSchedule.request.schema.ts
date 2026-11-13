@@ -31,10 +31,13 @@ export const createAccessScheduleSchema = z.object({
 });
 
 /**
- * Xác thực vào cổng linh hoạt: Chỉ cần truyền `code` là chuỗi quét QR HOẶC mã OTP 6 số
+ * Check-in accepts only a six-digit OTP.
  */
 export const checkInAccessScheduleSchema = z.object({
-  code: z.string().min(1, 'Please scan QR code or enter 6-digit OTP').trim(),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Enter 6-digit OTP'),
   staffNotes: z.string().trim().max(500).optional().nullable(),
 });
 
@@ -62,10 +65,25 @@ export const accessScheduleQuerySchema = paginationQuerySchema.extend({
   customerId: z.string().regex(objectIdRegex).optional(),
   contractId: z.string().regex(objectIdRegex).optional(),
   status: z.nativeEnum(AccessScheduleStatusEnum).optional(),
+  assignmentScope: z.enum(['unassigned', 'mine', 'all']).optional(),
   startDate: z.string().regex(dateStringRegex).optional(),
   endDate: z.string().regex(dateStringRegex).optional(),
 });
 
+export const assignAccessScheduleSchema = z.object({
+  staffId: z.string().regex(objectIdRegex),
+  assignmentVersion: z.number().int().min(0),
+});
+export const unassignAccessScheduleSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+  assignmentVersion: z.number().int().min(0),
+});
+export type AssignAccessScheduleRequest = z.infer<
+  typeof assignAccessScheduleSchema
+>;
+export type UnassignAccessScheduleRequest = z.infer<
+  typeof unassignAccessScheduleSchema
+>;
 export const accessScheduleIdParamSchema = z.object({
   id: z.string().regex(objectIdRegex, 'Invalid Access Schedule ID format'),
 });

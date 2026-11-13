@@ -1,5 +1,6 @@
 import type { ClientSession, Types } from 'mongoose';
 import type { SoftDeleteModel } from 'mongoose-delete';
+import type { AccessScheduleStaffLock } from './accessSchedule.model.ts';
 import type { IAccessSchedule } from './accessSchedule.model.ts';
 import { AccessScheduleStatusEnum } from '../../common/enums/customerInventory.enum.ts';
 import { paginate } from '../../utils/pagination.util.ts';
@@ -9,12 +10,68 @@ import crypto from 'node:crypto';
 
 export class AccessScheduleRepository {
   constructor(
-    private readonly accessScheduleModel: SoftDeleteModel<IAccessSchedule>
+    private readonly accessScheduleModel: SoftDeleteModel<IAccessSchedule>,
+    private readonly staffLockModel: typeof AccessScheduleStaffLock
   ) {}
 
   /**
    * Sinh mã lịch hẹn theo định dạng ACC-YYMMDD-XXXX
    */
+  async lockStaff(staffId: string, session: ClientSession): Promise<void> {
+    await this.staffLockModel.findOneAndUpdate(
+      { _id: staffId },
+      { $inc: { revision: 1 } },
+      { upsert: true, session }
+    );
+  }
+  async findStaffWorkload(
+    staffId: string,
+    excludedId: string,
+    session: ClientSession
+  ): Promise<IAccessSchedule[]> {
+    return this.accessScheduleModel
+      .find({
+        _id: { $ne: excludedId },
+        assignedStaffId: staffId,
+        $or: [
+          { status: AccessScheduleStatusEnum.CHECKED_IN },
+          {
+            status: AccessScheduleStatusEnum.PENDING,
+            expiresAt: { $gte: new Date() },
+          },
+        ],
+      })
+      .session(session);
+  }
+  async atomicAssign(
+    id: string,
+    version: number,
+    staffId: Types.ObjectId | null,
+    name: string | null,
+    actorId: Types.ObjectId,
+    session: ClientSession
+  ): Promise<IAccessSchedule | null> {
+    return this.accessScheduleModel.findOneAndUpdate(
+      {
+        _id: id,
+        status: AccessScheduleStatusEnum.PENDING,
+        assignmentVersion: version,
+        ...(staffId
+          ? { assignedStaffId: null, expiresAt: { $gte: new Date() } }
+          : { assignedStaffId: { $ne: null } }),
+      },
+      {
+        $set: {
+          assignedStaffId: staffId,
+          assignedStaffNameSnapshot: name,
+          assignedAt: staffId ? new Date() : null,
+          assignedBy: actorId,
+        },
+        $inc: { assignmentVersion: 1 },
+      },
+      { returnDocument: 'after', session }
+    );
+  }
   async generateScheduleCode(session?: ClientSession): Promise<string> {
     const vnDate = getVNDateString(new Date()).replace(/-/g, '').slice(2); // YYMMDD
     const prefix = `ACC-${vnDate}-`;
@@ -77,22 +134,6 @@ export class AccessScheduleRepository {
         'contractCode status startDate endDate rentedRackIds'
       )
       .populate('facilityId', 'name code city address');
-  }
-
-  async findByQrToken(
-    token: string,
-    session?: ClientSession
-  ): Promise<IAccessSchedule | null> {
-    return this.accessScheduleModel
-      .findOne({ qrToken: token })
-      .session(session ?? null)
-      .populate('customerId', 'name email phoneNumber')
-      .populate(
-        'contractId',
-        'contractCode status startDate endDate rentedRackIds'
-      )
-      .populate('facilityId', 'name code city address')
-      .populate('timeSlotId', 'slotName startTime endTime maxCapacity');
   }
 
   async findByFacilityAndOtpHash(
@@ -165,13 +206,17 @@ export class AccessScheduleRepository {
   }
 
   /**
-   * Cập nhật nguyên tử: Check-in tại cổng (vô hiệu hóa qrToken và otpHash)
+   * Atomic check-in consumes the encrypted OTP and its lookup hash.
    */
   async atomicCheckIn(
     id: string,
     updateData: {
       checkedInAt: Date;
       checkedInBy: Types.ObjectId;
+      assignmentVersion: number;
+      assignedStaffNameSnapshot: string;
+      assignedAt: Date;
+      assignedBy: Types.ObjectId;
       staffNotes?: string | null;
     },
     session?: ClientSession
@@ -181,14 +226,24 @@ export class AccessScheduleRepository {
         {
           _id: id,
           status: AccessScheduleStatusEnum.PENDING,
+          assignmentVersion: updateData.assignmentVersion,
+          $or: [
+            { assignedStaffId: null },
+            { assignedStaffId: updateData.checkedInBy },
+          ],
         },
         {
+          $inc: { assignmentVersion: 1 },
           $set: {
+            assignedStaffId: updateData.checkedInBy,
+            assignedStaffNameSnapshot: updateData.assignedStaffNameSnapshot,
+            assignedAt: updateData.assignedAt,
+            assignedBy: updateData.assignedBy,
             status: AccessScheduleStatusEnum.CHECKED_IN,
             checkedInAt: updateData.checkedInAt,
             checkedInBy: updateData.checkedInBy,
             staffNotes: updateData.staffNotes ?? null,
-            qrToken: null,
+            otpEncrypted: null,
             otpHash: null,
           },
         },
@@ -228,6 +283,8 @@ export class AccessScheduleRepository {
         {
           _id: id,
           status: AccessScheduleStatusEnum.CHECKED_IN,
+          assignedStaffId: updateData.checkedOutBy,
+          checkedInBy: updateData.checkedOutBy,
         },
         {
           $set: updateSet,
@@ -264,7 +321,7 @@ export class AccessScheduleRepository {
             status: AccessScheduleStatusEnum.CANCELLED,
             cancelledAt: updateData.cancelledAt,
             cancelledReason: updateData.cancelledReason ?? null,
-            qrToken: null,
+            otpEncrypted: null,
             otpHash: null,
           },
         },
@@ -309,7 +366,7 @@ export class AccessScheduleRepository {
       {
         $set: {
           status: AccessScheduleStatusEnum.NO_SHOW,
-          qrToken: null,
+          otpEncrypted: null,
           otpHash: null,
         },
       },

@@ -949,6 +949,8 @@
 					"cancel_invoice",
 					"void_invoice",
 					"send_invoice",
+					"assign_access_schedule",
+					"unassign_access_schedule",
 					"create_access_schedule",
 					"check_in_access_schedule",
 					"check_out_access_schedule",
@@ -1632,6 +1634,43 @@
 			},
 			"UpdateUnitTypeRequest": {
 				"$ref": "#/components/schemas/infer_typeofupdateUnitTypeSchema_"
+			},
+			"ApiResponse__enabled-boolean__": {
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"messageCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"data": {
+						"properties": {
+							"enabled": {
+								"type": "boolean"
+							}
+						},
+						"required": [
+							"enabled"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"success",
+					"statusCode",
+					"messageCode",
+					"message",
+					"data"
+				],
+				"type": "object",
+				"additionalProperties": false
 			},
 			"SupportTicketCategoryEnum": {
 				"enum": [
@@ -8908,6 +8947,7 @@
 			},
 			"NotificationTypeEnum": {
 				"enum": [
+					"access_schedule",
 					"system",
 					"system_alert",
 					"approval_request",
@@ -16725,9 +16765,6 @@
 					"rawOtpCode": {
 						"type": "string"
 					},
-					"qrPayload": {
-						"type": "string"
-					},
 					"purpose": {
 						"type": "string"
 					},
@@ -16750,6 +16787,15 @@
 						"type": "string"
 					},
 					"customerName": {
+						"type": "string"
+					},
+					"assignedAt": {
+						"type": "string"
+					},
+					"assignedStaffName": {
+						"type": "string"
+					},
+					"assignedStaffId": {
 						"type": "string"
 					},
 					"updatedAt": {
@@ -16802,6 +16848,10 @@
 					"status": {
 						"$ref": "#/components/schemas/AccessScheduleStatusEnum"
 					},
+					"assignmentVersion": {
+						"type": "number",
+						"format": "double"
+					},
 					"scheduleCode": {
 						"type": "string"
 					},
@@ -16821,6 +16871,7 @@
 					"contractId",
 					"customerId",
 					"status",
+					"assignmentVersion",
 					"scheduleCode",
 					"id"
 				],
@@ -17072,9 +17123,6 @@
 							"rawOtpCode": {
 								"type": "string"
 							},
-							"qrPayload": {
-								"type": "string"
-							},
 							"purpose": {
 								"type": "string"
 							},
@@ -17097,6 +17145,15 @@
 								"type": "string"
 							},
 							"customerName": {
+								"type": "string"
+							},
+							"assignedAt": {
+								"type": "string"
+							},
+							"assignedStaffName": {
+								"type": "string"
+							},
+							"assignedStaffId": {
 								"type": "string"
 							},
 							"updatedAt": {
@@ -17149,6 +17206,10 @@
 							"status": {
 								"$ref": "#/components/schemas/AccessScheduleStatusEnum"
 							},
+							"assignmentVersion": {
+								"type": "number",
+								"format": "double"
+							},
 							"scheduleCode": {
 								"type": "string"
 							},
@@ -17168,6 +17229,7 @@
 							"contractId",
 							"customerId",
 							"status",
+							"assignmentVersion",
 							"scheduleCode",
 							"id"
 						],
@@ -17269,6 +17331,15 @@
 					"customerName": {
 						"type": "string"
 					},
+					"assignedAt": {
+						"type": "string"
+					},
+					"assignedStaffName": {
+						"type": "string"
+					},
+					"assignedStaffId": {
+						"type": "string"
+					},
 					"createdAt": {
 						"type": "string"
 					},
@@ -17303,6 +17374,10 @@
 					"status": {
 						"$ref": "#/components/schemas/AccessScheduleStatusEnum"
 					},
+					"assignmentVersion": {
+						"type": "number",
+						"format": "double"
+					},
 					"scheduleCode": {
 						"type": "string"
 					},
@@ -17322,6 +17397,7 @@
 					"contractId",
 					"customerId",
 					"status",
+					"assignmentVersion",
 					"scheduleCode",
 					"id"
 				],
@@ -17377,6 +17453,44 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"infer_typeofassignAccessScheduleSchema_": {
+				"properties": {
+					"assignmentVersion": {
+						"type": "number",
+						"format": "double"
+					},
+					"staffId": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"assignmentVersion",
+					"staffId"
+				],
+				"type": "object"
+			},
+			"AssignAccessScheduleRequest": {
+				"$ref": "#/components/schemas/infer_typeofassignAccessScheduleSchema_"
+			},
+			"infer_typeofunassignAccessScheduleSchema_": {
+				"properties": {
+					"assignmentVersion": {
+						"type": "number",
+						"format": "double"
+					},
+					"reason": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"assignmentVersion",
+					"reason"
+				],
+				"type": "object"
+			},
+			"UnassignAccessScheduleRequest": {
+				"$ref": "#/components/schemas/infer_typeofunassignAccessScheduleSchema_"
 			},
 			"ContractSourceEnum": {
 				"enum": [
@@ -21870,6 +21984,66 @@
 						}
 					}
 				]
+			}
+		},
+		"/system-settings/check-in-time-validation": {
+			"get": {
+				"operationId": "GetCheckInTimeValidation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__enabled-boolean__"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"System Settings"
+				],
+				"security": [],
+				"parameters": []
+			},
+			"patch": {
+				"operationId": "SetCheckInTimeValidation",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse__enabled-boolean__"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"System Settings"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"enabled": {
+										"type": "boolean"
+									}
+								},
+								"required": [
+									"enabled"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/support-tickets": {
@@ -29616,7 +29790,7 @@
 						}
 					}
 				},
-				"description": "Tra cứu thông tin chi tiết cơ sở mà Facility Manager hiện tại đang phụ trách.\nDanh tính được xác định từ token đăng nhập.",
+				"description": "Tra cứu cơ sở được phân công cho Staff hoặc Facility Manager hiện tại.\nDanh tính được xác định từ token đăng nhập.",
 				"tags": [
 					"Facility Manager"
 				],
@@ -32479,7 +32653,7 @@
 						}
 					}
 				},
-				"description": "1. Register a new Access Schedule to visit the warehouse rack\nCustomer books an access time slot and receives an Access QR Token + 6-digit OTP",
+				"description": "1. Register a new Access Schedule to visit the warehouse rack\nCustomer books an access time slot and receives a 6-digit OTP",
 				"tags": [
 					"Access Schedules"
 				],
@@ -32603,6 +32777,19 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"in": "query",
+						"name": "assignmentScope",
+						"required": false,
+						"schema": {
+							"type": "string",
+							"enum": [
+								"unassigned",
+								"mine",
+								"all"
+							]
+						}
 					}
 				]
 			}
@@ -32662,7 +32849,7 @@
 						}
 					}
 				},
-				"description": "3. Gate Staff verifies Check-in (Supports EITHER QR code scan OR 6-digit OTP)\nOpens gate and returns rented rack locations and vehicle info for loading bay direction",
+				"description": "3. Responsible staff verifies check-in using a 6-digit OTP\nOpens gate and returns rented rack locations and vehicle info for loading bay direction",
 				"tags": [
 					"Access Schedules"
 				],
@@ -32695,7 +32882,7 @@
 						}
 					}
 				},
-				"description": "4. Gate Staff scans Check-out when customer departs",
+				"description": "4. The same staff checks out the departing customer",
 				"tags": [
 					"Access Schedules"
 				],
@@ -32785,6 +32972,119 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/access-schedules/{id}/claim": {
+			"post": {
+				"operationId": "Claim",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AccessScheduleDetailResponse_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/access-schedules/{id}/assign": {
+			"post": {
+				"operationId": "Assign",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AccessScheduleDetailResponse_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AssignAccessScheduleRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/access-schedules/{id}/unassign": {
+			"post": {
+				"operationId": "Unassign",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiResponse_AccessScheduleDetailResponse_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Access Schedules"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UnassignAccessScheduleRequest"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/access-schedules/{id}": {

@@ -1,5 +1,7 @@
 # ĐẶC TẢ TOÀN DIỆN: LUỒNG NGHIỆP VỤ KHO KỆ TỰ QUẢN (SELF-MANAGED WAREHOUSE RACK)
 
+> **Cập nhật AccessSchedule 2026-11-13:** phần QR và sơ đồ cổng bên dưới là mô tả phiên bản cũ. Hiện chỉ OTP 6 số cho check-in; khách xem lại OTP và tên staff trong lịch. Staff nhận/giao lịch theo cơ sở, Manager chỉ gỡ trước check-in. Cùng staff check-in, giám sát và check-out; không đổi giữa chừng. Chặn nhận lịch chồng giờ và check-in khi còn khách chưa ra. Check-out dùng ID lịch, không QR/OTP. Ân hạn trễ là **45 phút**, không phải 30 phút. Quy tắc cập nhật và migration tại `business-rules-current.md`, mục Access Schedule.
+
 > **Tài liệu chuẩn hóa nghiệp vụ sau tinh chỉnh**  
 > **Áp dụng cho:** Loại kho lớn trang bị kệ tầng công nghiệp (`WAREHOUSE_RACK`)  
 > **Cập nhật ngày:** 03/11/2026

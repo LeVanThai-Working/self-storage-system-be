@@ -1,6 +1,9 @@
 import { CustomerInventory } from './customerInventory.model.ts';
 import { InventoryMovement } from './inventoryMovement.model.ts';
-import { AccessSchedule } from './accessSchedule.model.ts';
+import {
+  AccessSchedule,
+  AccessScheduleStaffLock,
+} from './accessSchedule.model.ts';
 import { CustomerInventoryRepository } from './customerInventory.repository.ts';
 import { InventoryMovementRepository } from './inventoryMovement.repository.ts';
 import { AccessScheduleRepository } from './accessSchedule.repository.ts';
@@ -34,7 +37,8 @@ export const inventoryMovementRepository = new InventoryMovementRepository(
   InventoryMovement
 );
 export const accessScheduleRepository = new AccessScheduleRepository(
-  AccessSchedule
+  AccessSchedule,
+  AccessScheduleStaffLock
 );
 
 export const customerInventoryService = new CustomerInventoryService(

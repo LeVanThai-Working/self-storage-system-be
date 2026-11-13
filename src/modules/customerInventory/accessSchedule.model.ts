@@ -25,7 +25,12 @@ export interface IAccessSchedule extends SoftDeleteDocument {
   vehiclePlate?: string | null;
   purpose?: string | null;
 
-  qrToken?: string | null;
+  otpEncrypted?: string | null;
+  assignedStaffId?: Types.ObjectId | null;
+  assignedStaffNameSnapshot?: string | null;
+  assignedAt?: Date | null;
+  assignedBy?: Types.ObjectId | null;
+  assignmentVersion: number;
   otpHash?: string | null;
   expiresAt: Date;
 
@@ -123,15 +128,16 @@ const accessScheduleSchema = new Schema<IAccessSchedule>(
       trim: true,
       default: null,
     },
-    qrToken: {
-      type: String,
-      trim: true,
-      index: {
-        unique: true,
-        partialFilterExpression: { qrToken: { $type: 'string' } },
-      },
+    otpEncrypted: { type: String, default: null },
+    assignedStaffId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       default: null,
     },
+    assignedStaffNameSnapshot: { type: String, default: null },
+    assignedAt: { type: Date, default: null },
+    assignedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    assignmentVersion: { type: Number, default: 0 },
     otpHash: {
       type: String,
       trim: true,
@@ -180,6 +186,26 @@ const accessScheduleSchema = new Schema<IAccessSchedule>(
   }
 );
 
+// Staff workload serialization across schedules inside transactions.
+export const AccessScheduleStaffLock = mongoose.model(
+  'AccessScheduleStaffLock',
+  new Schema({
+    _id: { type: Schema.Types.ObjectId, required: true },
+    revision: { type: Number, default: 0 },
+  })
+);
+accessScheduleSchema.index(
+  { facilityId: 1, otpHash: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: AccessScheduleStatusEnum.PENDING,
+      otpHash: { $type: 'string' },
+      deleted: false,
+    },
+  }
+);
+accessScheduleSchema.index({ assignedStaffId: 1, scheduledDate: 1, status: 1 });
 // Indexes for fast capacity checking and query scoping
 accessScheduleSchema.index({
   facilityId: 1,

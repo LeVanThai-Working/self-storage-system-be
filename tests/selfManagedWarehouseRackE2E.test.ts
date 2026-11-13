@@ -472,7 +472,7 @@ describe('T-SMR.5: Self-Managed Warehouse Rack End-to-End (E2E) Integration Suit
 
       expect(schedule.status).toBe(AccessScheduleStatusEnum.PENDING);
       expect(schedule.numberOfPeople).toBe(3);
-      expect(schedule.qrPayload).toBeTruthy();
+      expect(schedule).not.toHaveProperty('qrPayload');
       expect(schedule.rawOtpCode).toHaveLength(6);
 
       // 2. Gate Check-in by Facility Staff (within allowed time window)
@@ -480,7 +480,7 @@ describe('T-SMR.5: Self-Managed Warehouse Rack End-to-End (E2E) Integration Suit
       vi.setSystemTime(new Date(`${scheduledDate}T08:10:00.000+07:00`));
 
       const checkInResult = await accessScheduleService.checkIn(
-        { code: schedule.qrPayload! },
+        { code: schedule.rawOtpCode! },
         staffACaller
       );
 

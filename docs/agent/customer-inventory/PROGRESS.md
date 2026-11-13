@@ -1,5 +1,19 @@
 # Kế Hoạch & Tiến Độ Triển Khai Phân Hệ Quản Lý Tồn Kho (Customer Inventory)
 
+## Access Schedule OTP và phân công — 2026-11-13
+
+| Task                            | Trạng thái  | Kết quả                                                                                                                                                                                                                                                                       |
+| ------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ngoài PLAN: OTP/phân công P1–P2 | IN_PROGRESS | Đã triển khai và review phần OTP, nhận/giao/gỡ lịch, notification, khóa người check-out, chặn chồng giờ và lượt chưa ra. Build pass; toàn suite 628 tests/60 files pass, sau đó 33 tests AccessSchedule pass. Chưa đóng quality gate vì `npm run check` bị lỗi ngoài phạm vi. |
+
+- Quyết định đã chốt: OTP thay QR; chỉ chủ lịch xem mã; Manager gỡ trước check-in có lý do và không có hạn trước giờ hẹn; sau check-in không đổi người phụ trách, không Manager override. Staff tự nhận/giao không được chồng ca; đang giám sát khách thì không check-in lượt mới.
+- Migration và rollback: xem `business-rules-current.md`. Script đã test bằng replica set tạm, chưa chạy dữ liệu thực. Cần đồng bộ BE/FE, backup và maintenance window.
+- FE handover: `FE_PROMPT_ACCESS_SCHEDULE.md`. Notification dùng in-app/Socket.IO, không bổ sung offline push/outbox.
+- Review: model/repository/service/controller/schema, audit mask và actor SYSTEM, conditional updates, transaction staff-lock và version phân công đã kiểm tra. Các thay đổi song song về seed/support/system settings được giữ nguyên.
+- Quality gate: lượt check đầu typecheck/lint pass, format-check báo 5 file ngoài phần code này; lượt check sau typecheck pass nhưng lint bị `.catalog-diagnostic.mjs` (`process`/`console` no-undef). Không sửa các file ngoài phạm vi để làm xanh check.
+- Phát hiện ngoài phạm vi: tracker T-SMR.5 và memory mâu thuẫn; file E2E `tests/selfManagedWarehouseRackE2E.test.ts` không có trong checkout hiện tại. Không ghi đè trạng thái T-SMR.5.
+- Bước tiếp theo: xử lý quality gate toàn repository riêng, review thay đổi system settings song song trước phát hành; migration/FE chưa triển khai trên môi trường thực. Nhánh `dev`, chưa commit.
+
 > Phân hệ: `customer-inventory`  
 > Tài liệu kỹ thuật: `docs/agent/customer-inventory/FE_INTEGRATION_FLOW.md`  
 > Tài liệu luồng vận hành kho & di dời kệ: `docs/agent/customer-inventory/PHYSICAL_WAREHOUSE_AND_RACK_MIGRATION_FLOW.md`  
@@ -109,3 +123,7 @@
 |  **G12**  |  🟢 Sửa nhỏ   | Đổi trạng thái hàng chưa chặt (`DAMAGED` thiếu incidentId, chưa tận dụng mã 646)                                                               | ✅ **ĐÃ HOÀN TẤT (Commit `c4d61dc`)**: Bắt buộc `incidentId` khi `DAMAGED` và xây ma trận chuyển đổi hợp lệ.                                                                                                                                                                               |
 |  **G13**  |  🟢 Sửa nhỏ   | UOM mặc định lệch (`piece` vs `cái`), thiếu folder `SKU` trong `CloudinaryFolderEnum`                                                          | ✅ **ĐÃ HOÀN TẤT (Commit `c4d61dc`)**: Thống nhất uom và thêm folder `SKU`.                                                                                                                                                                                                                |
 | **Mục D** |  📚 Tài liệu  | Tài liệu sai lệch/lỗi thời (`FE_INTEGRATION_FLOW.md` sai endpoint phiếu, trùng lặp §V)                                                         | ✅ **ĐÃ HOÀN TẤT (Phase A3)**: Đã xóa trùng lặp Mục §V, cập nhật URL endpoint chuẩn, bổ sung luồng `pre-advised`.                                                                                                                                                                          |
+
+### Verification before publishing ? 2026-11-13
+
+Final npm run check passed: typecheck, lint, formatting and 651 tests across 63 files. npm run build passed. Earlier quality-gate failures recorded above have been resolved. Publication branch: feature/access-schedule-otp-staff-assignment. Production migration/FE deployment remain separate from committing code.

@@ -5,6 +5,7 @@ import type { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffe
 import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
 import type { FacilityAmenityOfferingRepository } from '../facilityAmenityOffering/facilityAmenityOffering.repository.ts';
 import { AppError } from '../../common/errors/appError.error.ts';
+import { UnitTypeStatusEnum } from '../../common/enums/unitType.enum.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
 import {
@@ -415,7 +416,18 @@ export class FacilityService {
           : Promise.resolve([]),
       ]);
 
-    const formattedUnitTypeOfferings = unitTypeOfferingsResult.items.map(
+    const activeUnitTypeOfferings = unitTypeOfferingsResult.items.filter(
+      (offering) => {
+        const unitType = offering.unitTypeId as unknown as {
+          status?: string;
+          deleted?: boolean;
+        } | null;
+        return (
+          unitType?.status === UnitTypeStatusEnum.ACTIVE && !unitType.deleted
+        );
+      }
+    );
+    const formattedUnitTypeOfferings = activeUnitTypeOfferings.map(
       (offering) => {
         const rawUnitType = offering.unitTypeId as unknown as Record<
           string,

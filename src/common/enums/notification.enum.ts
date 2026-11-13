@@ -1,4 +1,5 @@
 export enum NotificationTypeEnum {
+  ACCESS_SCHEDULE = 'access_schedule',
   SYSTEM = 'system',
   SYSTEM_ALERT = 'system_alert',
   APPROVAL_REQUEST = 'approval_request',

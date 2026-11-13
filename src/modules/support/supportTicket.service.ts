@@ -6,6 +6,7 @@ import type { UserRepository } from '../user/user.repository.ts';
 import type { NotificationService } from '../notification/notification.service.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import {
+  SupportTicketCategoryEnum,
   SupportTicketPriorityEnum,
   SupportTicketStatusEnum,
 } from '../../common/enums/supportTicket.enum.ts';
@@ -197,7 +198,8 @@ export class SupportTicketService {
       customer,
       facility,
       contract,
-      category: raw.category,
+      // Older seeded tickets may have no category; keep the queue readable.
+      category: raw.category ?? SupportTicketCategoryEnum.GENERAL_INQUIRY,
       priority: raw.priority,
       title: raw.title,
       description: raw.description,
