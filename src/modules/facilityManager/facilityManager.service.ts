@@ -69,9 +69,12 @@ export class FacilityManagerService {
     return obj;
   }
 
-  private async getFacilityForManager(userId: string): Promise<IFacility> {
+  private async resolveMyFacility(
+    userId: string,
+    allowStaff = false
+  ): Promise<IFacility> {
     const caller = await this.userRepository.findById(userId);
-    if (!caller) {
+    if (!caller || caller.deleted) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['User']);
     }
 
@@ -79,10 +82,15 @@ export class FacilityManagerService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['User Account']);
     }
 
-    if (caller.role !== RoleEnum.FACILITY_MANAGER) {
+    const isStaff = caller.role === RoleEnum.FACILITY_STAFF;
+    if (caller.role !== RoleEnum.FACILITY_MANAGER && !(allowStaff && isStaff)) {
       throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_121, [
         'Facility Manager',
       ]);
+    }
+
+    if (isStaff && !caller.assignedFacilityId) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_122, ['Facility']);
     }
 
     let facility: IFacility | null = null;
@@ -92,11 +100,11 @@ export class FacilityManagerService {
       );
     }
 
-    if (!facility) {
+    if (!facility && !isStaff) {
       facility = await this.facilityRepository.findByManagerId(userId);
     }
 
-    if (!facility) {
+    if (!facility || facility.deleted) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, [
         'Assigned Facility',
       ]);
@@ -106,7 +114,7 @@ export class FacilityManagerService {
   }
 
   async getMyFacility(userId: string): Promise<FacilityResponse> {
-    const facility = await this.getFacilityForManager(userId);
+    const facility = await this.resolveMyFacility(userId, true);
     return validateResponse(
       facilityResponseSchema,
       this.formatFacility(facility)
@@ -116,7 +124,7 @@ export class FacilityManagerService {
   async getMyFacilityDashboard(
     userId: string
   ): Promise<MyFacilityDashboardResponse> {
-    const facility = await this.getFacilityForManager(userId);
+    const facility = await this.resolveMyFacility(userId);
     const facilityId = facility._id.toString();
 
     const [storageUnitsByStatus, amenitySummary] = await Promise.all([
@@ -175,7 +183,7 @@ export class FacilityManagerService {
     userId: string,
     query: FacilityStaffQuery
   ): Promise<PaginatedData<UserResponse>> {
-    const facility = await this.getFacilityForManager(userId);
+    const facility = await this.resolveMyFacility(userId);
     const facilityId = facility._id.toString();
 
     const result = await this.userRepository.findStaffsByFacilityId(

@@ -71,12 +71,12 @@ export class FacilityManagerController extends Controller {
   }
 
   /**
-   * Tra cứu thông tin chi tiết cơ sở mà Facility Manager hiện tại đang phụ trách.
+   * Tra cứu cơ sở được phân công cho Staff hoặc Facility Manager hiện tại.
    * Danh tính được xác định từ token đăng nhập.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')
-  // TODO: Role authorization: FACILITY_MANAGER, BUSINESS_OPS_MANAGER, SYSTEM_ADMIN
+  // TODO: Role authorization: FACILITY_STAFF, FACILITY_MANAGER
   @Get('')
   @Response<ApiErrorResponse>(401, 'Unauthorized Access')
   @Response<ApiErrorResponse>(403, 'Access Denied')
