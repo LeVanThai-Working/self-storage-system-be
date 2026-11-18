@@ -1,6 +1,6 @@
 # Seed theo milestone module
 
-Quy tắc floor cập nhật ngày 18/11/2026: mọi kho có tầng số nguyên dương; warehouse seed ở floor=1. Yêu cầu này thay thế quy tắc warehouse floor=null trước đó. Người dùng đã sửa dữ liệu và code đã đồng bộ. M5 có Reservation đã được duyệt, apply và đối soát; không reset DB, dừng để người dùng kiểm tra trước M6.
+Quy tắc floor cập nhật ngày 18/11/2026: mọi kho có tầng số nguyên dương; warehouse seed ở floor=1. Yêu cầu này thay thế quy tắc warehouse floor=null trước đó. Người dùng đã sửa dữ liệu và code đã đồng bộ. Đã apply/đối soát M5 và M6, không reset DB; dừng để người dùng kiểm tra M6 trước M7.
 
 ## Quy tắc đã chốt
 
@@ -31,7 +31,7 @@ Quy tắc floor cập nhật ngày 18/11/2026: mọi kho có tầng số nguyên
 - Lưu options và indexes của mọi collection, kể cả collection rỗng. So sánh metadata trước/sau snapshot; nếu thay đổi thì dừng.
 - Backup AES-256-GCM, khóa ngẫu nhiên lưu file riêng; đọc lại và kiểm tra checksum.
 - Restore thử chỉ dùng replica set local mới do `mongodb-memory-server` tạo. Tắt TTL monitor ở DB tạm để tài liệu lịch sử không biến mất khi đối soát. Đối chiếu raw BSON, toàn bộ indexes (giữ thứ tự compound key) và collection options.
-- Không nhận URI restore đích. Milestone 1 chỉ chuẩn bị/backup; reset và seed Account + Facility thuộc milestone 2 riêng. Milestone 3 thêm danh mục và đổi tên; milestone 4 thêm phòng/kệ/tầng, warehouse floor=1. Milestone 5 đã apply và đối soát; milestone 6–7 chưa triển khai.
+- Không nhận URI restore đích. Milestone 1 chỉ chuẩn bị/backup; reset và seed Account + Facility thuộc milestone 2 riêng. Milestone 3 thêm danh mục và đổi tên; milestone 4 thêm phòng/kệ/tầng, warehouse floor=1. Milestone 5–6 đã apply và đối soát; milestone 7 chưa chạy.
 - Không cần cài thư viện mới. Không import app/container để tránh khởi động worker, Redis hoặc gửi email.
 - Chỉ hỗ trợ collection thường với options validator/validationLevel/validationAction/collation. Gặp view, system collection hoặc cấu trúc đặc biệt khác phải báo lỗi, không âm thầm bỏ qua.
 
@@ -180,7 +180,17 @@ Người dùng đã duyệt plan chi tiết và yêu cầu triển khai. Chốt 
 - Tổng tiền thuê/tiện ích 2.500.000đ; cọc thu 276.000đ, cọc hoàn 112.000đ, cọc giữ 164.000đ. Phí một lần chỉ ở hóa đơn đầu. Hóa đơn settlement 0đ không có Payment 0đ.
 - Có pipeline 52 tài liệu PNG qua Cloudinary, manifest/hash để resume; backup và restore thử trước mọi upload/insert. Network ngoài transaction; không email, queue, SePay hay chuyển tiền thật.
 - Điều kiện apply bắt buộc: M4 complete, giá/tài nguyên/stock khớp, nhóm active chưa hết hạn, Render floor numeric và map cả 5 cơ sở có warehouse floor=1. Không có cờ bỏ qua điều kiện hoặc reset. Rerun complete không ghi đè sửa đổi của người dùng.
-- Người dùng đã duyệt phương án thêm Reservation và yêu cầu tiếp tục M5. Đã apply lúc 18:51 ngày 18/11/2026, đối soát DB/service/Render/tài liệu và rerun không trùng; chi tiết trong PROGRESS.md. Chờ người dùng kiểm tra M5, chưa triển khai M6.
+- Người dùng đã duyệt phương án thêm Reservation và yêu cầu tiếp tục M5. Đã apply lúc 18:51 ngày 18/11/2026, đối soát DB/service/Render/tài liệu và rerun không trùng; chi tiết trong PROGRESS.md. Sau đó người dùng đã duyệt và M6 cũng đã hoàn thành.
+
+## Milestone 6: lịch đến, SKU, tồn kho và lịch sử hàng
+
+Plan chi tiết tại [MILESTONE_6_DATA.md](MILESTONE_6_DATA.md), **đã duyệt, apply và đối soát lúc 20:16 ngày 18/11/2026**. M6 là mốc thêm dữ liệu cuối, M7 chỉ đối soát/bàn giao. Xem backup, kiểm tra service, hash và rerun trong PROGRESS.md.
+
+- Chỉ Q2–Q5, dùng HĐ 04 (R01, completed) và HĐ 08 (R05/R09, active) đã seed. 24 Access Schedules completed, mỗi HĐ 3 lượt nhập/dời/xuất với 5/8/10 người; ca 09:00–11:00.
+- Đã seed 8 SKU (2/khách), 24 inventory records giữ cả vị trí hết hàng và 36 movements (12 IN/12 MOVE/12 OUT). Nhập 80, xuất 56, tồn 24 thùng; HĐ completed tồn 0, mỗi HĐ active tồn 6 chia đều hai kệ.
+- Chỉ 8 tier T02 của R05/R09 chuyển occupied, warehouse floor=1, trạng thái thuê kệ/hợp đồng và tài chính M5 giữ nguyên; không thêm vào Q1.
+- Khách thao tác hàng, nhân viên đúng cơ sở phụ trách check-in/check-out. Ledger MOVE giữ quy ước source previous/new quantity của backend; không thêm InventoryRequest cũ.
+- Đã kiểm thử/dry-run/backup/restore thử rồi transaction, chặn xung đột và bảo toàn 958 records có trước ngoài các field tier cho phép. Rerun không trùng/ghi đè chỉnh sửa. Dừng sau M6 để người dùng kiểm tra trước M7.
 
 ## Dữ liệu đã thống nhất cho các milestone sau
 

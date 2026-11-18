@@ -38,7 +38,12 @@ export const SEED_MILESTONES = [
   {
     id: 6,
     name: 'Access Schedule + SKU + Inventory + Movement',
-    expected: { accessschedules: 24 },
+    expected: {
+      accessschedules: 24,
+      customerskus: 8,
+      customerinventories: 24,
+      inventorymovements: 36,
+    },
   },
   { id: 7, name: 'Final reconciliation and handover', expected: {} },
 ] as const;

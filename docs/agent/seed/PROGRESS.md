@@ -9,7 +9,7 @@
 | 3         | Danh mục + Offering + Timeslot      | DONE — đã seed và đối soát DB thật; chờ người dùng kiểm tra                |
 | 4         | Phòng + Kệ + Tầng kệ                | DONE — đã seed và đối soát DB thật; chờ người dùng kiểm tra                |
 | 5         | Reservation + Hợp đồng + Tài chính  | DONE — đã seed/đối soát DB thật; chờ người dùng kiểm tra trước M6          |
-| 6         | Lịch đến + SKU + Tồn kho + Movement | NOT_STARTED                                                                |
+| 6         | Lịch đến + SKU + Tồn kho + Movement | DONE - seeded and verified; waiting for user review before M7              |
 | 7         | Đối soát và bàn giao                | NOT_STARTED                                                                |
 
 ## Milestone 1 — 18/11/2026
@@ -108,9 +108,31 @@
 - Đối chiếu 547 bản ghi có trước: 544 giữ nguyên ngoài các field được phép cập nhật; 3 bản ghi Quận 1 thay đổi trong lúc chạy (nhận kho, Reservation completed, hợp đồng có create/approve addendum). Đã đối chiếu backup/audit và xác nhận cả 3 không nằm trong ids/resources M5; không ghi đè thao tác thủ công. Báo cáo gitignored `.agents/memory/milestone-5-final-verification.json` và `m5-manual-q1-reconciliation.json`.
 - Log kiểm tra: `.agents/memory/milestone-5-reservations-quality.log`, `milestone-5-reservations-build.log`, `m5-reservation-tests.log`, `milestone-5-reservations-apply.log`, `milestone-5-reservations-rerun.log`. Sau sửa Cloudinary và test rerun bảo toàn Reservation, **20/20 tests M5**, TypeScript scoped, ESLint và Prettier PASS. Không commit/push.
 
+## Plan M6 — 18/11/2026
+
+- Người dùng yêu cầu tiếp tục sau M5. Theo quy trình đã chốt, khảo sát và trình dữ liệu trước khi viết/chạy seed mốc mới. Plan chi tiết tại [MILESTONE_6_DATA.md](MILESTONE_6_DATA.md), chưa được duyệt.
+- Đã đọc model/service Access Schedule, Customer SKU, Inventory và Movement; đối chiếu vai trò khách thao tác hàng/nhân viên giám sát, cấu hình hạn check-in và quy ước ledger MOVE.
+- Khảo sát DB chỉ đọc: checkpoint M5 complete; đúng 4 HĐ kệ completed + 4 active tại Q2–Q5, các collection accessschedules/customerskus/customerinventories/inventorymovements đều 0.
+- Đề xuất 24 lịch completed (3/HĐ, 5/8/10 người), 8 SKU, 24 inventory records, 36 movements; nhập 80, xuất 56, tồn 24 thùng ở 8 tiers. HĐ completed tồn 0; mỗi HĐ active tồn 6 thùng trên cả hai kệ. Không thêm Q1 hoặc thay tài chính M5.
+- Cần xử lý partial unique index `$ne:true` của SKU/Inventory giống M3/M4 khi triển khai; đã ghi rõ trong plan. Chưa sửa model, test, CLI/seed hoặc DB.
+
+## Triển khai M6 — 18/11/2026
+
+- Người dùng đã duyệt và yêu cầu chạy. M6 là mốc cuối thêm dữ liệu trong plan, M7 chỉ đối soát/bàn giao.
+- Đã viết `scripts/seed/access-inventory.ts`, tích hợp CLI milestone 6 và cập nhật manifest. Dữ liệu model-validated, ledger replay kiểm tra nhập/dời/xuất và tồn; yêu cầu M5 đúng hợp đồng/khách/kệ/ngày, kiểm tra ca/capacity/workload và hash nền trước transaction. Rerun checkpoint không reset trạng thái hoặc số lượng đã chỉnh.
+- Đã sửa partial unique index SKU/Inventory sang `$in:[false,null]`, giữ ý nghĩa active/soft-delete. DB thật chưa có 3 unique index này; không cần drop index đang có.
+- 11 tests M6 ban đầu đã PASS trên replica set, gồm rollback cuối transaction, nguồn thay đổi, giữ dữ liệu cũ, rerun và đọc lịch/SKU/tree/locations/ledger qua service thật với phân quyền chéo. Bổ sung kiểm tra barcode và hai lần apply đồng thời; đang chạy quality gate tổng thể.
+- Dry-run DB thật đạt: 24 lịch, 8 SKU, 24 inventory records, 36 movements; nhập 80, xuất 56, tồn 24; 8 tier updates. Đã ghi hash bảo vệ 958 bản ghi cũ ngoài các field tier được phép đổi; chưa apply M6.
+- **Đã apply thành công** `npm run db:seed:milestone -- --milestone 6 --apply --database self-storage-db`. Checkpoint `module-seed-v1:6` complete lúc `2026-11-18T13:16:55.747Z` (20:16 giờ VN), resetPerformed=false. Đủ 92 business records + 8 tier updates + 101 audit SYSTEM/simulated và checkpoint cùng transaction; hash và ledger replay đạt.
+- Backup **33 collections / 2.117 documents**, restore thử raw BSON/index/options PASS. Stem gitignored `.agents/memory/backups/seed-m1-2026-11-18T13-16-30-615Z-111b26d6-3583-401e-84c5-39d8b2e26db2`; lưu `.bson.enc`, `.key`, `.verified.json`, `.milestone-6.json`.
+- Đối soát thật: 8 SKU, 24 Access Schedules completed, 24 inventory positions (8 quantity=3, 16 quantity=0), 36 movements (12 IN/12 MOVE/12 OUT). Nhập 80, xuất 56, tồn 24; 8 tiers occupied. R01 đã xuất hết và available; R05/R09 vẫn rented theo M5.
+- Đối chiếu **958 records có trước**, không có thay đổi ngoài các field tier được duyệt; bảo toàn Q1, hợp đồng/Reservation và tài chính M5. Đọc thật qua service: 8 SKU, 24 lịch, 24 inventory records, 8 SKU locations, 36 movements và 4 cây kệ; mỗi cây HĐ 08 có đúng 6 thùng trên 2 kệ. Map 5 cơ sở Render đạt numeric floor/warehouse=1.
+- Chạy lại cùng lệnh: alreadyApplied=true, số lượng giữ nguyên, không reset hoặc ghi đè dữ liệu. `npm run check` PASS **756/756 tests, 75/75 files**, typecheck/lint/format PASS; `npm run build` và TypeScript scoped PASS. 12 tests M6 có ca apply đồng thời, unique barcode/soft-delete và chéo khách/cơ sở.
+- Báo cáo gitignored `.agents/memory/milestone-6-final-verification.json`; log `milestone-6-quality.log`, `milestone-6-build.log`, `milestone-6-dry-run.log`, `milestone-6-apply.log`, `milestone-6-rerun.log`. Script kiểm tra độc lập chỉ import model/service, không khởi động app/container/worker. Không commit/push.
+
 ## Điểm dừng
 
-M5 đã seed và đối soát backend/tài liệu. Dừng để người dùng kiểm tra dữ liệu/giao diện trong phiên của mình, rồi mới trình plan M6. Chưa seed Access Schedule, SKU, Inventory hoặc Movement (đều 0); không reset DB hoặc tự triển khai M6.
+M6 đã seed/đối soát thành công — hoàn tất phần thêm dữ liệu theo plan hiện tại. Dừng để người dùng kiểm tra giao diện/dữ liệu M6; M7 còn lại chỉ đối soát/bàn giao, chưa chạy và không thêm seed mới. Không reset DB hoặc tự triển khai M7.
 
 ## Phát hiện ngoài phạm vi
 

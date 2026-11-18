@@ -118,7 +118,7 @@ const customerInventorySchema = new Schema<ICustomerInventory>(
 // Partial Unique Index: Each SKU at a position (contract + storageUnit + rackTier) is unique among non-soft-deleted records
 customerInventorySchema.index(
   { contractId: 1, skuId: 1, storageUnitId: 1, rackTierId: 1 },
-  { unique: true, partialFilterExpression: { deleted: { $ne: true } } }
+  { unique: true, partialFilterExpression: { deleted: { $in: [false, null] } } }
 );
 
 // Compound indexes for fast lookup & filtering queries

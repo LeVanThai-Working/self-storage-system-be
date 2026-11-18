@@ -24,6 +24,7 @@ import { assertLocalApiStopped, beginSeedMaintenance } from './seed/runtime.ts';
 import { runCatalog } from './seed/catalog.ts';
 import { runStorageLayout } from './seed/storage-layout.ts';
 import { runContractsFinance } from './seed/contracts-finance.ts';
+import { runAccessInventory } from './seed/access-inventory.ts';
 
 type PreparationArgs =
   { mode: 'inspect' } | { mode: 'backup' } | { mode: 'verify'; stem: string };
@@ -303,15 +304,17 @@ if (
   const args = process.argv.slice(2);
   const milestoneIndex = args.indexOf('--milestone');
   const run =
-    milestoneIndex >= 0 && args[milestoneIndex + 1] === '5'
-      ? runContractsFinance
-      : milestoneIndex >= 0 && args[milestoneIndex + 1] === '4'
-        ? runStorageLayout
-        : milestoneIndex >= 0 && args[milestoneIndex + 1] === '3'
-          ? runCatalog
-          : milestoneIndex >= 0 && args[milestoneIndex + 1] === '2'
-            ? runAccountFacility
-            : runPreparation;
+    milestoneIndex >= 0 && args[milestoneIndex + 1] === '6'
+      ? runAccessInventory
+      : milestoneIndex >= 0 && args[milestoneIndex + 1] === '5'
+        ? runContractsFinance
+        : milestoneIndex >= 0 && args[milestoneIndex + 1] === '4'
+          ? runStorageLayout
+          : milestoneIndex >= 0 && args[milestoneIndex + 1] === '3'
+            ? runCatalog
+            : milestoneIndex >= 0 && args[milestoneIndex + 1] === '2'
+              ? runAccountFacility
+              : runPreparation;
   run(args).catch((error: unknown) => {
     // Driver errors may contain connection details or document values: do not print them.
     console.error(
