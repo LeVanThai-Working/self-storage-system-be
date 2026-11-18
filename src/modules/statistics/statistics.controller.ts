@@ -21,6 +21,7 @@ import type { TokenPayload } from '../../utils/jwt.util.ts';
 import { RoleEnum } from '../../common/enums/user.enum.ts';
 import {
   StatisticsGranularityEnum,
+  RentalTrendsGranularityEnum,
   FacilityKpiTierEnum,
   FacilityKpiSortByEnum,
   AiInsightFocusAreaEnum,
@@ -53,7 +54,7 @@ export interface StatisticsBaseQueryDto {
 }
 
 export interface RentalTrendsQueryDto extends StatisticsBaseQueryDto {
-  granularity?: StatisticsGranularityEnum;
+  granularity?: RentalTrendsGranularityEnum;
 }
 
 export interface FacilitiesKpiQueryDto extends StatisticsBaseQueryDto {
@@ -176,8 +177,9 @@ export class StatisticsController extends Controller {
 
   /**
    * Phân tích xu hướng thuê theo thời gian (Rental Trends & Temporal Demand):
-   * Chuỗi thời gian theo ngày/tuần/tháng/quý, tự động chỉ ra khoảng thời gian cao điểm (peakPeriods)
-   * và ít người thuê (lowPeriods), phân bổ nhu cầu theo thứ trong tuần, khung giờ hẹn check-in/ra vào kho,
+   * Chuỗi thời gian liên tục theo tháng/quý (mặc định 365 ngày gần nhất), tự động đánh dấu
+   * Top 1 giai đoạn cao điểm (isPeak / peakPeriods) và Top 1 ít người thuê (isLow / lowPeriods),
+   * số lượng đơn đặt theo thứ trong tuần (busiestDay), số lượng đơn đặt theo khung giờ (mostBookedTimeSlot),
    * giờ đặt đơn online trong ngày và độ dài kỳ thuê.
    */
   // @Security('bearerAuth')

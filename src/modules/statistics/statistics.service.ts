@@ -4,6 +4,7 @@ import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { RoleEnum, UserStatusEnum } from '../../common/enums/user.enum.ts';
 import {
   StatisticsGranularityEnum,
+  RentalTrendsGranularityEnum,
   FacilityKpiTierEnum,
   FacilityKpiSortByEnum,
   AiInsightFocusAreaEnum,
@@ -45,6 +46,7 @@ import {
   type RentalTrendsResponse,
   type RentalTrendPoint,
   type DayOfWeekItem,
+  type TimeSlotDemandItem,
   type FacilitiesKpiResponse,
   type FacilityKpiItem,
   type FinancialAnalyticsResponse,
@@ -101,6 +103,105 @@ export function safeRate(numerator: number, denominator: number): number {
 export function clampScore(score: number): number {
   if (!Number.isFinite(score)) return 0;
   return roundRate(Math.max(0, Math.min(100, score)));
+}
+
+/**
+ * Sinh đầy đủ chuỗi mốc thời gian liên tục (zero-fill) theo múi giờ Việt Nam
+ * cho `month` (YYYY-MM) và `quarter` (YYYY-Qq).
+ */
+export function generateRentalTrendPeriodKeys(
+  fromDate: Date,
+  toDate: Date,
+  granularity: RentalTrendsGranularityEnum
+): string[] {
+  const [startYear, startMonth] = getVNDateString(fromDate)
+    .split('-')
+    .map(Number);
+  const [endYear, endMonth] = getVNDateString(toDate).split('-').map(Number);
+
+  const keys: string[] = [];
+
+  if (granularity === RentalTrendsGranularityEnum.MONTH) {
+    let year = startYear;
+    let month = startMonth;
+    while (year < endYear || (year === endYear && month <= endMonth)) {
+      keys.push(`${year}-${String(month).padStart(2, '0')}`);
+      month += 1;
+      if (month > 12) {
+        month = 1;
+        year += 1;
+      }
+    }
+    return keys;
+  }
+
+  let year = startYear;
+  let quarter = Math.ceil(startMonth / 3);
+  const endQuarter = Math.ceil(endMonth / 3);
+  while (year < endYear || (year === endYear && quarter <= endQuarter)) {
+    keys.push(`${year}-Q${quarter}`);
+    quarter += 1;
+    if (quarter > 4) {
+      quarter = 1;
+      year += 1;
+    }
+  }
+  return keys;
+}
+
+/**
+ * Chọn Top N mốc Cao điểm & Thấp điểm không trùng nhau dựa trên `reservationsCreated`:
+ * - Nếu tất cả kỳ = 0 đơn -> cả 2 rỗng.
+ * - Cao điểm: chọn kỳ đạt mức cao nhất (hòa ưu tiên kỳ mới nhất).
+ * - Thấp điểm: chỉ chọn kỳ thấp hơn hẳn mức cao nhất và không nằm trong tập Cao điểm (hòa ưu tiên kỳ mới nhất);
+ *   nếu mọi kỳ có đơn bằng nhau hoặc chỉ có 1 kỳ -> lowKeys rỗng để giữ mốc đó là Cao điểm.
+ */
+export function selectPeakAndLowPeriodKeys(
+  points: ReadonlyArray<{ period: string; reservationsCreated: number }>,
+  maxCount = 1
+): { peakKeys: Set<string>; lowKeys: Set<string> } {
+  const peakKeys = new Set<string>();
+  const lowKeys = new Set<string>();
+  const safeCount = Math.max(1, maxCount);
+
+  if (points.length === 0) {
+    return { peakKeys, lowKeys };
+  }
+
+  const maxReservations = Math.max(...points.map((p) => p.reservationsCreated));
+  if (maxReservations <= 0) {
+    return { peakKeys, lowKeys };
+  }
+
+  const peakCandidates = points
+    .filter((p) => p.reservationsCreated === maxReservations)
+    .sort((a, b) => b.period.localeCompare(a.period))
+    .slice(0, safeCount);
+
+  for (const p of peakCandidates) {
+    peakKeys.add(p.period);
+  }
+
+  const lowerCandidates = points.filter(
+    (p) => p.reservationsCreated < maxReservations && !peakKeys.has(p.period)
+  );
+  if (lowerCandidates.length === 0) {
+    return { peakKeys, lowKeys };
+  }
+
+  const minReservations = Math.min(
+    ...lowerCandidates.map((p) => p.reservationsCreated)
+  );
+  const lowCandidates = lowerCandidates
+    .filter((p) => p.reservationsCreated === minReservations)
+    .sort((a, b) => b.period.localeCompare(a.period))
+    .slice(0, safeCount);
+
+  for (const p of lowCandidates) {
+    lowKeys.add(p.period);
+  }
+
+  return { peakKeys, lowKeys };
 }
 
 export class StatisticsService {
@@ -188,7 +289,8 @@ export class StatisticsService {
 
   private resolveDateRange(
     fromDateStr?: string,
-    toDateStr?: string
+    toDateStr?: string,
+    defaultRangeDaysOverride?: number
   ): {
     fromDate: Date;
     toDate: Date;
@@ -198,12 +300,13 @@ export class StatisticsService {
     toDateVN: string;
   } {
     const config = getStatisticsConfig();
+    const rangeDays = defaultRangeDaysOverride ?? config.defaultRangeDays;
     const now = new Date();
 
     const toDate = toDateStr ? endOfDayVN(toDateStr) : endOfDayVN(now);
     const fromDate = fromDateStr
       ? startOfDayVN(fromDateStr)
-      : startOfDayVN(addDays(toDate, -(config.defaultRangeDays - 1)));
+      : startOfDayVN(addDays(toDate, -(rangeDays - 1)));
 
     if (
       Number.isNaN(fromDate.getTime()) ||
@@ -470,12 +573,13 @@ export class StatisticsService {
   ): Promise<RentalTrendsResponse> {
     const { scopedFacilityId, facilityObjectIds } =
       await this.resolveAndAuthorizeScope(callerId, query.facilityId);
+    const config = getStatisticsConfig();
     const { fromDate, toDate, fromDateVN, toDateVN } = this.resolveDateRange(
       query.fromDate,
-      query.toDate
+      query.toDate,
+      config.rentalTrendsDefaultRangeDays
     );
-    const granularity = query.granularity ?? StatisticsGranularityEnum.DAY;
-    const config = getStatisticsConfig();
+    const granularity = query.granularity ?? RentalTrendsGranularityEnum.MONTH;
 
     const raw = await this.statisticsRepository.getRentalTrendsAggregations(
       fromDate,
@@ -484,17 +588,17 @@ export class StatisticsService {
       facilityObjectIds
     );
 
-    // 1. Merge Time Series buckets
-    const periodKeys = new Set<string>();
+    // 1. Merge Time Series buckets (zero-filled across [fromDate, toDate])
+    const periodKeys = new Set<string>(
+      generateRentalTrendPeriodKeys(fromDate, toDate, granularity)
+    );
     for (const r of raw.reservationsByPeriod) periodKeys.add(r._id);
     for (const r of raw.checkInsByPeriod) periodKeys.add(r._id);
     for (const r of raw.checkOutsByPeriod) periodKeys.add(r._id);
     for (const r of raw.paymentsByPeriod) periodKeys.add(r._id);
 
     const resMap = new Map(raw.reservationsByPeriod.map((r) => [r._id, r]));
-    const checkInMap = new Map(
-      raw.checkInsByPeriod.map((r) => [r._id, r.contractsCheckedIn])
-    );
+    const checkInMap = new Map(raw.checkInsByPeriod.map((r) => [r._id, r]));
     const checkOutMap = new Map(
       raw.checkOutsByPeriod.map((r) => [r._id, r.contractsEnded])
     );
@@ -512,8 +616,9 @@ export class StatisticsService {
         ? roundRate(totalResInSeries / sortedPeriods.length)
         : 0;
 
-    const timeSeries: RentalTrendPoint[] = sortedPeriods.map((period) => {
+    const baseSeries = sortedPeriods.map((period) => {
       const resRow = resMap.get(period);
+      const checkInRow = checkInMap.get(period);
       const reservationsCreated = resRow?.reservationsCreated ?? 0;
       const varianceFromAvgPercent =
         avgResPerPeriod > 0
@@ -527,118 +632,84 @@ export class StatisticsService {
         reservationsCreated,
         completedReservations: resRow?.completedReservations ?? 0,
         cancelledReservations: resRow?.cancelledReservations ?? 0,
-        contractsCheckedIn: checkInMap.get(period) ?? 0,
+        contractsCheckedIn: checkInRow?.contractsCheckedIn ?? 0,
+        walkInContracts: checkInRow?.walkInContracts ?? 0,
         contractsEnded: checkOutMap.get(period) ?? 0,
         collectedRevenue: Math.round(payMap.get(period) ?? 0),
         varianceFromAvgPercent,
       };
     });
 
-    // 2. Peak & Low Periods analysis
-    const sortedByDemandDesc = [...timeSeries].sort(
-      (a, b) =>
-        b.reservationsCreated - a.reservationsCreated ||
-        b.contractsCheckedIn - a.contractsCheckedIn
-    );
-    const sortedByDemandAsc = [...timeSeries].sort(
-      (a, b) =>
-        a.reservationsCreated - b.reservationsCreated ||
-        a.contractsCheckedIn - b.contractsCheckedIn
+    // 2. Peak & Low Periods analysis (Top 1 non-overlapping, tie keeps peak)
+    const { peakKeys, lowKeys } = selectPeakAndLowPeriodKeys(
+      baseSeries,
+      config.topPeakLowCount
     );
 
-    const peakPeriods = sortedByDemandDesc.slice(0, config.topPeakLowCount);
-    const lowPeriods = sortedByDemandAsc.slice(0, config.topPeakLowCount);
+    const timeSeries: RentalTrendPoint[] = baseSeries.map((point) => ({
+      ...point,
+      isPeak: peakKeys.has(point.period),
+      isLow: lowKeys.has(point.period),
+    }));
 
-    // 3. Day of Week Distribution (1 = Sunday ... 7 = Saturday)
+    const peakPeriods = timeSeries
+      .filter((p) => p.isPeak)
+      .sort((a, b) => b.period.localeCompare(a.period));
+    const lowPeriods = timeSeries
+      .filter((p) => p.isLow)
+      .sort((a, b) => b.period.localeCompare(a.period));
+
+    // 3. Day of Week Distribution (reservations only, 1 = Sunday ... 7 = Saturday)
     const dowResMap = new Map(
       raw.reservationsByDayOfWeek.map((r) => [r._id, r.count])
     );
-    const dowCheckInMap = new Map(
-      raw.checkInsByDayOfWeek.map((r) => [r._id, r.count])
-    );
-    const dowAccessMap = new Map(
-      raw.accessByDayOfWeek.map((r) => [r._id, r.count])
-    );
 
-    const dayOfWeekItems: DayOfWeekItem[] = [2, 3, 4, 5, 6, 7, 1].map((dow) => {
-      const reservationsCreated = dowResMap.get(dow) ?? 0;
-      const contractsCheckedIn = dowCheckInMap.get(dow) ?? 0;
-      const accessSchedulesCount = dowAccessMap.get(dow) ?? 0;
-      return {
+    const dayOfWeekItems: DayOfWeekItem[] = [2, 3, 4, 5, 6, 7, 1].map(
+      (dow) => ({
         dayOfWeek: dow,
         dayName: DAY_NAMES_VN[dow] ?? `Day ${dow}`,
-        reservationsCreated,
-        contractsCheckedIn,
-        accessSchedulesCount,
-        totalActivity:
-          reservationsCreated + contractsCheckedIn + accessSchedulesCount,
-      };
-    });
+        reservationsCreated: dowResMap.get(dow) ?? 0,
+      })
+    );
 
-    const activeDowItems = dayOfWeekItems.filter((d) => d.totalActivity > 0);
+    const maxDowBookings = Math.max(
+      ...dayOfWeekItems.map((d) => d.reservationsCreated)
+    );
     const busiestDay =
-      activeDowItems.length > 0
-        ? [...dayOfWeekItems].sort(
-            (a, b) => b.totalActivity - a.totalActivity
-          )[0]
-        : null;
-    const quietestDay =
-      dayOfWeekItems.length > 0
-        ? [...dayOfWeekItems].sort(
-            (a, b) => a.totalActivity - b.totalActivity
-          )[0]
+      maxDowBookings > 0
+        ? (dayOfWeekItems.find(
+            (d) => d.reservationsCreated === maxDowBookings
+          ) ?? null)
         : null;
 
-    // 4. Time-Slot Demand
+    // 4. Time-Slot Demand (reservations only)
     const slotKeys = new Set<string>();
     for (const r of raw.reservationsByTimeSlot) {
       if (r._id) slotKeys.add(r._id);
     }
-    for (const a of raw.accessByTimeSlot) {
-      if (a._id) slotKeys.add(a._id);
-    }
-    const slotCapMap = new Map<string, number>();
     for (const ts of raw.activeTimeSlots) {
-      const key = `${ts.startTime} - ${ts.endTime}`;
-      slotKeys.add(key);
-      slotCapMap.set(key, (slotCapMap.get(key) ?? 0) + ts.maxCapacity);
+      slotKeys.add(`${ts.startTime} - ${ts.endTime}`);
     }
 
     const resSlotMap = new Map(
-      raw.reservationsByTimeSlot.map((r) => [r._id, r])
-    );
-    const accSlotMap = new Map(
-      raw.accessByTimeSlot.map((a) => [a._id, a.scheduleCount])
+      raw.reservationsByTimeSlot.map((r) => [r._id, r.reservationCount])
     );
 
-    const rawTimeSlotItems = Array.from(slotKeys).map((slotKey) => {
-      const resInfo = resSlotMap.get(slotKey);
-      const reservationCount = resInfo?.reservationCount ?? 0;
-      const completedReservationCount = resInfo?.completedCount ?? 0;
-      const accessScheduleCount = accSlotMap.get(slotKey) ?? 0;
-      const totalDemandCount = reservationCount + accessScheduleCount;
-      const configuredMaxCapacityPerDay = slotCapMap.get(slotKey) ?? 0;
-      return {
+    const timeSlotItems: TimeSlotDemandItem[] = Array.from(slotKeys)
+      .map((slotKey) => ({
         timeSlot: slotKey,
-        reservationCount,
-        completedReservationCount,
-        accessScheduleCount,
-        totalDemandCount,
-        configuredMaxCapacityPerDay,
-        demandSharePercent: 0,
-      };
-    });
-
-    const totalSlotDemand = rawTimeSlotItems.reduce(
-      (sum, i) => sum + i.totalDemandCount,
-      0
-    );
-    const timeSlotDemand = rawTimeSlotItems
-      .map((item) => ({
-        ...item,
-        demandSharePercent: safeRate(item.totalDemandCount, totalSlotDemand),
+        reservationCount: resSlotMap.get(slotKey) ?? 0,
       }))
-      .sort((a, b) => b.totalDemandCount - a.totalDemandCount);
+      .sort(
+        (a, b) =>
+          b.reservationCount - a.reservationCount ||
+          a.timeSlot.localeCompare(b.timeSlot)
+      );
+
+    const mostBookedTimeSlot =
+      timeSlotItems[0] && timeSlotItems[0].reservationCount > 0
+        ? timeSlotItems[0]
+        : null;
 
     // 5. Hour of Day Distribution (0..23)
     const hourMap = new Map(
@@ -697,10 +768,12 @@ export class StatisticsService {
       },
       dayOfWeekDistribution: {
         busiestDay,
-        quietestDay,
         items: dayOfWeekItems,
       },
-      timeSlotDemand,
+      timeSlotDemand: {
+        mostBookedTimeSlot,
+        items: timeSlotItems,
+      },
       hourOfDayDistribution,
       durationBreakdown: {
         byBillingUnit,
@@ -1608,7 +1681,7 @@ export class StatisticsService {
       this.getOverview(callerId, baseSubQuery),
       this.getRentalTrends(callerId, {
         ...baseSubQuery,
-        granularity: StatisticsGranularityEnum.MONTH,
+        granularity: RentalTrendsGranularityEnum.MONTH,
       }),
       this.getFacilitiesKpi(callerId, {
         ...baseSubQuery,
@@ -1723,7 +1796,7 @@ export class StatisticsService {
       this.getOverview(callerId, baseSubQuery),
       this.getRentalTrends(callerId, {
         ...baseSubQuery,
-        granularity: StatisticsGranularityEnum.MONTH,
+        granularity: RentalTrendsGranularityEnum.MONTH,
       }),
       this.getFacilitiesKpi(callerId, {
         ...baseSubQuery,

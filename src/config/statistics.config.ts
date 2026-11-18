@@ -31,6 +31,7 @@ export interface StatisticsRagAdvisorConfig {
 
 export interface StatisticsConfig {
   defaultRangeDays: number;
+  rentalTrendsDefaultRangeDays: number;
   maxRangeDays: number;
   topPeakLowCount: number;
   kpiWeights: StatisticsKpiWeights;
@@ -40,8 +41,9 @@ export interface StatisticsConfig {
 }
 
 const DEFAULT_RANGE_DAYS = 30;
+const DEFAULT_RENTAL_TRENDS_RANGE_DAYS = 365;
 const DEFAULT_MAX_RANGE_DAYS = 366;
-const DEFAULT_TOP_PEAK_LOW_COUNT = 3;
+const DEFAULT_TOP_PEAK_LOW_COUNT = 1;
 const DEFAULT_RAG_EMBEDDING_MODEL = 'gemini-embedding-001';
 const DEFAULT_RAG_FAST_MODEL = 'gemini-3.5-flash-lite';
 const DEFAULT_RAG_REASONING_MODEL = 'gemini-3.8-flash';
@@ -62,6 +64,16 @@ export function getStatisticsConfig(): StatisticsConfig {
     Number.isInteger(rawMaxDays) && rawMaxDays >= defaultRangeDays
       ? rawMaxDays
       : DEFAULT_MAX_RANGE_DAYS;
+
+  const rawRentalTrendsDays = Number(
+    process.env.STATISTICS_RENTAL_TRENDS_DEFAULT_RANGE_DAYS
+  );
+  const rentalTrendsDefaultRangeDays =
+    Number.isInteger(rawRentalTrendsDays) &&
+    rawRentalTrendsDays > 0 &&
+    rawRentalTrendsDays <= maxRangeDays
+      ? rawRentalTrendsDays
+      : Math.min(DEFAULT_RENTAL_TRENDS_RANGE_DAYS, maxRangeDays);
 
   const rawTopPeakLow = Number(process.env.STATISTICS_TOP_PEAK_LOW_COUNT);
   const topPeakLowCount =
@@ -100,6 +112,7 @@ export function getStatisticsConfig(): StatisticsConfig {
 
   return {
     defaultRangeDays,
+    rentalTrendsDefaultRangeDays,
     maxRangeDays,
     topPeakLowCount,
     kpiWeights: {

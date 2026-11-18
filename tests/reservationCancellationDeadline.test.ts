@@ -9,7 +9,11 @@ import {
   RefundStatusEnum,
   ReservationStatusEnum,
 } from '../src/common/enums/reservation.enum.ts';
-import { addDays, startOfDayVN } from '../src/utils/date.util.ts';
+import {
+  addDays,
+  getVNDateString,
+  startOfDayVN,
+} from '../src/utils/date.util.ts';
 import { RoleEnum } from '../src/common/enums/user.enum.ts';
 import { BillingUnitEnum } from '../src/common/enums/billing.enum.ts';
 import { FacilityStatusEnum } from '../src/common/enums/facility.enum.ts';
@@ -474,8 +478,9 @@ describe('T2.1: Reservation Cancellation Deadline & Slot Reference Time (Unit Te
 
     it('should normalize checkInDate and startDate to startOfDayVN in createReservation', async () => {
       const customer = TEST_USERS.customer1;
-      // Client sends date with non-midnight hours or local time
-      const rawDateInput = '2026-11-15T15:45:30.000Z';
+      // Client sends future VN date with non-midnight UTC hours (15:45:30Z = 22:45:30 VN same day)
+      const futureDateStr = getVNDateString(addDays(startOfDayVN(), 3));
+      const rawDateInput = `${futureDateStr}T15:45:30.000Z`;
 
       const res = await reservationService.createReservation(customer.id, {
         facilityId: TEST_FACILITY_A_ID,
@@ -490,7 +495,7 @@ describe('T2.1: Reservation Cancellation Deadline & Slot Reference Time (Unit Te
       const rawDoc = await Reservation.findById(res.id).lean();
       expect(rawDoc).toBeTruthy();
 
-      const expectedStartOfDay = startOfDayVN('2026-11-15');
+      const expectedStartOfDay = startOfDayVN(futureDateStr);
       expect(rawDoc?.checkInDate.getTime()).toBe(expectedStartOfDay.getTime());
       expect(rawDoc?.startDate.getTime()).toBe(expectedStartOfDay.getTime());
     });
