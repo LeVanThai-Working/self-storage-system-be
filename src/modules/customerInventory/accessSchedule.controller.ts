@@ -9,6 +9,7 @@ import {
   Query,
   Middlewares,
   Request,
+  Security,
 } from 'tsoa';
 import type { Request as ExpressRequest } from 'express';
 import type { AccessScheduleService } from './accessSchedule.service.ts';
@@ -131,6 +132,7 @@ function extractCaller(req: ExpressRequest): CallerContext {
 
 @Route('access-schedules')
 @Tags('Access Schedules')
+@Security('bearerAuth')
 export class AccessScheduleController extends Controller {
   constructor(private readonly accessScheduleService: AccessScheduleService) {
     super();
