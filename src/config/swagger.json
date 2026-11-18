@@ -35,16 +35,16 @@
 			},
 			"infer_typeofuserResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"googleId": {
 						"type": "string"
 					},
 					"phoneNumber": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"isEmailVerified": {
@@ -70,6 +70,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"isEmailVerified",
 					"status",
 					"authProvider",
@@ -449,12 +451,6 @@
 					},
 					"user": {
 						"properties": {
-							"updatedAt": {
-								"type": "string"
-							},
-							"createdAt": {
-								"type": "string"
-							},
 							"assignedFacilityId": {},
 							"status": {
 								"$ref": "#/components/schemas/UserStatusEnum"
@@ -469,6 +465,12 @@
 							"id": {
 								"type": "string"
 							},
+							"updatedAt": {
+								"type": "string"
+							},
+							"createdAt": {
+								"type": "string"
+							},
 							"role": {
 								"$ref": "#/components/schemas/RoleEnum"
 							},
@@ -480,6 +482,8 @@
 							}
 						},
 						"required": [
+							"updatedAt",
+							"createdAt",
 							"role",
 							"email",
 							"name"
@@ -633,12 +637,6 @@
 			},
 			"infer_typeofauthUserResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"assignedFacilityId": {},
 					"status": {
 						"$ref": "#/components/schemas/UserStatusEnum"
@@ -653,6 +651,12 @@
 					"id": {
 						"type": "string"
 					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
 					"role": {
 						"$ref": "#/components/schemas/RoleEnum"
 					},
@@ -664,6 +668,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"role",
 					"email",
 					"name"
@@ -766,12 +772,6 @@
 			},
 			"infer_typeofprofileResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"gender": {
 						"$ref": "#/components/schemas/GenderEnum"
 					},
@@ -782,24 +782,39 @@
 						"type": "string"
 					},
 					"idCardLast4": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"idCardBackPhotoUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"idCardFrontPhotoUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"avatarUrl": {
+						"type": "string",
+						"nullable": true
+					},
+					"id": {
+						"type": "string"
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"userId": {
 						"type": "string"
-					},
-					"id": {
-						"type": "string"
 					}
 				},
+				"required": [
+					"updatedAt",
+					"createdAt",
+					"userId"
+				],
 				"type": "object"
 			},
 			"ProfileResponse": {
@@ -1006,26 +1021,33 @@
 			},
 			"infer_typeofauditLogResponseSchema_": {
 				"properties": {
-					"createdAt": {
-						"type": "string"
-					},
 					"path": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"method": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"requestId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"userAgent": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"ip": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"metadata": {
-						"$ref": "#/components/schemas/Record_string.unknown_"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							}
+						],
+						"nullable": true
 					},
 					"changes": {
 						"properties": {
@@ -1036,18 +1058,26 @@
 								"$ref": "#/components/schemas/Record_string.unknown_"
 							}
 						},
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"resourceId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"actorEmail": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"actorRole": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"actorId": {
+						"type": "string",
+						"nullable": true
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"status": {
@@ -1068,6 +1098,7 @@
 					}
 				},
 				"required": [
+					"createdAt",
 					"status",
 					"resourceType",
 					"action",
@@ -1307,31 +1338,40 @@
 			},
 			"infer_typeofunitTypeResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"features": {
 						"items": {
 							"type": "string"
 						},
-						"type": "array"
+						"type": "array",
+						"nullable": true
 					},
 					"images": {
 						"items": {
 							"type": "string"
 						},
-						"type": "array"
+						"type": "array",
+						"nullable": true
 					},
 					"imageUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"category": {
-						"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+							}
+						],
+						"nullable": true
 					},
 					"description": {
+						"type": "string",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"status": {
@@ -1375,6 +1415,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"status",
 					"volume",
 					"area",
@@ -1706,16 +1748,22 @@
 			"infer_typeofsupportTicketResponseSchema_": {
 				"properties": {
 					"cancellationReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"completedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"staffResponse": {
 						"properties": {
+							"respondedAt": {
+								"type": "string"
+							},
 							"respondedBy": {
 								"anyOf": [
 									{
@@ -1746,9 +1794,6 @@
 									}
 								]
 							},
-							"respondedAt": {
-								"type": "string"
-							},
 							"attachments": {
 								"items": {
 									"type": "string"
@@ -1761,10 +1806,12 @@
 						},
 						"required": [
 							"respondedAt",
+							"respondedBy",
 							"attachments",
 							"responseMessage"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"assignedStaff": {
 						"anyOf": [
@@ -1794,7 +1841,8 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"contract": {
 						"anyOf": [
@@ -1824,7 +1872,8 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"facility": {
 						"anyOf": [
@@ -1851,7 +1900,35 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"status": {
+						"$ref": "#/components/schemas/SupportTicketStatusEnum"
+					},
+					"attachments": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"description": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"priority": {
+						"$ref": "#/components/schemas/SupportTicketPriorityEnum"
+					},
+					"category": {
+						"$ref": "#/components/schemas/SupportTicketCategoryEnum"
 					},
 					"customer": {
 						"anyOf": [
@@ -1883,33 +1960,6 @@
 							}
 						]
 					},
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/SupportTicketStatusEnum"
-					},
-					"attachments": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"description": {
-						"type": "string"
-					},
-					"title": {
-						"type": "string"
-					},
-					"priority": {
-						"$ref": "#/components/schemas/SupportTicketPriorityEnum"
-					},
-					"category": {
-						"$ref": "#/components/schemas/SupportTicketCategoryEnum"
-					},
 					"ticketCode": {
 						"type": "string"
 					},
@@ -1926,6 +1976,7 @@
 					"title",
 					"priority",
 					"category",
+					"customer",
 					"ticketCode",
 					"id"
 				],
@@ -2043,16 +2094,22 @@
 						"items": {
 							"properties": {
 								"cancellationReason": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"cancelledAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"completedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"staffResponse": {
 									"properties": {
+										"respondedAt": {
+											"type": "string"
+										},
 										"respondedBy": {
 											"anyOf": [
 												{
@@ -2083,9 +2140,6 @@
 												}
 											]
 										},
-										"respondedAt": {
-											"type": "string"
-										},
 										"attachments": {
 											"items": {
 												"type": "string"
@@ -2098,10 +2152,12 @@
 									},
 									"required": [
 										"respondedAt",
+										"respondedBy",
 										"attachments",
 										"responseMessage"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"assignedStaff": {
 									"anyOf": [
@@ -2131,7 +2187,8 @@
 											],
 											"type": "object"
 										}
-									]
+									],
+									"nullable": true
 								},
 								"contract": {
 									"anyOf": [
@@ -2161,7 +2218,8 @@
 											],
 											"type": "object"
 										}
-									]
+									],
+									"nullable": true
 								},
 								"facility": {
 									"anyOf": [
@@ -2188,7 +2246,35 @@
 											],
 											"type": "object"
 										}
-									]
+									],
+									"nullable": true
+								},
+								"updatedAt": {
+									"type": "string"
+								},
+								"createdAt": {
+									"type": "string"
+								},
+								"status": {
+									"$ref": "#/components/schemas/SupportTicketStatusEnum"
+								},
+								"attachments": {
+									"items": {
+										"type": "string"
+									},
+									"type": "array"
+								},
+								"description": {
+									"type": "string"
+								},
+								"title": {
+									"type": "string"
+								},
+								"priority": {
+									"$ref": "#/components/schemas/SupportTicketPriorityEnum"
+								},
+								"category": {
+									"$ref": "#/components/schemas/SupportTicketCategoryEnum"
 								},
 								"customer": {
 									"anyOf": [
@@ -2220,33 +2306,6 @@
 										}
 									]
 								},
-								"updatedAt": {
-									"type": "string"
-								},
-								"createdAt": {
-									"type": "string"
-								},
-								"status": {
-									"$ref": "#/components/schemas/SupportTicketStatusEnum"
-								},
-								"attachments": {
-									"items": {
-										"type": "string"
-									},
-									"type": "array"
-								},
-								"description": {
-									"type": "string"
-								},
-								"title": {
-									"type": "string"
-								},
-								"priority": {
-									"$ref": "#/components/schemas/SupportTicketPriorityEnum"
-								},
-								"category": {
-									"$ref": "#/components/schemas/SupportTicketCategoryEnum"
-								},
 								"ticketCode": {
 									"type": "string"
 								},
@@ -2263,6 +2322,7 @@
 								"title",
 								"priority",
 								"category",
+								"customer",
 								"ticketCode",
 								"id"
 							],
@@ -2435,12 +2495,6 @@
 			},
 			"infer_typeofstorageUnitResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"rackCapacity": {
 						"properties": {
 							"availablePercentage": {
@@ -2466,12 +2520,18 @@
 							"available",
 							"total"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"unitType": {
 						"properties": {
 							"category": {
-								"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+									}
+								],
+								"nullable": true
 							},
 							"dimensions": {
 								"properties": {
@@ -2521,7 +2581,8 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"facility": {
 						"properties": {
@@ -2548,12 +2609,21 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"zone": {
+						"type": "string",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"images": {
@@ -2583,6 +2653,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"images",
 					"status",
 					"floor",
@@ -2844,7 +2916,6 @@
 					}
 				},
 				"required": [
-					"floor",
 					"unitNumber",
 					"unitTypeId",
 					"facilityId"
@@ -3002,12 +3073,6 @@
 			},
 			"infer_typeofstorageRackResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"storageUnit": {
 						"properties": {
 							"status": {
@@ -3031,7 +3096,8 @@
 							"unitNumber",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"facility": {
 						"properties": {
@@ -3055,23 +3121,20 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"tiers": {
 						"items": {
 							"properties": {
-								"updatedAt": {
-									"type": "string"
-								},
-								"createdAt": {
-									"type": "string"
-								},
 								"notes": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"volume": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
 								},
 								"dimensions": {
 									"properties": {
@@ -3093,11 +3156,19 @@
 										"width",
 										"length"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"maxWeightKg": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
+								},
+								"updatedAt": {
+									"type": "string"
+								},
+								"createdAt": {
+									"type": "string"
 								},
 								"status": {
 									"$ref": "#/components/schemas/RackTierStatusEnum"
@@ -3123,6 +3194,8 @@
 								}
 							},
 							"required": [
+								"updatedAt",
+								"createdAt",
 								"status",
 								"tierCode",
 								"tierNumber",
@@ -3133,35 +3206,55 @@
 							],
 							"type": "object"
 						},
-						"type": "array"
+						"type": "array",
+						"nullable": true
 					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"name": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"isMine": {
-						"type": "boolean"
+						"type": "boolean",
+						"nullable": true
 					},
 					"currentCustomerId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"currentContractId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"customPrice": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"zone": {
-						"$ref": "#/components/schemas/RackZoneEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/RackZoneEnum"
+							}
+						],
+						"nullable": true
 					},
 					"bay": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"aisle": {
+						"type": "string",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"status": {
@@ -3185,6 +3278,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"status",
 					"tierCount",
 					"rackCode",
@@ -3406,7 +3501,8 @@
 					},
 					"customPrice": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"zone": {
 						"$ref": "#/components/schemas/RackZoneEnum"
@@ -3449,7 +3545,8 @@
 					},
 					"customPrice": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"zone": {
 						"$ref": "#/components/schemas/RackZoneEnum"
@@ -3472,18 +3569,14 @@
 			},
 			"infer_typeofrackTierResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"volume": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"dimensions": {
 						"properties": {
@@ -3505,11 +3598,19 @@
 							"width",
 							"length"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"maxWeightKg": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
 					},
 					"status": {
 						"$ref": "#/components/schemas/RackTierStatusEnum"
@@ -3535,6 +3636,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"status",
 					"tierCode",
 					"tierNumber",
@@ -6008,10 +6111,12 @@
 			"infer_typeofsigningAuthorizationResponseSchema_": {
 				"properties": {
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"fileHash": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -6256,13 +6361,13 @@
 			},
 			"infer_typeofupdateSigningAuthorizationSchema_": {
 				"properties": {
-					"notes": {
-						"type": "string"
-					},
 					"documentUrl": {
 						"type": "string"
 					},
 					"validTo": {
+						"type": "string"
+					},
+					"notes": {
 						"type": "string"
 					}
 				},
@@ -6305,7 +6410,8 @@
 					"storageUnit": {
 						"properties": {
 							"zone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"status": {
 								"type": "string"
@@ -6327,23 +6433,28 @@
 							"unitNumber",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"offering": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"minRentalDays": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"depositMultiplier": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"unitTypeId": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"pricePerUnit": {
 								"type": "number",
@@ -6361,18 +6472,22 @@
 							"billingUnit",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"facility": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"address": {
 								"type": "string"
@@ -6393,15 +6508,18 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"customer": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -6418,20 +6536,24 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"pendingUnitChange": {
 						"properties": {
 							"proposedBy": {
 								"properties": {
 									"role": {
-										"type": "string"
+										"type": "string",
+										"nullable": true
 									},
 									"phoneNumber": {
-										"type": "string"
+										"type": "string",
+										"nullable": true
 									},
 									"email": {
 										"type": "string"
@@ -6448,27 +6570,33 @@
 									"name",
 									"id"
 								],
-								"type": "object"
+								"type": "object",
+								"nullable": true
 							},
 							"priceDifference": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"newOffering": {
 								"properties": {
 									"status": {
-										"type": "string"
+										"type": "string",
+										"nullable": true
 									},
 									"minRentalDays": {
 										"type": "number",
-										"format": "double"
+										"format": "double",
+										"nullable": true
 									},
 									"depositMultiplier": {
 										"type": "number",
-										"format": "double"
+										"format": "double",
+										"nullable": true
 									},
 									"unitTypeId": {
-										"type": "string"
+										"type": "string",
+										"nullable": true
 									},
 									"pricePerUnit": {
 										"type": "number",
@@ -6486,12 +6614,14 @@
 									"billingUnit",
 									"id"
 								],
-								"type": "object"
+								"type": "object",
+								"nullable": true
 							},
 							"newStorageUnit": {
 								"properties": {
 									"zone": {
-										"type": "string"
+										"type": "string",
+										"nullable": true
 									},
 									"status": {
 										"type": "string"
@@ -6513,7 +6643,8 @@
 									"unitNumber",
 									"id"
 								],
-								"type": "object"
+								"type": "object",
+								"nullable": true
 							},
 							"proposedAt": {
 								"type": "string"
@@ -6543,16 +6674,20 @@
 							"newFacilityUnitTypeOfferingId",
 							"newStorageUnitId"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"outOfSlot": {
-						"type": "boolean"
+						"type": "boolean",
+						"nullable": true
 					},
 					"earlyCheckIn": {
-						"type": "boolean"
+						"type": "boolean",
+						"nullable": true
 					},
 					"immediateForfeitWarning": {
-						"type": "boolean"
+						"type": "boolean",
+						"nullable": true
 					},
 					"policySnapshot": {
 						"properties": {
@@ -6560,8 +6695,10 @@
 								"type": "string",
 								"enum": [
 									"slot_start",
-									"calendar_day"
-								]
+									"calendar_day",
+									null
+								],
+								"nullable": true
 							},
 							"noShowGraceHours": {
 								"type": "number",
@@ -6581,37 +6718,47 @@
 							"forfeitPercent",
 							"freeCancelHours"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"acceptedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"policyVersion": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"paymentId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"paidAmount": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"paidAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"refundNote": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"refundReference": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"refundedBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -6628,21 +6775,26 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"refundedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"graceExtensionReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"graceExtendedBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -6659,18 +6811,22 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"graceExtendedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"arrivedBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -6687,21 +6843,26 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"arrivedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"forceCancelledAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"forceCancelledBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -6718,24 +6879,34 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"incidentId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancellationSource": {
-						"$ref": "#/components/schemas/ReservationCancelSourceEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ReservationCancelSourceEnum"
+							}
+						],
+						"nullable": true
 					},
 					"cancelledAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -6752,21 +6923,26 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"cancellationReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"assignedStaffAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"assignedStaff": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -6783,21 +6959,26 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"assignedStaffId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"confirmedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"confirmedBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -6814,19 +6995,24 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"graceExpiresAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"expiresAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"rentalTargetType": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"storageUnitId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -6838,15 +7024,18 @@
 						"items": {
 							"properties": {
 								"changedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"changedBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -6863,21 +7052,26 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"rejectReason": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"decisionAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"decisionBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -6894,18 +7088,22 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"proposedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"proposedBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -6922,34 +7120,42 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"status": {
 									"type": "string",
 									"enum": [
 										"pending",
 										"accepted",
-										"rejected"
-									]
+										"rejected",
+										null
+									],
+									"nullable": true
 								},
 								"toPrice": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
 								},
 								"fromPrice": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
 								},
 								"toOfferingId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"fromOfferingId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"toUnit": {
 									"properties": {
 										"zone": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
 											"type": "string"
@@ -6971,12 +7177,14 @@
 										"unitNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"fromUnit": {
 									"properties": {
 										"zone": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
 											"type": "string"
@@ -6998,7 +7206,8 @@
 										"unitNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"reason": {
 									"type": "string"
@@ -7581,10 +7790,12 @@
 			"infer_typeofconfirmRefundSchema_": {
 				"properties": {
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"referenceCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					}
 				},
 				"type": "object"
@@ -7696,8 +7907,15 @@
 			},
 			"infer_typeofrefundRequestResponseSchema_": {
 				"properties": {
-					"cancelledAt": {
+					"updatedAt": {
 						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
+					},
+					"cancelledAt": {
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledBy": {
 						"anyOf": [
@@ -7724,10 +7942,12 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"paidAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"paidBy": {
 						"anyOf": [
@@ -7754,10 +7974,12 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"rejectedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"rejectedBy": {
 						"anyOf": [
@@ -7784,10 +8006,12 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"approvedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"approvedBy": {
 						"anyOf": [
@@ -7814,7 +8038,11 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
+					},
+					"requestedAt": {
+						"type": "string"
 					},
 					"requestedBy": {
 						"anyOf": [
@@ -7844,28 +8072,46 @@
 						]
 					},
 					"note": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancellationReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"rejectionReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"proofImageUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"referenceCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"refundAccountHolder": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"refundAccountNumberMasked": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"refundBankName": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
+					},
+					"status": {
+						"$ref": "#/components/schemas/RefundRequestStatusEnum"
+					},
+					"reason": {
+						"$ref": "#/components/schemas/RefundRequestReasonEnum"
+					},
+					"amount": {
+						"type": "number",
+						"format": "double"
 					},
 					"customer": {
 						"anyOf": [
@@ -7922,32 +8168,16 @@
 						]
 					},
 					"paymentId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"contractId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"reservationId": {
-						"type": "string"
-					},
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
-					"requestedAt": {
-						"type": "string"
-					},
-					"status": {
-						"$ref": "#/components/schemas/RefundRequestStatusEnum"
-					},
-					"reason": {
-						"$ref": "#/components/schemas/RefundRequestReasonEnum"
-					},
-					"amount": {
-						"type": "number",
-						"format": "double"
+						"type": "string",
+						"nullable": true
 					},
 					"refundCode": {
 						"type": "string"
@@ -7959,10 +8189,32 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
+					"cancelledAt",
+					"cancelledBy",
+					"paidAt",
+					"paidBy",
+					"rejectedAt",
+					"rejectedBy",
+					"approvedAt",
+					"approvedBy",
 					"requestedAt",
+					"requestedBy",
+					"note",
+					"cancellationReason",
+					"rejectionReason",
+					"proofImageUrl",
+					"referenceCode",
+					"refundAccountHolder",
+					"refundAccountNumberMasked",
+					"refundBankName",
 					"status",
 					"reason",
 					"amount",
+					"customer",
+					"facility",
+					"paymentId",
+					"contractId",
+					"reservationId",
 					"refundCode",
 					"id"
 				],
@@ -8296,13 +8548,16 @@
 					"facility": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"address": {
 								"type": "string"
@@ -8323,15 +8578,18 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"customer": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -8348,24 +8606,30 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"note": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancellationReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -8382,21 +8646,26 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"proofImageUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"confirmedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"confirmedBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -8413,20 +8682,25 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"referenceCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"sepayTransactionId": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"paidAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"expiresAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"bankInfo": {
 						"properties": {
@@ -8445,19 +8719,24 @@
 							"accountNumber",
 							"bankCode"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"qrUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"invoiceId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"contractId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"reservationId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -8683,42 +8962,54 @@
 			"infer_typeofpaymentTransactionResponseSchema_": {
 				"properties": {
 					"matchedPaymentId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"description": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"referenceCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"accumulated": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"transferAmount": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"transferType": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"content": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"code": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"subAccount": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"accountNumber": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"transactionDate": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"gateway": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -8990,10 +9281,12 @@
 						"$ref": "#/components/schemas/Record_string.unknown_"
 					},
 					"readAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"facilityId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"isRead": {
 						"type": "boolean"
@@ -9273,10 +9566,12 @@
 			"infer_typeoflegalEntityResponseSchema_": {
 				"properties": {
 					"email": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"phone": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -9313,7 +9608,8 @@
 					"legalRepresentative": {
 						"properties": {
 							"idNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"title": {
 								"type": "string"
@@ -9389,10 +9685,12 @@
 			"infer_typeofcreateLegalEntitySchema_": {
 				"properties": {
 					"email": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"phone": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"status": {
 						"type": "string",
@@ -9566,10 +9864,12 @@
 						]
 					},
 					"email": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"phone": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"bankAccount": {
 						"properties": {
@@ -9646,10 +9946,12 @@
 			"infer_typeofinvoiceResponseSchema_": {
 				"properties": {
 					"cancelReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledBy": {
 						"anyOf": [
@@ -9676,13 +9978,16 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"proofImageUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"confirmedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"confirmedBy": {
 						"anyOf": [
@@ -9709,7 +10014,8 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"createdBy": {
 						"anyOf": [
@@ -9736,22 +10042,32 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"issuedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"paymentMethod": {
-						"$ref": "#/components/schemas/PaymentMethodEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PaymentMethodEnum"
+							}
+						],
+						"nullable": true
 					},
 					"paymentId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"paidAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"contract": {
 						"anyOf": [
@@ -9778,7 +10094,8 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"customer": {
 						"anyOf": [
@@ -9805,7 +10122,8 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"facility": {
 						"anyOf": [
@@ -9832,7 +10150,8 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -9864,7 +10183,8 @@
 						"items": {
 							"properties": {
 								"description": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"itemType": {
 									"$ref": "#/components/schemas/InvoiceItemTypeEnum"
@@ -10099,7 +10419,8 @@
 			"infer_typeofcreateManualInvoiceSchema_": {
 				"properties": {
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"taxAmount": {
 						"type": "number",
@@ -10117,7 +10438,8 @@
 									"format": "double"
 								},
 								"description": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"itemType": {
 									"$ref": "#/components/schemas/InvoiceItemTypeEnum"
@@ -10418,10 +10740,12 @@
 			"infer_typeofconfirmManualInvoicePaymentSchema_": {
 				"properties": {
 					"note": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"referenceCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"paymentMethod": {
 						"anyOf": [
@@ -10493,19 +10817,24 @@
 			"infer_typeofincidentResponseSchema_": {
 				"properties": {
 					"cancellationReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"closedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"readyAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"customerAcknowledgeNotes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"customerAcknowledgedBy": {
 						"anyOf": [
@@ -10535,10 +10864,12 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"customerAcknowledgedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"restorationUploadedBy": {
 						"anyOf": [
@@ -10568,48 +10899,21 @@
 								],
 								"type": "object"
 							}
-						]
+						],
+						"nullable": true
 					},
 					"restorationUploadedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"restorationManifestDocUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"preEvacuationManifest": {
 						"properties": {
 							"notes": {
 								"type": "string"
-							},
-							"evacuatedBy": {
-								"anyOf": [
-									{
-										"type": "string"
-									},
-									{
-										"properties": {
-											"role": {
-												"type": "string"
-											},
-											"phoneNumber": {
-												"type": "string"
-											},
-											"email": {
-												"type": "string"
-											},
-											"name": {
-												"type": "string"
-											},
-											"id": {
-												"type": "string"
-											}
-										},
-										"required": [
-											"id"
-										],
-										"type": "object"
-									}
-								]
 							},
 							"totalDiscrepancy": {
 								"type": "number",
@@ -10670,6 +10974,36 @@
 								},
 								"type": "array"
 							},
+							"evacuatedBy": {
+								"anyOf": [
+									{
+										"type": "string"
+									},
+									{
+										"properties": {
+											"role": {
+												"type": "string"
+											},
+											"phoneNumber": {
+												"type": "string"
+											},
+											"email": {
+												"type": "string"
+											},
+											"name": {
+												"type": "string"
+											},
+											"id": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"id"
+										],
+										"type": "object"
+									}
+								]
+							},
 							"evacuatedAt": {
 								"type": "string"
 							}
@@ -10680,12 +11014,20 @@
 							"totalSystemQuantity",
 							"items",
 							"evidenceImages",
+							"evacuatedBy",
 							"evacuatedAt"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"resolution": {
 						"properties": {
+							"investigationNotes": {
+								"type": "string"
+							},
+							"resolvedAt": {
+								"type": "string"
+							},
 							"resolvedBy": {
 								"anyOf": [
 									{
@@ -10716,12 +11058,6 @@
 									}
 								]
 							},
-							"investigationNotes": {
-								"type": "string"
-							},
-							"resolvedAt": {
-								"type": "string"
-							},
 							"damageFee": {
 								"type": "number",
 								"format": "double"
@@ -10745,16 +11081,19 @@
 						},
 						"required": [
 							"resolvedAt",
+							"resolvedBy",
 							"damageFee",
 							"liableParty",
 							"repairCost",
 							"resolutionNotes",
 							"staffEvidenceImages"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"investigationNotes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"assignedStaff": {
 						"properties": {
@@ -10777,37 +11116,8 @@
 						"required": [
 							"id"
 						],
-						"type": "object"
-					},
-					"reporter": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"properties": {
-									"role": {
-										"type": "string"
-									},
-									"phoneNumber": {
-										"type": "string"
-									},
-									"email": {
-										"type": "string"
-									},
-									"name": {
-										"type": "string"
-									},
-									"id": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"id"
-								],
-								"type": "object"
-							}
-						]
+						"type": "object",
+						"nullable": true
 					},
 					"contract": {
 						"properties": {
@@ -10830,7 +11140,8 @@
 						"required": [
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"rackTier": {
 						"properties": {
@@ -10848,7 +11159,8 @@
 						"required": [
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"storageRack": {
 						"properties": {
@@ -10875,7 +11187,8 @@
 						"required": [
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"storageUnit": {
 						"properties": {
@@ -10899,34 +11212,8 @@
 						"required": [
 							"id"
 						],
-						"type": "object"
-					},
-					"facility": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"properties": {
-									"address": {
-										"type": "string"
-									},
-									"name": {
-										"type": "string"
-									},
-									"code": {
-										"type": "string"
-									},
-									"id": {
-										"type": "string"
-									}
-								},
-								"required": [
-									"id"
-								],
-								"type": "object"
-							}
-						]
+						"type": "object",
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -10964,6 +11251,63 @@
 					"reporterRole": {
 						"$ref": "#/components/schemas/RoleEnum"
 					},
+					"reporter": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"role": {
+										"type": "string"
+									},
+									"phoneNumber": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
+					"facility": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"properties": {
+									"address": {
+										"type": "string"
+									},
+									"name": {
+										"type": "string"
+									},
+									"code": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						]
+					},
 					"incidentCode": {
 						"type": "string"
 					},
@@ -10983,6 +11327,8 @@
 					"severity",
 					"category",
 					"reporterRole",
+					"reporter",
+					"facility",
 					"incidentCode",
 					"id"
 				],
@@ -11118,19 +11464,24 @@
 						"items": {
 							"properties": {
 								"cancellationReason": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"cancelledAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"closedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"readyAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"customerAcknowledgeNotes": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"customerAcknowledgedBy": {
 									"anyOf": [
@@ -11160,10 +11511,12 @@
 											],
 											"type": "object"
 										}
-									]
+									],
+									"nullable": true
 								},
 								"customerAcknowledgedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"restorationUploadedBy": {
 									"anyOf": [
@@ -11193,48 +11546,21 @@
 											],
 											"type": "object"
 										}
-									]
+									],
+									"nullable": true
 								},
 								"restorationUploadedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"restorationManifestDocUrl": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"preEvacuationManifest": {
 									"properties": {
 										"notes": {
 											"type": "string"
-										},
-										"evacuatedBy": {
-											"anyOf": [
-												{
-													"type": "string"
-												},
-												{
-													"properties": {
-														"role": {
-															"type": "string"
-														},
-														"phoneNumber": {
-															"type": "string"
-														},
-														"email": {
-															"type": "string"
-														},
-														"name": {
-															"type": "string"
-														},
-														"id": {
-															"type": "string"
-														}
-													},
-													"required": [
-														"id"
-													],
-													"type": "object"
-												}
-											]
 										},
 										"totalDiscrepancy": {
 											"type": "number",
@@ -11295,6 +11621,36 @@
 											},
 											"type": "array"
 										},
+										"evacuatedBy": {
+											"anyOf": [
+												{
+													"type": "string"
+												},
+												{
+													"properties": {
+														"role": {
+															"type": "string"
+														},
+														"phoneNumber": {
+															"type": "string"
+														},
+														"email": {
+															"type": "string"
+														},
+														"name": {
+															"type": "string"
+														},
+														"id": {
+															"type": "string"
+														}
+													},
+													"required": [
+														"id"
+													],
+													"type": "object"
+												}
+											]
+										},
 										"evacuatedAt": {
 											"type": "string"
 										}
@@ -11305,12 +11661,20 @@
 										"totalSystemQuantity",
 										"items",
 										"evidenceImages",
+										"evacuatedBy",
 										"evacuatedAt"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"resolution": {
 									"properties": {
+										"investigationNotes": {
+											"type": "string"
+										},
+										"resolvedAt": {
+											"type": "string"
+										},
 										"resolvedBy": {
 											"anyOf": [
 												{
@@ -11341,12 +11705,6 @@
 												}
 											]
 										},
-										"investigationNotes": {
-											"type": "string"
-										},
-										"resolvedAt": {
-											"type": "string"
-										},
 										"damageFee": {
 											"type": "number",
 											"format": "double"
@@ -11370,16 +11728,19 @@
 									},
 									"required": [
 										"resolvedAt",
+										"resolvedBy",
 										"damageFee",
 										"liableParty",
 										"repairCost",
 										"resolutionNotes",
 										"staffEvidenceImages"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"investigationNotes": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"assignedStaff": {
 									"properties": {
@@ -11402,37 +11763,8 @@
 									"required": [
 										"id"
 									],
-									"type": "object"
-								},
-								"reporter": {
-									"anyOf": [
-										{
-											"type": "string"
-										},
-										{
-											"properties": {
-												"role": {
-													"type": "string"
-												},
-												"phoneNumber": {
-													"type": "string"
-												},
-												"email": {
-													"type": "string"
-												},
-												"name": {
-													"type": "string"
-												},
-												"id": {
-													"type": "string"
-												}
-											},
-											"required": [
-												"id"
-											],
-											"type": "object"
-										}
-									]
+									"type": "object",
+									"nullable": true
 								},
 								"contract": {
 									"properties": {
@@ -11455,7 +11787,8 @@
 									"required": [
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"rackTier": {
 									"properties": {
@@ -11473,7 +11806,8 @@
 									"required": [
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"storageRack": {
 									"properties": {
@@ -11500,7 +11834,8 @@
 									"required": [
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"storageUnit": {
 									"properties": {
@@ -11524,34 +11859,8 @@
 									"required": [
 										"id"
 									],
-									"type": "object"
-								},
-								"facility": {
-									"anyOf": [
-										{
-											"type": "string"
-										},
-										{
-											"properties": {
-												"address": {
-													"type": "string"
-												},
-												"name": {
-													"type": "string"
-												},
-												"code": {
-													"type": "string"
-												},
-												"id": {
-													"type": "string"
-												}
-											},
-											"required": [
-												"id"
-											],
-											"type": "object"
-										}
-									]
+									"type": "object",
+									"nullable": true
 								},
 								"updatedAt": {
 									"type": "string"
@@ -11589,6 +11898,63 @@
 								"reporterRole": {
 									"$ref": "#/components/schemas/RoleEnum"
 								},
+								"reporter": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"role": {
+													"type": "string"
+												},
+												"phoneNumber": {
+													"type": "string"
+												},
+												"email": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
+								"facility": {
+									"anyOf": [
+										{
+											"type": "string"
+										},
+										{
+											"properties": {
+												"address": {
+													"type": "string"
+												},
+												"name": {
+													"type": "string"
+												},
+												"code": {
+													"type": "string"
+												},
+												"id": {
+													"type": "string"
+												}
+											},
+											"required": [
+												"id"
+											],
+											"type": "object"
+										}
+									]
+								},
 								"incidentCode": {
 									"type": "string"
 								},
@@ -11608,6 +11974,8 @@
 								"severity",
 								"category",
 								"reporterRole",
+								"reporter",
+								"facility",
 								"incidentCode",
 								"id"
 							],
@@ -11909,14 +12277,9 @@
 			},
 			"infer_typeoffacilityUnitTypeOfferingResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"rackZonePricing": {
 						"properties": {
@@ -11938,7 +12301,14 @@
 							"STANDARD",
 							"PRIME"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
+						"type": "string"
 					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityUnitTypeOfferingStatusEnum"
@@ -11961,7 +12331,12 @@
 					"unitType": {
 						"properties": {
 							"category": {
-								"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/UnitTypeCategoryEnum"
+									}
+								],
+								"nullable": true
 							},
 							"dimensions": {
 								"properties": {
@@ -12045,6 +12420,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"status",
 					"minRentalDays",
 					"depositMultiplier",
@@ -12396,14 +12773,15 @@
 			},
 			"infer_typeoffacilityTimeSlotResponseSchema_": {
 				"properties": {
-					"notes": {
-						"type": "string"
-					},
 					"updatedAt": {
 						"type": "string"
 					},
 					"createdAt": {
 						"type": "string"
+					},
+					"notes": {
+						"type": "string",
+						"nullable": true
 					},
 					"isActive": {
 						"type": "boolean"
@@ -12431,6 +12809,7 @@
 				"required": [
 					"updatedAt",
 					"createdAt",
+					"notes",
 					"isActive",
 					"maxCapacity",
 					"endTime",
@@ -12572,12 +12951,6 @@
 			},
 			"infer_typeoffacilityResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"operatingHours": {
 						"properties": {
 							"close": {
@@ -12591,21 +12964,33 @@
 							"close",
 							"open"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"managerId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"description": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"email": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"phone": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"code": {
+						"type": "string",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"images": {
@@ -12631,6 +13016,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"images",
 					"status",
 					"city",
@@ -12900,42 +13287,23 @@
 			},
 			"infer_typeoffacilityAmenityOfferingResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"format": "date-time"
-							}
-						]
-					},
-					"createdAt": {
-						"anyOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "string",
-								"format": "date-time"
-							}
-						]
-					},
 					"notes": {
 						"type": "string"
 					},
 					"availableQuantity": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"inUseQuantity": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"totalQuantity": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"amenity": {
 						"properties": {
@@ -13004,6 +13372,28 @@
 						],
 						"type": "object"
 					},
+					"updatedAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					},
+					"createdAt": {
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "string",
+								"format": "date-time"
+							}
+						]
+					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
 					},
@@ -13025,6 +13415,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"status",
 					"billingUnit",
 					"pricePerUnit",
@@ -13216,7 +13608,8 @@
 					},
 					"totalQuantity": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"status": {
 						"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
@@ -13257,7 +13650,8 @@
 					},
 					"totalQuantity": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"billingUnit": {
 						"$ref": "#/components/schemas/BillingUnitEnum"
@@ -13427,15 +13821,18 @@
 							"properties": {
 								"availableQuantity": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
 								},
 								"inUseQuantity": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
 								},
 								"totalQuantity": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
 								},
 								"status": {
 									"$ref": "#/components/schemas/FacilityAmenityOfferingStatusEnum"
@@ -13453,16 +13850,19 @@
 											"items": {
 												"type": "string"
 											},
-											"type": "array"
+											"type": "array",
+											"nullable": true
 										},
 										"images": {
 											"items": {
 												"type": "string"
 											},
-											"type": "array"
+											"type": "array",
+											"nullable": true
 										},
 										"description": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
 											"$ref": "#/components/schemas/AmenityStatusEnum"
@@ -13536,7 +13936,8 @@
 								"unitType": {
 									"properties": {
 										"description": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
 											"$ref": "#/components/schemas/UnitTypeStatusEnum"
@@ -13620,12 +14021,6 @@
 					},
 					"facility": {
 						"properties": {
-							"updatedAt": {
-								"type": "string"
-							},
-							"createdAt": {
-								"type": "string"
-							},
 							"operatingHours": {
 								"properties": {
 									"close": {
@@ -13639,21 +14034,33 @@
 									"close",
 									"open"
 								],
-								"type": "object"
+								"type": "object",
+								"nullable": true
 							},
 							"managerId": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"description": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"code": {
+								"type": "string",
+								"nullable": true
+							},
+							"updatedAt": {
+								"type": "string"
+							},
+							"createdAt": {
 								"type": "string"
 							},
 							"images": {
@@ -13679,6 +14086,8 @@
 							}
 						},
 						"required": [
+							"updatedAt",
+							"createdAt",
 							"images",
 							"status",
 							"city",
@@ -13859,12 +14268,6 @@
 			},
 			"infer_typeofcustomerSkuResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"customer": {
 						"properties": {
 							"status": {
@@ -13874,7 +14277,8 @@
 								"type": "string"
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -13890,21 +14294,26 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"imageUrl": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"weightKg": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"volume": {
 						"type": "number",
-						"format": "double"
+						"format": "double",
+						"nullable": true
 					},
 					"dimensions": {
 						"properties": {
@@ -13926,15 +14335,25 @@
 							"width",
 							"length"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"barcode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"category": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"description": {
+						"type": "string",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"status": {
@@ -13957,6 +14376,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"status",
 					"uom",
 					"name",
@@ -14245,22 +14666,19 @@
 			},
 			"infer_typeofcustomerInventoryResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"sku": {
 						"properties": {
 							"imageUrl": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"barcode": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"category": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"uom": {
 								"type": "string"
@@ -14281,16 +14699,19 @@
 							"skuCode",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"rackTier": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"maxWeightKg": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"tierCode": {
 								"type": "string"
@@ -14308,25 +14729,31 @@
 							"tierNumber",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"storageRack": {
 						"properties": {
 							"zone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"bay": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"aisle": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"name": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"rackCode": {
 								"type": "string"
@@ -14339,15 +14766,18 @@
 							"rackCode",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"storageUnit": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"zone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"floor": {
 								"type": "number",
@@ -14364,18 +14794,22 @@
 							"unitNumber",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"facility": {
 						"properties": {
 							"address": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"city": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"code": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"name": {
 								"type": "string"
@@ -14388,15 +14822,18 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"contract": {
 						"properties": {
 							"endDate": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"startDate": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"status": {
 								"type": "string"
@@ -14413,15 +14850,18 @@
 							"contractCode",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"customer": {
 						"properties": {
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"name": {
 								"type": "string"
@@ -14434,24 +14874,36 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"notes": {
+						"type": "string",
+						"nullable": true
+					},
+					"relatedIncidentId": {
+						"type": "string",
+						"nullable": true
+					},
+					"holdingReason": {
+						"type": "string",
+						"nullable": true
+					},
+					"rackTierId": {
+						"type": "string",
+						"nullable": true
+					},
+					"storageRackId": {
+						"type": "string",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"lastMovementAt": {
-						"type": "string"
-					},
-					"relatedIncidentId": {
-						"type": "string"
-					},
-					"holdingReason": {
-						"type": "string"
-					},
-					"rackTierId": {
-						"type": "string"
-					},
-					"storageRackId": {
 						"type": "string"
 					},
 					"status": {
@@ -14489,6 +14941,9 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
+					"lastMovementAt",
 					"status",
 					"availableQuantity",
 					"pendingOutboundQuantity",
@@ -14677,19 +15132,15 @@
 			},
 			"infer_typeofinventoryMovementResponseSchema_": {
 				"properties": {
-					"updatedAt": {
-						"type": "string"
-					},
-					"createdAt": {
-						"type": "string"
-					},
 					"performer": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"name": {
 								"type": "string"
@@ -14702,16 +15153,19 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"toRackTier": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"maxWeightKg": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"tierCode": {
 								"type": "string"
@@ -14729,16 +15183,19 @@
 							"tierNumber",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"fromRackTier": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"maxWeightKg": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"tierCode": {
 								"type": "string"
@@ -14756,18 +15213,22 @@
 							"tierNumber",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"sku": {
 						"properties": {
 							"imageUrl": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"barcode": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"category": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"uom": {
 								"type": "string"
@@ -14788,15 +15249,18 @@
 							"skuCode",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"storageUnit": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"zone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"floor": {
 								"type": "number",
@@ -14813,18 +15277,22 @@
 							"unitNumber",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"facility": {
 						"properties": {
 							"address": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"city": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"code": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"name": {
 								"type": "string"
@@ -14837,15 +15305,18 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"contract": {
 						"properties": {
 							"endDate": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"startDate": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"status": {
 								"type": "string"
@@ -14862,15 +15333,18 @@
 							"contractCode",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"customer": {
 						"properties": {
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"name": {
 								"type": "string"
@@ -14883,24 +15357,37 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"referenceCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"reason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"toRackTierId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"fromRackTierId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"customerInventoryId": {
+						"type": "string",
+						"nullable": true
+					},
+					"updatedAt": {
+						"type": "string"
+					},
+					"createdAt": {
 						"type": "string"
 					},
 					"performedBy": {
@@ -14944,6 +15431,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"performedBy",
 					"newQuantity",
 					"previousQuantity",
@@ -15200,10 +15689,12 @@
 							"customer": {
 								"properties": {
 									"phoneNumber": {
-										"type": "string"
+										"type": "string",
+										"nullable": true
 									},
 									"email": {
-										"type": "string"
+										"type": "string",
+										"nullable": true
 									},
 									"name": {
 										"type": "string"
@@ -15216,13 +15707,16 @@
 									"name",
 									"id"
 								],
-								"type": "object"
+								"type": "object",
+								"nullable": true
 							},
 							"endDate": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"startDate": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"status": {
 								"type": "string"
@@ -15239,18 +15733,22 @@
 							"contractCode",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"facility": {
 						"properties": {
 							"address": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"city": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"code": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"name": {
 								"type": "string"
@@ -15263,38 +15761,43 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"unrackedItems": {
 						"items": {
 							"properties": {
 								"relatedIncidentId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"holdingReason": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"status": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"notes": {
-									"type": "string"
-								},
-								"lastMovementAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"sku": {
 									"properties": {
 										"imageUrl": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"weightKg": {
 											"type": "number",
-											"format": "double"
+											"format": "double",
+											"nullable": true
 										},
 										"volume": {
 											"type": "number",
-											"format": "double"
+											"format": "double",
+											"nullable": true
 										},
 										"dimensions": {
 											"properties": {
@@ -15316,13 +15819,16 @@
 												"width",
 												"length"
 											],
-											"type": "object"
+											"type": "object",
+											"nullable": true
 										},
 										"barcode": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"category": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"uom": {
 											"type": "string"
@@ -15345,6 +15851,9 @@
 									],
 									"type": "object"
 								},
+								"lastMovementAt": {
+									"type": "string"
+								},
 								"availableQuantity": {
 									"type": "number",
 									"format": "double"
@@ -15363,6 +15872,7 @@
 							},
 							"required": [
 								"sku",
+								"lastMovementAt",
 								"availableQuantity",
 								"pendingOutboundQuantity",
 								"quantity",
@@ -15376,40 +15886,50 @@
 						"items": {
 							"properties": {
 								"isMine": {
-									"type": "boolean"
+									"type": "boolean",
+									"nullable": true
 								},
 								"currentContractId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"customPrice": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
 								},
 								"zone": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"bay": {
 									"type": "number",
-									"format": "double"
+									"format": "double",
+									"nullable": true
 								},
 								"aisle": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"status": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"name": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"tiers": {
 									"items": {
 										"properties": {
 											"status": {
-												"type": "string"
+												"type": "string",
+												"nullable": true
 											},
 											"volume": {
 												"type": "number",
-												"format": "double"
+												"format": "double",
+												"nullable": true
 											},
 											"dimensions": {
 												"properties": {
@@ -15431,42 +15951,48 @@
 													"width",
 													"length"
 												],
-												"type": "object"
+												"type": "object",
+												"nullable": true
 											},
 											"maxWeightKg": {
 												"type": "number",
-												"format": "double"
+												"format": "double",
+												"nullable": true
 											},
 											"items": {
 												"items": {
 													"properties": {
 														"relatedIncidentId": {
-															"type": "string"
+															"type": "string",
+															"nullable": true
 														},
 														"holdingReason": {
-															"type": "string"
+															"type": "string",
+															"nullable": true
 														},
 														"status": {
-															"type": "string"
+															"type": "string",
+															"nullable": true
 														},
 														"notes": {
-															"type": "string"
-														},
-														"lastMovementAt": {
-															"type": "string"
+															"type": "string",
+															"nullable": true
 														},
 														"sku": {
 															"properties": {
 																"imageUrl": {
-																	"type": "string"
+																	"type": "string",
+																	"nullable": true
 																},
 																"weightKg": {
 																	"type": "number",
-																	"format": "double"
+																	"format": "double",
+																	"nullable": true
 																},
 																"volume": {
 																	"type": "number",
-																	"format": "double"
+																	"format": "double",
+																	"nullable": true
 																},
 																"dimensions": {
 																	"properties": {
@@ -15488,13 +16014,16 @@
 																		"width",
 																		"length"
 																	],
-																	"type": "object"
+																	"type": "object",
+																	"nullable": true
 																},
 																"barcode": {
-																	"type": "string"
+																	"type": "string",
+																	"nullable": true
 																},
 																"category": {
-																	"type": "string"
+																	"type": "string",
+																	"nullable": true
 																},
 																"uom": {
 																	"type": "string"
@@ -15517,6 +16046,9 @@
 															],
 															"type": "object"
 														},
+														"lastMovementAt": {
+															"type": "string"
+														},
 														"availableQuantity": {
 															"type": "number",
 															"format": "double"
@@ -15535,6 +16067,7 @@
 													},
 													"required": [
 														"sku",
+														"lastMovementAt",
 														"availableQuantity",
 														"pendingOutboundQuantity",
 														"quantity",
@@ -15626,10 +16159,12 @@
 					"storageUnit": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"zone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"floor": {
 								"type": "number",
@@ -15762,11 +16297,13 @@
 											"rackTier": {
 												"properties": {
 													"status": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"maxWeightKg": {
 														"type": "number",
-														"format": "double"
+														"format": "double",
+														"nullable": true
 													},
 													"tierCode": {
 														"type": "string"
@@ -15784,25 +16321,31 @@
 													"tierNumber",
 													"id"
 												],
-												"type": "object"
+												"type": "object",
+												"nullable": true
 											},
 											"storageRack": {
 												"properties": {
 													"zone": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"bay": {
 														"type": "number",
-														"format": "double"
+														"format": "double",
+														"nullable": true
 													},
 													"aisle": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"status": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"name": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"rackCode": {
 														"type": "string"
@@ -15815,15 +16358,18 @@
 													"rackCode",
 													"id"
 												],
-												"type": "object"
+												"type": "object",
+												"nullable": true
 											},
 											"storageUnit": {
 												"properties": {
 													"status": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"zone": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"floor": {
 														"type": "number",
@@ -15840,15 +16386,18 @@
 													"unitNumber",
 													"id"
 												],
-												"type": "object"
+												"type": "object",
+												"nullable": true
 											},
 											"contract": {
 												"properties": {
 													"endDate": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"startDate": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"status": {
 														"type": "string"
@@ -15865,18 +16414,22 @@
 													"contractCode",
 													"id"
 												],
-												"type": "object"
+												"type": "object",
+												"nullable": true
 											},
 											"facility": {
 												"properties": {
 													"address": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"city": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"code": {
-														"type": "string"
+														"type": "string",
+														"nullable": true
 													},
 													"name": {
 														"type": "string"
@@ -15889,15 +16442,18 @@
 													"name",
 													"id"
 												],
-												"type": "object"
+												"type": "object",
+												"nullable": true
 											},
 											"notes": {
-												"type": "string"
-											},
-											"lastMovementAt": {
-												"type": "string"
+												"type": "string",
+												"nullable": true
 											},
 											"status": {
+												"type": "string",
+												"nullable": true
+											},
+											"lastMovementAt": {
 												"type": "string"
 											},
 											"quantity": {
@@ -15909,6 +16465,7 @@
 											}
 										},
 										"required": [
+											"lastMovementAt",
 											"quantity",
 											"inventoryId"
 										],
@@ -15931,13 +16488,16 @@
 								"sku": {
 									"properties": {
 										"imageUrl": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"barcode": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"category": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"uom": {
 											"type": "string"
@@ -16055,11 +16615,13 @@
 								"rackTier": {
 									"properties": {
 										"status": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"maxWeightKg": {
 											"type": "number",
-											"format": "double"
+											"format": "double",
+											"nullable": true
 										},
 										"tierCode": {
 											"type": "string"
@@ -16077,25 +16639,31 @@
 										"tierNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"storageRack": {
 									"properties": {
 										"zone": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"bay": {
 											"type": "number",
-											"format": "double"
+											"format": "double",
+											"nullable": true
 										},
 										"aisle": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"name": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"rackCode": {
 											"type": "string"
@@ -16108,15 +16676,18 @@
 										"rackCode",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"storageUnit": {
 									"properties": {
 										"status": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"zone": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"floor": {
 											"type": "number",
@@ -16133,15 +16704,18 @@
 										"unitNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"contract": {
 									"properties": {
 										"endDate": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"startDate": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
 											"type": "string"
@@ -16158,18 +16732,22 @@
 										"contractCode",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"facility": {
 									"properties": {
 										"address": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"city": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"code": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"name": {
 											"type": "string"
@@ -16182,15 +16760,18 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"notes": {
-									"type": "string"
-								},
-								"lastMovementAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"status": {
+									"type": "string",
+									"nullable": true
+								},
+								"lastMovementAt": {
 									"type": "string"
 								},
 								"quantity": {
@@ -16202,6 +16783,7 @@
 								}
 							},
 							"required": [
+								"lastMovementAt",
 								"quantity",
 								"inventoryId"
 							],
@@ -16212,13 +16794,16 @@
 					"sku": {
 						"properties": {
 							"imageUrl": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"barcode": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"category": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"totalQuantity": {
 								"type": "number",
@@ -16290,19 +16875,15 @@
 					"recentMovements": {
 						"items": {
 							"properties": {
-								"updatedAt": {
-									"type": "string"
-								},
-								"createdAt": {
-									"type": "string"
-								},
 								"performer": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"name": {
 											"type": "string"
@@ -16315,16 +16896,19 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"toRackTier": {
 									"properties": {
 										"status": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"maxWeightKg": {
 											"type": "number",
-											"format": "double"
+											"format": "double",
+											"nullable": true
 										},
 										"tierCode": {
 											"type": "string"
@@ -16342,16 +16926,19 @@
 										"tierNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"fromRackTier": {
 									"properties": {
 										"status": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"maxWeightKg": {
 											"type": "number",
-											"format": "double"
+											"format": "double",
+											"nullable": true
 										},
 										"tierCode": {
 											"type": "string"
@@ -16369,18 +16956,22 @@
 										"tierNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"sku": {
 									"properties": {
 										"imageUrl": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"barcode": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"category": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"uom": {
 											"type": "string"
@@ -16401,15 +16992,18 @@
 										"skuCode",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"storageUnit": {
 									"properties": {
 										"status": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"zone": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"floor": {
 											"type": "number",
@@ -16426,18 +17020,22 @@
 										"unitNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"facility": {
 									"properties": {
 										"address": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"city": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"code": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"name": {
 											"type": "string"
@@ -16450,15 +17048,18 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"contract": {
 									"properties": {
 										"endDate": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"startDate": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
 											"type": "string"
@@ -16475,15 +17076,18 @@
 										"contractCode",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"customer": {
 									"properties": {
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"name": {
 											"type": "string"
@@ -16496,24 +17100,37 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"notes": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"referenceCode": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"reason": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"toRackTierId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"fromRackTierId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"customerInventoryId": {
+									"type": "string",
+									"nullable": true
+								},
+								"updatedAt": {
+									"type": "string"
+								},
+								"createdAt": {
 									"type": "string"
 								},
 								"performedBy": {
@@ -16557,6 +17174,8 @@
 								}
 							},
 							"required": [
+								"updatedAt",
+								"createdAt",
 								"performedBy",
 								"newQuantity",
 								"previousQuantity",
@@ -16710,7 +17329,8 @@
 						"items": {
 							"properties": {
 								"zone": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"bay": {
 									"anyOf": [
@@ -16721,10 +17341,12 @@
 											"type": "number",
 											"format": "double"
 										}
-									]
+									],
+									"nullable": true
 								},
 								"aisle": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"rackCode": {
 									"type": "string"
@@ -16742,61 +17364,68 @@
 						"type": "array"
 					},
 					"staffNotes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"checkedOutByName": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"checkedOutAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"checkedInByName": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"checkedInAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"rawOtpCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"purpose": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"vehiclePlate": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"vehicleType": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"facilityCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"facilityName": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"contractCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"customerPhone": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"customerName": {
-						"type": "string"
-					},
-					"assignedAt": {
-						"type": "string"
-					},
-					"assignedStaffName": {
-						"type": "string"
-					},
-					"assignedStaffId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -16852,6 +17481,18 @@
 						"type": "number",
 						"format": "double"
 					},
+					"assignedAt": {
+						"type": "string",
+						"nullable": true
+					},
+					"assignedStaffName": {
+						"type": "string",
+						"nullable": true
+					},
+					"assignedStaffId": {
+						"type": "string",
+						"nullable": true
+					},
 					"scheduleCode": {
 						"type": "string"
 					},
@@ -16872,6 +17513,9 @@
 					"customerId",
 					"status",
 					"assignmentVersion",
+					"assignedAt",
+					"assignedStaffName",
+					"assignedStaffId",
 					"scheduleCode",
 					"id"
 				],
@@ -17031,7 +17675,8 @@
 						"items": {
 							"properties": {
 								"zone": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"bay": {
 									"anyOf": [
@@ -17042,10 +17687,12 @@
 											"type": "number",
 											"format": "double"
 										}
-									]
+									],
+									"nullable": true
 								},
 								"aisle": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"rackCode": {
 									"type": "string"
@@ -17068,7 +17715,8 @@
 								"items": {
 									"properties": {
 										"zone": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"bay": {
 											"anyOf": [
@@ -17079,10 +17727,12 @@
 													"type": "number",
 													"format": "double"
 												}
-											]
+											],
+											"nullable": true
 										},
 										"aisle": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"rackCode": {
 											"type": "string"
@@ -17100,61 +17750,68 @@
 								"type": "array"
 							},
 							"staffNotes": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"cancelledReason": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"cancelledAt": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"checkedOutByName": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"checkedOutAt": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"checkedInByName": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"checkedInAt": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"rawOtpCode": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"purpose": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"vehiclePlate": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"vehicleType": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"facilityCode": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"facilityName": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"contractCode": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"customerPhone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"customerName": {
-								"type": "string"
-							},
-							"assignedAt": {
-								"type": "string"
-							},
-							"assignedStaffName": {
-								"type": "string"
-							},
-							"assignedStaffId": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"updatedAt": {
 								"type": "string"
@@ -17210,6 +17867,18 @@
 								"type": "number",
 								"format": "double"
 							},
+							"assignedAt": {
+								"type": "string",
+								"nullable": true
+							},
+							"assignedStaffName": {
+								"type": "string",
+								"nullable": true
+							},
+							"assignedStaffId": {
+								"type": "string",
+								"nullable": true
+							},
 							"scheduleCode": {
 								"type": "string"
 							},
@@ -17230,6 +17899,9 @@
 							"customerId",
 							"status",
 							"assignmentVersion",
+							"assignedAt",
+							"assignedStaffName",
+							"assignedStaffId",
 							"scheduleCode",
 							"id"
 						],
@@ -17314,31 +17986,28 @@
 			"infer_typeofaccessScheduleListItemResponseSchema_": {
 				"properties": {
 					"checkedOutAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"checkedInAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"vehiclePlate": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"facilityName": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"contractCode": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"customerName": {
-						"type": "string"
-					},
-					"assignedAt": {
-						"type": "string"
-					},
-					"assignedStaffName": {
-						"type": "string"
-					},
-					"assignedStaffId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"createdAt": {
 						"type": "string"
@@ -17378,6 +18047,18 @@
 						"type": "number",
 						"format": "double"
 					},
+					"assignedAt": {
+						"type": "string",
+						"nullable": true
+					},
+					"assignedStaffName": {
+						"type": "string",
+						"nullable": true
+					},
+					"assignedStaffId": {
+						"type": "string",
+						"nullable": true
+					},
 					"scheduleCode": {
 						"type": "string"
 					},
@@ -17398,6 +18079,9 @@
 					"customerId",
 					"status",
 					"assignmentVersion",
+					"assignedAt",
+					"assignedStaffName",
+					"assignedStaffId",
 					"scheduleCode",
 					"id"
 				],
@@ -17567,10 +18251,12 @@
 					"assignedStaff": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -17587,12 +18273,14 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"storageUnit": {
 						"properties": {
 							"zone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"status": {
 								"type": "string"
@@ -17614,23 +18302,28 @@
 							"unitNumber",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"offering": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"minRentalDays": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"depositMultiplier": {
 								"type": "number",
-								"format": "double"
+								"format": "double",
+								"nullable": true
 							},
 							"unitTypeId": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"pricePerUnit": {
 								"type": "number",
@@ -17648,18 +18341,22 @@
 							"billingUnit",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"facility": {
 						"properties": {
 							"status": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phone": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"address": {
 								"type": "string"
@@ -17680,15 +18377,18 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"customer": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -17705,36 +18405,45 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"notes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"outOfSlot": {
-						"type": "boolean"
+						"type": "boolean",
+						"nullable": true
 					},
 					"earlyCheckIn": {
-						"type": "boolean"
+						"type": "boolean",
+						"nullable": true
 					},
 					"staffSignedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"customerSignedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"signingAuthorizationSnapshot": {},
 					"customerSnapshot": {},
 					"legalEntitySnapshot": {},
 					"terminatedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"terminatedBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -17751,27 +18460,42 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"terminationReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"violationCategory": {
-						"$ref": "#/components/schemas/ViolationCategoryEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ViolationCategoryEnum"
+							}
+						],
+						"nullable": true
 					},
 					"terminationType": {
-						"$ref": "#/components/schemas/ContractTerminationTypeEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ContractTerminationTypeEnum"
+							}
+						],
+						"nullable": true
 					},
 					"cancelledAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancelledBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -17788,36 +18512,54 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"cancellationReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"cancellationType": {
-						"$ref": "#/components/schemas/ContractCancellationTypeEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ContractCancellationTypeEnum"
+							}
+						],
+						"nullable": true
 					},
 					"disputeReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"disputedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"settlementConfirmedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"depositStatus": {
-						"$ref": "#/components/schemas/ContractDepositStatusEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ContractDepositStatusEnum"
+							}
+						],
+						"nullable": true
 					},
 					"inspectionNotes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"inspectedBy": {
 						"properties": {
 							"role": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"phoneNumber": {
-								"type": "string"
+								"type": "string",
+								"nullable": true
 							},
 							"email": {
 								"type": "string"
@@ -17834,34 +18576,44 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"firstPeriodPaymentId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"firstPeriodPaidAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"depositPaymentId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"depositPaidAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"actualCheckOutDate": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"actualCheckInDate": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"assignedStaffId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"rentalTargetType": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"reservationId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"updatedAt": {
 						"type": "string"
@@ -17923,7 +18675,8 @@
 						"items": {
 							"properties": {
 								"fileHash": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"uploadedAt": {
 									"type": "string"
@@ -17946,10 +18699,12 @@
 								"terminatedBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -17966,10 +18721,16 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"violationCategory": {
-									"$ref": "#/components/schemas/ViolationCategoryEnum"
+									"allOf": [
+										{
+											"$ref": "#/components/schemas/ViolationCategoryEnum"
+										}
+									],
+									"nullable": true
 								},
 								"forfeitedAmount": {
 									"type": "number",
@@ -17988,7 +18749,8 @@
 									"items": {
 										"properties": {
 											"fileHash": {
-												"type": "string"
+												"type": "string",
+												"nullable": true
 											},
 											"uploadedAt": {
 												"type": "string"
@@ -18009,7 +18771,8 @@
 									"items": {
 										"properties": {
 											"fileHash": {
-												"type": "string"
+												"type": "string",
+												"nullable": true
 											},
 											"uploadedAt": {
 												"type": "string"
@@ -18051,7 +18814,8 @@
 						"items": {
 							"properties": {
 								"fileHash": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"uploadedAt": {
 									"type": "string"
@@ -18072,7 +18836,8 @@
 						"items": {
 							"properties": {
 								"fileHash": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"uploadedAt": {
 									"type": "string"
@@ -18131,15 +18896,18 @@
 						"items": {
 							"properties": {
 								"note": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"renewedBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -18156,7 +18924,8 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"renewedAt": {
 									"type": "string"
@@ -18181,18 +18950,22 @@
 						"items": {
 							"properties": {
 								"notes": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"cancelledAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"cancelledBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -18209,21 +18982,26 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"cancellationReason": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"rejectedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"rejectedBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -18240,27 +19018,34 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"rejectionReason": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"completedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"staffSignedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"customerSignedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"assignedStaff": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -18277,21 +19062,26 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"assignedStaffId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"approvedAt": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"approvedBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -18308,15 +19098,18 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"requestedBy": {
 									"properties": {
 										"role": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"phoneNumber": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"email": {
 											"type": "string"
@@ -18333,18 +19126,22 @@
 										"name",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"newRackId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"previousRackId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"newStorageUnit": {
 									"properties": {
 										"zone": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
 											"type": "string"
@@ -18366,15 +19163,18 @@
 										"unitNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"newStorageUnitId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"previousStorageUnit": {
 									"properties": {
 										"zone": {
-											"type": "string"
+											"type": "string",
+											"nullable": true
 										},
 										"status": {
 											"type": "string"
@@ -18396,22 +19196,27 @@
 										"unitNumber",
 										"id"
 									],
-									"type": "object"
+									"type": "object",
+									"nullable": true
 								},
 								"previousStorageUnitId": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"newEndDate": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"previousEndDate": {
-									"type": "string"
+									"type": "string",
+									"nullable": true
 								},
 								"signedAddendumFiles": {
 									"items": {
 										"properties": {
 											"fileHash": {
-												"type": "string"
+												"type": "string",
+												"nullable": true
 											},
 											"uploadedAt": {
 												"type": "string"
@@ -19211,7 +20016,12 @@
 						"type": "string"
 					},
 					"violationCategory": {
-						"$ref": "#/components/schemas/ViolationCategoryEnum"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/ViolationCategoryEnum"
+							}
+						],
+						"nullable": true
 					},
 					"evidenceFileUrls": {
 						"items": {
@@ -19353,16 +20163,24 @@
 						"type": "string"
 					},
 					"targetCurrentData": {
-						"$ref": "#/components/schemas/Record_string.unknown_"
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/Record_string.unknown_"
+							}
+						],
+						"nullable": true
 					},
 					"reviewNotes": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"rejectionReason": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"reviewedAt": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"approver": {
 						"properties": {
@@ -19387,13 +20205,16 @@
 							"name",
 							"id"
 						],
-						"type": "object"
+						"type": "object",
+						"nullable": true
 					},
 					"approverId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"targetId": {
-						"type": "string"
+						"type": "string",
+						"nullable": true
 					},
 					"facility": {
 						"properties": {
@@ -19695,6 +20516,9 @@
 			},
 			"infer_typeofamenityResponseSchema_": {
 				"properties": {
+					"description": {
+						"type": "string"
+					},
 					"updatedAt": {
 						"anyOf": [
 							{
@@ -19716,9 +20540,6 @@
 								"format": "date-time"
 							}
 						]
-					},
-					"description": {
-						"type": "string"
 					},
 					"tags": {
 						"items": {
@@ -19746,6 +20567,8 @@
 					}
 				},
 				"required": [
+					"updatedAt",
+					"createdAt",
 					"tags",
 					"images",
 					"status",

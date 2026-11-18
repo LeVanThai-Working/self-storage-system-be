@@ -34,7 +34,7 @@ export const facilityRefSchema = z.object({
 export const storageUnitRefSchema = z.object({
   id: z.string(),
   unitNumber: z.string().optional(),
-  floor: z.number().optional(),
+  floor: z.number().int().min(1).optional(),
   zone: z.string().optional(),
   status: z.string().optional(),
 });

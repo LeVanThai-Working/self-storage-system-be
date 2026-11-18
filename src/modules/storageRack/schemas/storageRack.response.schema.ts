@@ -64,7 +64,7 @@ export const storageRackResponseSchema = z.object({
     .object({
       id: z.string(),
       unitNumber: z.string(),
-      floor: z.number().optional(),
+      floor: z.number().int().min(1).optional(),
       zone: z.string().optional(),
       status: z.string().optional(),
     })

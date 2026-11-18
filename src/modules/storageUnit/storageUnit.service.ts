@@ -52,6 +52,17 @@ export class StorageUnitService {
     private readonly storageRackRepository?: StorageRackRepository
   ) {}
 
+  private resolveFloor(
+    requested: number | undefined,
+    previous?: number
+  ): number {
+    const floor = requested === undefined ? (previous ?? 1) : requested;
+    if (!Number.isInteger(floor) || floor < 1) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_608);
+    }
+    return floor;
+  }
+
   private formatStorageUnit(unit: unknown): unknown {
     if (!unit) return unit;
     const doc = unit as {
@@ -276,6 +287,7 @@ export class StorageUnitService {
 
     const newUnit = await this.storageUnitRepository.create({
       ...data,
+      floor: this.resolveFloor(data.floor),
       facilityId: data.facilityId as unknown as IStorageUnit['facilityId'],
       unitTypeId: data.unitTypeId as unknown as IStorageUnit['unitTypeId'],
       unitNumber: normalizedUnitNumber,
@@ -312,6 +324,11 @@ export class StorageUnitService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Storage Unit']);
     }
 
+    const currentUnitType = await this.unitTypeRepository.findById(
+      String(unit.unitTypeId?._id || unit.unitTypeId)
+    );
+    let effectiveUnitType = currentUnitType;
+
     // If unitTypeId is changed: only allow if the unit is currently AVAILABLE
     if (
       data.unitTypeId &&
@@ -328,6 +345,7 @@ export class StorageUnitService {
       if (!unitType || unitType.status !== UnitTypeStatusEnum.ACTIVE) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_110, ['Unit Type']);
       }
+      effectiveUnitType = unitType;
 
       const facilityIdStr = String(unit.facilityId?._id || unit.facilityId);
       const offering = await this.offeringRepository.findByFacilityAndUnitType(
@@ -359,9 +377,14 @@ export class StorageUnitService {
       }
     }
 
+    if (!effectiveUnitType) {
+      throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['Unit Type']);
+    }
+    const resolvedFloor = this.resolveFloor(data.floor, unit.floor);
     const { unitTypeId, unitNumber, ...otherData } = data;
     const updatePayload: Partial<IStorageUnit> = {
       ...otherData,
+      floor: resolvedFloor,
       ...(unitTypeId && {
         unitTypeId: unitTypeId as unknown as IStorageUnit['unitTypeId'],
       }),

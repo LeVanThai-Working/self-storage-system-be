@@ -91,7 +91,7 @@ interface PopulatedRef {
   city?: string | null;
   address?: string | null;
   unitNumber?: string;
-  floor?: number | null;
+  floor?: number;
   zone?: string | null;
   rackCode?: string;
   aisle?: string | null;
@@ -1405,7 +1405,7 @@ export class CustomerInventoryService {
       const storageUnitSummary = {
         id: String(unit._id),
         unitNumber: unit.unitNumber,
-        floor: unit.floor ?? null,
+        floor: unit.floor,
         zone: unit.zone || null,
         status: unit.status || null,
       };
@@ -1618,7 +1618,7 @@ export class CustomerInventoryService {
     const storageUnitSummary = {
       id: String(unit._id),
       unitNumber: unit.unitNumber,
-      floor: unit.floor ?? null,
+      floor: unit.floor,
       zone: unit.zone || null,
       status: unit.status || null,
     };
@@ -1747,7 +1747,7 @@ export class CustomerInventoryService {
         ? {
             id: String(unt._id),
             unitNumber: unt.unitNumber || '',
-            floor: unt.floor ?? null,
+            floor: unt.floor,
             zone: unt.zone || null,
             status: unt.status || null,
           }
@@ -2033,7 +2033,7 @@ export class CustomerInventoryService {
         ? {
             id: String(unit._id),
             unitNumber: unit.unitNumber || '',
-            floor: unit.floor ?? null,
+            floor: unit.floor,
             zone: unit.zone || null,
             status: unit.status || null,
           }
@@ -2136,7 +2136,7 @@ export class CustomerInventoryService {
         ? {
             id: String(unit._id),
             unitNumber: unit.unitNumber || '',
-            floor: unit.floor ?? null,
+            floor: unit.floor,
             zone: unit.zone || null,
             status: unit.status || null,
           }

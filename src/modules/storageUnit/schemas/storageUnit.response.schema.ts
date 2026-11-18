@@ -43,7 +43,7 @@ export const storageUnitResponseSchema = z.object({
   facilityId: z.string(),
   unitTypeId: z.string(),
   unitNumber: z.string(),
-  floor: z.number(),
+  floor: z.number().int().min(1),
   zone: z.string().optional().nullable(),
   status: z.enum(StorageUnitStatusEnum),
   images: z.array(z.string()).default([]),
