@@ -33468,7 +33468,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -33499,7 +33503,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "query",
@@ -33624,7 +33632,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "query",
@@ -33664,7 +33676,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [],
 				"requestBody": {
 					"required": true,
@@ -33697,7 +33713,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -33739,7 +33759,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -33781,7 +33805,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": []
 			}
 		},
@@ -33803,7 +33831,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -33834,7 +33866,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -33875,7 +33911,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",
@@ -33917,7 +33957,11 @@
 				"tags": [
 					"Access Schedules"
 				],
-				"security": [],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
 				"parameters": [
 					{
 						"in": "path",

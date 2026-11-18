@@ -26,6 +26,7 @@ import {
   TEST_USERS,
   TEST_FACILITY_A_ID,
   TEST_FACILITY_B_ID,
+  getAuthHeaders,
 } from './helpers/auth.helper.ts';
 import { RegisterRoutes } from '../src/routes/routes.ts';
 import { errorMiddleware } from '../src/middlewares/error.middleware.ts';
@@ -1180,11 +1181,32 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
     afterEach(() => vi.unstubAllEnvs());
 
     beforeEach(() => {
-      vi.stubEnv('ALLOW_INSECURE_CALLER_FALLBACK', 'true');
+      vi.stubEnv('ALLOW_INSECURE_CALLER_FALLBACK', 'false');
       app = express();
       app.use(express.json());
       RegisterRoutes(app);
       app.use(errorMiddleware);
+    });
+
+    it('rejects caller headers without a valid access token', async () => {
+      const body = {
+        contractId: String(activeContractA._id),
+        timeSlotId: String(timeSlot1A._id),
+        scheduledDate: futureDateStr,
+      };
+      const missingToken = await request(app)
+        .post('/access-schedules')
+        .set('x-user-id', customer1Caller.userId)
+        .set('x-user-role', customer1Caller.role)
+        .send(body);
+      expect(missingToken.status).toBe(401);
+
+      const invalidToken = await request(app)
+        .post('/access-schedules')
+        .set('Authorization', 'Bearer invalid-token')
+        .send(body);
+      expect(invalidToken.status).toBe(401);
+      expect(await AccessSchedule.countDocuments()).toBe(0);
     });
 
     it('accepts null vehicle/purpose fields and returns phone and gate staff names in detail', async () => {
@@ -1194,8 +1216,10 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
 
       const createRes = await request(app)
         .post('/access-schedules')
-        .set('x-user-id', customer1Caller.userId)
-        .set('x-user-role', customer1Caller.role)
+        .set(
+          'Authorization',
+          getAuthHeaders(TEST_USERS.customer1).Authorization
+        )
         .send({
           contractId: String(activeContractA._id),
           timeSlotId: String(timeSlot1A._id),
@@ -1215,18 +1239,20 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
         vi.setSystemTime(new Date(`${futureDateStr}T08:10:00.000+07:00`));
         const checkInRes = await request(app)
           .post('/access-schedules/check-in')
-          .set('x-user-id', staffACaller.userId)
-          .set('x-user-role', staffACaller.role)
-          .set('x-facility-id', staffACaller.assignedFacilityId)
+          .set(
+            'Authorization',
+            getAuthHeaders(TEST_USERS.staffFacilityA).Authorization
+          )
           .send({ code: createRes.body.data.rawOtpCode, staffNotes: null });
         expect(checkInRes.status).toBe(200);
 
         vi.setSystemTime(new Date(`${futureDateStr}T09:30:00.000+07:00`));
         const checkOutRes = await request(app)
           .post(`/access-schedules/${scheduleId}/check-out`)
-          .set('x-user-id', staffACaller.userId)
-          .set('x-user-role', staffACaller.role)
-          .set('x-facility-id', staffACaller.assignedFacilityId)
+          .set(
+            'Authorization',
+            getAuthHeaders(TEST_USERS.staffFacilityA).Authorization
+          )
           .send({ staffNotes: null });
         expect(checkOutRes.status).toBe(200);
       } finally {
@@ -1235,8 +1261,10 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
 
       const detailRes = await request(app)
         .get(`/access-schedules/${scheduleId}`)
-        .set('x-user-id', customer1Caller.userId)
-        .set('x-user-role', customer1Caller.role);
+        .set(
+          'Authorization',
+          getAuthHeaders(TEST_USERS.customer1).Authorization
+        );
 
       expect(detailRes.status).toBe(200);
       expect(detailRes.body.data).toMatchObject({
@@ -1260,8 +1288,10 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
 
       const res = await request(app)
         .post(`/access-schedules/${schedule.id}/cancel`)
-        .set('x-user-id', customer1Caller.userId)
-        .set('x-user-role', customer1Caller.role)
+        .set(
+          'Authorization',
+          getAuthHeaders(TEST_USERS.customer1).Authorization
+        )
         .send({ reason: null });
 
       expect(res.status).toBe(200);

@@ -10491,6 +10491,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"CreateAccessScheduleRequest"},
         };
         app.post('/access-schedules',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.createAccessSchedule)),
 
@@ -10527,6 +10528,7 @@ export function RegisterRoutes(app: Router) {
                 date: {"in":"query","name":"date","required":true,"dataType":"string"},
         };
         app.get('/access-schedules/available-slots',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.getAvailableSlots)),
 
@@ -10563,6 +10565,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"CheckInAccessScheduleRequest"},
         };
         app.post('/access-schedules/check-in',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.checkIn)),
 
@@ -10600,6 +10603,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"CheckOutAccessScheduleRequest"},
         };
         app.post('/access-schedules/:id/check-out',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.checkOut)),
 
@@ -10637,6 +10641,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"CancelAccessScheduleRequest"},
         };
         app.post('/access-schedules/:id/cancel',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.cancelSchedule)),
 
@@ -10672,6 +10677,7 @@ export function RegisterRoutes(app: Router) {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
         };
         app.post('/access-schedules/process-no-show',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.processNoShowScan)),
 
@@ -10718,6 +10724,7 @@ export function RegisterRoutes(app: Router) {
                 assignmentScope: {"in":"query","name":"assignmentScope","dataType":"union","subSchemas":[{"dataType":"enum","enums":["unassigned"]},{"dataType":"enum","enums":["mine"]},{"dataType":"enum","enums":["all"]}]},
         };
         app.get('/access-schedules',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.getSchedules)),
 
@@ -10754,6 +10761,7 @@ export function RegisterRoutes(app: Router) {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
         };
         app.post('/access-schedules/:id/claim',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.claim)),
 
@@ -10791,6 +10799,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"AssignAccessScheduleRequest"},
         };
         app.post('/access-schedules/:id/assign',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.assign)),
 
@@ -10828,6 +10837,7 @@ export function RegisterRoutes(app: Router) {
                 body: {"in":"body","name":"body","required":true,"ref":"UnassignAccessScheduleRequest"},
         };
         app.post('/access-schedules/:id/unassign',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.unassign)),
 
@@ -10864,6 +10874,7 @@ export function RegisterRoutes(app: Router) {
                 id: {"in":"path","name":"id","required":true,"dataType":"string"},
         };
         app.get('/access-schedules/:id',
+            authenticateMiddleware([{"bearerAuth":[]}]),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController)),
             ...(fetchMiddlewares<RequestHandler>(AccessScheduleController.prototype.getScheduleById)),
 
