@@ -3921,10 +3921,8 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"StatisticsGranularityEnum": {
+			"RentalTrendsGranularityEnum": {
 				"enum": [
-					"day",
-					"week",
 					"month",
 					"quarter"
 				],
@@ -3951,6 +3949,10 @@
 						"type": "number",
 						"format": "double"
 					},
+					"walkInContracts": {
+						"type": "number",
+						"format": "double"
+					},
 					"contractsEnded": {
 						"type": "number",
 						"format": "double"
@@ -3962,6 +3964,12 @@
 					"varianceFromAvgPercent": {
 						"type": "number",
 						"format": "double"
+					},
+					"isPeak": {
+						"type": "boolean"
+					},
+					"isLow": {
+						"type": "boolean"
 					}
 				},
 				"required": [
@@ -3970,9 +3978,12 @@
 					"completedReservations",
 					"cancelledReservations",
 					"contractsCheckedIn",
+					"walkInContracts",
 					"contractsEnded",
 					"collectedRevenue",
-					"varianceFromAvgPercent"
+					"varianceFromAvgPercent",
+					"isPeak",
+					"isLow"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -3989,27 +4000,12 @@
 					"reservationsCreated": {
 						"type": "number",
 						"format": "double"
-					},
-					"contractsCheckedIn": {
-						"type": "number",
-						"format": "double"
-					},
-					"accessSchedulesCount": {
-						"type": "number",
-						"format": "double"
-					},
-					"totalActivity": {
-						"type": "number",
-						"format": "double"
 					}
 				},
 				"required": [
 					"dayOfWeek",
 					"dayName",
-					"reservationsCreated",
-					"contractsCheckedIn",
-					"accessSchedulesCount",
-					"totalActivity"
+					"reservationsCreated"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -4022,36 +4018,11 @@
 					"reservationCount": {
 						"type": "number",
 						"format": "double"
-					},
-					"completedReservationCount": {
-						"type": "number",
-						"format": "double"
-					},
-					"accessScheduleCount": {
-						"type": "number",
-						"format": "double"
-					},
-					"totalDemandCount": {
-						"type": "number",
-						"format": "double"
-					},
-					"configuredMaxCapacityPerDay": {
-						"type": "number",
-						"format": "double"
-					},
-					"demandSharePercent": {
-						"type": "number",
-						"format": "double"
 					}
 				},
 				"required": [
 					"timeSlot",
-					"reservationCount",
-					"completedReservationCount",
-					"accessScheduleCount",
-					"totalDemandCount",
-					"configuredMaxCapacityPerDay",
-					"demandSharePercent"
+					"reservationCount"
 				],
 				"type": "object",
 				"additionalProperties": false
@@ -4095,7 +4066,7 @@
 								"nullable": true
 							},
 							"granularity": {
-								"$ref": "#/components/schemas/StatisticsGranularityEnum"
+								"$ref": "#/components/schemas/RentalTrendsGranularityEnum"
 							},
 							"toDate": {
 								"type": "string"
@@ -4152,14 +4123,6 @@
 								},
 								"type": "array"
 							},
-							"quietestDay": {
-								"allOf": [
-									{
-										"$ref": "#/components/schemas/DayOfWeekItem"
-									}
-								],
-								"nullable": true
-							},
 							"busiestDay": {
 								"allOf": [
 									{
@@ -4171,16 +4134,32 @@
 						},
 						"required": [
 							"items",
-							"quietestDay",
 							"busiestDay"
 						],
 						"type": "object"
 					},
 					"timeSlotDemand": {
-						"items": {
-							"$ref": "#/components/schemas/TimeSlotDemandItem"
+						"properties": {
+							"items": {
+								"items": {
+									"$ref": "#/components/schemas/TimeSlotDemandItem"
+								},
+								"type": "array"
+							},
+							"mostBookedTimeSlot": {
+								"allOf": [
+									{
+										"$ref": "#/components/schemas/TimeSlotDemandItem"
+									}
+								],
+								"nullable": true
+							}
 						},
-						"type": "array"
+						"required": [
+							"items",
+							"mostBookedTimeSlot"
+						],
+						"type": "object"
 					},
 					"hourOfDayDistribution": {
 						"items": {
@@ -4308,7 +4287,7 @@
 						"type": "string"
 					},
 					"granularity": {
-						"$ref": "#/components/schemas/StatisticsGranularityEnum"
+						"$ref": "#/components/schemas/RentalTrendsGranularityEnum"
 					}
 				},
 				"type": "object",
@@ -4778,6 +4757,15 @@
 				},
 				"type": "object",
 				"additionalProperties": false
+			},
+			"StatisticsGranularityEnum": {
+				"enum": [
+					"day",
+					"week",
+					"month",
+					"quarter"
+				],
+				"type": "string"
 			},
 			"InvoiceItemTypeEnum": {
 				"enum": [
@@ -23892,7 +23880,7 @@
 						}
 					}
 				},
-				"description": "Phân tích xu hướng thuê theo thời gian (Rental Trends & Temporal Demand):\nChuỗi thời gian theo ngày/tuần/tháng/quý, tự động chỉ ra khoảng thời gian cao điểm (peakPeriods)\nvà ít người thuê (lowPeriods), phân bổ nhu cầu theo thứ trong tuần, khung giờ hẹn check-in/ra vào kho,\ngiờ đặt đơn online trong ngày và độ dài kỳ thuê.",
+				"description": "Phân tích xu hướng thuê theo thời gian (Rental Trends & Temporal Demand):\nChuỗi thời gian liên tục theo tháng/quý (mặc định 365 ngày gần nhất), tự động đánh dấu\nTop 1 giai đoạn cao điểm (isPeak / peakPeriods) và Top 1 ít người thuê (isLow / lowPeriods),\nsố lượng đơn đặt theo thứ trong tuần (busiestDay), số lượng đơn đặt theo khung giờ (mostBookedTimeSlot),\ngiờ đặt đơn online trong ngày và độ dài kỳ thuê.",
 				"tags": [
 					"Statistics & KPI"
 				],
@@ -23927,7 +23915,7 @@
 						"name": "granularity",
 						"required": false,
 						"schema": {
-							"$ref": "#/components/schemas/StatisticsGranularityEnum"
+							"$ref": "#/components/schemas/RentalTrendsGranularityEnum"
 						}
 					}
 				]

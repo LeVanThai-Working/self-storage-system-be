@@ -34,6 +34,7 @@ import type { Request as ExpressRequest } from 'express';
 import { StatisticsRepository } from '../src/modules/statistics/statistics.repository.ts';
 import { StatisticsService } from '../src/modules/statistics/statistics.service.ts';
 import { statisticsController } from '../src/modules/statistics/statistics.container.ts';
+import { rentalTrendsQuerySchema } from '../src/modules/statistics/schemas/statistics.request.schema.ts';
 
 import {
   RoleEnum,
@@ -103,7 +104,7 @@ import {
   ApprovalRequestTargetTypeEnum,
 } from '../src/common/enums/approvalRequest.enum.ts';
 import {
-  StatisticsGranularityEnum,
+  RentalTrendsGranularityEnum,
   FacilityKpiTierEnum,
   FacilityKpiSortByEnum,
 } from '../src/common/enums/statistics.enum.ts';
@@ -877,33 +878,107 @@ describe('statistics/T0.1-T1.5: Business Operations Statistics, Temporal Trends 
   });
 
   describe('2. Rental Trends, Peak/Low Periods & Time-Slot Demand (GET /statistics/rental-trends)', () => {
-    it('should identify peak rental periods, low rental periods, time slot demand and rental durations', async () => {
+    it('should validate rentalTrendsQuerySchema to only allow month and quarter (default month)', () => {
+      const defaultParsed = rentalTrendsQuerySchema.safeParse({});
+      expect(defaultParsed.success).toBe(true);
+      if (defaultParsed.success) {
+        expect(defaultParsed.data.granularity).toBe('month');
+      }
+
+      expect(
+        rentalTrendsQuerySchema.safeParse({ granularity: 'quarter' }).success
+      ).toBe(true);
+      expect(
+        rentalTrendsQuerySchema.safeParse({ granularity: 'day' }).success
+      ).toBe(false);
+      expect(
+        rentalTrendsQuerySchema.safeParse({ granularity: 'week' }).success
+      ).toBe(false);
+    });
+
+    it('should default to 365-day month range, zero-fill all months, mark 1 peak and 1 low without overlap, and simplify dayOfWeek & timeSlot', async () => {
       const result = await statisticsService.getRentalTrends(
         opsUser._id.toString(),
-        {
-          granularity: StatisticsGranularityEnum.DAY,
-        }
+        {}
       );
 
-      expect(result.timeSeries.length).toBeGreaterThanOrEqual(2);
-      expect(result.peakAndLowAnalysis.peakPeriods.length).toBeGreaterThan(0);
-      expect(result.peakAndLowAnalysis.lowPeriods.length).toBeGreaterThan(0);
+      expect(result.period.granularity).toBe('month');
+      // 365-day default range covers at least 12 calendar months
+      expect(result.timeSeries.length).toBeGreaterThanOrEqual(12);
 
-      // Peak day has 4 reservations created (RES-A1, RES-A2, RES-B1), Low day has 2 (RES-A3, RES-B2)
+      // Peak & Low: Top 1 each and disjoint
+      expect(result.peakAndLowAnalysis.peakPeriods).toHaveLength(1);
+      expect(result.peakAndLowAnalysis.lowPeriods).toHaveLength(1);
+
       const topPeak = result.peakAndLowAnalysis.peakPeriods[0];
-      expect(topPeak.reservationsCreated).toBeGreaterThanOrEqual(3);
+      const topLow = result.peakAndLowAnalysis.lowPeriods[0];
+      expect(topPeak.period).not.toBe(topLow.period);
+      expect(topPeak.reservationsCreated).toBe(5);
+      expect(topPeak.isPeak).toBe(true);
+      expect(topPeak.isLow).toBe(false);
 
-      // Time slots: '08:00 - 10:00' has 3 reservations vs '14:00 - 16:00' has 2 reservations
-      const morningSlot = result.timeSlotDemand.find((s) =>
+      expect(topLow.reservationsCreated).toBe(0);
+      expect(topLow.isPeak).toBe(false);
+      expect(topLow.isLow).toBe(true);
+
+      // Walk-in contracts are separated from Reservation check-ins
+      const totalResCheckIns = result.timeSeries.reduce(
+        (sum, p) => sum + p.contractsCheckedIn,
+        0
+      );
+      const totalWalkInContracts = result.timeSeries.reduce(
+        (sum, p) => sum + p.walkInContracts,
+        0
+      );
+      expect(totalResCheckIns).toBe(2); // CTR-A1, CTR-A2 (RESERVATION)
+      expect(totalWalkInContracts).toBe(1); // CTR-B1 (WALK_IN)
+
+      // timeSeries marks exact 1 peak and 1 low
+      const markedPeaks = result.timeSeries.filter((p) => p.isPeak);
+      const markedLows = result.timeSeries.filter((p) => p.isLow);
+      expect(markedPeaks).toHaveLength(1);
+      expect(markedLows).toHaveLength(1);
+      expect(markedPeaks[0].period).toBe(topPeak.period);
+      expect(markedLows[0].period).toBe(topLow.period);
+      expect(result.timeSeries.some((p) => p.isPeak && p.isLow)).toBe(false);
+
+      // Day of week: only reservationsCreated + busiestDay (no quietestDay / totalActivity)
+      expect(result.dayOfWeekDistribution.items).toHaveLength(7);
+      expect(result.dayOfWeekDistribution.busiestDay).not.toBeNull();
+      expect('quietestDay' in result.dayOfWeekDistribution).toBe(false);
+      for (const item of result.dayOfWeekDistribution.items) {
+        expect(Object.keys(item).sort()).toEqual([
+          'dayName',
+          'dayOfWeek',
+          'reservationsCreated',
+        ]);
+      }
+
+      // TimeSlot: object { mostBookedTimeSlot, items } with only timeSlot & reservationCount
+      expect(result.timeSlotDemand.mostBookedTimeSlot).toEqual({
+        timeSlot: '08:00 - 10:00',
+        reservationCount: 3,
+      });
+      const morningSlot = result.timeSlotDemand.items.find((s) =>
         s.timeSlot.includes('08:00')
       );
-      const afternoonSlot = result.timeSlotDemand.find((s) =>
+      const afternoonSlot = result.timeSlotDemand.items.find((s) =>
         s.timeSlot.includes('14:00')
       );
-      expect(morningSlot).toBeDefined();
-      expect(afternoonSlot).toBeDefined();
-      expect(morningSlot!.reservationCount).toBe(3);
-      expect(afternoonSlot!.reservationCount).toBe(2);
+      expect(morningSlot).toEqual({
+        timeSlot: '08:00 - 10:00',
+        reservationCount: 3,
+      });
+      expect(afternoonSlot).toEqual({
+        timeSlot: '14:00 - 16:00',
+        reservationCount: 2,
+      });
+      for (const item of result.timeSlotDemand.items) {
+        expect(Object.keys(item).sort()).toEqual([
+          'reservationCount',
+          'timeSlot',
+        ]);
+      }
 
       // Billing unit breakdown: 4 MONTH vs 1 DAY
       const monthUnit = result.durationBreakdown.byBillingUnit.find(
@@ -914,9 +989,134 @@ describe('statistics/T0.1-T1.5: Business Operations Statistics, Temporal Trends 
       );
       expect(monthUnit?.reservationCount).toBe(4);
       expect(dayUnit?.reservationCount).toBe(1);
-
-      expect(result.dayOfWeekDistribution.items).toHaveLength(7);
       expect(result.hourOfDayDistribution).toHaveLength(24);
+    });
+
+    it('should support quarter granularity and zero-fill quarters accurately', async () => {
+      const result = await statisticsService.getRentalTrends(
+        opsUser._id.toString(),
+        {
+          fromDate: '2026-01-01',
+          toDate: '2026-12-31',
+          granularity: RentalTrendsGranularityEnum.QUARTER,
+        }
+      );
+
+      expect(result.period.granularity).toBe('quarter');
+      expect(result.timeSeries.map((p) => p.period)).toEqual([
+        '2026-Q1',
+        '2026-Q2',
+        '2026-Q3',
+        '2026-Q4',
+      ]);
+      expect(result.peakAndLowAnalysis.peakPeriods).toHaveLength(1);
+      expect(result.peakAndLowAnalysis.lowPeriods).toHaveLength(1);
+      expect(result.peakAndLowAnalysis.peakPeriods[0].period).not.toBe(
+        result.peakAndLowAnalysis.lowPeriods[0].period
+      );
+      expect(result.timeSeries.filter((p) => p.isPeak)).toHaveLength(1);
+      expect(result.timeSeries.filter((p) => p.isLow)).toHaveLength(1);
+    });
+
+    it('should keep peak and return empty lowPeriods when periods tie or only 1 period exists, and empty both when zero bookings', async () => {
+      // Seed 2 equal months in Q2/Q3 2025 (isolated from beforeEach 2026 data)
+      const offering = await FacilityUnitTypeOffering.findOne({
+        facilityId: facilityA._id,
+      });
+      const unit = await StorageUnit.findOne({ facilityId: facilityA._id });
+
+      await Reservation.create([
+        {
+          reservationCode: 'RES-TIE-1',
+          customerId: customerUser._id,
+          facilityId: facilityA._id,
+          facilityUnitTypeOfferingId: offering!._id,
+          storageUnitId: unit!._id,
+          startDate: new Date('2025-04-10T03:00:00.000Z'),
+          checkInDate: new Date('2025-04-10T03:00:00.000Z'),
+          checkInTimeSlot: '08:00 - 10:00',
+          rentalDuration: 1,
+          billingUnit: BillingUnitEnum.MONTH,
+          basePrice: 2000000,
+          depositAmount: 2000000,
+          totalAmount: 2000000,
+          status: ReservationStatusEnum.COMPLETED,
+          refundStatus: RefundStatusEnum.NONE,
+          termsAccepted: true,
+          createdAt: new Date('2025-04-10T03:00:00.000Z'),
+        },
+        {
+          reservationCode: 'RES-TIE-2',
+          customerId: customerUser._id,
+          facilityId: facilityA._id,
+          facilityUnitTypeOfferingId: offering!._id,
+          storageUnitId: unit!._id,
+          startDate: new Date('2025-05-10T03:00:00.000Z'),
+          checkInDate: new Date('2025-05-10T03:00:00.000Z'),
+          checkInTimeSlot: '08:00 - 10:00',
+          rentalDuration: 1,
+          billingUnit: BillingUnitEnum.MONTH,
+          basePrice: 2000000,
+          depositAmount: 2000000,
+          totalAmount: 2000000,
+          status: ReservationStatusEnum.COMPLETED,
+          refundStatus: RefundStatusEnum.NONE,
+          termsAccepted: true,
+          createdAt: new Date('2025-05-10T03:00:00.000Z'),
+        },
+      ]);
+
+      // 1. Two months tied at 1 booking each -> peak = latest (2025-05), low = []
+      const tiedRes = await statisticsService.getRentalTrends(
+        opsUser._id.toString(),
+        {
+          fromDate: '2025-04-01',
+          toDate: '2025-05-31',
+          granularity: RentalTrendsGranularityEnum.MONTH,
+        }
+      );
+      expect(tiedRes.timeSeries.map((p) => p.period)).toEqual([
+        '2025-04',
+        '2025-05',
+      ]);
+      expect(tiedRes.peakAndLowAnalysis.peakPeriods).toHaveLength(1);
+      expect(tiedRes.peakAndLowAnalysis.peakPeriods[0].period).toBe('2025-05');
+      expect(tiedRes.peakAndLowAnalysis.lowPeriods).toEqual([]);
+      expect(
+        tiedRes.timeSeries.find((p) => p.period === '2025-05')?.isPeak
+      ).toBe(true);
+      expect(tiedRes.timeSeries.every((p) => !p.isLow)).toBe(true);
+
+      // 2. Single month -> peak = 2025-04, low = []
+      const singleRes = await statisticsService.getRentalTrends(
+        opsUser._id.toString(),
+        {
+          fromDate: '2025-04-01',
+          toDate: '2025-04-30',
+          granularity: RentalTrendsGranularityEnum.MONTH,
+        }
+      );
+      expect(singleRes.peakAndLowAnalysis.peakPeriods).toHaveLength(1);
+      expect(singleRes.peakAndLowAnalysis.peakPeriods[0].period).toBe(
+        '2025-04'
+      );
+      expect(singleRes.peakAndLowAnalysis.lowPeriods).toEqual([]);
+
+      // 3. Zero bookings in entire range -> both empty, busiestDay null, mostBookedTimeSlot null
+      const zeroRes = await statisticsService.getRentalTrends(
+        opsUser._id.toString(),
+        {
+          fromDate: '2024-01-01',
+          toDate: '2024-03-31',
+          granularity: RentalTrendsGranularityEnum.MONTH,
+        }
+      );
+      expect(zeroRes.timeSeries).toHaveLength(3);
+      expect(zeroRes.peakAndLowAnalysis.peakPeriods).toEqual([]);
+      expect(zeroRes.peakAndLowAnalysis.lowPeriods).toEqual([]);
+      expect(zeroRes.timeSeries.every((p) => !p.isPeak && !p.isLow)).toBe(true);
+      expect(zeroRes.dayOfWeekDistribution.busiestDay).toBeNull();
+      expect(zeroRes.timeSlotDemand.mostBookedTimeSlot).toBeNull();
     });
   });
 

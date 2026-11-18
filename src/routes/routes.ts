@@ -1004,9 +1004,9 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "StatisticsGranularityEnum": {
+    "RentalTrendsGranularityEnum": {
         "dataType": "refEnum",
-        "enums": ["day","week","month","quarter"],
+        "enums": ["month","quarter"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "RentalTrendPoint": {
@@ -1017,9 +1017,12 @@ const models: TsoaRoute.Models = {
             "completedReservations": {"dataType":"double","required":true},
             "cancelledReservations": {"dataType":"double","required":true},
             "contractsCheckedIn": {"dataType":"double","required":true},
+            "walkInContracts": {"dataType":"double","required":true},
             "contractsEnded": {"dataType":"double","required":true},
             "collectedRevenue": {"dataType":"double","required":true},
             "varianceFromAvgPercent": {"dataType":"double","required":true},
+            "isPeak": {"dataType":"boolean","required":true},
+            "isLow": {"dataType":"boolean","required":true},
         },
         "additionalProperties": false,
     },
@@ -1030,9 +1033,6 @@ const models: TsoaRoute.Models = {
             "dayOfWeek": {"dataType":"double","required":true},
             "dayName": {"dataType":"string","required":true},
             "reservationsCreated": {"dataType":"double","required":true},
-            "contractsCheckedIn": {"dataType":"double","required":true},
-            "accessSchedulesCount": {"dataType":"double","required":true},
-            "totalActivity": {"dataType":"double","required":true},
         },
         "additionalProperties": false,
     },
@@ -1042,11 +1042,6 @@ const models: TsoaRoute.Models = {
         "properties": {
             "timeSlot": {"dataType":"string","required":true},
             "reservationCount": {"dataType":"double","required":true},
-            "completedReservationCount": {"dataType":"double","required":true},
-            "accessScheduleCount": {"dataType":"double","required":true},
-            "totalDemandCount": {"dataType":"double","required":true},
-            "configuredMaxCapacityPerDay": {"dataType":"double","required":true},
-            "demandSharePercent": {"dataType":"double","required":true},
         },
         "additionalProperties": false,
     },
@@ -1069,11 +1064,11 @@ const models: TsoaRoute.Models = {
     "RentalTrendsResponse": {
         "dataType": "refObject",
         "properties": {
-            "period": {"dataType":"nestedObjectLiteral","nestedProperties":{"scopedFacilityId":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"granularity":{"ref":"StatisticsGranularityEnum","required":true},"toDate":{"dataType":"string","required":true},"fromDate":{"dataType":"string","required":true}},"required":true},
+            "period": {"dataType":"nestedObjectLiteral","nestedProperties":{"scopedFacilityId":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"granularity":{"ref":"RentalTrendsGranularityEnum","required":true},"toDate":{"dataType":"string","required":true},"fromDate":{"dataType":"string","required":true}},"required":true},
             "timeSeries": {"dataType":"array","array":{"dataType":"refObject","ref":"RentalTrendPoint"},"required":true},
             "peakAndLowAnalysis": {"dataType":"nestedObjectLiteral","nestedProperties":{"lowPeriods":{"dataType":"array","array":{"dataType":"refObject","ref":"RentalTrendPoint"},"required":true},"peakPeriods":{"dataType":"array","array":{"dataType":"refObject","ref":"RentalTrendPoint"},"required":true},"averageReservationsPerPeriod":{"dataType":"double","required":true}},"required":true},
-            "dayOfWeekDistribution": {"dataType":"nestedObjectLiteral","nestedProperties":{"items":{"dataType":"array","array":{"dataType":"refObject","ref":"DayOfWeekItem"},"required":true},"quietestDay":{"dataType":"union","subSchemas":[{"ref":"DayOfWeekItem"},{"dataType":"enum","enums":[null]}],"required":true},"busiestDay":{"dataType":"union","subSchemas":[{"ref":"DayOfWeekItem"},{"dataType":"enum","enums":[null]}],"required":true}},"required":true},
-            "timeSlotDemand": {"dataType":"array","array":{"dataType":"refObject","ref":"TimeSlotDemandItem"},"required":true},
+            "dayOfWeekDistribution": {"dataType":"nestedObjectLiteral","nestedProperties":{"items":{"dataType":"array","array":{"dataType":"refObject","ref":"DayOfWeekItem"},"required":true},"busiestDay":{"dataType":"union","subSchemas":[{"ref":"DayOfWeekItem"},{"dataType":"enum","enums":[null]}],"required":true}},"required":true},
+            "timeSlotDemand": {"dataType":"nestedObjectLiteral","nestedProperties":{"items":{"dataType":"array","array":{"dataType":"refObject","ref":"TimeSlotDemandItem"},"required":true},"mostBookedTimeSlot":{"dataType":"union","subSchemas":[{"ref":"TimeSlotDemandItem"},{"dataType":"enum","enums":[null]}],"required":true}},"required":true},
             "hourOfDayDistribution": {"dataType":"array","array":{"dataType":"refObject","ref":"HourOfDayItem"},"required":true},
             "durationBreakdown": {"dataType":"nestedObjectLiteral","nestedProperties":{"byDurationBucket":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"sharePercent":{"dataType":"double","required":true},"reservationCount":{"dataType":"double","required":true},"label":{"dataType":"string","required":true},"bucket":{"dataType":"string","required":true}}},"required":true},"byBillingUnit":{"dataType":"array","array":{"dataType":"nestedObjectLiteral","nestedProperties":{"totalDepositAmount":{"dataType":"double","required":true},"sharePercent":{"dataType":"double","required":true},"reservationCount":{"dataType":"double","required":true},"billingUnit":{"ref":"BillingUnitEnum","required":true}}},"required":true}},"required":true},
         },
@@ -1098,7 +1093,7 @@ const models: TsoaRoute.Models = {
             "fromDate": {"dataType":"string"},
             "toDate": {"dataType":"string"},
             "facilityId": {"dataType":"string"},
-            "granularity": {"ref":"StatisticsGranularityEnum"},
+            "granularity": {"ref":"RentalTrendsGranularityEnum"},
         },
         "additionalProperties": false,
     },
@@ -1165,6 +1160,11 @@ const models: TsoaRoute.Models = {
             "sortOrder": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["asc"]},{"dataType":"enum","enums":["desc"]}]},
         },
         "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "StatisticsGranularityEnum": {
+        "dataType": "refEnum",
+        "enums": ["day","week","month","quarter"],
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "InvoiceItemTypeEnum": {

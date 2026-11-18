@@ -56,7 +56,10 @@ import {
   MovementTypeEnum,
 } from '../../common/enums/customerInventory.enum.ts';
 import { ApprovalRequestStatusEnum } from '../../common/enums/approvalRequest.enum.ts';
-import { StatisticsGranularityEnum } from '../../common/enums/statistics.enum.ts';
+import {
+  StatisticsGranularityEnum,
+  RentalTrendsGranularityEnum,
+} from '../../common/enums/statistics.enum.ts';
 import { UnitTypeCategoryEnum } from '../../common/enums/unitType.enum.ts';
 
 const VN_TZ = 'Asia/Ho_Chi_Minh';
@@ -204,7 +207,7 @@ export class StatisticsRepository {
 
   private buildPeriodBucketExpression(
     dateField: string,
-    granularity: StatisticsGranularityEnum
+    granularity: StatisticsGranularityEnum | RentalTrendsGranularityEnum
   ): Record<string, unknown> {
     switch (granularity) {
       case StatisticsGranularityEnum.DAY:
@@ -252,6 +255,7 @@ export class StatisticsRepository {
           ],
         };
       case StatisticsGranularityEnum.MONTH:
+      case RentalTrendsGranularityEnum.MONTH:
         return {
           $dateToString: {
             format: '%Y-%m',
@@ -260,6 +264,7 @@ export class StatisticsRepository {
           },
         };
       case StatisticsGranularityEnum.QUARTER:
+      case RentalTrendsGranularityEnum.QUARTER:
         return {
           $concat: [
             {
@@ -997,7 +1002,7 @@ export class StatisticsRepository {
   async getRentalTrendsAggregations(
     fromDate: Date,
     toDate: Date,
-    granularity: StatisticsGranularityEnum,
+    granularity: RentalTrendsGranularityEnum | StatisticsGranularityEnum,
     facilityIds?: Types.ObjectId[]
   ) {
     const baseMatch = this.buildFacilityMatch(facilityIds);
@@ -1025,10 +1030,7 @@ export class StatisticsRepository {
       checkOutsByPeriod,
       paymentsByPeriod,
       reservationsByDayOfWeek,
-      checkInsByDayOfWeek,
-      accessByDayOfWeek,
       reservationsByTimeSlot,
-      accessByTimeSlot,
       activeTimeSlots,
       reservationsByHour,
       reservationsByBillingUnit,
@@ -1083,6 +1085,7 @@ export class StatisticsRepository {
       this.models.contract.aggregate<{
         _id: string;
         contractsCheckedIn: number;
+        walkInContracts: number;
       }>([
         {
           $match: {
@@ -1093,7 +1096,20 @@ export class StatisticsRepository {
         {
           $group: {
             _id: checkInBucketExpr,
-            contractsCheckedIn: { $sum: 1 },
+            contractsCheckedIn: {
+              $sum: {
+                $cond: [
+                  { $eq: ['$source', ContractSourceEnum.RESERVATION] },
+                  1,
+                  0,
+                ],
+              },
+            },
+            walkInContracts: {
+              $sum: {
+                $cond: [{ $eq: ['$source', ContractSourceEnum.WALK_IN] }, 1, 0],
+              },
+            },
           },
         },
       ]),
@@ -1141,41 +1157,10 @@ export class StatisticsRepository {
           },
         },
       ]),
-      this.models.contract.aggregate<{ _id: number; count: number }>([
-        {
-          $match: {
-            ...baseMatch,
-            actualCheckInDate: { $gte: fromDate, $lte: toDate },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              $dayOfWeek: { date: '$actualCheckInDate', timezone: VN_TZ },
-            },
-            count: { $sum: 1 },
-          },
-        },
-      ]),
-      this.models.accessSchedule.aggregate<{ _id: number; count: number }>([
-        {
-          $match: {
-            ...baseMatch,
-            scheduledDate: { $gte: fromDate, $lte: toDate },
-          },
-        },
-        {
-          $group: {
-            _id: { $dayOfWeek: { date: '$scheduledDate', timezone: VN_TZ } },
-            count: { $sum: 1 },
-          },
-        },
-      ]),
-      // Time slots
+      // Time slots (reservations only)
       this.models.reservation.aggregate<{
         _id: string;
         reservationCount: number;
-        completedCount: number;
       }>([
         {
           $match: {
@@ -1187,48 +1172,16 @@ export class StatisticsRepository {
           $group: {
             _id: '$checkInTimeSlot',
             reservationCount: { $sum: 1 },
-            completedCount: {
-              $sum: {
-                $cond: [
-                  { $eq: ['$status', ReservationStatusEnum.COMPLETED] },
-                  1,
-                  0,
-                ],
-              },
-            },
           },
         },
         { $sort: { reservationCount: -1 } },
-      ]),
-      this.models.accessSchedule.aggregate<{
-        _id: string;
-        scheduleCount: number;
-      }>([
-        {
-          $match: {
-            ...baseMatch,
-            scheduledDate: { $gte: fromDate, $lte: toDate },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              $concat: [
-                '$timeSlotSnapshot.startTime',
-                ' - ',
-                '$timeSlotSnapshot.endTime',
-              ],
-            },
-            scheduleCount: { $sum: 1 },
-          },
-        },
       ]),
       this.models.facilityTimeSlot
         .find({
           ...baseMatch,
           isActive: true,
         })
-        .select('slotName startTime endTime maxCapacity'),
+        .select('slotName startTime endTime'),
       // Hour of day (0 - 23 in VN Time)
       this.models.reservation.aggregate<{
         _id: number;
@@ -1331,10 +1284,7 @@ export class StatisticsRepository {
       checkOutsByPeriod,
       paymentsByPeriod,
       reservationsByDayOfWeek,
-      checkInsByDayOfWeek,
-      accessByDayOfWeek,
       reservationsByTimeSlot,
-      accessByTimeSlot,
       activeTimeSlots,
       reservationsByHour,
       reservationsByBillingUnit,

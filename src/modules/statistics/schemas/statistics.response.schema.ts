@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   StatisticsGranularityEnum,
+  RentalTrendsGranularityEnum,
   FacilityKpiTierEnum,
   RagQueryComplexityEnum,
   RagGroundingStatusEnum,
@@ -148,28 +149,23 @@ export const rentalTrendPointSchema = z.object({
   completedReservations: z.number(),
   cancelledReservations: z.number(),
   contractsCheckedIn: z.number(),
+  walkInContracts: z.number(),
   contractsEnded: z.number(),
   collectedRevenue: z.number(),
   varianceFromAvgPercent: z.number(),
+  isPeak: z.boolean(),
+  isLow: z.boolean(),
 });
 
 export const dayOfWeekItemSchema = z.object({
   dayOfWeek: z.number(), // 1 = Sunday ... 7 = Saturday
   dayName: z.string(),
   reservationsCreated: z.number(),
-  contractsCheckedIn: z.number(),
-  accessSchedulesCount: z.number(),
-  totalActivity: z.number(),
 });
 
 export const timeSlotDemandItemSchema = z.object({
   timeSlot: z.string(),
   reservationCount: z.number(),
-  completedReservationCount: z.number(),
-  accessScheduleCount: z.number(),
-  totalDemandCount: z.number(),
-  configuredMaxCapacityPerDay: z.number(),
-  demandSharePercent: z.number(),
 });
 
 export const hourOfDayItemSchema = z.object({
@@ -182,7 +178,7 @@ export const rentalTrendsResponseSchema = z.object({
   period: z.object({
     fromDate: z.string(),
     toDate: z.string(),
-    granularity: z.nativeEnum(StatisticsGranularityEnum),
+    granularity: z.nativeEnum(RentalTrendsGranularityEnum),
     scopedFacilityId: z.string().nullable(),
   }),
   timeSeries: z.array(rentalTrendPointSchema),
@@ -193,10 +189,12 @@ export const rentalTrendsResponseSchema = z.object({
   }),
   dayOfWeekDistribution: z.object({
     busiestDay: dayOfWeekItemSchema.nullable(),
-    quietestDay: dayOfWeekItemSchema.nullable(),
     items: z.array(dayOfWeekItemSchema),
   }),
-  timeSlotDemand: z.array(timeSlotDemandItemSchema),
+  timeSlotDemand: z.object({
+    mostBookedTimeSlot: timeSlotDemandItemSchema.nullable(),
+    items: z.array(timeSlotDemandItemSchema),
+  }),
   hourOfDayDistribution: z.array(hourOfDayItemSchema),
   durationBreakdown: z.object({
     byBillingUnit: z.array(
@@ -224,28 +222,23 @@ export interface RentalTrendPoint {
   completedReservations: number;
   cancelledReservations: number;
   contractsCheckedIn: number;
+  walkInContracts: number;
   contractsEnded: number;
   collectedRevenue: number;
   varianceFromAvgPercent: number;
+  isPeak: boolean;
+  isLow: boolean;
 }
 
 export interface DayOfWeekItem {
   dayOfWeek: number;
   dayName: string;
   reservationsCreated: number;
-  contractsCheckedIn: number;
-  accessSchedulesCount: number;
-  totalActivity: number;
 }
 
 export interface TimeSlotDemandItem {
   timeSlot: string;
   reservationCount: number;
-  completedReservationCount: number;
-  accessScheduleCount: number;
-  totalDemandCount: number;
-  configuredMaxCapacityPerDay: number;
-  demandSharePercent: number;
 }
 
 export interface HourOfDayItem {
@@ -258,7 +251,7 @@ export interface RentalTrendsResponse {
   period: {
     fromDate: string;
     toDate: string;
-    granularity: StatisticsGranularityEnum;
+    granularity: RentalTrendsGranularityEnum;
     scopedFacilityId: string | null;
   };
   timeSeries: RentalTrendPoint[];
@@ -269,10 +262,12 @@ export interface RentalTrendsResponse {
   };
   dayOfWeekDistribution: {
     busiestDay: DayOfWeekItem | null;
-    quietestDay: DayOfWeekItem | null;
     items: DayOfWeekItem[];
   };
-  timeSlotDemand: TimeSlotDemandItem[];
+  timeSlotDemand: {
+    mostBookedTimeSlot: TimeSlotDemandItem | null;
+    items: TimeSlotDemandItem[];
+  };
   hourOfDayDistribution: HourOfDayItem[];
   durationBreakdown: {
     byBillingUnit: Array<{

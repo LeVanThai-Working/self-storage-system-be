@@ -572,13 +572,13 @@ export function buildKnowledgeChunks(
       )
       .join('; ') || 'Không có';
   const slotText =
-    tr.timeSlotDemand
+    tr.timeSlotDemand.items
       .slice(0, 4)
-      .map(
-        (s) =>
-          `${s.timeSlot} (Tổng lượt: ${s.totalDemandCount}, chiếm ${s.demandSharePercent}%, sức chứa cấu hình: ${s.configuredMaxCapacityPerDay})`
-      )
+      .map((s) => `${s.timeSlot} (${s.reservationCount} đơn đặt)`)
       .join('; ') || 'Chưa có dữ liệu ca hẹn';
+  const mostBookedSlotText = tr.timeSlotDemand.mostBookedTimeSlot
+    ? `${tr.timeSlotDemand.mostBookedTimeSlot.timeSlot} (${tr.timeSlotDemand.mostBookedTimeSlot.reservationCount} đơn đặt)`
+    : 'Chưa có';
   const billingUnitText = tr.durationBreakdown.byBillingUnit
     .map(
       (b) =>
@@ -608,12 +608,12 @@ export function buildKnowledgeChunks(
       'dai han',
     ],
     content: [
-      `Báo cáo Phân tích Xu hướng Thời gian & Nhu cầu Thuê:`,
+      `Báo cáo Phân tích Xu hướng Thời gian & Nhu cầu Thuê (${tr.period.fromDate} đến ${tr.period.toDate}):`,
       `- Trung bình số đơn mỗi kỳ: ${tr.peakAndLowAnalysis.averageReservationsPerPeriod} đơn.`,
       `- Giai đoạn Cao điểm: ${peakText}.`,
       `- Giai đoạn Thấp điểm / Vắng khách: ${lowText}.`,
-      `- Phân bổ theo Thứ trong tuần: Ngày đông khách nhất là ${tr.dayOfWeekDistribution.busiestDay ? `${tr.dayOfWeekDistribution.busiestDay.dayName} (${tr.dayOfWeekDistribution.busiestDay.totalActivity} lượt hoạt động)` : 'Chưa có'}; Ngày vắng khách nhất là ${tr.dayOfWeekDistribution.quietestDay ? `${tr.dayOfWeekDistribution.quietestDay.dayName} (${tr.dayOfWeekDistribution.quietestDay.totalActivity} lượt hoạt động)` : 'Chưa có'}.`,
-      `- Nhu cầu theo Khung giờ hẹn: ${slotText}.`,
+      `- Phân bổ theo Thứ trong tuần: Thứ đặt nhiều nhất là ${tr.dayOfWeekDistribution.busiestDay ? `${tr.dayOfWeekDistribution.busiestDay.dayName} (${tr.dayOfWeekDistribution.busiestDay.reservationsCreated} đơn đặt)` : 'Chưa có'}.`,
+      `- Nhu cầu theo Khung giờ hẹn: Khung giờ đặt nhiều nhất là ${mostBookedSlotText}. Chi tiết: ${slotText}.`,
       `- Cơ cấu Chu kỳ thuê: ${billingUnitText}.`,
     ].join('\n'),
   });
