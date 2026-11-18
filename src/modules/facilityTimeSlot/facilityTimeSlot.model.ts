@@ -63,7 +63,7 @@ const facilityTimeSlotSchema = new mongoose.Schema<IFacilityTimeSlot>(
 // Compound unique index: A facility cannot have duplicate slotName among active records
 facilityTimeSlotSchema.index(
   { facilityId: 1, slotName: 1 },
-  { unique: true, partialFilterExpression: { deleted: { $ne: true } } }
+  { unique: true, partialFilterExpression: { deleted: { $in: [false, null] } } }
 );
 
 facilityTimeSlotSchema.index({ facilityId: 1, isActive: 1 });

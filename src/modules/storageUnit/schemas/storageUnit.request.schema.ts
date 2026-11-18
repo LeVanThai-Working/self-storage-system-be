@@ -20,7 +20,7 @@ export const createStorageUnitSchema = z.object({
     .min(1, 'Unit number is required')
     .max(50, 'Unit number must not exceed 50 characters')
     .trim(),
-  floor: z.number().int().min(1, 'Floor must be at least 1').default(1),
+  floor: z.number().int().min(1, 'Floor must be at least 1').optional(),
   zone: z
     .string()
     .max(100, 'Zone must not exceed 100 characters')

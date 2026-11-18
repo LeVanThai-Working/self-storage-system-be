@@ -39,7 +39,7 @@ export const inventoryFacilitySummarySchema = z.object({
 export const inventoryStorageUnitSummarySchema = z.object({
   id: z.string(),
   unitNumber: z.string(),
-  floor: z.number().optional().nullable(),
+  floor: z.number().int().min(1).optional(),
   zone: z.string().optional().nullable(),
   status: z.string().optional().nullable(),
 });

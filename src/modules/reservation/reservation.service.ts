@@ -293,7 +293,7 @@ export class ReservationService {
       return {
         id: String(sr._id || sr.id),
         unitNumber: String(sr.unitNumber),
-        floor: Number(sr.floor),
+        floor: sr.floor as number,
         zone: (sr.zone as string) ?? null,
         status: String(sr.status),
       };

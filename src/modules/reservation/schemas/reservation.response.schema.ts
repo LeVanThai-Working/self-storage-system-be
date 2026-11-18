@@ -37,7 +37,7 @@ const offeringSnapshotSchema = z.object({
 const storageUnitSnapshotSchema = z.object({
   id: z.string(),
   unitNumber: z.string(),
-  floor: z.number(),
+  floor: z.number().int().min(1),
   zone: z.string().optional().nullable(),
   status: z.string(),
 });

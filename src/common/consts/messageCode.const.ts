@@ -280,6 +280,10 @@ export const MESSAGE_CODE = {
   MESSAGE_CODE_605: 'MESSAGE_CODE_605',
   // Cannot Delete Storage Rack With Active Rental Or Contract
   MESSAGE_CODE_606: 'MESSAGE_CODE_606',
+  // Legacy warehouse-null rule; retained for compatibility, no longer emitted.
+  MESSAGE_CODE_607: 'MESSAGE_CODE_607',
+  // A Positive Integer Floor Is Required For Storage Units
+  MESSAGE_CODE_608: 'MESSAGE_CODE_608',
 
   // ==========================================
   // CUSTOMER SKU (610 - 614)
@@ -643,6 +647,8 @@ export const MESSAGE_DICTIONARY: Record<string, string> = {
   MESSAGE_CODE_604: 'Storage Unit Does Not Support Rack Layout',
   MESSAGE_CODE_605: 'Invalid Rack Zone Pricing Configuration',
   MESSAGE_CODE_606: 'Cannot Delete Storage Rack With Active Rental Or Contract',
+  MESSAGE_CODE_607: 'Warehouse Storage Unit Floor Must Be Null',
+  MESSAGE_CODE_608: 'A Positive Integer Floor Is Required For Storage Units',
 
   // Customer SKU
   MESSAGE_CODE_610: 'Customer SKU Not Found',

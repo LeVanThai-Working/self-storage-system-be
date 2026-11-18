@@ -92,7 +92,7 @@ const rackTierSchema = new mongoose.Schema<IRackTier>(
 // Partial Unique Index: Each rack has a unique tierNumber among non-deleted records
 rackTierSchema.index(
   { storageRackId: 1, tierNumber: 1 },
-  { unique: true, partialFilterExpression: { deleted: { $ne: true } } }
+  { unique: true, partialFilterExpression: { deleted: { $in: [false, null] } } }
 );
 
 rackTierSchema.index({ storageUnitId: 1, status: 1 });

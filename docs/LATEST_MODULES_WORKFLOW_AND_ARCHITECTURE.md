@@ -46,8 +46,8 @@ stateDiagram-v2
     [*] --> PENDING: Khách tạo lịch (createAccessSchedule)
     PENDING --> CANCELLED: Khách tự hủy (trước giờ ca >= 1h)
     PENDING --> NO_SHOW: Quá 45p sau ca bắt đầu chưa đến (BullMQ Worker)
-    PENDING --> CHECKED_IN: Bảo vệ quét QR hoặc nhập OTP tại cổng
-    CHECKED_IN --> CHECKED_OUT: Khách rời kho, bảo vệ xác nhận
+    PENDING --> CHECKED_IN: Staff quét QR hoặc nhập OTP tại cổng
+    CHECKED_IN --> CHECKED_OUT: Khách rời kho, staff xác nhận
     CHECKED_OUT --> [*]
     CANCELLED --> [*]
     NO_SHOW --> [*]

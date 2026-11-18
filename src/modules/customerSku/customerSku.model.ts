@@ -112,7 +112,7 @@ const customerSkuSchema = new mongoose.Schema<ICustomerSku>(
 // Partial Unique Index 1: Mỗi khách hàng có 1 skuCode duy nhất trong các record chưa bị xóa mềm
 customerSkuSchema.index(
   { customerId: 1, skuCode: 1 },
-  { unique: true, partialFilterExpression: { deleted: { $ne: true } } }
+  { unique: true, partialFilterExpression: { deleted: { $in: [false, null] } } }
 );
 
 // Partial Unique Index 2: Mỗi khách hàng có 1 barcode duy nhất nếu có khai báo barcode trong các record chưa bị xóa mềm
@@ -121,7 +121,7 @@ customerSkuSchema.index(
   {
     unique: true,
     partialFilterExpression: {
-      deleted: { $ne: true },
+      deleted: { $in: [false, null] },
       barcode: { $type: 'string' },
     },
   }

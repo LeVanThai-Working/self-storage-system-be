@@ -83,7 +83,7 @@ facilitySchema.index(
   {
     unique: true,
     partialFilterExpression: {
-      deleted: { $ne: true },
+      deleted: { $in: [false, null] },
       code: { $type: 'string' },
     },
   }

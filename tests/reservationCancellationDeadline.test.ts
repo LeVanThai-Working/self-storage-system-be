@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from 'vitest';
 import { Types } from 'mongoose';
 import {
   computeCancellationOutcome,
@@ -9,11 +17,7 @@ import {
   RefundStatusEnum,
   ReservationStatusEnum,
 } from '../src/common/enums/reservation.enum.ts';
-import {
-  addDays,
-  getVNDateString,
-  startOfDayVN,
-} from '../src/utils/date.util.ts';
+import { addDays, startOfDayVN } from '../src/utils/date.util.ts';
 import { RoleEnum } from '../src/common/enums/user.enum.ts';
 import { BillingUnitEnum } from '../src/common/enums/billing.enum.ts';
 import { FacilityStatusEnum } from '../src/common/enums/facility.enum.ts';
@@ -386,21 +390,16 @@ describe('T2.1: Reservation Cancellation Deadline & Slot Reference Time (Unit Te
         FacilityAmenityOffering
       );
       const storageUnitRepo = new StorageUnitRepository(StorageUnit);
-      const paymentRepo = new PaymentRepository(
-        Payment,
-        PaymentTransaction,
-        Reservation,
-        Contract
-      );
+      const paymentRepo = new PaymentRepository(Payment, PaymentTransaction);
       const contractRepo = new ContractRepository(Contract);
       refundRequestRepo = new RefundRequestRepository(RefundRequest);
+      reservationRepo = new ReservationRepository(Reservation);
       const refundRequestService = new RefundRequestService(
         refundRequestRepo,
-        paymentRepo,
+        userRepo,
         reservationRepo,
         contractRepo
       );
-      reservationRepo = new ReservationRepository(Reservation);
 
       reservationService = new ReservationService(
         reservationRepo,
@@ -438,7 +437,7 @@ describe('T2.1: Reservation Cancellation Deadline & Slot Reference Time (Unit Te
       await UnitType.create({
         _id: unitTypeId,
         name: 'Standard Unit',
-        category: UnitTypeCategoryEnum.CLIMATE_CONTROLLED,
+        category: UnitTypeCategoryEnum.SMALL,
         status: UnitTypeStatusEnum.ACTIVE,
         dimensions: { length: 2, width: 2, height: 2.5 },
         area: 4,
@@ -476,29 +475,42 @@ describe('T2.1: Reservation Cancellation Deadline & Slot Reference Time (Unit Te
       ]);
     });
 
-    it('should normalize checkInDate and startDate to startOfDayVN in createReservation', async () => {
-      const customer = TEST_USERS.customer1;
-      // Client sends future VN date with non-midnight UTC hours (15:45:30Z = 22:45:30 VN same day)
-      const futureDateStr = getVNDateString(addDays(startOfDayVN(), 3));
-      const rawDateInput = `${futureDateStr}T15:45:30.000Z`;
+    it.each([
+      ['2026-11-15T15:45:30.000Z', '2026-11-15T00:00:00.000+07:00'],
+      ['2026-11-15T23:45:30.000Z', '2026-11-16T00:00:00.000+07:00'],
+    ])(
+      'should normalize checkInDate and startDate to startOfDayVN in createReservation (%s)',
+      async (rawDateInput, expectedDate) => {
+        // Freeze Date only: keep MongoDB/network timers real and the fixture in the future.
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(new Date('2026-11-10T09:00:00.000+07:00'));
+        try {
+          const customer = TEST_USERS.customer1;
+          const res = await reservationService.createReservation(customer.id, {
+            facilityId: TEST_FACILITY_A_ID,
+            storageUnitId: unit1Id.toString(),
+            facilityUnitTypeOfferingId: offeringId.toString(),
+            checkInDate: rawDateInput,
+            checkInTimeSlot: '10:00 - 12:00',
+            rentalDuration: 1,
+            amenities: [],
+            termsAccepted: true,
+          });
 
-      const res = await reservationService.createReservation(customer.id, {
-        facilityId: TEST_FACILITY_A_ID,
-        storageUnitId: unit1Id.toString(),
-        facilityUnitTypeOfferingId: offeringId.toString(),
-        checkInDate: rawDateInput,
-        checkInTimeSlot: '10:00 - 12:00',
-        rentalDuration: 1,
-        termsAccepted: true,
-      });
-
-      const rawDoc = await Reservation.findById(res.id).lean();
-      expect(rawDoc).toBeTruthy();
-
-      const expectedStartOfDay = startOfDayVN(futureDateStr);
-      expect(rawDoc?.checkInDate.getTime()).toBe(expectedStartOfDay.getTime());
-      expect(rawDoc?.startDate.getTime()).toBe(expectedStartOfDay.getTime());
-    });
+          const rawDoc = await Reservation.findById(res.id).lean();
+          expect(rawDoc).toBeTruthy();
+          const expectedStartOfDay = new Date(expectedDate);
+          expect(rawDoc?.checkInDate.getTime()).toBe(
+            expectedStartOfDay.getTime()
+          );
+          expect(rawDoc?.startDate.getTime()).toBe(
+            expectedStartOfDay.getTime()
+          );
+        } finally {
+          vi.useRealTimers();
+        }
+      }
+    );
 
     it('should integrate cancellation deadline in cancelReservation and create RefundRequest on free cancel', async () => {
       const customer = TEST_USERS.customer1;
@@ -511,6 +523,7 @@ describe('T2.1: Reservation Cancellation Deadline & Slot Reference Time (Unit Te
         checkInDate: futureCheckIn.toISOString(),
         checkInTimeSlot: '09:00 - 11:00',
         rentalDuration: 1,
+        amenities: [],
         termsAccepted: true,
       });
 
@@ -563,6 +576,7 @@ describe('T2.1: Reservation Cancellation Deadline & Slot Reference Time (Unit Te
         checkInDate: targetDate.toISOString(),
         checkInTimeSlot: '09:00 - 11:00',
         rentalDuration: 1,
+        amenities: [],
         termsAccepted: true,
       });
 

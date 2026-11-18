@@ -43,6 +43,7 @@ const storageUnitSchema = new mongoose.Schema<IStorageUnit>(
       required: true,
       default: 1,
       min: 1,
+      validate: Number.isInteger,
     },
     zone: {
       type: String,
@@ -72,7 +73,7 @@ const storageUnitSchema = new mongoose.Schema<IStorageUnit>(
 // Allows re-creating a unit with the same number after soft-delete
 storageUnitSchema.index(
   { facilityId: 1, unitNumber: 1 },
-  { unique: true, partialFilterExpression: { deleted: { $ne: true } } }
+  { unique: true, partialFilterExpression: { deleted: { $in: [false, null] } } }
 );
 
 // Compound Indexes for optimizing queries by facility

@@ -1,5 +1,6 @@
 {
   "entryFile": "src/app.ts",
+  "compilerOptions": { "strictNullChecks": true },
   "noImplicitAdditionalProperties": "throw-on-extras",
   "controllerPathGlobs": ["src/modules/**/*.controller.ts"],
   "routes": {
