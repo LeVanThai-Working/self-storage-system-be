@@ -99,6 +99,10 @@ export const incidentResponseSchema = z.object({
   id: z.string(),
   incidentCode: z.string(),
   facility: z.union([facilityRefSchema, z.string()]),
+  locationType: z
+    .enum(['storage_unit', 'storage_rack', 'common_area'])
+    .optional(),
+  commonAreaLocation: z.string().nullable().optional(),
   storageUnit: storageUnitRefSchema.nullable().optional(),
   storageRack: storageRackRefSchema.nullable().optional(),
   rackTier: rackTierRefSchema.nullable().optional(),

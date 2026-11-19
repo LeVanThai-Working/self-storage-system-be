@@ -65,6 +65,7 @@ import type {
   UploadRestorationManifestRequest,
   CustomerAcknowledgeIncidentRequest,
 } from './schemas/incident.request.schema.ts';
+import { reportIncidentSchema } from './schemas/incident.request.schema.ts';
 
 export interface CallerContext {
   id: string;
@@ -273,12 +274,20 @@ export class IncidentService {
     data: ReportIncidentRequest,
     session?: ClientSession
   ): Promise<IncidentResponse> {
+    const parsed = reportIncidentSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_101, [parsed.error]);
+    }
+    data = parsed.data;
     const callerRole = (caller.role || RoleEnum.CUSTOMER) as RoleEnum;
     let reporterRole = callerRole;
 
     // A. Validate Caller Scope
     if (callerRole === RoleEnum.CUSTOMER) {
       reporterRole = RoleEnum.CUSTOMER;
+      if (data.locationType === 'common_area' || !data.contractId) {
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
+      }
     } else if (
       callerRole === RoleEnum.FACILITY_STAFF ||
       callerRole === RoleEnum.FACILITY_MANAGER
@@ -291,8 +300,56 @@ export class IncidentService {
       }
     }
 
+    // Validate the full location hierarchy before any maintenance or inventory changes.
+    if (data.storageUnitId) {
+      if (!this.storageUnitRepository)
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106);
+      const unit = await this.storageUnitRepository.findById(
+        data.storageUnitId,
+        session
+      );
+      if (!unit || unit.deleted)
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_104, ['StorageUnit']);
+      if (toId(unit.facilityId) !== data.facilityId)
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
+    }
+    if (data.storageRackId) {
+      if (!this.storageRackRepository)
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106);
+      const rack = await this.storageRackRepository.findById(
+        data.storageRackId,
+        session
+      );
+      if (!rack || rack.deleted)
+        throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
+      if (
+        toId(rack.facilityId) !== data.facilityId ||
+        toId(rack.storageUnitId) !== data.storageUnitId
+      )
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_709);
+      // Staff reports against a rented rack must remain visible to its contract customer.
+      if (!data.contractId && rack.currentContractId) {
+        data.contractId = toId(rack.currentContractId);
+      }
+    }
+    if (data.rackTierId) {
+      if (!this.rackTierRepository)
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106);
+      const tier = await this.rackTierRepository.findById(data.rackTierId);
+      if (
+        !tier ||
+        tier.deleted ||
+        toId(tier.storageRackId) !== data.storageRackId ||
+        toId(tier.storageUnitId) !== data.storageUnitId ||
+        toId(tier.facilityId) !== data.facilityId
+      )
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_709);
+    }
+
     // B2. Validate linked Contract (existence, facility match, customer ownership, and anti-write-skew touch)
-    if (data.contractId && this.contractRepository) {
+    if (data.contractId) {
+      if (!this.contractRepository)
+        throw new AppError(500, MESSAGE_CODE.MESSAGE_CODE_106);
       const contract = await this.contractRepository.findById(
         data.contractId,
         session
@@ -309,6 +366,17 @@ export class IncidentService {
       if (toId(contract.facilityId) !== data.facilityId) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_407);
       }
+      if (toId(contract.storageUnitId) !== data.storageUnitId)
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_702);
+      if (
+        data.storageRackId &&
+        (contract.rentalTargetType === 'storage_rack' ||
+          contract.rentedRackIds?.length) &&
+        !contract.rentedRackIds?.some(
+          (rackId) => toId(rackId) === data.storageRackId
+        )
+      )
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_709);
       if (
         contract.status === ContractStatusEnum.ACTIVE ||
         contract.status === ContractStatusEnum.OVERDUE
@@ -353,6 +421,10 @@ export class IncidentService {
     const incidentData: Partial<IIncident> = {
       incidentCode,
       facilityId: new Types.ObjectId(data.facilityId),
+      locationType:
+        data.locationType ??
+        (data.storageRackId ? 'storage_rack' : 'storage_unit'),
+      commonAreaLocation: data.commonAreaLocation ?? null,
       storageUnitId: data.storageUnitId
         ? new Types.ObjectId(data.storageUnitId)
         : undefined,
@@ -445,6 +517,16 @@ export class IncidentService {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_700);
     }
 
+    if (
+      ![
+        RoleEnum.FACILITY_MANAGER,
+        RoleEnum.BUSINESS_OPS_MANAGER,
+        RoleEnum.SYSTEM_ADMIN,
+      ].includes(caller.role as RoleEnum)
+    ) {
+      throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_707);
+    }
+
     // Scope check: only FM of facility, or Ops/Admin
     if (
       caller.role === RoleEnum.FACILITY_MANAGER ||
@@ -468,19 +550,33 @@ export class IncidentService {
       if (
         !staffUser ||
         staffUser.deleted ||
+        staffUser.role !== RoleEnum.FACILITY_STAFF ||
         toId(staffUser.assignedFacilityId) !== toId(incident.facilityId)
       ) {
         throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_708);
       }
     }
 
+    const assignableStatuses = [
+      IncidentStatusEnum.REPORTED,
+      IncidentStatusEnum.ASSIGNED,
+      IncidentStatusEnum.INVESTIGATING,
+      IncidentStatusEnum.IN_PROGRESS,
+    ];
+    if (!assignableStatuses.includes(incident.status)) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_701);
+    }
+
     const updated = await this.incidentRepository.atomicUpdateStatus(
       id,
-      [IncidentStatusEnum.REPORTED, IncidentStatusEnum.ASSIGNED],
+      incident.status,
       {
         $set: {
           assignedStaffId: new Types.ObjectId(data.assignedStaffId),
-          status: IncidentStatusEnum.ASSIGNED,
+          status:
+            incident.status === IncidentStatusEnum.REPORTED
+              ? IncidentStatusEnum.ASSIGNED
+              : incident.status,
         },
       },
       session
@@ -769,6 +865,8 @@ export class IncidentService {
     // Scope check: Customer (reporter or owner of linked contract), FM of facility, or Ops/Admin.
     // FACILITY_STAFF is explicitly barred from closing incidents (Maker-Checker).
     if (caller.role === RoleEnum.CUSTOMER) {
+      if (incident.locationType === 'common_area' || !incident.storageUnitId)
+        throw new AppError(403, MESSAGE_CODE.MESSAGE_CODE_103);
       let isAuthorizedCustomer = toId(incident.reporterId) === caller.id;
       if (
         !isAuthorizedCustomer &&
@@ -1180,10 +1278,15 @@ export class IncidentService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_710);
     }
 
-    const fromRackId =
-      data.fromRackId ||
-      (incident.storageRackId ? toId(incident.storageRackId) : undefined);
-    if (!fromRackId) {
+    const fromRackId = incident.storageRackId
+      ? toId(incident.storageRackId)
+      : undefined;
+    if (
+      incident.locationType === 'common_area' ||
+      !incident.storageUnitId ||
+      !fromRackId ||
+      (data.fromRackId && data.fromRackId !== fromRackId)
+    ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_711);
     }
 
@@ -1206,10 +1309,18 @@ export class IncidentService {
       ]);
     }
 
-    const fromRack = await this.storageRackRepository.findById(fromRackId);
+    const fromRack = await this.storageRackRepository.findById(
+      fromRackId,
+      session
+    );
     if (!fromRack || (fromRack as unknown as { deleted?: boolean }).deleted) {
       throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_600);
     }
+    if (
+      toId(fromRack.facilityId) !== facilityId ||
+      toId(fromRack.storageUnitId) !== toId(incident.storageUnitId)
+    )
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_709);
 
     const activeItems =
       await this.customerInventoryRepository.findActiveByRackId(

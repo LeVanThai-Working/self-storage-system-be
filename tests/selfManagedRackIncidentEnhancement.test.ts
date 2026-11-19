@@ -46,6 +46,7 @@ import { InventoryItemStatusEnum } from '../src/common/enums/customerInventory.e
 
 import { AppError } from '../src/common/errors/appError.error.ts';
 import { Incident } from '../src/modules/incident/incident.model.ts';
+import { User } from '../src/modules/user/user.model.ts';
 import { Notification } from '../src/modules/notification/notification.model.ts';
 
 describe('T-SMR.3: Self-Managed Warehouse Rack Incident Handling & 2-Layer Acknowledgment', () => {
@@ -261,7 +262,10 @@ describe('T-SMR.3: Self-Managed Warehouse Rack Incident Handling & 2-Layer Ackno
     ]);
   });
 
-  async function createIncident(requiresRelocation: boolean = false) {
+  async function createIncident(
+    requiresRelocation: boolean = false,
+    assign = true
+  ) {
     const reported = await incidentService.reportIncident(customerCaller, {
       facilityId: String(facilityAId),
       storageUnitId: String(storageUnitId),
@@ -277,14 +281,333 @@ describe('T-SMR.3: Self-Managed Warehouse Rack Incident Handling & 2-Layer Ackno
       requiresRelocation,
     });
 
-    await incidentService.assignStaff(managerA, reported.id, {
-      assignedStaffId: staffA.id,
-    });
+    if (assign) {
+      await incidentService.assignStaff(managerA, reported.id, {
+        assignedStaffId: staffA.id,
+      });
+    }
 
     return reported.id;
   }
 
   describe('1. Emergency Rack Evacuation (POST /incidents/:id/evacuate-rack)', () => {
+    const reportFields = {
+      facilityId: TEST_FACILITY_A_ID,
+      category: IncidentCategoryEnum.ELECTRICAL,
+      severity: IncidentSeverityEnum.HIGH,
+      title: 'Exposed electrical wiring',
+      description: 'Electrical wiring needs inspection and repair.',
+      images: ['https://example.com/wiring.jpg'],
+      putUnitUnderMaintenance: false,
+      requiresRelocation: false,
+    };
+
+    it('rejects an unspecified location even when calling the service directly', async () => {
+      await expect(
+        incidentService.reportIncident(staffA, reportFields)
+      ).rejects.toMatchObject({ statusCode: 400 });
+      expect(await Incident.countDocuments()).toBe(0);
+    });
+
+    it('links a staff rack report to the current contract even if the client omits it', async () => {
+      const reported = await incidentService.reportIncident(staffA, {
+        ...reportFields,
+        locationType: 'storage_rack',
+        storageUnitId: String(storageUnitId),
+        storageRackId: String(storageRackId),
+      });
+      expect(reported.contract?.id).toBe(String(contractId));
+      expect(
+        (await incidentService.getIncidentById(customerCaller, reported.id)).id
+      ).toBe(reported.id);
+      await expect(
+        incidentService.getIncidentById(otherCustomerCaller, reported.id)
+      ).rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('persists an explicitly described common area and lets a manager close it without customer acceptance', async () => {
+      const common = await incidentService.reportIncident(staffA, {
+        ...reportFields,
+        locationType: 'common_area',
+        commonAreaLocation: '  Second-floor corridor by the exit  ',
+      });
+      expect(common.locationType).toBe('common_area');
+      expect(common.commonAreaLocation).toBe(
+        'Second-floor corridor by the exit'
+      );
+      const detail = await incidentService.getIncidentById(managerA, common.id);
+      expect(detail.commonAreaLocation).toBe(common.commonAreaLocation);
+      await incidentService.assignStaff(managerA, common.id, {
+        assignedStaffId: staffA.id,
+      });
+      await incidentService.investigateIncident(staffA, common.id, {
+        investigationNotes: 'Insulated the wiring pending repair.',
+      });
+      await incidentService.resolveIncident(staffA, common.id, {
+        resolutionNotes: 'Replaced the exposed wire and tested the circuit.',
+        staffEvidenceImages: ['https://example.com/repaired.jpg'],
+        repairCost: 0,
+        liableParty: IncidentLiablePartyEnum.FACILITY,
+        damageFee: 0,
+      });
+      await expect(
+        incidentService.closeIncident(customerCaller, common.id)
+      ).rejects.toMatchObject({ statusCode: 403 });
+      expect(
+        (await incidentService.closeIncident(managerA, common.id)).status
+      ).toBe(IncidentStatusEnum.CLOSED);
+    });
+
+    it('rejects blank common areas, mixed scopes and common-area reports by customers', async () => {
+      await expect(
+        incidentService.reportIncident(staffA, {
+          ...reportFields,
+          locationType: 'common_area',
+          commonAreaLocation: '  ',
+        })
+      ).rejects.toMatchObject({ statusCode: 400 });
+      await expect(
+        incidentService.reportIncident(staffA, {
+          ...reportFields,
+          locationType: 'common_area',
+          commonAreaLocation: 'Main corridor',
+          storageUnitId: String(storageUnitId),
+        })
+      ).rejects.toMatchObject({ statusCode: 400 });
+      await expect(
+        incidentService.reportIncident(customerCaller, {
+          ...reportFields,
+          locationType: 'common_area',
+          commonAreaLocation: 'Main corridor',
+        })
+      ).rejects.toMatchObject({ statusCode: 403 });
+      await expect(
+        incidentService.reportIncident(customerCaller, {
+          ...reportFields,
+          storageUnitId: String(storageUnitId),
+        })
+      ).rejects.toMatchObject({ statusCode: 403 });
+      expect(await Incident.countDocuments()).toBe(0);
+    });
+
+    it('rejects a unit in another facility before changing maintenance status', async () => {
+      await StorageUnit.findByIdAndUpdate(storageUnitId, {
+        facilityId: facilityBId,
+        status: StorageUnitStatusEnum.AVAILABLE,
+      });
+      await expect(
+        incidentService.reportIncident(staffA, {
+          ...reportFields,
+          storageUnitId: String(storageUnitId),
+          putUnitUnderMaintenance: true,
+        })
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        messageCode: 'MESSAGE_CODE_407',
+      });
+      expect((await StorageUnit.findById(storageUnitId))?.status).toBe(
+        StorageUnitStatusEnum.AVAILABLE
+      );
+      expect(await Incident.countDocuments()).toBe(0);
+    });
+
+    it.each(['facilityId', 'storageUnitId'] as const)(
+      'rejects a rack with a mismatched %s',
+      async (field) => {
+        await StorageRack.findByIdAndUpdate(storageRackId, {
+          [field]: new Types.ObjectId(),
+        });
+        await expect(
+          incidentService.reportIncident(staffA, {
+            ...reportFields,
+            storageUnitId: String(storageUnitId),
+            storageRackId: String(storageRackId),
+          })
+        ).rejects.toMatchObject({
+          statusCode: 400,
+          messageCode: 'MESSAGE_CODE_709',
+        });
+        expect(await Incident.countDocuments()).toBe(0);
+      }
+    );
+
+    it('rejects a tier from a different rack', async () => {
+      await RackTier.findByIdAndUpdate(rackTier1Id, {
+        storageRackId: new Types.ObjectId(),
+      });
+      await expect(
+        incidentService.reportIncident(staffA, {
+          ...reportFields,
+          storageUnitId: String(storageUnitId),
+          storageRackId: String(storageRackId),
+          rackTierId: String(rackTier1Id),
+        })
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        messageCode: 'MESSAGE_CODE_709',
+      });
+    });
+
+    it('rejects a contract for a different unit or rented rack', async () => {
+      await Contract.findByIdAndUpdate(contractId, {
+        storageUnitId: new Types.ObjectId(),
+      });
+      const payload = {
+        ...reportFields,
+        contractId: String(contractId),
+        storageUnitId: String(storageUnitId),
+        storageRackId: String(storageRackId),
+      };
+      await expect(
+        incidentService.reportIncident(customerCaller, payload)
+      ).rejects.toMatchObject({ messageCode: 'MESSAGE_CODE_702' });
+      await Contract.findByIdAndUpdate(contractId, {
+        storageUnitId,
+        rentedRackIds: [],
+        rentalTargetType: 'storage_rack',
+      });
+      await expect(
+        incidentService.reportIncident(customerCaller, payload)
+      ).rejects.toMatchObject({ messageCode: 'MESSAGE_CODE_709' });
+      expect(await Incident.countDocuments()).toBe(0);
+    });
+
+    it('blocks injecting an arbitrary rack into common-area or whole-room evacuation', async () => {
+      const common = await incidentService.reportIncident(staffA, {
+        ...reportFields,
+        locationType: 'common_area',
+        commonAreaLocation: 'Main corridor',
+      });
+      const room = await incidentService.reportIncident(staffA, {
+        ...reportFields,
+        storageUnitId: String(storageUnitId),
+      });
+      for (const id of [common.id, room.id]) {
+        await expect(
+          incidentService.evacuateRack(staffA, id, {
+            fromRackId: String(storageRackId),
+            evidenceImages: ['https://example.com/evacuate.jpg'],
+            emergencyReason: 'Unsafe electrical wiring requires evacuation',
+            items: [
+              { skuId: String(sku1Id), actualQuantity: 10 },
+              { skuId: String(sku2Id), actualQuantity: 15 },
+            ],
+          })
+        ).rejects.toMatchObject({ messageCode: 'MESSAGE_CODE_711' });
+        expect(
+          (await Incident.findById(id))?.preEvacuationManifest
+        ).toBeFalsy();
+      }
+      expect((await StorageRack.findById(storageRackId))?.status).toBe(
+        RackStatusEnum.RENTED
+      );
+      expect(
+        await CustomerInventory.countDocuments({
+          storageRackId,
+          quantity: { $gt: 0 },
+        })
+      ).toBe(2);
+    });
+
+    it('allows ops to assign after unassigned emergency evacuation, then the assignee resolves', async () => {
+      const id = await createIncident(false, false);
+      const evacuated = await incidentService.evacuateRack(staffA, id, {
+        evidenceImages: ['https://example.com/evacuate.jpg'],
+        emergencyReason: 'Unsafe rack requires evacuation',
+        items: [
+          { skuId: String(sku1Id), actualQuantity: 10 },
+          { skuId: String(sku2Id), actualQuantity: 15 },
+        ],
+      });
+      expect(evacuated.status).toBe(IncidentStatusEnum.IN_PROGRESS);
+      expect(evacuated.assignedStaff).toBeFalsy();
+      const assigned = await incidentService.assignStaff(
+        { id: TEST_USERS.opsManager.id, role: RoleEnum.BUSINESS_OPS_MANAGER },
+        id,
+        { assignedStaffId: staffA.id }
+      );
+      expect(assigned.status).toBe(IncidentStatusEnum.IN_PROGRESS);
+      expect(assigned.assignedStaff?.id).toBe(staffA.id);
+      expect(assigned.preEvacuationManifest).toEqual(
+        evacuated.preEvacuationManifest
+      );
+      const resolved = await incidentService.resolveIncident(staffA, id, {
+        resolutionNotes: 'Repaired the rack supports and checked stability.',
+        staffEvidenceImages: ['https://example.com/repaired.jpg'],
+        repairCost: 0,
+        liableParty: IncidentLiablePartyEnum.FACILITY,
+        damageFee: 0,
+      });
+      expect(resolved.status).toBe(IncidentStatusEnum.RESOLVED);
+    });
+
+    it.each([IncidentStatusEnum.INVESTIGATING, IncidentStatusEnum.IN_PROGRESS])(
+      'preserves %s when a manager changes the assignee',
+      async (status) => {
+        const id = await createIncident();
+        await Incident.findByIdAndUpdate(id, { status });
+        await User.findByIdAndUpdate(staffB.id, {
+          assignedFacilityId: facilityAId,
+        });
+        const assigned = await incidentService.assignStaff(managerA, id, {
+          assignedStaffId: staffB.id,
+        });
+        expect(assigned.status).toBe(status);
+        expect(assigned.assignedStaff?.id).toBe(staffB.id);
+        await expect(
+          incidentService.resolveIncident(staffA, id, {
+            resolutionNotes: 'Previous assignee cannot complete this incident.',
+            staffEvidenceImages: ['https://example.com/repaired.jpg'],
+            repairCost: 0,
+            liableParty: IncidentLiablePartyEnum.FACILITY,
+            damageFee: 0,
+          })
+        ).rejects.toMatchObject({ statusCode: 403 });
+      }
+    );
+
+    it('rejects staff self-assignment, foreign-facility staff and non-staff recipients', async () => {
+      const id = await createIncident(false, false);
+      await expect(
+        incidentService.assignStaff(staffA, id, { assignedStaffId: staffA.id })
+      ).rejects.toMatchObject({ statusCode: 403 });
+      await expect(
+        incidentService.assignStaff(managerA, id, {
+          assignedStaffId: staffB.id,
+        })
+      ).rejects.toBeInstanceOf(AppError);
+      await expect(
+        incidentService.assignStaff(managerA, id, {
+          assignedStaffId: managerA.id,
+        })
+      ).rejects.toBeInstanceOf(AppError);
+      const managerB = {
+        id: TEST_USERS.managerFacilityB.id,
+        role: RoleEnum.FACILITY_MANAGER,
+        assignedFacilityId: TEST_FACILITY_B_ID,
+      };
+      await expect(
+        incidentService.assignStaff(managerB, id, {
+          assignedStaffId: staffA.id,
+        })
+      ).rejects.toBeInstanceOf(AppError);
+    });
+
+    it.each([
+      IncidentStatusEnum.RESOLVED,
+      IncidentStatusEnum.CLOSED,
+      IncidentStatusEnum.CANCELLED,
+    ])('rejects assignment after %s', async (status) => {
+      const id = await createIncident();
+      await Incident.findByIdAndUpdate(id, { status });
+      await expect(
+        incidentService.assignStaff(managerA, id, {
+          assignedStaffId: staffA.id,
+        })
+      ).rejects.toBeInstanceOf(AppError);
+      expect((await Incident.findById(id))?.status).toBe(status);
+    });
+
     it('lists staff-reported contract incidents only for their owner, preserving search and pagination', async () => {
       const id = await createIncident();
       await Incident.findByIdAndUpdate(id, {
