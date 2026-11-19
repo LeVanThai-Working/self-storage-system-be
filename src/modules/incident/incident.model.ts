@@ -48,6 +48,8 @@ export interface IIncident extends SoftDeleteDocument {
   _id: Types.ObjectId;
   incidentCode: string;
   facilityId: Types.ObjectId;
+  locationType?: 'storage_unit' | 'storage_rack' | 'common_area';
+  commonAreaLocation?: string | null;
   storageUnitId?: Types.ObjectId;
   storageRackId?: Types.ObjectId;
   rackTierId?: Types.ObjectId;
@@ -176,6 +178,16 @@ const incidentSchema = new Schema<IIncident>(
       ref: 'StorageUnit',
       default: null,
       index: true,
+    },
+    locationType: {
+      type: String,
+      enum: ['storage_unit', 'storage_rack', 'common_area'],
+    },
+    commonAreaLocation: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+      default: null,
     },
     storageRackId: {
       type: Schema.Types.ObjectId,

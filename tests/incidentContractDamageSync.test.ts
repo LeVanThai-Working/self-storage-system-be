@@ -204,9 +204,11 @@ describe('X5: Incident resolution.damageFee <-> Contract.damageFee & checkOutCon
   describe('incident code uniqueness', () => {
     async function reportAtFacility(targetFacilityId: string) {
       return incidentService.reportIncident(
-        { id: String(customerId), role: RoleEnum.CUSTOMER },
+        { id: TEST_USERS.opsManager.id, role: RoleEnum.BUSINESS_OPS_MANAGER },
         {
           facilityId: targetFacilityId,
+          locationType: 'common_area',
+          commonAreaLocation: 'Main loading entrance',
           category: IncidentCategoryEnum.STRUCTURAL,
           severity: IncidentSeverityEnum.LOW,
           title: 'Damaged door lock',
@@ -566,7 +568,11 @@ describe('X5: Incident resolution.damageFee <-> Contract.damageFee & checkOutCon
     });
 
     const incident = await incidentService.reportIncident(
-      { id: String(customerId), role: RoleEnum.CUSTOMER },
+      {
+        id: String(staffId),
+        role: RoleEnum.FACILITY_STAFF,
+        assignedFacilityId: String(facilityId),
+      },
       {
         facilityId: String(facilityId),
         storageUnitId: String(storageUnitId),

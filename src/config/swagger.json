@@ -11203,6 +11203,18 @@
 						"type": "object",
 						"nullable": true
 					},
+					"commonAreaLocation": {
+						"type": "string",
+						"nullable": true
+					},
+					"locationType": {
+						"type": "string",
+						"enum": [
+							"storage_unit",
+							"storage_rack",
+							"common_area"
+						]
+					},
 					"updatedAt": {
 						"type": "string"
 					},
@@ -11367,6 +11379,17 @@
 					},
 					"storageUnitId": {
 						"type": "string"
+					},
+					"commonAreaLocation": {
+						"type": "string"
+					},
+					"locationType": {
+						"type": "string",
+						"enum": [
+							"storage_unit",
+							"storage_rack",
+							"common_area"
+						]
 					},
 					"requiresRelocation": {
 						"type": "boolean"
@@ -11849,6 +11872,18 @@
 									],
 									"type": "object",
 									"nullable": true
+								},
+								"commonAreaLocation": {
+									"type": "string",
+									"nullable": true
+								},
+								"locationType": {
+									"type": "string",
+									"enum": [
+										"storage_unit",
+										"storage_rack",
+										"common_area"
+									]
 								},
 								"updatedAt": {
 									"type": "string"
