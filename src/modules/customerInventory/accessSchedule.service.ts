@@ -2,7 +2,12 @@ import crypto from 'node:crypto';
 import { Types, type ClientSession } from 'mongoose';
 import { isCheckInTimeValidationEnabled } from '../systemSettings/systemSettings.service.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
-import { encryptText, decryptText } from '../../utils/encryption.util.ts';
+import {
+  hashAccessScheduleOtp,
+  getAccessScheduleOtpHashes,
+  encryptAccessScheduleOtp,
+  decryptAccessScheduleOtp,
+} from '../../utils/accessScheduleOtp.util.ts';
 import { runAfterCommit } from '../../utils/transactionScope.util.ts';
 import { NotificationTypeEnum } from '../../common/enums/notification.enum.ts';
 import type {
@@ -204,13 +209,6 @@ export class AccessScheduleService {
     });
     this.notifyAssignment(updated, true);
     return this.formatDetail(updated);
-  }
-
-  private hashOtp(otp: string): string {
-    if (process.env.NODE_ENV === 'production' && !process.env.OTP_SECRET)
-      throw new Error('OTP_SECRET is required');
-    const secret = process.env.OTP_SECRET || 'self-storage-secret-key-2026';
-    return crypto.createHmac('sha256', secret).update(otp.trim()).digest('hex');
   }
 
   /**
@@ -486,7 +484,7 @@ export class AccessScheduleService {
     const scheduleCode =
       await this.accessScheduleRepository.generateScheduleCode();
     let rawOtpCode = String(crypto.randomInt(100000, 1000000));
-    const otpHash = this.hashOtp(rawOtpCode);
+    const otpHash = hashAccessScheduleOtp(rawOtpCode);
 
     const payload = {
       scheduleCode,
@@ -505,7 +503,7 @@ export class AccessScheduleService {
       vehicleType: data.vehicleType ?? null,
       vehiclePlate: data.vehiclePlate ?? null,
       purpose: data.purpose ?? null,
-      otpEncrypted: encryptText(rawOtpCode),
+      otpEncrypted: encryptAccessScheduleOtp(rawOtpCode),
       otpHash,
       expiresAt,
     };
@@ -523,8 +521,8 @@ export class AccessScheduleService {
         )
           throw error;
         rawOtpCode = String(crypto.randomInt(100000, 1000000));
-        payload.otpHash = this.hashOtp(rawOtpCode);
-        payload.otpEncrypted = encryptText(rawOtpCode);
+        payload.otpHash = hashAccessScheduleOtp(rawOtpCode);
+        payload.otpEncrypted = encryptAccessScheduleOtp(rawOtpCode);
         payload.scheduleCode =
           await this.accessScheduleRepository.generateScheduleCode();
       }
@@ -625,7 +623,7 @@ export class AccessScheduleService {
     const candidate =
       await this.accessScheduleRepository.findByFacilityAndOtpHash(
         facilityId,
-        this.hashOtp(data.code)
+        getAccessScheduleOtpHashes(data.code)
       );
     if (!candidate) throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_659);
     // Preserve the caller's original assignment version across transaction retries.
@@ -668,7 +666,7 @@ export class AccessScheduleService {
     const schedule =
       await this.accessScheduleRepository.findByFacilityAndOtpHash(
         staffFacilityId!,
-        this.hashOtp(trimmed),
+        getAccessScheduleOtpHashes(trimmed),
         session
       );
 
@@ -1077,7 +1075,7 @@ export class AccessScheduleService {
       schedule.status === AccessScheduleStatusEnum.PENDING &&
       new Date() <= schedule.expiresAt &&
       schedule.otpEncrypted
-        ? decryptText(schedule.otpEncrypted)
+        ? decryptAccessScheduleOtp(schedule.otpEncrypted)
         : null;
     return this.formatDetail(schedule, otp, rentedRacks);
   }

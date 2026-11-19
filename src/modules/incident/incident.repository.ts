@@ -14,6 +14,7 @@ import {
 import { paginate, type PaginateResult } from '../../utils/pagination.util.ts';
 
 export interface IncidentQueryFilter {
+  customerScope?: { customerId: string; contractIds: Types.ObjectId[] };
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -57,6 +58,9 @@ export class IncidentRepository {
       .populate('contractId', 'contractCode status startDate endDate')
       .populate('reporterId', 'name email phoneNumber role')
       .populate('assignedStaffId', 'name email phoneNumber role')
+      .populate('preEvacuationManifest.evacuatedBy', 'name role')
+      .populate('restorationUploadedBy', 'name role')
+      .populate('customerAcknowledgedBy', 'name role')
       .populate('resolution.resolvedBy', 'name email phoneNumber role');
 
     if (session) q.session(session);
@@ -76,6 +80,9 @@ export class IncidentRepository {
       .populate('contractId', 'contractCode status startDate endDate')
       .populate('reporterId', 'name email phoneNumber role')
       .populate('assignedStaffId', 'name email phoneNumber role')
+      .populate('preEvacuationManifest.evacuatedBy', 'name role')
+      .populate('restorationUploadedBy', 'name role')
+      .populate('customerAcknowledgedBy', 'name role')
       .populate('resolution.resolvedBy', 'name email phoneNumber role');
 
     if (session) q.session(session);
@@ -86,6 +93,18 @@ export class IncidentRepository {
     filter: IncidentQueryFilter
   ): Promise<PaginateResult<IIncident>> {
     const mongoFilter: FilterQuery<IIncident> = { deleted: false };
+
+    // AND with other filters, including the search $or, so callers cannot widen visibility.
+    if (filter.customerScope) {
+      mongoFilter.$and = [
+        {
+          $or: [
+            { reporterId: new Types.ObjectId(filter.customerScope.customerId) },
+            { contractId: { $in: filter.customerScope.contractIds } },
+          ],
+        },
+      ];
+    }
 
     if (filter.facilityId && Types.ObjectId.isValid(filter.facilityId)) {
       mongoFilter.facilityId = new Types.ObjectId(filter.facilityId);
@@ -201,6 +220,9 @@ export class IncidentRepository {
       .populate('contractId', 'contractCode status startDate endDate')
       .populate('reporterId', 'name email phoneNumber role')
       .populate('assignedStaffId', 'name email phoneNumber role')
+      .populate('preEvacuationManifest.evacuatedBy', 'name role')
+      .populate('restorationUploadedBy', 'name role')
+      .populate('customerAcknowledgedBy', 'name role')
       .populate('resolution.resolvedBy', 'name email phoneNumber role')
       .exec();
   }
@@ -221,6 +243,9 @@ export class IncidentRepository {
       .populate('contractId', 'contractCode status startDate endDate')
       .populate('reporterId', 'name email phoneNumber role')
       .populate('assignedStaffId', 'name email phoneNumber role')
+      .populate('preEvacuationManifest.evacuatedBy', 'name role')
+      .populate('restorationUploadedBy', 'name role')
+      .populate('customerAcknowledgedBy', 'name role')
       .populate('resolution.resolvedBy', 'name email phoneNumber role')
       .exec();
   }

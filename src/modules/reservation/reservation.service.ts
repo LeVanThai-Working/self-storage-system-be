@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { Types, type ClientSession } from 'mongoose';
+import { generateIncidentCode } from '../../utils/incidentCode.util.ts';
 import type { ReservationRepository } from './reservation.repository.ts';
 import type { FacilityRepository } from '../facility/facility.repository.ts';
 import type { FacilityUnitTypeOfferingRepository } from '../facilityUnitTypeOffering/facilityUnitTypeOffering.repository.ts';
@@ -2493,11 +2494,7 @@ export class ReservationService {
           'IncidentRepository',
         ]);
       }
-      const count =
-        (await this.incidentRepository.countIncidentsToday(facilityIdStr)) ?? 0;
-      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const seq = String(count + 1).padStart(4, '0');
-      const incidentCode = `INC-${dateStr}-${seq}`;
+      const incidentCode = generateIncidentCode();
 
       const createdIncident = await this.incidentRepository.create(
         {

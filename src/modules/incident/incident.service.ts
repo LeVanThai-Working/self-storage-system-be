@@ -2,7 +2,10 @@ import { Types, type ClientSession } from 'mongoose';
 import { AppError } from '../../common/errors/appError.error.ts';
 import { MESSAGE_CODE } from '../../common/consts/messageCode.const.ts';
 import { validateResponse } from '../../utils/validateReponse.util.ts';
+import { generateIncidentCode } from '../../utils/incidentCode.util.ts';
 import { Transactional } from '../../common/decorators/transactional.decorator.ts';
+import { runAfterCommit } from '../../utils/transactionScope.util.ts';
+import type { CreateNotificationInput } from '../notification/schemas/notification.request.schema.ts';
 import { RoleEnum } from '../../common/enums/user.enum.ts';
 import {
   IncidentLiablePartyEnum,
@@ -34,7 +37,10 @@ import type { RackTierRepository } from '../storageRack/rackTier.repository.ts';
 import type { InventoryMovementRepository } from '../customerInventory/inventoryMovement.repository.ts';
 import type { CustomerSkuRepository } from '../customerSku/customerSku.repository.ts';
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
-import type { IncidentRepository } from './incident.repository.ts';
+import type {
+  IncidentRepository,
+  IncidentQueryFilter,
+} from './incident.repository.ts';
 import type { StorageUnitRepository } from '../storageUnit/storageUnit.repository.ts';
 import type { ContractRepository } from '../contract/contract.repository.ts';
 import type { UserRepository } from '../user/user.repository.ts';
@@ -87,6 +93,28 @@ export class IncidentService {
     private readonly inventoryMovementRepository?: InventoryMovementRepository,
     private readonly customerSkuRepository?: CustomerSkuRepository
   ) {}
+
+  private notifyIncidentCustomer(
+    incident: IIncident,
+    input: Omit<CreateNotificationInput, 'recipientId'>
+  ): void {
+    if (!this.notificationService) return;
+    runAfterCommit(async () => {
+      const contract =
+        incident.contractId && this.contractRepository
+          ? await this.contractRepository.findById(toId(incident.contractId))
+          : null;
+      let recipientId = contract ? toId(contract.customerId) : '';
+      if (!recipientId && incident.reporterRole === RoleEnum.CUSTOMER) {
+        recipientId = toId(incident.reporterId);
+      }
+      if (recipientId)
+        await this.notificationService!.sendNotification({
+          ...input,
+          recipientId,
+        });
+    });
+  }
 
   private async resolveCallerAssignedFacilityId(
     caller: CallerContext
@@ -236,16 +264,6 @@ export class IncidentService {
     };
   }
 
-  private async generateIncidentCode(
-    facilityId: string | Types.ObjectId
-  ): Promise<string> {
-    const todayCount =
-      await this.incidentRepository.countIncidentsToday(facilityId);
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const sequenceStr = String(todayCount + 1).padStart(4, '0');
-    return `INC-${dateStr}-${sequenceStr}`;
-  }
-
   /**
    * 1. Report an Incident (Customer or Staff/FM)
    */
@@ -331,7 +349,7 @@ export class IncidentService {
     }
 
     // D. Generate Code & Create Incident
-    const incidentCode = await this.generateIncidentCode(data.facilityId);
+    const incidentCode = generateIncidentCode();
     const incidentData: Partial<IIncident> = {
       incidentCode,
       facilityId: new Types.ObjectId(data.facilityId),
@@ -1100,11 +1118,15 @@ export class IncidentService {
     caller: CallerContext,
     query: IncidentQuery
   ): Promise<PaginatedIncidentResponse> {
-    const filter = { ...query };
+    const filter: IncidentQueryFilter = { ...query };
 
     // Enforce Scope:
     if (caller.role === RoleEnum.CUSTOMER) {
-      filter.reporterId = caller.id;
+      filter.customerScope = {
+        customerId: caller.id,
+        contractIds:
+          (await this.contractRepository?.findIdsByCustomerId(caller.id)) ?? [],
+      };
     } else if (
       caller.role === RoleEnum.FACILITY_STAFF ||
       caller.role === RoleEnum.FACILITY_MANAGER
@@ -1392,8 +1414,7 @@ export class IncidentService {
     if (this.notificationService) {
       const rackCode = fromRack.rackCode || 'Kệ kho';
       if (requiresRelocation) {
-        this.notificationService.sendNotification({
-          recipientId: toId(incident.reporterId),
+        this.notifyIncidentCustomer(incident, {
           facilityId: toId(incident.facilityId),
           title: `[Khẩn cấp] Mời quý khách đến chi nhánh giải quyết sự cố Kệ ${rackCode}`,
           content: `Kệ ${rackCode} gặp sự cố kỹ thuật không thể tiếp tục sử dụng. Toàn bộ hàng hóa đã được sơ tán an toàn về Khu lưu tạm. Kính mời quý khách tạo lịch hẹn (AccessSchedule) đến chi nhánh gặp Quản lý để thống nhất phương án xử lý: Đổi sang Kệ mới tương đương HOẶC Thanh lý hợp đồng nhận lại 100% tiền cọc.`,
@@ -1410,8 +1431,7 @@ export class IncidentService {
           },
         });
       } else {
-        this.notificationService.sendNotification({
-          recipientId: toId(incident.reporterId),
+        this.notifyIncidentCustomer(incident, {
           facilityId: toId(incident.facilityId),
           title: `[Khẩn cấp] Đã sơ tán hàng hóa tại Kệ ${rackCode} xuống khu lưu tạm`,
           content: `Do sự cố kỹ thuật tại Kệ ${rackCode}, nhân viên đã sơ tán khẩn cấp hàng hóa xuống khu vực lưu tạm để sửa chữa. Chúng tôi sẽ thông báo ngay khi hoàn tất.`,
@@ -1507,8 +1527,7 @@ export class IncidentService {
 
     // Notify Customer to acknowledge in App
     if (this.notificationService) {
-      this.notificationService.sendNotification({
-        recipientId: toId(incident.reporterId),
+      this.notifyIncidentCustomer(incident, {
         facilityId: toId(incident.facilityId),
         title: `[Biên bản bàn giao] Quản lý đã tải lên biên bản kiểm kê sự cố ${incident.incidentCode}`,
         content: `Biên bản kiểm kê bàn giao hàng hóa đã được Quản lý tải lên. Kính mời quý khách mở ứng dụng kiểm tra và bấm nút [Xác nhận nghiệm thu].`,
@@ -1611,20 +1630,33 @@ export class IncidentService {
       },
     });
 
-    // Notify FM & Assigned Staff
-    if (this.notificationService && incident.assignedStaffId) {
-      this.notificationService.sendNotification({
-        recipientId: toId(incident.assignedStaffId),
-        facilityId: toId(incident.facilityId),
-        title: `[Khách hàng xác nhận] Sự cố ${incident.incidentCode} đã được nghiệm thu`,
-        content: `Khách hàng đã bấm xác nhận nghiệm thu trên ứng dụng cho sự cố ${incident.incidentCode}. Quản lý có thể tiến hành đóng hồ sơ.`,
-        type: NotificationTypeEnum.INCIDENT,
-        priority: NotificationPriorityEnum.NORMAL,
-        channels: [NotificationChannelEnum.IN_APP],
-        metadata: {
-          incidentId: id,
-          incidentCode: incident.incidentCode,
-        },
+    // External effects run only after the acknowledgment transaction commits.
+    if (this.notificationService) {
+      runAfterCommit(async () => {
+        const managers =
+          (await this.userRepository?.findFacilityManagers(
+            toId(incident.facilityId)
+          )) ?? [];
+        const recipients = new Set(
+          managers.map((manager) => toId(manager._id))
+        );
+        if (incident.assignedStaffId)
+          recipients.add(toId(incident.assignedStaffId));
+        await Promise.all(
+          [...recipients].map((recipientId) =>
+            this.notificationService!.sendNotification({
+              recipientId,
+              facilityId: toId(incident.facilityId),
+              title: `[Khách hàng xác nhận] Sự cố ${incident.incidentCode} đã được nghiệm thu`,
+              content:
+                'Khách hàng đã xác nhận biên bản bàn giao. Quản lý có thể kiểm tra và đóng hồ sơ.',
+              type: NotificationTypeEnum.INCIDENT,
+              priority: NotificationPriorityEnum.NORMAL,
+              channels: [NotificationChannelEnum.IN_APP],
+              metadata: { incidentId: id, incidentCode: incident.incidentCode },
+            })
+          )
+        );
       });
     }
 

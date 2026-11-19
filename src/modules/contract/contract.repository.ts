@@ -29,6 +29,10 @@ export interface ContractQueryFilter {
 export class ContractRepository {
   constructor(private readonly contract: SoftDeleteModel<IContract>) {}
 
+  async findIdsByCustomerId(customerId: string): Promise<Types.ObjectId[]> {
+    return this.contract.distinct('_id', { customerId, deleted: false });
+  }
+
   async create(data: Partial<IContract>, session?: ClientSession) {
     if (session) {
       const [created] = await this.contract.create([data], { session });

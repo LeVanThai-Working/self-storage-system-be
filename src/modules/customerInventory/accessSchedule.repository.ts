@@ -138,13 +138,13 @@ export class AccessScheduleRepository {
 
   async findByFacilityAndOtpHash(
     facilityId: string,
-    otpHash: string,
+    otpHash: string | string[],
     session?: ClientSession
   ): Promise<IAccessSchedule | null> {
     return this.accessScheduleModel
       .findOne({
         facilityId,
-        otpHash,
+        otpHash: { $in: Array.isArray(otpHash) ? otpHash : [otpHash] },
         status: AccessScheduleStatusEnum.PENDING,
       })
       .session(session ?? null)

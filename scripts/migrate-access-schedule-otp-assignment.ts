@@ -9,7 +9,10 @@ import {
   NotificationTypeEnum,
   NotificationChannelEnum,
 } from '../src/common/enums/notification.enum.ts';
-import { encryptText } from '../src/utils/encryption.util.ts';
+import {
+  hashAccessScheduleOtp,
+  encryptAccessScheduleOtp,
+} from '../src/utils/accessScheduleOtp.util.ts';
 
 /** Run during a maintenance window, after a database backup. Never prints OTPs. */
 export async function migrateAccessSchedules(apply = false) {
@@ -46,15 +49,9 @@ export async function migrateAccessSchedules(apply = false) {
             set.assignedStaffNameSnapshot = staff?.name ?? null;
           }
           if (needsOtp) {
-            const secret = process.env.OTP_SECRET;
-            if (!secret && process.env.NODE_ENV === 'production')
-              throw new Error('OTP_SECRET is required');
             const otp = String(crypto.randomInt(100000, 1000000));
-            set.otpHash = crypto
-              .createHmac('sha256', secret || 'self-storage-secret-key-2026')
-              .update(otp)
-              .digest('hex');
-            set.otpEncrypted = encryptText(otp);
+            set.otpHash = hashAccessScheduleOtp(otp);
+            set.otpEncrypted = encryptAccessScheduleOtp(otp);
           } else if (
             !pending ||
             new Date(raw.expiresAt) < new Date() ||
