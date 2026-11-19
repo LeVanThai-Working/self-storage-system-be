@@ -30,6 +30,8 @@ import {
 import type { AuditLogService } from '../auditLog/auditLog.service.ts';
 import type { NotificationService } from '../notification/notification.service.ts';
 import type { IncidentRepository } from '../incident/incident.repository.ts';
+import type { IIncident } from '../incident/incident.model.ts';
+import { IncidentStatusEnum } from '../../common/enums/incident.enum.ts';
 import type { CustomerInventoryRepository } from './customerInventory.repository.ts';
 import type { InventoryMovementRepository } from './inventoryMovement.repository.ts';
 import type { ContractRepository } from '../contract/contract.repository.ts';
@@ -237,6 +239,53 @@ export class CustomerInventoryService {
     private readonly incidentRepository?: IncidentRepository,
     private readonly notificationService?: NotificationService
   ) {}
+
+  /** Closing a case releases the right to move, not the physical holding stock itself. */
+  private canReturnHoldingItem(
+    item: FormattableInventory,
+    contractStatus: string | undefined,
+    incidents: IIncident[]
+  ): boolean {
+    if (
+      item.rackTierId ||
+      item.quantity - (item.pendingOutboundQuantity || 0) <= 0 ||
+      ![ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE].includes(
+        contractStatus as ContractStatusEnum
+      ) ||
+      ![
+        InventoryItemStatusEnum.NORMAL,
+        InventoryItemStatusEnum.TEMPORARY_HOLDING,
+      ].includes(
+        (item.status ||
+          InventoryItemStatusEnum.NORMAL) as InventoryItemStatusEnum
+      )
+    )
+      return false;
+
+    const related = incidents.filter(
+      (incident) =>
+        toId(incident.contractId) === toId(item.contractId) &&
+        toId(incident.storageUnitId) === toId(item.storageUnitId) &&
+        toId(incident.facilityId) === toId(item.facilityId) &&
+        incident.preEvacuationManifest?.items.some(
+          (entry) => toId(entry.skuId) === toId(item.skuId)
+        )
+    );
+    const linked = related.find(
+      (incident) => toId(incident._id) === toId(item.relatedIncidentId)
+    );
+    return Boolean(
+      linked &&
+      linked.status === IncidentStatusEnum.CLOSED &&
+      linked.restorationManifestDocUrl &&
+      linked.customerAcknowledgedAt &&
+      !related.some(
+        (incident) =>
+          incident.status !== IncidentStatusEnum.CLOSED &&
+          incident.status !== IncidentStatusEnum.CANCELLED
+      )
+    );
+  }
 
   /**
    * Access control verification:
@@ -747,8 +796,8 @@ export class CustomerInventoryService {
     const fromTierId = data.fromRackTierId || null;
     const toTierId = data.toRackTierId || null;
 
-    // Block movements to/from holding area in self-managed daily operations (Full Freeze)
-    if (!fromTierId || !toTierId) {
+    // Daily operations cannot put stock into holding. Returning it requires a closed evacuation.
+    if (!toTierId) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
     }
 
@@ -801,6 +850,9 @@ export class CustomerInventoryService {
       if (toStorageRackId) {
         const destRack =
           await this.storageRackRepository.findById(toStorageRackId);
+        if (!destRack) {
+          throw new AppError(404, MESSAGE_CODE.MESSAGE_CODE_601);
+        }
         if (destRack) {
           if (
             destRack.status === RackStatusEnum.MAINTENANCE ||
@@ -836,12 +888,32 @@ export class CustomerInventoryService {
       session
     );
 
-    if (!sourceInventory || sourceInventory.quantity < data.quantity) {
+    if (
+      !sourceInventory ||
+      sourceInventory.quantity -
+        (sourceInventory.pendingOutboundQuantity || 0) <
+        data.quantity
+    ) {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_621);
     }
 
-    // Operation Guard: Cannot move non-NORMAL items (TEMPORARY_HOLDING, DAMAGED, DISPUTED)
-    if (
+    if (!fromTierId) {
+      const incidents = this.incidentRepository
+        ? await this.incidentRepository.findEvacuationsByContractIds(
+            [data.contractId],
+            session
+          )
+        : [];
+      if (
+        !this.canReturnHoldingItem(
+          sourceInventory as unknown as FormattableInventory,
+          contract.status,
+          incidents
+        )
+      ) {
+        throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
+      }
+    } else if (
       sourceInventory.status &&
       sourceInventory.status !== InventoryItemStatusEnum.NORMAL
     ) {
@@ -869,6 +941,13 @@ export class CustomerInventoryService {
       toTierId,
       session
     );
+
+    if (
+      destInventory?.status &&
+      destInventory.status !== InventoryItemStatusEnum.NORMAL
+    ) {
+      throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_645);
+    }
 
     let destInventoryId: string;
     if (!destInventory) {
@@ -900,16 +979,6 @@ export class CustomerInventoryService {
         data.quantity,
         session
       );
-      // Restore status to NORMAL when placing item onto rack tier
-      if (toTierId && destInventory.status !== InventoryItemStatusEnum.NORMAL) {
-        await this.inventoryRepository.updateItemStatus(
-          destInventoryId,
-          InventoryItemStatusEnum.NORMAL,
-          null,
-          null,
-          session
-        );
-      }
     }
 
     // 3. Record in InventoryMovement ledger
@@ -1457,6 +1526,20 @@ export class CustomerInventoryService {
       ? unitItems.filter((item) => toId(item.contractId) === contractId)
       : unitItems;
 
+    const holdingContractIds = [
+      ...new Set(
+        items
+          .filter((item) => !item.rackTierId)
+          .map((item) => toId(item.contractId))
+      ),
+    ];
+    const evacuationIncidents =
+      holdingContractIds.length && this.incidentRepository
+        ? await this.incidentRepository.findEvacuationsByContractIds(
+            holdingContractIds
+          )
+        : [];
+
     const itemsByTierMap = new Map<string, TreeTierItem[]>();
     const unrackedItems: TreeTierItem[] = [];
 
@@ -1470,6 +1553,11 @@ export class CustomerInventoryService {
 
       const formattedItem: TreeTierItem = {
         inventoryId: String(doc._id),
+        canReturnToRack: this.canReturnHoldingItem(
+          doc,
+          scopeContract?.status ?? toPopulated(doc.contractId)?.status,
+          evacuationIncidents
+        ),
         quantity: doc.quantity,
         pendingOutboundQuantity: pendingQty,
         availableQuantity: availableQty,

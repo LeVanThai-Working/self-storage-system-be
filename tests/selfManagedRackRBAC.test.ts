@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from 'vitest';
 import { Types } from 'mongoose';
 import {
   setupTestDB,
@@ -19,7 +27,20 @@ import { StorageRack } from '../src/modules/storageRack/storageRack.model.ts';
 import { RackTier } from '../src/modules/storageRack/rackTier.model.ts';
 import { CustomerSku } from '../src/modules/customerSku/customerSku.model.ts';
 import { CustomerInventory } from '../src/modules/customerInventory/customerInventory.model.ts';
-import { customerInventoryService } from '../src/modules/customerInventory/customerInventory.container.ts';
+import {
+  customerInventoryService,
+  inventoryMovementRepository,
+} from '../src/modules/customerInventory/customerInventory.container.ts';
+import { InventoryMovement } from '../src/modules/customerInventory/inventoryMovement.model.ts';
+import {
+  Incident,
+  type IIncident,
+} from '../src/modules/incident/incident.model.ts';
+import { incidentService } from '../src/modules/incident/incident.container.ts';
+import {
+  IncidentCategoryEnum,
+  IncidentStatusEnum,
+} from '../src/common/enums/incident.enum.ts';
 import { customerSkuService } from '../src/modules/customerSku/customerSku.container.ts';
 import {
   UnitTypeCategoryEnum,
@@ -40,6 +61,7 @@ import {
 } from '../src/common/enums/storageRack.enum.ts';
 import { InventoryItemStatusEnum } from '../src/common/enums/customerInventory.enum.ts';
 import { MESSAGE_CODE } from '../src/common/consts/messageCode.const.ts';
+import { repairClosedIncidentRacks } from '../scripts/repair-closed-incident-racks.ts';
 
 describe('T-SMR.1: Self-Managed Warehouse Rack RBAC & Zero-Touch Policy', () => {
   const facilityAId = new Types.ObjectId(TEST_FACILITY_A_ID);
@@ -316,6 +338,451 @@ describe('T-SMR.1: Self-Managed Warehouse Rack RBAC & Zero-Touch Policy', () => 
       status: CustomerSkuStatusEnum.ACTIVE,
     });
     sku2Id = sku2._id as Types.ObjectId;
+  });
+
+  describe('Return holding goods after incident closure', () => {
+    async function createCase(overrides: Partial<IIncident> = {}) {
+      return Incident.create({
+        incidentCode: `RETURN-${new Types.ObjectId()}`,
+        facilityId: facilityAId,
+        storageUnitId: unitAId,
+        storageRackId: rack1Id,
+        contractId: contract1Id,
+        reporterId: customer1Caller.id,
+        reporterRole: RoleEnum.CUSTOMER,
+        category: IncidentCategoryEnum.STRUCTURAL,
+        title: 'Rack repaired',
+        description: 'Goods evacuated during repair',
+        images: ['https://example.com/evidence.jpg'],
+        status: IncidentStatusEnum.CLOSED,
+        restorationManifestDocUrl: 'https://example.com/signed.jpg',
+        customerAcknowledgedAt: new Date(),
+        preEvacuationManifest: {
+          evacuatedAt: new Date(),
+          evacuatedBy: new Types.ObjectId(staffACaller.id),
+          evidenceImages: ['https://example.com/evidence.jpg'],
+          items: [
+            {
+              skuId: sku1Id,
+              systemQuantity: 10,
+              actualQuantity: 10,
+              discrepancy: 0,
+            },
+          ],
+          totalSystemQuantity: 10,
+          totalActualQuantity: 10,
+          totalDiscrepancy: 0,
+        },
+        ...overrides,
+      });
+    }
+    async function createHolding(incidentId: Types.ObjectId | null) {
+      return CustomerInventory.create({
+        customerId: customer1Caller.id,
+        contractId: contract1Id,
+        facilityId: facilityAId,
+        storageUnitId: unitAId,
+        storageRackId: null,
+        rackTierId: null,
+        skuId: sku1Id,
+        quantity: 10,
+        status: InventoryItemStatusEnum.TEMPORARY_HOLDING,
+        holdingReason: 'Emergency evacuation',
+        relatedIncidentId: incidentId,
+      });
+    }
+    function payload(quantity = 4) {
+      return {
+        contractId: String(contract1Id),
+        skuId: String(sku1Id),
+        fromRackTierId: null,
+        toRackTierId: String(tier1AId),
+        quantity,
+        reason: 'Return after incident closure',
+      };
+    }
+    async function canReturn() {
+      const tree = await customerInventoryService.getStorageUnitTree(
+        String(unitAId),
+        customer1Caller,
+        String(contract1Id)
+      );
+      return tree.unrackedItems[0]?.canReturnToRack;
+    }
+
+    it('keeps acknowledged goods frozen until the manager closes, reopens the repaired rack and supports partial/full return', async () => {
+      const incident = await createCase({
+        status: IncidentStatusEnum.RESOLVED,
+      });
+      const holding = await createHolding(incident._id);
+      await StorageRack.findByIdAndUpdate(rack1Id, {
+        status: RackStatusEnum.MAINTENANCE,
+      });
+      expect(await canReturn()).toBe(false);
+      await expect(
+        customerInventoryService.stockMove(
+          { ...payload(), toRackTierId: String(tier2AId) },
+          customer1Caller
+        )
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_645 });
+      await incidentService.closeIncident(
+        managerACaller,
+        String(incident._id),
+        {}
+      );
+      expect((await StorageRack.findById(rack1Id))?.status).toBe(
+        RackStatusEnum.RENTED
+      );
+      expect(await canReturn()).toBe(true);
+      const result = await customerInventoryService.stockMove(
+        payload(),
+        customer1Caller
+      );
+      expect(result.quantity).toBe(4);
+      expect(result.status).toBe(InventoryItemStatusEnum.NORMAL);
+      expect((await CustomerInventory.findById(holding._id))?.quantity).toBe(6);
+      expect((await CustomerInventory.findById(holding._id))?.status).toBe(
+        InventoryItemStatusEnum.TEMPORARY_HOLDING
+      );
+      expect(await canReturn()).toBe(true);
+      await customerInventoryService.stockMove(payload(6), customer1Caller);
+      expect((await CustomerInventory.findById(holding._id))?.quantity).toBe(0);
+      expect(
+        (
+          await CustomerInventory.findOne({
+            rackTierId: tier1AId,
+            skuId: sku1Id,
+          })
+        )?.quantity
+      ).toBe(10);
+      expect((await RackTier.findById(tier1AId))?.status).toBe(
+        RackTierStatusEnum.OCCUPIED
+      );
+      expect(
+        await InventoryMovement.countDocuments({
+          type: 'move',
+          fromRackTierId: null,
+          toRackTierId: tier1AId,
+        })
+      ).toBe(2);
+    });
+
+    it('allows stock-in on both formerly evacuated racks after their repair cases close', async () => {
+      for (const [rackId, tierId] of [
+        [rack1Id, tier1AId],
+        [rack2Id, tier2AId],
+      ]) {
+        const incident = await createCase({
+          status: IncidentStatusEnum.RESOLVED,
+          storageRackId: rackId,
+        });
+        await StorageRack.findByIdAndUpdate(rackId, {
+          status: RackStatusEnum.MAINTENANCE,
+        });
+        const stockIn = {
+          contractId: String(contract1Id),
+          skuId: String(sku1Id),
+          rackTierId: String(tierId),
+          quantity: 2,
+        };
+        await expect(
+          customerInventoryService.stockIn(stockIn, customer1Caller)
+        ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_625 });
+        await incidentService.closeIncident(
+          managerACaller,
+          String(incident._id),
+          {}
+        );
+        expect(
+          (await customerInventoryService.stockIn(stockIn, customer1Caller))
+            .quantity
+        ).toBe(2);
+        expect((await StorageRack.findById(rackId))?.status).toBe(
+          RackStatusEnum.RENTED
+        );
+      }
+    });
+
+    it('inspects old closed cases without writes and repairs only the matching historical maintenance', async () => {
+      const incident = await createCase({
+        closedAt: new Date(Date.now() + 1000),
+      });
+      await StorageRack.findByIdAndUpdate(rack1Id, {
+        status: RackStatusEnum.MAINTENANCE,
+      });
+      const preview = await repairClosedIncidentRacks(String(contract1Id));
+      expect(preview).toMatchObject([
+        { rackCode: 'RACK-01', outcome: 'eligible' },
+      ]);
+      expect((await StorageRack.findById(rack1Id))?.status).toBe(
+        RackStatusEnum.MAINTENANCE
+      );
+      expect(
+        await repairClosedIncidentRacks(String(contract1Id), true)
+      ).toMatchObject([{ outcome: 'repaired' }]);
+      expect((await StorageRack.findById(rack1Id))?.status).toBe(
+        RackStatusEnum.RENTED
+      );
+      expect((await Incident.findById(incident._id))?.status).toBe(
+        IncidentStatusEnum.CLOSED
+      );
+      expect(
+        await repairClosedIncidentRacks(String(contract1Id), true)
+      ).toEqual([]);
+      expect(
+        (
+          await customerInventoryService.stockIn(
+            {
+              contractId: String(contract1Id),
+              skuId: String(sku1Id),
+              rackTierId: String(tier1AId),
+              quantity: 1,
+            },
+            customer1Caller
+          )
+        ).quantity
+      ).toBe(1);
+    });
+
+    it.each(['open', 'relocation', 'later maintenance'])(
+      'does not repair legacy rack with %s',
+      async (scenario) => {
+        await createCase({
+          closedAt: new Date(
+            scenario === 'later maintenance'
+              ? Date.now() - 5000
+              : Date.now() + 1000
+          ),
+          requiresRelocation: scenario === 'relocation',
+        });
+        await StorageRack.findByIdAndUpdate(rack1Id, {
+          status: RackStatusEnum.MAINTENANCE,
+        });
+        if (scenario === 'open')
+          await createCase({ status: IncidentStatusEnum.RESOLVED });
+        expect(
+          await repairClosedIncidentRacks(String(contract1Id), true)
+        ).toMatchObject([{ outcome: 'skipped' }]);
+        expect((await StorageRack.findById(rack1Id))?.status).toBe(
+          RackStatusEnum.MAINTENANCE
+        );
+      }
+    );
+
+    it.each([
+      { status: IncidentStatusEnum.RESOLVED },
+      { restorationManifestDocUrl: undefined },
+      { customerAcknowledgedAt: undefined },
+      { status: IncidentStatusEnum.CANCELLED },
+      { contractId: new Types.ObjectId() },
+      { deleted: true },
+    ])(
+      'fails closed for incomplete, foreign or deleted incident: %j',
+      async (overrides) => {
+        const incident = await createCase(overrides);
+        await createHolding(incident._id);
+        expect(await canReturn()).toBe(false);
+        await expect(
+          customerInventoryService.stockMove(payload(), customer1Caller)
+        ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_645 });
+      }
+    );
+
+    it.each([
+      InventoryItemStatusEnum.DAMAGED,
+      InventoryItemStatusEnum.DISPUTED,
+    ])('blocks %s even after closure', async (status) => {
+      const incident = await createCase();
+      const holding = await createHolding(incident._id);
+      await CustomerInventory.findByIdAndUpdate(holding._id, { status });
+      expect(await canReturn()).toBe(false);
+      await expect(
+        customerInventoryService.stockMove(payload(), customer1Caller)
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_645 });
+    });
+
+    it('keeps unlinked legacy holding locked', async () => {
+      await createHolding(null);
+      expect(await canReturn()).toBe(false);
+      await expect(
+        customerInventoryService.stockMove(payload(), customer1Caller)
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_645 });
+    });
+
+    it('blocks a merged SKU while another evacuation is still open, including RESOLVED cases', async () => {
+      const closed = await createCase();
+      await createHolding(closed._id);
+      const other = await createCase({
+        status: IncidentStatusEnum.RESOLVED,
+        storageRackId: rack2Id,
+      });
+      expect(await canReturn()).toBe(false);
+      await expect(
+        customerInventoryService.stockMove(payload(), customer1Caller)
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_645 });
+      await Incident.findByIdAndUpdate(other._id, {
+        status: IncidentStatusEnum.CLOSED,
+      });
+      expect(await canReturn()).toBe(true);
+    });
+
+    it('preserves existing stock and rejects a frozen destination without deducting holding', async () => {
+      const incident = await createCase();
+      const holding = await createHolding(incident._id);
+      const destination = await CustomerInventory.create({
+        customerId: customer1Caller.id,
+        contractId: contract1Id,
+        facilityId: facilityAId,
+        storageUnitId: unitAId,
+        storageRackId: rack1Id,
+        rackTierId: tier1AId,
+        skuId: sku1Id,
+        quantity: 3,
+        status: InventoryItemStatusEnum.DISPUTED,
+      });
+      await expect(
+        customerInventoryService.stockMove(payload(), customer1Caller)
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_645 });
+      expect((await CustomerInventory.findById(holding._id))?.quantity).toBe(
+        10
+      );
+      expect(
+        (await CustomerInventory.findById(destination._id))?.quantity
+      ).toBe(3);
+      expect(await InventoryMovement.countDocuments({ type: 'move' })).toBe(0);
+      await CustomerInventory.findByIdAndUpdate(destination._id, {
+        status: InventoryItemStatusEnum.NORMAL,
+      });
+      expect(
+        (await customerInventoryService.stockMove(payload(), customer1Caller))
+          .quantity
+      ).toBe(7);
+    });
+
+    it('enforces customer, staff, destination rack and contract access; allows OVERDUE', async () => {
+      const incident = await createCase();
+      await createHolding(incident._id);
+      for (const caller of [customer2Caller, staffACaller, managerACaller]) {
+        await expect(
+          customerInventoryService.stockMove(payload(), caller)
+        ).rejects.toMatchObject({ statusCode: 403 });
+      }
+      await expect(
+        customerInventoryService.stockMove(
+          { ...payload(), toRackTierId: String(tier3AId) },
+          customer1Caller
+        )
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_637 });
+      for (const status of [
+        RackStatusEnum.MAINTENANCE,
+        RackStatusEnum.INACTIVE,
+      ]) {
+        await StorageRack.findByIdAndUpdate(rack1Id, { status });
+        await expect(
+          customerInventoryService.stockMove(payload(), customer1Caller)
+        ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_625 });
+      }
+      await StorageRack.findByIdAndUpdate(rack1Id, {
+        status: RackStatusEnum.RENTED,
+      });
+      await Contract.findByIdAndUpdate(contract1Id, {
+        status: ContractStatusEnum.COMPLETED,
+      });
+      expect(await canReturn()).toBe(false);
+      await expect(
+        customerInventoryService.stockMove(payload(), customer1Caller)
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_622 });
+      await Contract.findByIdAndUpdate(contract1Id, {
+        status: ContractStatusEnum.OVERDUE,
+      });
+      expect(await canReturn()).toBe(true);
+      await customerInventoryService.stockMove(payload(), customer1Caller);
+    });
+
+    it('honors pending outbound reservations under concurrent requests', async () => {
+      const incident = await createCase();
+      const holding = await createHolding(incident._id);
+      await CustomerInventory.findByIdAndUpdate(holding._id, {
+        pendingOutboundQuantity: 2,
+      });
+      const results = await Promise.allSettled([
+        customerInventoryService.stockMove(payload(6), customer1Caller),
+        customerInventoryService.stockMove(payload(6), customer1Caller),
+      ]);
+      expect(
+        results.filter((result) => result.status === 'fulfilled')
+      ).toHaveLength(1);
+      expect((await CustomerInventory.findById(holding._id))?.quantity).toBe(4);
+      expect(
+        (
+          await CustomerInventory.findOne({
+            skuId: sku1Id,
+            rackTierId: tier1AId,
+          })
+        )?.quantity
+      ).toBe(6);
+      await expect(
+        customerInventoryService.stockMove(payload(3), customer1Caller)
+      ).rejects.toMatchObject({ messageCode: MESSAGE_CODE.MESSAGE_CODE_621 });
+    });
+
+    it('rolls back stock and tier changes when recording a movement fails', async () => {
+      const incident = await createCase();
+      const holding = await createHolding(incident._id);
+      const failure = vi
+        .spyOn(inventoryMovementRepository, 'create')
+        .mockRejectedValueOnce(new Error('ledger unavailable'));
+      try {
+        await expect(
+          customerInventoryService.stockMove(payload(), customer1Caller)
+        ).rejects.toThrow('ledger unavailable');
+      } finally {
+        failure.mockRestore();
+      }
+      expect((await CustomerInventory.findById(holding._id))?.quantity).toBe(
+        10
+      );
+      expect(
+        await CustomerInventory.countDocuments({
+          rackTierId: tier1AId,
+          skuId: sku1Id,
+        })
+      ).toBe(0);
+      expect((await RackTier.findById(tier1AId))?.status).toBe(
+        RackTierStatusEnum.AVAILABLE
+      );
+    });
+
+    it.each(['relocation', 'other open incident', 'reassigned', 'inactive'])(
+      'does not reopen a rack for %s',
+      async (scenario) => {
+        const incident = await createCase({
+          status: IncidentStatusEnum.RESOLVED,
+          requiresRelocation: scenario === 'relocation',
+        });
+        await StorageRack.findByIdAndUpdate(rack1Id, {
+          status:
+            scenario === 'inactive'
+              ? RackStatusEnum.INACTIVE
+              : RackStatusEnum.MAINTENANCE,
+          ...(scenario === 'reassigned'
+            ? { currentContractId: contract2Id }
+            : {}),
+        });
+        if (scenario === 'other open incident')
+          await createCase({ status: IncidentStatusEnum.RESOLVED });
+        await incidentService.closeIncident(
+          managerACaller,
+          String(incident._id),
+          {}
+        );
+        expect((await StorageRack.findById(rack1Id))?.status).toBe(
+          scenario === 'inactive'
+            ? RackStatusEnum.INACTIVE
+            : RackStatusEnum.MAINTENANCE
+        );
+      }
+    );
   });
 
   describe('Part 1: Customer Self-Mutation & Zero-Touch Staff Policy', () => {

@@ -15889,6 +15889,9 @@
 									"type": "number",
 									"format": "double"
 								},
+								"canReturnToRack": {
+									"type": "boolean"
+								},
 								"inventoryId": {
 									"type": "string"
 								}
@@ -15899,6 +15902,7 @@
 								"availableQuantity",
 								"pendingOutboundQuantity",
 								"quantity",
+								"canReturnToRack",
 								"inventoryId"
 							],
 							"type": "object"
@@ -16084,6 +16088,9 @@
 															"type": "number",
 															"format": "double"
 														},
+														"canReturnToRack": {
+															"type": "boolean"
+														},
 														"inventoryId": {
 															"type": "string"
 														}
@@ -16094,6 +16101,7 @@
 														"availableQuantity",
 														"pendingOutboundQuantity",
 														"quantity",
+														"canReturnToRack",
 														"inventoryId"
 													],
 													"type": "object"
@@ -32602,7 +32610,7 @@
 						}
 					}
 				},
-				"description": "3. Stock Move (Stock Move)\nCustomer relocates items between their rented rack tiers within an active contract.\nPermitted when contract status is ACTIVE.",
+				"description": "3. Stock Move (Stock Move)\nCustomer relocates items between rented rack tiers, or returns holding goods after\nthe related evacuation is closed with a signed document and customer acknowledgment.\nPermitted when contract status is ACTIVE or OVERDUE. Holding is never a destination.",
 				"tags": [
 					"Customer Inventories"
 				],

@@ -143,6 +143,24 @@ export class StorageRackRepository {
     return this.storageRack.create(data, { session });
   }
 
+  /** Never reopen a rack that has been released, reassigned or explicitly disabled. */
+  async restoreRepairedRack(
+    id: string,
+    contractId: string,
+    session?: ClientSession
+  ) {
+    return this.storageRack.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(id),
+        currentContractId: new Types.ObjectId(contractId),
+        status: RackStatusEnum.MAINTENANCE,
+        deleted: { $ne: true },
+      },
+      { $set: { status: RackStatusEnum.RENTED } },
+      { returnDocument: 'after', session }
+    );
+  }
+
   async update(
     id: string,
     data: Partial<IStorageRack>,

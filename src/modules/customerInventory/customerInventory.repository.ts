@@ -167,6 +167,17 @@ export class CustomerInventoryRepository {
     };
     if (delta < 0) {
       filter.quantity = { $gte: Math.abs(delta) };
+      filter.$expr = {
+        $gte: [
+          {
+            $subtract: [
+              '$quantity',
+              { $ifNull: ['$pendingOutboundQuantity', 0] },
+            ],
+          },
+          Math.abs(delta),
+        ],
+      };
     }
 
     const query = this.inventory.findOneAndUpdate(

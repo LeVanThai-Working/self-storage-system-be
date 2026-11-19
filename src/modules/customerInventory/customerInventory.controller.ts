@@ -209,8 +209,9 @@ export class CustomerInventoryController extends Controller {
 
   /**
    * 3. Stock Move (Stock Move)
-   * Customer relocates items between their rented rack tiers within an active contract.
-   * Permitted when contract status is ACTIVE.
+   * Customer relocates items between rented rack tiers, or returns holding goods after
+   * the related evacuation is closed with a signed document and customer acknowledgment.
+   * Permitted when contract status is ACTIVE or OVERDUE. Holding is never a destination.
    */
   // @Security('bearerAuth')
   // @Security('cookieAuth')

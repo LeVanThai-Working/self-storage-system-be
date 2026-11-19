@@ -933,6 +933,39 @@ export class IncidentService {
       throw new AppError(400, MESSAGE_CODE.MESSAGE_CODE_701);
     }
 
+    // Repair-in-place releases this rack only after the two-layer acknowledgment and closure.
+    if (
+      incident.preEvacuationManifest &&
+      !incident.requiresRelocation &&
+      incident.storageRackId &&
+      incident.contractId &&
+      this.storageRackRepository &&
+      this.contractRepository
+    ) {
+      const contract = await this.contractRepository.findById(
+        toId(incident.contractId),
+        effectiveSession
+      );
+      const rackId = toId(incident.storageRackId);
+      if (
+        contract &&
+        [ContractStatusEnum.ACTIVE, ContractStatusEnum.OVERDUE].includes(
+          contract.status
+        ) &&
+        (contract.rentedRackIds || []).some((rack) => toId(rack) === rackId) &&
+        (await this.incidentRepository.countOpenByRackId(
+          rackId,
+          effectiveSession
+        )) === 0
+      ) {
+        await this.storageRackRepository.restoreRepairedRack(
+          rackId,
+          toId(incident.contractId),
+          effectiveSession
+        );
+      }
+    }
+
     // Sync customer-liable damageFee & staffEvidenceImages onto Contract when Incident closes ([CHỐT Q3])
     const resolution = incident.resolution;
     if (
