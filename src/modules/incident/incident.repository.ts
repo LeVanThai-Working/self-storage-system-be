@@ -36,6 +36,32 @@ export interface IncidentQueryFilter {
 export class IncidentRepository {
   constructor(private readonly model: SoftDeleteModel<IIncident> = Incident) {}
 
+  /** Includes closed evacuations so old holding stock can be returned without a migration. */
+  async findEvacuationsByContractIds(
+    contractIds: string[],
+    session?: ClientSession
+  ) {
+    const query = this.model.find({
+      contractId: { $in: contractIds.map((id) => new Types.ObjectId(id)) },
+      preEvacuationManifest: { $ne: null },
+      deleted: { $ne: true },
+    });
+    if (session) query.session(session);
+    return query.exec();
+  }
+
+  async countOpenByRackId(rackId: string, session?: ClientSession) {
+    const query = this.model.countDocuments({
+      storageRackId: new Types.ObjectId(rackId),
+      status: {
+        $nin: [IncidentStatusEnum.CLOSED, IncidentStatusEnum.CANCELLED],
+      },
+      deleted: { $ne: true },
+    });
+    if (session) query.session(session);
+    return query.exec();
+  }
+
   async create(
     data: Partial<IIncident>,
     session?: ClientSession

@@ -170,6 +170,7 @@ export type PaginatedInventoryMovementResponse = z.infer<
 
 export const treeTierItemSchema = z.object({
   inventoryId: z.string(),
+  canReturnToRack: z.boolean().default(false),
   quantity: z.number(),
   pendingOutboundQuantity: z.number().default(0),
   availableQuantity: z.number().default(0),
