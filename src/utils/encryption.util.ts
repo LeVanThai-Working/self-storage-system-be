@@ -31,11 +31,14 @@ function getEncryptionKey(): Buffer {
  * Encrypts a plain-text string using AES-256-GCM.
  * Output format: <IV_HEX>:<AUTH_TAG_HEX>:<CIPHER_HEX>
  */
-export function encryptText(plainText: string): string {
+export function encryptText(plainText: string, key?: Buffer): string {
   if (!plainText) return '';
-  const key = getEncryptionKey();
   const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  const cipher = crypto.createCipheriv(
+    ALGORITHM,
+    key ?? getEncryptionKey(),
+    iv
+  );
 
   const encrypted = Buffer.concat([
     cipher.update(plainText, 'utf8'),
@@ -49,7 +52,7 @@ export function encryptText(plainText: string): string {
 /**
  * Decrypts an AES-256-GCM encrypted string (<IV_HEX>:<AUTH_TAG_HEX>:<CIPHER_HEX>).
  */
-export function decryptText(encryptedPayload: string): string {
+export function decryptText(encryptedPayload: string, key?: Buffer): string {
   if (!encryptedPayload) return '';
   const parts = encryptedPayload.split(':');
   if (parts.length !== 3) {
@@ -59,12 +62,15 @@ export function decryptText(encryptedPayload: string): string {
   }
 
   const [ivHex, authTagHex, cipherHex] = parts;
-  const key = getEncryptionKey();
   const iv = Buffer.from(ivHex, 'hex');
   const authTag = Buffer.from(authTagHex, 'hex');
   const cipherBuffer = Buffer.from(cipherHex, 'hex');
 
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  const decipher = crypto.createDecipheriv(
+    ALGORITHM,
+    key ?? getEncryptionKey(),
+    iv
+  );
   decipher.setAuthTag(authTag);
 
   const decrypted = Buffer.concat([

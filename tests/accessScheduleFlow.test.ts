@@ -16,6 +16,7 @@ import { User } from '../src/modules/user/user.model.ts';
 import { Notification } from '../src/modules/notification/notification.model.ts';
 import { migrateAccessSchedules } from '../scripts/migrate-access-schedule-otp-assignment.ts';
 import crypto from 'node:crypto';
+import { encryptText } from '../src/utils/encryption.util.ts';
 import {
   setupTestDB,
   teardownTestDB,
@@ -1208,6 +1209,78 @@ describe('T-SMR.2: Access Schedule & Gate Check-in/Check-out Flow', () => {
       expect(invalidToken.status).toBe(401);
       expect(await AccessSchedule.countDocuments()).toBe(0);
     });
+
+    it.each(['new', 'legacy-default', 'legacy-configured'])(
+      'creates, reloads and checks in with %s OTP in production without requiring separate OTP keys',
+      async (format) => {
+        vi.stubEnv('NODE_ENV', 'production');
+        vi.stubEnv('OTP_SECRET', undefined);
+        vi.stubEnv('ENCRYPTION_KEY', undefined);
+
+        const created = await request(app)
+          .post('/access-schedules')
+          .set(getAuthHeaders(TEST_USERS.customer1))
+          .send({
+            contractId: String(activeContractA._id),
+            timeSlotId: String(timeSlot1A._id),
+            scheduledDate: futureDateStr,
+            numberOfPeople: 6,
+          });
+        expect(created.status).toBe(201);
+        expect(created.body.data.rawOtpCode).toMatch(/^\d{6}$/);
+
+        if (format !== 'new') {
+          const legacySecret =
+            format === 'legacy-configured'
+              ? 'legacy-otp-test-secret'
+              : 'self-storage-secret-key-2026';
+          const legacyEncryptionKey =
+            format === 'legacy-configured'
+              ? 'legacy-encryption-test-key'
+              : 'self_storage_dev_secret_key_32bytes';
+          const otp: string = created.body.data.rawOtpCode;
+          vi.stubEnv(
+            'OTP_SECRET',
+            format === 'legacy-configured' ? legacySecret : undefined
+          );
+          vi.stubEnv(
+            'ENCRYPTION_KEY',
+            format === 'legacy-configured' ? legacyEncryptionKey : undefined
+          );
+          await AccessSchedule.findByIdAndUpdate(created.body.data.id, {
+            otpHash: crypto
+              .createHmac('sha256', legacySecret)
+              .update(otp)
+              .digest('hex'),
+            otpEncrypted: encryptText(
+              otp,
+              crypto.createHash('sha256').update(legacyEncryptionKey).digest()
+            ),
+          });
+        }
+
+        const detail = await request(app)
+          .get(`/access-schedules/${created.body.data.id}`)
+          .set(getAuthHeaders(TEST_USERS.customer1));
+        expect(detail.status).toBe(200);
+        expect(detail.body.data.rawOtpCode).toBe(created.body.data.rawOtpCode);
+
+        vi.useFakeTimers({ toFake: ['Date'] });
+        try {
+          vi.setSystemTime(new Date(`${futureDateStr}T08:10:00+07:00`));
+          const checkedIn = await request(app)
+            .post('/access-schedules/check-in')
+            .set(getAuthHeaders(TEST_USERS.staffFacilityA))
+            .send({ code: created.body.data.rawOtpCode });
+          expect(checkedIn.status).toBe(200);
+          expect(checkedIn.body.data.schedule.status).toBe(
+            AccessScheduleStatusEnum.CHECKED_IN
+          );
+        } finally {
+          vi.useRealTimers();
+        }
+      }
+    );
 
     it('accepts null vehicle/purpose fields and returns phone and gate staff names in detail', async () => {
       await User.findByIdAndUpdate(TEST_USERS.customer1.id, {

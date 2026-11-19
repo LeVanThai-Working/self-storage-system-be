@@ -33,4 +33,14 @@
 
 ## Phát hiện thêm ngoài phạm vi (Out of Scope Findings)
 
+### Đồng bộ FE và nghiệm thu — 19/11/2026
+
+- Danh sách khách dùng phạm vi `reporterId = caller` **hoặc** hợp đồng thuộc khách; phạm vi này được AND với tìm kiếm/bộ lọc trước khi phân trang. Không thay đổi API public.
+- Thông báo sơ tán và biên bản gửi chủ hợp đồng, fallback người báo nếu là khách; thông báo khách xác nhận gửi quản lý cùng cơ sở và nhân viên phụ trách, sau transaction commit.
+- FE bổ sung kiểm đếm/sơ tán, upload PDF/ảnh có chữ ký, xác nhận riêng trên mobile, đóng từ `IN_PROGRESS` cho relocation và giữ bồi thường cơ sở. Module hợp đồng vẫn xử lý đổi kệ/thanh lý.
+- Test hồi quy mới đã tái hiện lỗi danh sách và sai người nhận trước khi sửa. Ba bộ test incident enhancement, addendum/settlement và contract damage sync: **36/36 pass** trên MongoDB memory replica set. `tsc --noEmit` và build BE pass.
+- `npm run check` toàn BE: **767/767 test pass**, typecheck/lint/format pass. Sau bổ sung tên người upload/xác nhận, chạy lại incident enhancement: **13/13 pass**. FE: **64 test pass**, type-check web/mobile và lint phần thay đổi pass.
+- Không migration; triển khai BE/FE đồng bộ. Xem hướng dẫn kiểm thử FE tại `self-storage-system-fe/docs/incident-workflow.md`.
+- Giới hạn: sơ tán chỉ nhận `skuId`, chưa phân biệt nhiều vị trí cùng SKU; FE chặn trường hợp này để tránh sai kiểm đếm. Audit tài chính cũ vẫn best-effort; chưa bổ sung outbox hay thay đổi quy tắc quyết toán. Kiểm thử UI với tài khoản local và upload thực tế chưa được thực hiện trong phiên này.
+
 - `IncidentService.resolveIncident` (`src/modules/incident/incident.service.ts` dòng 528–544) mở lại kho `UNDER_MAINTENANCE -> AVAILABLE` chưa kiểm tra `countRemainingByStorageUnit === 0` (guard `MESSAGE_CODE_629` của `X1`).

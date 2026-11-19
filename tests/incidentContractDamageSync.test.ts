@@ -22,6 +22,7 @@ import { RefundRequest } from '../src/modules/refundRequest/refundRequest.model.
 import { AuditLog } from '../src/modules/auditLog/auditLog.model.ts';
 import { contractService } from '../src/modules/contract/contract.container.ts';
 import { incidentService } from '../src/modules/incident/incident.container.ts';
+import { Incident } from '../src/modules/incident/incident.model.ts';
 import { FacilityStatusEnum } from '../src/common/enums/facility.enum.ts';
 import { UnitTypeCategoryEnum } from '../src/common/enums/unitType.enum.ts';
 import { StorageUnitStatusEnum } from '../src/common/enums/storageUnit.enum.ts';
@@ -199,6 +200,45 @@ describe('X5: Incident resolution.damageFee <-> Contract.damageFee & checkOutCon
 
     return resolved;
   }
+
+  describe('incident code uniqueness', () => {
+    async function reportAtFacility(targetFacilityId: string) {
+      return incidentService.reportIncident(
+        { id: String(customerId), role: RoleEnum.CUSTOMER },
+        {
+          facilityId: targetFacilityId,
+          category: IncidentCategoryEnum.STRUCTURAL,
+          severity: IncidentSeverityEnum.LOW,
+          title: 'Damaged door lock',
+          description: 'Door lock bent during loading.',
+          images: ['https://example.com/incident.jpg'],
+          putUnitUnderMaintenance: false,
+          requiresRelocation: false,
+        }
+      );
+    }
+
+    it('creates incidents at different facilities on the same day', async () => {
+      await Incident.init();
+      const first = await reportAtFacility(String(facilityId));
+      const second = await reportAtFacility(String(facilityBId));
+
+      expect(second.incidentCode).not.toBe(first.incidentCode);
+      expect(await Incident.countDocuments()).toBe(2);
+    });
+
+    it('creates concurrent incidents at the same facility', async () => {
+      await Incident.init();
+      const incidents = await Promise.all(
+        Array.from({ length: 3 }, () => reportAtFacility(String(facilityId)))
+      );
+
+      expect(
+        new Set(incidents.map((incident) => incident.incidentCode)).size
+      ).toBe(3);
+      expect(await Incident.countDocuments()).toBe(3);
+    });
+  });
 
   it('1. accumulates resolution.damageFee & staffEvidenceImages into Contract when CUSTOMER-liable incident is CLOSED, and records CONTRACT AuditLog', async () => {
     const contract = await seedContract(ContractStatusEnum.ACTIVE);

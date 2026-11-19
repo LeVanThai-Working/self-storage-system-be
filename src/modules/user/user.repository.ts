@@ -8,6 +8,15 @@ import { RoleEnum, UserStatusEnum } from '../../common/enums/user.enum.ts';
 export class UserRepository {
   constructor(private readonly user: SoftDeleteModel<IUser>) {}
 
+  async findFacilityManagers(facilityId: string): Promise<IUser[]> {
+    return this.user.find({
+      assignedFacilityId: facilityId,
+      role: RoleEnum.FACILITY_MANAGER,
+      status: UserStatusEnum.ACTIVE,
+      deleted: false,
+    });
+  }
+
   async findAllUser(
     query: UserQuery = {
       page: 1,

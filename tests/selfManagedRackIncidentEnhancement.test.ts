@@ -45,6 +45,8 @@ import { RoleEnum } from '../src/common/enums/user.enum.ts';
 import { InventoryItemStatusEnum } from '../src/common/enums/customerInventory.enum.ts';
 
 import { AppError } from '../src/common/errors/appError.error.ts';
+import { Incident } from '../src/modules/incident/incident.model.ts';
+import { Notification } from '../src/modules/notification/notification.model.ts';
 
 describe('T-SMR.3: Self-Managed Warehouse Rack Incident Handling & 2-Layer Acknowledgment', () => {
   const facilityAId = new Types.ObjectId(TEST_FACILITY_A_ID);
@@ -283,6 +285,88 @@ describe('T-SMR.3: Self-Managed Warehouse Rack Incident Handling & 2-Layer Ackno
   }
 
   describe('1. Emergency Rack Evacuation (POST /incidents/:id/evacuate-rack)', () => {
+    it('lists staff-reported contract incidents only for their owner, preserving search and pagination', async () => {
+      const id = await createIncident();
+      await Incident.findByIdAndUpdate(id, {
+        reporterId: staffA.id,
+        reporterRole: RoleEnum.FACILITY_STAFF,
+      });
+      const query = {
+        page: 1,
+        limit: 1,
+        sortBy: 'createdAt',
+        sortOrder: 'desc' as const,
+        search: 'Bent support',
+      };
+      const own = await incidentService.getIncidents(customerCaller, query);
+      expect(own.items.map((item) => item.id)).toEqual([id]);
+      expect(own.pagination.totalItems).toBe(1);
+      const other = await incidentService.getIncidents(
+        otherCustomerCaller,
+        query
+      );
+      expect(other.items).toEqual([]);
+      expect(
+        (
+          await incidentService.getIncidents(customerCaller, {
+            ...query,
+            search: 'no matching report',
+          })
+        ).items
+      ).toEqual([]);
+    });
+
+    it('routes handover notifications to the contract customer and acceptance to manager and staff', async () => {
+      const id = await createIncident(true);
+      await Incident.findByIdAndUpdate(id, {
+        reporterId: staffA.id,
+        reporterRole: RoleEnum.FACILITY_STAFF,
+      });
+      await incidentService.evacuateRack(staffA, id, {
+        evidenceImages: ['https://example.com/evacuate.jpg'],
+        emergencyReason: 'Unsafe rack requires evacuation',
+        requiresRelocation: true,
+        items: [
+          { skuId: String(sku1Id), actualQuantity: 20 },
+          { skuId: String(sku2Id), actualQuantity: 15 },
+        ],
+      });
+      await incidentService.uploadRestorationManifest(managerA, id, {
+        restorationManifestDocUrl: 'https://example.com/signed.pdf',
+      });
+      await incidentService.customerAcknowledge(customerCaller, id);
+      // Notifications must be persisted only after each transaction commits.
+      const notifications = await Notification.find({
+        'metadata.incidentId': id,
+      }).lean();
+      const documentNotices = notifications.filter(
+        (n) => n.metadata?.restorationManifestDocUrl
+      );
+      expect(documentNotices.map((n) => String(n.recipientId))).toEqual([
+        customerCaller.id,
+      ]);
+      const accepted = notifications.filter((n) =>
+        n.title.includes('[Khách hàng xác nhận]')
+      );
+      expect(new Set(accepted.map((n) => String(n.recipientId)))).toEqual(
+        new Set([managerA.id, staffA.id])
+      );
+      const customerView = await incidentService.getIncidentById(
+        customerCaller,
+        id
+      );
+      expect(customerView.status).toBe(IncidentStatusEnum.IN_PROGRESS);
+      expect(customerView.customerAcknowledgedAt).toBeTruthy();
+      expect(customerView.customerAcknowledgedBy).toMatchObject({
+        id: customerCaller.id,
+        name: expect.any(String),
+      });
+      expect(customerView.restorationUploadedBy).toMatchObject({
+        id: managerA.id,
+        name: expect.any(String),
+      });
+    });
+
     it('should successfully evacuate rack items to TEMPORARY_HOLDING and generate preEvacuationManifest', async () => {
       const incidentId = await createIncident(false);
 
